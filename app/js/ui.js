@@ -77,7 +77,10 @@
       const back = $('#modal'); back.innerHTML = '';
       const form = h('form', { class: 'modal-box' }, h('h3', null, title));
       if (opts.note) form.appendChild(h('p', { class: 'note' }, opts.note));
-      const inputs = {};
+      const inputs = {}, rows = {}, descs = {};
+      const read = () => { const out = {}; fields.forEach(f => { const i = inputs[f.name]; out[f.name] = f.type === 'check' ? i.checked : f.type === 'number' ? parseInt(i.value || '0', 10) : f.type === 'multi' ? Array.from(i.selectedOptions).map(o => o.value) : i.value; }); return out; };
+      // f.when(値) が偽の項目は隠す（値は既定のまま返す）。f.desc(値) は選んだ内容の説明を項目の下に出す。選択肢が「使わない」だけの生命核欄は出さない
+      const refresh = () => { const v = read(); fields.forEach(f => { const trivial = f.name === 'useL' && f.type === 'select' && f.options.length <= 1; rows[f.name].style.display = trivial || (f.when && !f.when(v)) ? 'none' : ''; if (f.desc) descs[f.name].textContent = f.desc(v) || ''; }); };
       fields.forEach(f => {
         const row = h('label', { class: 'frow' }, h('span', null, f.label)); let inp;
         if (f.type === 'select') { inp = h('select', { name: f.name }); f.options.forEach(o => inp.appendChild(h('option', { value: o.value, selected: o.value === f.value, disabled: !!o.disabled }, o.label))); }
@@ -85,22 +88,27 @@
         else if (f.type === 'check') inp = h('input', { type: 'checkbox', name: f.name, checked: !!f.value });
         else if (f.type === 'multi') { inp = h('select', { name: f.name, multiple: true, size: Math.min(8, Math.max(2, f.options.length)) }); f.options.forEach(o => inp.appendChild(h('option', { value: o.value }, o.label))); }
         else inp = h('input', { type: 'text', name: f.name, value: f.value || '' });
-        inputs[f.name] = inp; row.appendChild(inp); if (f.hint) row.appendChild(h('small', null, f.hint)); form.appendChild(row);
+        inputs[f.name] = inp; row.appendChild(inp); if (f.hint) row.appendChild(h('small', null, f.hint)); if (f.desc) { descs[f.name] = h('small', { class: 'desc' }); row.appendChild(descs[f.name]); }
+        rows[f.name] = row; form.appendChild(row); inp.addEventListener('change', refresh); inp.addEventListener('input', refresh);
       });
+      refresh();
       const btns = h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, opts.okLabel || '実行'));
       if (opts.skipLabel) btns.appendChild(h('button', { type: 'button', onclick: () => { back.classList.remove('open'); resolve({ __skip: true }); } }, opts.skipLabel));
       if (!opts.noCancel) btns.appendChild(h('button', { type: 'button', onclick: () => { back.classList.remove('open'); resolve(null); } }, 'キャンセル'));
       form.appendChild(btns);
-      form.addEventListener('submit', ev => { ev.preventDefault(); const out = {}; fields.forEach(f => { const i = inputs[f.name]; out[f.name] = f.type === 'check' ? i.checked : f.type === 'number' ? parseInt(i.value || '0', 10) : f.type === 'multi' ? Array.from(i.selectedOptions).map(o => o.value) : i.value; }); back.classList.remove('open'); resolve(out); });
+      form.addEventListener('submit', ev => { ev.preventDefault(); const out = read(); back.classList.remove('open'); resolve(out); });
       back.appendChild(form); back.classList.add('open'); const first = form.querySelector('select,input,button'); if (first) first.focus();
     });
   }
   function toast(msg, isErr) { const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (isErr ? ' err' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', 3000); }
   const lOpts = (p, res) => Array.from({ length: p.L + 1 }, (_, i) => ({ value: i, label: i === 0 ? '使わない' : `L${i}（=${res || 'E'}${i * 3}）` }));
   const resSel = (name, label, value) => ({ type: 'select', name, label, value: value || 'E', options: [{ value: 'E', label: 'E' }, { value: 'G', label: 'G' }, { value: 'P', label: 'P' }] });
-  const traitSel = (p, name, label, filter) => ({ type: 'select', name, label, options: G.TRAIT_ORDER.filter(t => !G.trait(p, t) && (!filter || filter(t))).map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}（G${G.traitCost(st, p, t).G}）` })) });
-  const imSel = () => resSel('res', '代謝亢進(IM)を取る場合の資源');
-  const daSel = () => ({ type: 'select', name: 'track', label: '適応効率(DA)を取る場合のトラック', options: G.TRACKS.map(t => ({ value: t, label: G.TRACK_INFO[t].name })) });
+  // 選択中の形質の効果（先着なら強・後続なら弱）を項目の下に表示する
+  const traitDesc = (p, name) => (v) => { const t = v[name]; if (!t || !G.TRAITS[t]) return ''; const c = G.traitCost(st, p, t); return `${c.strong ? '強' : '弱'}：${c.strong ? G.TRAITS[t].strong : G.TRAITS[t].weak}`; };
+  const traitSel = (p, name, label, filter) => ({ type: 'select', name, label, options: G.TRAIT_ORDER.filter(t => !G.trait(p, t) && (!filter || filter(t))).map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}（G${G.traitCost(st, p, t).G}）` })), desc: traitDesc(p, name) });
+  // sel＝形質を選ぶ項目名。指定時はその項目で IM／DA を選んだときだけ表示する
+  const imSel = (sel) => Object.assign(resSel('res', '代謝亢進(IM)の資源'), sel ? { when: v => v[sel] === 'IM' } : {});
+  const daSel = (sel) => Object.assign({ type: 'select', name: 'track', label: '適応効率(DA)のトラック', options: G.TRACKS.map(t => ({ value: t, label: G.TRACK_INFO[t].name })) }, sel ? { when: v => v[sel] === 'DA' } : {});
 
   // ---------- 画面：入口 ----------
   function render() {
@@ -466,7 +474,8 @@
     if (id === 'TRT') return toast('形質プールのカードをクリックしてください');
     if (s.group === 'mass') {
       if (id === 'MI') { const r = await ask('大量消費(知性)：G4以下の形質を異なる2種', [{ type: 'multi', name: 'traits', label: '形質（2つまで・Ctrlで複数選択）', options: G.TRAIT_ORDER.filter(t => G.TRAITS[t].cost[0] <= 4 && !G.trait(p, t)).map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}` })) }], { note: `コスト P${G.massCost(p, 'MI')}` }); if (!r) return; return submit({ pid: p.id, type: 'mass', kind: 'MI', traits: r.traits.slice(0, 2) }); }
-      return confirm(`${s.name}：P${G.massCost(p, id)}を支払います。実行しますか？`) && submit({ pid: p.id, type: 'mass', kind: id });
+      const mc = G.massCost(p, id), floor = G.MASS_MIN[id === 'MB' ? 'body' : 'other'];
+      return confirm(`${s.name}：P${mc}を支払います${mc === floor ? `（軽減後の下限P${floor}）` : ''}。実行しますか？`) && submit({ pid: p.id, type: 'mass', kind: id });
     }
     if (id === 'GEM') { const r = await ask('宝石セット得点カード', [{ type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }], { note: `コスト G${G.gemsetPrice(p)} → 仮想宝石+1（現在 ${p.gemsets}）` }); if (!r) return; return submit({ pid: p.id, type: 'gemset', useL: +r.useL }); }
     if (id === 'SCAN') { const cands = G.scanCandidates(st, p); if (!cands.length) return toast('参照できる他プレイヤーがいません（全員Lv1）', true); const r = await ask('環境スキャン（E5）', [{ type: 'select', name: 'tgt', label: '参照先', options: cands.map((c, i) => ({ value: i, label: `${st.players[c.pid].name} の ${G.TRACK_INFO[c.track].name} Lv${c.lv} → ${RES_JP[G.TRACK_INFO[c.track].res]}+${c.lv * 2}` })) }, { type: 'select', name: 'useL', label: '生命核をEの代わりに', options: lOpts(p) }]); if (!r) return; return submit({ pid: p.id, type: 'scan', target: cands[+r.tgt], useL: +r.useL }); }
@@ -487,11 +496,11 @@
     if (G.trait(p, id)) {
       const from = id; const targets = G.TRAIT_ORDER.filter(t => !G.trait(p, t) && G.TRAITS[t].cost[0] > G.TRAITS[from].cost[0]);
       if (!targets.length) return toast('アップグレード先がありません', true);
-      const r = await ask(`形質アップグレード：${from} を手放して上位へ`, [{ type: 'select', name: 'to', label: '上位形質', options: targets.map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}（表示G${G.TRAITS[t].cost[0]}/${G.TRAITS[t].cost[1]}）` })) }, { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel(), daSel()], { note: 'コスト＝表示コストの差額＋G1（下限G1）。即時効果の形質は手放せません' }); if (!r) return;
+      const r = await ask(`形質アップグレード：${from} を手放して上位へ`, [{ type: 'select', name: 'to', label: '上位形質', options: targets.map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}（表示G${G.TRAITS[t].cost[0]}/${G.TRAITS[t].cost[1]}）` })), desc: traitDesc(p, 'to') }, { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel('to'), daSel('to')], { note: 'コスト＝表示コストの差額＋G1（下限G1）。即時効果の形質は手放せません' }); if (!r) return;
       return submit({ pid: p.id, type: 'upgrade', from, to: r.to, useL: +r.useL, res: r.res, track: r.track });
     }
     const c = G.traitCost(st, p, id);
-    const r = await ask(`形質購入 ${id} ${G.TRAITS[id].name}`, [{ type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel(), daSel()], { note: `コスト G${c.G}（${c.strong ? '強' : '弱'}）：${c.strong ? G.TRAITS[id].strong : G.TRAITS[id].weak}` }); if (!r) return;
+    const r = await ask(`形質購入 ${id} ${G.TRAITS[id].name}`, [{ type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, ...(id === 'IM' ? [imSel()] : []), ...(id === 'DA' ? [daSel()] : [])], { note: `コスト G${c.G}（${c.strong ? '強' : '弱'}）：${c.strong ? G.TRAITS[id].strong : G.TRAITS[id].weak}` }); if (!r) return;
     submit({ pid: p.id, type: 'trait', trait: id, useL: +r.useL, res: r.res, track: r.track });
   }
   async function onCard(p, c) {
@@ -517,7 +526,7 @@
         if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit({ pid: p.id, type: 'resolve', dir: r.dir, n: r.n });
       }
       if (pd.type === 'dgBuy') {
-        const r = await ask(`ラウンド開始時：遺伝子図書館で形質1枚を-${pd.disc}Gで購入`, [traitSel(p, 'trait', '形質'), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel(), daSel()], { skipLabel: '買わない', noCancel: true });
+        const r = await ask(`ラウンド開始時：遺伝子図書館で形質1枚を-${pd.disc}Gで購入`, [traitSel(p, 'trait', '形質'), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel('trait'), daSel('trait')], { skipLabel: '買わない', noCancel: true });
         if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit({ pid: p.id, type: 'resolve', trait: r.trait, useL: +r.useL, res: r.res, track: r.track });
       }
       if (pd.type === 'freeMass') {
@@ -525,7 +534,7 @@
         if (!r) return; return submit({ pid: p.id, type: 'resolve', kind: r.kind, traits: r.traits });
       }
       if (pd.type === 'rewardTrait') {
-        const r = await ask('知性Lv3★先着：今すぐ形質1枚をG-3で購入できます', [traitSel(p, 'trait', '形質', null), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel(), daSel()], { skipLabel: '見送る', noCancel: true });
+        const r = await ask('知性Lv3★先着：今すぐ形質1枚をG-3で購入できます', [traitSel(p, 'trait', '形質', null), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel('trait'), daSel('trait')], { skipLabel: '見送る', noCancel: true });
         if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit({ pid: p.id, type: 'resolve', trait: r.trait, useL: +r.useL, res: r.res, track: r.track });
       }
       if (pd.type === 'cvIncome') { const r = await ask(`収斂膜：好きな資源+${pd.n}`, [resSel('res', '資源')], { noCancel: true }); if (!r) return; return submit({ pid: p.id, type: 'resolve', res: r.res }); }

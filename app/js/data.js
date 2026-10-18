@@ -14,7 +14,7 @@
   G.STEP_COST = [0, 2, 3, 5, 8]; // index = 現在Lv（1→2 は STEP_COST[1]）
   G.BASE_INCOME = { E: 3, G: 1, P: 4 };
   G.MASS_COST = 20;
-  G.MASS_MIN = { other: 8, body: 12 };
+  G.MASS_MIN = { other: 8, body: 10 }; // 身体は2026-10-18に12→10
   G.BREED_COST = [30, 50];
   G.GEMSET_BASE = 10; G.GEMSET_FLOOR = 5;
   G.ORGAN_COST = [[2, 1], [3, 1], [5, 1]]; // [E,G] 階層1..3（強）。弱はG0
