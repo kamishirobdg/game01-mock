@@ -81,6 +81,32 @@ button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
 .st-nav { display:flex; justify-content:space-between; align-items:center; }
 .legend { font-size:12px; color:var(--mute); }
 .soon { color:var(--mute); font-size:13px; }
+/* タブ */
+.tabs { display:flex; gap:6px; flex-wrap:wrap; margin:10px 0 0; }
+.tabbody { border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-top:8px; font-size:14px; }
+.tabbody h4 { margin:2px 0 2px; font-size:13px; color:var(--mute); } .tabbody ul { margin:2px 0 8px; padding-left:1.3em; }
+/* トラック */
+.lanev { margin-top:8px; display:grid; gap:4px; }
+.lanev .nd { display:grid; grid-template-columns:62px 1fr; gap:8px; border:1px solid var(--line); border-left-width:5px; border-radius:6px; padding:6px 10px; font-size:13px; }
+.lanev .nd.star { background:var(--hl); }
+.lanev .nd b { font-size:13px; } .lanev .nd small { display:block; color:var(--mute); font-size:11px; }
+.lanev .rs { display:block; } .lanev .rw { display:block; color:var(--mute); }
+.race { border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:10px 0; }
+.race-h { font-size:13px; color:var(--mute); }
+.race-out { margin-top:8px; font-size:13px; display:grid; gap:4px; }
+.race-out div { padding:4px 8px; border-radius:6px; background:var(--bg); }
+.race-out div.first { background:var(--okbg); }
+/* 倍率 */
+.coef { border:1px solid var(--line); border-radius:8px; padding:12px; text-align:center; }
+.coef-toks { display:flex; justify-content:center; gap:10px; }
+.coef-toks span { display:flex; flex-direction:column; align-items:center; font-size:11px; color:var(--mute); }
+.coef-toks i { width:30px; height:30px; border-radius:50%; display:block; margin-bottom:2px; }
+.coef-toks i.W { background:var(--ink); } .coef-toks i.AT { border:3px solid var(--ink); } .coef-toks i.S { background:var(--hlline); box-shadow:0 0 0 3px var(--ink); }
+.coef-x { font-size:28px; font-weight:800; margin:6px 0; }
+.coef .choices { justify-content:center; }
+.coef-msg { font-size:13px; color:var(--mute); min-height:1.6em; margin-top:6px; }
+.kv3 span { font-size:13px; } .kv3 b { font-size:16px; }
+@media (max-width: 480px) { .kv3 { grid-template-columns:1fr; } }
 footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; color:var(--mute); }
 </style>
 </head>
@@ -89,7 +115,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   <div class="bar"><b>game01 遊び方</b><a class="sp" href="../app/">アプリを開く</a></div>
   <nav class="toc">
     <a href="#c0">0 全体像</a><a href="#c1">1 画面</a><a href="#c2">2 ラウンド</a>
-    <a class="off">3 資源</a><a class="off">4 進化トラック</a><a class="off">5 倍率</a><a class="off">6 形質・器官</a><a class="off">7 得点</a><a class="off">8 種族</a>
+    <a href="#c3">3 資源</a><a href="#c4">4 進化トラック</a><a href="#c5">5 倍率</a><a class="off">6 形質・器官</a><a class="off">7 得点</a><a class="off">8 種族</a>
   </nav>
 </header>
 
@@ -157,9 +183,75 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 </div>
 </section>
 
+<!-- 3 -->
+<section id="c3">
+<h2><span class="no">3</span>資源4種</h2>
+<p>資源は4種類です。<strong>EとGは別の資源</strong>で、そのままでは代わりに使えません。橋渡しは共用盤の「資源変換」か、万能資源の生命核（L）です。</p>
+<div class="tabs" id="res-tabs"></div>
+<div class="tabbody" id="res-body"></div>
+<h3>橋渡し（共用盤・何人でも）</h3>
+<p><strong>資源変換</strong>：<span id="cnv"></span>（1回の行動で1種類、量は自由）。<br><strong>予備動員</strong>：<span id="rsv"></span>。置き場に困ったときの受け皿です。</p>
+<div class="ex" data-ex="em1">
+  <div class="q">早取り盤の「固定E強」を前の人に使われた。それでも使いたい。</div>
+  <div class="choices"><button data-a="0">使えない</button><button data-a="1">生命核1個で使える</button></div>
+  <div class="ans"></div>
+</div>
+<div class="ex" data-ex="em2">
+  <div class="q">「大量消費（身体）」を前の人に使われた。生命核で使える？</div>
+  <div class="choices"><button data-a="0">使えない</button><button data-a="1">生命核1個で使える</button></div>
+  <div class="ans"></div>
+</div>
+</section>
+
+<!-- 4 -->
+<section id="c4">
+<h2><span class="no">4</span>進化トラックと先着＝強</h2>
+<p>進化トラックは4本、それぞれLv1〜5です。1段進めるコストは <strong id="stepcost"></strong>。<strong>Wが必要</strong>で、何人でも同じ段に進めます。</p>
+<p class="prov">代わりの払い方：身体はEの代わりに個体数（Eの3倍）、知性は遺伝子（Eと同数）でも払えます。1段ごとにどちらか一方で払います。</p>
+<div class="tabs" id="trk-tabs"></div>
+<div class="lanev" id="trk-body"></div>
+<h3>Lv3・Lv5は「先着＝強」</h3>
+<p>Lv3とLv5に着くと、到達した全員が<strong>宝石を1個</strong>もらえます。ただし報酬は、<strong>最初に着いた人が強い方、後から着いた人は弱い方</strong>です。さらに<strong>Lv5の一番乗りだけは宝石2個</strong>です。</p>
+<div class="race">
+  <div class="race-h">Lv5に着いた順にタップ：</div>
+  <div class="choices" id="race-btns"></div>
+  <div id="race-out" class="race-out"></div>
+</div>
+<div class="tip">トラックを進めずに強い効果を得る道もあります。早取り盤の<strong>大量消費</strong>（個体数<span class="mass"></span>）は、トラックごとの強力な効果を1回得られます（身体なら宝石1個）。</div>
+<div class="ex" data-ex="lv5">
+  <div class="q">知性のLv5に2番目に着いた。宝石は何個？</div>
+  <div class="choices"><button data-a="0">0個</button><button data-a="1">1個</button><button data-a="2">2個</button></div>
+  <div class="ans"></div>
+</div>
+</section>
+
+<!-- 5 -->
+<section id="c5">
+<h2><span class="no">5</span>倍率（係数）を育てる</h2>
+<p>最終得点の倍率は、<strong>手元の5コマの合計</strong>です。AT＝0、W＝1、強W＝2。最初はW3個とAT2個なので<strong>×3</strong>、最大<strong>×7</strong>です。コマが育っても<strong>行動は1ラウンド5回のまま</strong>なので、損はありません。</p>
+<div class="coef">
+  <div class="coef-toks" id="cf-toks"></div>
+  <div class="coef-x" id="cf-x"></div>
+  <div class="choices" id="cf-btns"></div>
+  <div class="coef-msg" id="cf-msg"></div>
+</div>
+<h3>倍率を上げる3つの道</h3>
+<div class="kv kv3">
+  <div><b><svg class="ico c-p"><use href="#ico-pop"/></svg> 繁殖</b><span id="cf-breed"></span></div>
+  <div><b>器官</b><span>同じ系統の器官を3枚そろえるたびに +1</span></div>
+  <div><b><svg class="ico c-g"><use href="#ico-g"/></svg> 形質</b><span>4枚目と8枚目を取ったときに +1</span></div>
+</div>
+<p class="prov">器官・形質の+1は、ATが残っていればATをWに、無ければWを強Wに自動で変えます。×6・×7に届くのは器官か形質だけです。</p>
+<div class="ex" data-ex="coef">
+  <div class="q">宝石5個のまま、倍率が×5から×6に上がった。得点はいくつ増える？</div>
+  <div class="choices"><button data-a="0">10点</button><button data-a="1">50点</button><button data-a="2">60点</button></div>
+  <div class="ans"></div>
+</div>
+</section>
+
 <section>
-<h2><span class="no">3〜8</span>準備中</h2>
-<p class="soon">資源・進化トラック・倍率・形質と器官・得点・種族の選び方を順に追加します。</p>
+<h2><span class="no">6〜8</span>準備中</h2>
+<p class="soon">形質と器官・得点・種族の選び方を追加します。</p>
 </section>
 </main>
 <footer>ルールの正本は design.md。数値は data.js（アプリと同じもの）から読み込んでいます。</footer>
@@ -181,6 +273,10 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
     score: { ok: 1, text: '（4）×10×4＝160、おまけ点（3＋2）×7＝35、合計195点。宝石1個の価値は倍率で変わります（×4なら40点、×7なら70点）。' },
     token: { ok: 1, text: '進化トラックを進めるにはWが必要です。Wを先に使い切らないよう、手番の順番を考えましょう。' },
     order: { ok: 1, text: '第2ラウンドからは、ラウンド開始時に「実宝石の少ない順」に並べ替えます（同数なら前のラウンドの順）。先行している人ほど後手に回ります。' },
+    em1: { ok: 1, text: '「緊急発進」です。生命核1個を払うと、使用済みの資源獲得スロットを使えます（コマは普段どおり1個使います）。' },
+    em2: { ok: 0, text: '緊急発進で使えるのは資源獲得スロットだけです。大量消費・形質購入・宝石セットは対象外です。' },
+    lv5: { ok: 1, text: '2番目以降は弱い方の報酬と宝石1個です。宝石2個は一番乗りだけの特典です。' },
+    coef: { ok: 1, text: '宝石1個の価値は「10×倍率」。宝石5個×10×（6−5）＝50点増えます。宝石が多いほど倍率の価値も上がります。' },
   };
   document.querySelectorAll('.ex').forEach(box => {
     const d = EX[box.dataset.ex], ans = box.querySelector('.ans');
@@ -252,6 +348,79 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   $('prev').addEventListener('click', () => { cur = Math.max(0, cur - 1); draw(); });
   $('next').addEventListener('click', () => { cur = Math.min(STEPS.length - 1, cur + 1); draw(); });
   draw();
+
+  // 共通：タブ
+  const tabs = (wrap, body, items, renderBody) => {
+    let on = 0;
+    const paint = () => { wrap.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === on)); body.innerHTML = renderBody(items[on]); };
+    items.forEach((it, k) => { const b = document.createElement('button'); b.innerHTML = it.label; b.addEventListener('click', () => { on = k; paint(); }); wrap.appendChild(b); });
+    paint();
+  };
+  const slot = id => G.SLOT_BY_ID[id].text;
+  const sc = G.STEP_COST.slice(1);
+
+  // ---- 3 資源 ----
+  $('cnv').textContent = slot('CNV');
+  $('rsv').textContent = slot('RSV');
+  const RES = [
+    { label: E + '　エネルギー', get: [`収入 +${inc.E}/R`, '早取り盤の資源獲得（固定E強など）', '個人カード'],
+      use: [`進化トラックを進める（${sc.join('/')}E）`, '器官をつくる', '環境スキャン・資源変換'] },
+    { label: Gg + '　遺伝子', get: [`収入 +${inc.G}/R`, '早取り盤の資源獲得（固定G強など）', '個人カード'],
+      use: ['形質を買う', '器官をつくる（＋G1）', '宝石セット得点カード', `Pブースト購入（${slot('PB')}）`, '知性トラックをEの代わりに進める（同数）'] },
+    { label: P + '　個体数', get: [`収入 +${inc.P}/R`, `早取り盤の「P増加」（${slot('P8')}）`, 'Pブースト購入'],
+      use: [`大量消費（P${G.MASS_COST}）`, `繁殖で倍率を上げる（P${G.BREED_COST.join('・P')}）`, '身体トラックをEの代わりに進める（Eの3倍）', '資源変換（P8→E3／P8→G2）'] },
+    { label: L + '　生命核', get: ['毎ラウンド1個だけ（他に入手手段なし）', '受け取るたびに残りラウンドが1減る'],
+      use: ['EかGの代わりに払う（1個＝3つ分・お釣りなし）', '適応進化：Lv1のトラックを1段進める（Wが必要）', '緊急発進：使用済みの資源獲得スロットを使う'] },
+  ];
+  tabs($('res-tabs'), $('res-body'), RES, r => `<h4>主な入手</h4><ul>${r.get.map(x => `<li>${x}</li>`).join('')}</ul><h4>主な使い道</h4><ul>${r.use.map(x => `<li>${x}</li>`).join('')}</ul>`);
+
+  // ---- 4 進化トラック ----
+  $('stepcost').textContent = sc.map((c, i) => `Lv${i + 1}→${i + 2}：${c}E`).join('　');
+  document.querySelectorAll('.mass').forEach(el => { el.textContent = G.MASS_COST; });
+  const COLOR = { red: 'var(--red)', blue: 'var(--blue)', white: 'var(--white)', green: 'var(--green)' };
+  tabs($('trk-tabs'), $('trk-body'), G.TRACKS.map(t => ({ t, label: G.TRACK_INFO[t].name })), ({ t }) => {
+    const info = G.TRACK_INFO[t], rw = G.TRACK_REWARDS[t];
+    return [1, 2, 3, 4, 5].map(l => {
+      const star = l === 3 || l === 5; const r = rw[l] || 'スタート';
+      const parts = star ? r.split('／').map(s => s.replace(/^(強|弱)：/, '')) : [r];
+      const body = star ? `<span class="rs">先着：${parts[0]}</span><span class="rw">後着：${parts[1]}</span>` : `<span>${r}</span>`;
+      return `<div class="nd ${star ? 'star' : ''}" style="border-left-color:${COLOR[info.color]}"><div><b>Lv${l}${star ? ' ' + ico('ico-gem') : ''}</b>${l > 1 ? `<small>${sc[l - 2]}Eで到達</small>` : ''}</div><div>${body}</div></div>`;
+    }).join('');
+  });
+  const race = [];
+  const drawRace = () => {
+    $('race-out').innerHTML = race.length ? race.map((p, k) => `<div class="${k === 0 ? 'first' : ''}">${k + 1}番目 ${p}：${k === 0 ? '強い報酬＋宝石2個' : '弱い報酬＋宝石1個'}</div>`).join('') : '';
+    $('race-btns').querySelectorAll('button').forEach(b => { b.disabled = race.includes(b.textContent); });
+  };
+  ['P1', 'P2', 'P3'].forEach(n => { const b = document.createElement('button'); b.textContent = n; b.addEventListener('click', () => { race.push(n); drawRace(); }); $('race-btns').appendChild(b); });
+  const rb = document.createElement('button'); rb.textContent = 'やり直す'; rb.addEventListener('click', () => { race.length = 0; drawRace(); }); $('race-btns').appendChild(rb);
+  drawRace();
+
+  // ---- 5 倍率 ----
+  $('cf-breed').textContent = `個体数${G.BREED_COST[0]}で×4、${G.BREED_COST[1]}で×5（ATをWにする。ATが残っていないと使えず、繁殖だけでは×5まで）`;
+  const cf = { toks: ['W', 'W', 'W', 'AT', 'AT'], breed: 0, organ: 0, trait: 0, msg: '' };
+  const VAL = { AT: 0, W: 1, S: 2 }, NAME = { AT: 'AT', W: 'W', S: '強W' };
+  const up = why => {
+    const i = cf.toks.indexOf('AT');
+    if (i >= 0) { cf.toks[i] = 'W'; return `${why}：ATがWになった`; }
+    const j = cf.toks.lastIndexOf('W'); if (j >= 3) { cf.toks[j] = 'S'; return `${why}：Wが強Wになった`; }
+    return `${why}：もう×7（上限）です`;
+  };
+  const CFB = [
+    { label: () => cf.breed >= 2 ? '繁殖（済）' : cf.toks.includes('AT') ? `繁殖（P${G.BREED_COST[cf.breed]}）` : '繁殖（ATなし）', ok: () => cf.breed < 2 && cf.toks.includes('AT'),
+      run: () => { cf.breed++; return up('繁殖'); } },
+    { label: () => '器官の系統完成', ok: () => cf.toks.some(t => t !== 'S') && cf.toks.slice(3).some(t => t !== 'S'), run: () => { cf.organ++; return up(`器官の系統完成（${cf.organ}回目）`); } },
+    { label: () => cf.trait < 2 ? `形質${cf.trait === 0 ? 4 : 8}枚目` : '形質（済）', ok: () => cf.trait < 2 && cf.toks.slice(3).some(t => t !== 'S'), run: () => { cf.trait++; return up(`形質${cf.trait === 1 ? 4 : 8}枚目`); } },
+    { label: () => '最初に戻す', ok: () => true, run: () => { cf.toks = ['W', 'W', 'W', 'AT', 'AT']; cf.breed = cf.organ = cf.trait = 0; return ''; } },
+  ];
+  const drawCf = () => {
+    $('cf-toks').innerHTML = cf.toks.map(t => `<span><i class="${t}"></i>${NAME[t]}</span>`).join('');
+    $('cf-x').textContent = '×' + cf.toks.reduce((s, t) => s + VAL[t], 0);
+    $('cf-msg').textContent = cf.msg || 'ボタンを押して倍率の上がり方を試せます';
+    $('cf-btns').innerHTML = '';
+    CFB.forEach(c => { const b = document.createElement('button'); b.textContent = c.label(); b.disabled = !c.ok(); b.addEventListener('click', () => { cf.msg = c.run(); drawCf(); }); $('cf-btns').appendChild(b); });
+  };
+  drawCf();
 })();
 </script>
 </body>
