@@ -107,6 +107,24 @@ button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
 .coef-msg { font-size:13px; color:var(--mute); min-height:1.6em; margin-top:6px; }
 .kv3 span { font-size:13px; } .kv3 b { font-size:16px; }
 @media (max-width: 480px) { .kv3 { grid-template-columns:1fr; } }
+ul.pts { margin:4px 0 8px; padding-left:1.3em; font-size:14px; } ul.pts li { margin:2px 0; }
+.clist { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:6px; margin-top:8px; }
+.clist .cd { border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13px; }
+.clist .cd b { display:block; font-size:14px; } .clist .cd .c { float:right; font-size:12px; color:var(--mute); }
+.clist .cd .s { display:block; } .clist .cd .w { display:block; color:var(--mute); }
+.clist .cd.beg { border-color:var(--hlline); }
+.clist .tag { display:inline-block; font-size:11px; padding:0 6px; border-radius:8px; background:var(--bg); border:1px solid var(--line); margin-left:4px; vertical-align:1px; }
+.calc { border:1px solid var(--line); border-radius:8px; padding:12px; }
+.calc label { display:grid; grid-template-columns:96px 1fr 34px; align-items:center; gap:8px; font-size:13px; margin:4px 0; }
+.calc input[type=range] { width:100%; } .calc output { text-align:right; font-weight:700; }
+.calc .tot { font-size:22px; font-weight:800; text-align:center; margin-top:8px; } .calc .bd { text-align:center; font-size:12px; color:var(--mute); }
+.routes { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:8px; }
+.routes > div { border:1px solid var(--line); border-radius:8px; padding:8px 10px; } .routes b { display:block; } .routes span { font-size:13px; color:var(--mute); }
+table.qt { border-collapse:collapse; width:100%; font-size:13px; }
+table.qt th, table.qt td { border:1px solid var(--line); padding:5px 8px; text-align:left; vertical-align:top; } table.qt th { width:30%; background:var(--bg); font-weight:600; }
+dl.gl { display:grid; grid-template-columns:max-content 1fr; gap:4px 12px; font-size:13px; margin:0; }
+dl.gl dt { font-weight:700; } dl.gl dd { margin:0; color:var(--mute); }
+@media (max-width: 480px) { dl.gl { grid-template-columns:1fr; } dl.gl dd { margin-bottom:6px; } }
 footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; color:var(--mute); }
 </style>
 </head>
@@ -115,7 +133,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   <div class="bar"><b>game01 遊び方</b><a class="sp" href="../app/">アプリを開く</a></div>
   <nav class="toc">
     <a href="#c0">0 全体像</a><a href="#c1">1 画面</a><a href="#c2">2 ラウンド</a>
-    <a href="#c3">3 資源</a><a href="#c4">4 進化トラック</a><a href="#c5">5 倍率</a><a class="off">6 形質・器官</a><a class="off">7 得点</a><a class="off">8 種族</a>
+    <a href="#c3">3 資源</a><a href="#c4">4 進化トラック</a><a href="#c5">5 倍率</a><a href="#c6">6 形質・器官</a><a href="#c7">7 得点</a><a href="#c8">8 種族</a><a href="#ax">付録</a>
   </nav>
 </header>
 
@@ -249,9 +267,75 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 </div>
 </section>
 
-<section>
-<h2><span class="no">6〜8</span>準備中</h2>
-<p class="soon">形質と器官・得点・種族の選び方を追加します。</p>
+<!-- 6 -->
+<section id="c6">
+<h2><span class="no">6</span>形質と器官</h2>
+<p>どちらも「持っていると効き続けるカード」です。<strong>同じカードを何人でも取れます</strong>が、<strong>最初に取った人が強い効果</strong>、後から取った人は弱い効果（そのぶん安い）になります。</p>
+<h3><svg class="ico c-g"><use href="#ico-g"/></svg> 形質（遺伝子で買う・14種）</h3>
+<ul class="pts">
+  <li>早取り盤の「形質購入」で買います（1ラウンドに1人）。知性Lv3の一番乗り・大量消費（知性）などの特典で手に入れるときは、この枠を使いません。</li>
+  <li><strong>4枚目・8枚目</strong>で倍率+1。1枚ごとに終了時の発展度+7点。</li>
+  <li>持っている形質を、より高い形質に<strong>買い替え</strong>られます（差額＋G1。枚数は変わりません）。</li>
+</ul>
+<div class="tabs" id="tr-tabs"></div>
+<div class="clist" id="tr-body"></div>
+<h3>器官（主にエネルギーでつくる）</h3>
+<ul class="pts">
+  <li>器官は8系統×3段階。毎ゲーム<strong>4系統</strong>が並びます（初心者セットアップは連結・翻訳・転流・律動で固定＝下のタブの★）。共用盤なので何人でも何回でもつくれます。</li>
+  <li>コスト：<span id="org-cost"></span>。後からつくる人（弱）は遺伝子が要りません。</li>
+  <li>系統の中は<strong>段階順</strong>（1→2→3）にしかつくれません。</li>
+  <li><strong>同じ系統3枚</strong>で倍率+1。<strong>4系統を1枚ずつ</strong>そろえると体制完成：好きな資源1種の収入+1と、終了時+50点。</li>
+</ul>
+<div class="tabs" id="og-tabs"></div>
+<div class="clist" id="og-body"></div>
+<div class="ex" data-ex="organ">
+  <div class="q">連結の1段階目（Li1）を持っていない。連結の2段階目（Li2）をつくれる？</div>
+  <div class="choices"><button data-a="0">つくれる</button><button data-a="1">つくれない</button></div>
+  <div class="ans"></div>
+</div>
+</section>
+
+<!-- 7 -->
+<section id="c7">
+<h2><span class="no">7</span>得点と勝ち筋</h2>
+<div class="formula">
+  （実宝石＋仮想宝石）× 10 × 倍率<br>＋（形質＋協調）× 7 ＋ 体制完成 50
+</div>
+<h3>仮想宝石</h3>
+<ul class="pts">
+  <li><strong>コンボ</strong>：盤の下に並ぶ色の組み合わせ（2色4種＋3色2種）。その色の宝石を全部持っていれば、コンボ1つにつき仮想宝石+1。3色と2色は別々に数えます。<span id="combo-beg"></span></li>
+  <li><strong>宝石セット得点カード</strong>（早取り盤）：遺伝子（10−持っている形質の数・最低5）で仮想宝石+1。</li>
+</ul>
+<h3>協調</h3>
+<p>協調は終了時に1つ7点。さらに早取り盤の資源獲得で、<strong>協調の数だけ同じ資源が増えます</strong>（例：協調2で「固定E強」なら+5E+2E）。最大<span id="coopmax"></span>。</p>
+<h3>得点計算機</h3>
+<div class="calc" id="calc"></div>
+<h3>勝ち筋の例</h3>
+<div class="routes">
+  <div><b>宝石を急ぐ</b><span>トラックを早く進めてLv3・Lv5の一番乗りを狙う。身体の大量消費でも宝石が取れる。手番が後ろに回りやすい。</span></div>
+  <div><b>器官を広げる</b><span>器官で倍率と収入を育て、体制完成の+50を取る。前半は宝石が少なめ。</span></div>
+  <div><b>形質を集める</b><span>形質4・8枚で倍率+1、1枚7点。形質が多いほど宝石セットも安くなる。</span></div>
+  <div><b>個体数で押す</b><span>個体数を繁殖（倍率）と大量消費に回す。群泳双盤と相性が良い。</span></div>
+</div>
+<p class="prov">勝ち筋は混ぜて構いません。どの道が強すぎる・弱すぎるかを見るのが今回のテストプレイの目的です。</p>
+<p>同点のときは、実宝石が多い人 → 形質＋協調が多い人 → 残った資源（E＋G＋P）が多い人の順に上位です。</p>
+</section>
+
+<!-- 8 -->
+<section id="c8">
+<h2><span class="no">8</span>種族の選び方</h2>
+<p>種族ごとに初期資源とパッシブ（最初から持っている特典）が違います。<strong>手番値が大きいほど第1ラウンドの手番が早く</strong>なります。迷ったら<strong>万列協和衆</strong>がおすすめです。</p>
+<div class="clist" id="sp-body"></div>
+<p class="prov">ゲーム設定で「パッシブ有」を外すと、パッシブ無しで遊べます（意図的に弱くなります）。</p>
+</section>
+
+<!-- 付録 -->
+<section id="ax">
+<h2><span class="no">付録</span>早見表と用語集</h2>
+<h3>早見表</h3>
+<table class="qt" id="qt"></table>
+<h3>用語集</h3>
+<dl class="gl" id="gl"></dl>
 </section>
 </main>
 <footer>ルールの正本は design.md。数値は data.js（アプリと同じもの）から読み込んでいます。</footer>
@@ -276,6 +360,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
     em1: { ok: 1, text: '「緊急発進」です。生命核1個を払うと、使用済みの資源獲得スロットを使えます（コマは普段どおり1個使います）。' },
     em2: { ok: 0, text: '緊急発進で使えるのは資源獲得スロットだけです。大量消費・形質購入・宝石セットは対象外です。' },
     lv5: { ok: 1, text: '2番目以降は弱い方の報酬と宝石1個です。宝石2個は一番乗りだけの特典です。' },
+    organ: { ok: 1, text: '系統の中は段階順です。自分の手元にLi1があってはじめてLi2をつくれます（他の人のLi1は関係ありません）。' },
     coef: { ok: 1, text: '宝石1個の価値は「10×倍率」。宝石5個×10×（6−5）＝50点増えます。宝石が多いほど倍率の価値も上がります。' },
   };
   document.querySelectorAll('.ex').forEach(box => {
@@ -421,6 +506,77 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
     CFB.forEach(c => { const b = document.createElement('button'); b.textContent = c.label(); b.disabled = !c.ok(); b.addEventListener('click', () => { cf.msg = c.run(); drawCf(); }); $('cf-btns').appendChild(b); });
   };
   drawCf();
+
+  // ---- 6 形質・器官 ----
+  const CAT = [{ k: 'I', label: '収入' }, { k: 'D', label: 'コスト減' }, { k: 'M', label: '大量消費・繁殖' }, { k: 'J', label: '跳躍' }];
+  tabs($('tr-tabs'), $('tr-body'), CAT, c => G.TRAIT_ORDER.filter(id => G.TRAITS[id].cat === c.k).map(id => {
+    const t = G.TRAITS[id];
+    return `<div class="cd"><span class="c">${ico('ico-g', 'c-g')}強${t.cost[0]}／弱${t.cost[1]}</span><b>${id} ${t.name}</b><span class="s">強：${t.strong}</span><span class="w">弱：${t.weak}</span></div>`;
+  }).join(''));
+  $('org-cost').textContent = G.ORGAN_COST.map(([e, g], i) => `${i + 1}段階目 E${e}+G${g}`).join('／');
+  const BEG = G.ORGAN_FIELD.map(id => G.ORGANS[id].lin).filter((v, i, a) => a.indexOf(v) === i);
+  const LIN = Object.keys(G.LINEAGES).map(l => ({ l, label: G.LINEAGES[l] + (BEG.includes(l) ? '★' : '') }));
+  tabs($('og-tabs'), $('og-body'), LIN, ({ l }) => {
+    const type = G.LINEAGE_TYPE.cumulative.includes(l) ? '建てるほど効く' : '使うたび効く';
+    return [1, 2, 3].map(n => { const id = l + n, o = G.ORGANS[id];
+      return `<div class="cd ${BEG.includes(l) ? 'beg' : ''}"><span class="c">${n}段階目</span><b>${id} ${o.name}<span class="tag">${type}</span></b><span class="s">強：${o.strong}</span><span class="w">弱：${o.weak}</span></div>`; }).join('');
+  });
+
+  // ---- 7 得点 ----
+  const cname = c => c.map(t => G.TRACK_INFO[t].jp).join('+');
+  $('combo-beg').textContent = '初心者セットアップのコンボは ' + G.BEGINNER_COMBOS.two.map(i => cname(G.COMBOS2[i])).concat(G.BEGINNER_COMBOS.three.map(i => cname(G.COMBOS3[i]))).join('・') + '。';
+  $('coopmax').textContent = G.COOP_MAX;
+  const CALC = [
+    { k: 'real', label: '実宝石', min: 0, max: 10, v: 4 }, { k: 'vg', label: '仮想宝石', min: 0, max: 8, v: 1 },
+    { k: 'cf', label: '倍率', min: 3, max: 7, v: 4 }, { k: 'tr', label: '形質', min: 0, max: 14, v: 3 }, { k: 'co', label: '協調', min: 0, max: G.COOP_MAX, v: 2 },
+  ];
+  const cv = {}; const calc = $('calc');
+  CALC.forEach(c => {
+    cv[c.k] = c.v;
+    const lab = document.createElement('label');
+    lab.innerHTML = `<span>${c.label}</span><input type="range" min="${c.min}" max="${c.max}" value="${c.v}"><output>${c.v}</output>`;
+    lab.querySelector('input').addEventListener('input', e => { cv[c.k] = +e.target.value; lab.querySelector('output').textContent = (c.k === 'cf' ? '×' : '') + cv[c.k]; drawCalc(); });
+    if (c.k === 'cf') lab.querySelector('output').textContent = '×' + c.v;
+    calc.appendChild(lab);
+  });
+  const rg = document.createElement('label'); rg.innerHTML = '<span>体制完成</span><input type="checkbox"><output></output>';
+  rg.querySelector('input').addEventListener('change', e => { cv.reg = e.target.checked; drawCalc(); }); calc.appendChild(rg);
+  const tot = document.createElement('div'); tot.className = 'tot'; const bd = document.createElement('div'); bd.className = 'bd'; calc.appendChild(tot); calc.appendChild(bd);
+  const drawCalc = () => {
+    const core = (cv.real + cv.vg) * 10 * cv.cf, dev = (cv.tr + cv.co) * 7, reg = cv.reg ? 50 : 0;
+    tot.textContent = (core + dev + reg) + '点';
+    bd.textContent = `宝石 ${core}（${cv.real + cv.vg}個×10×${cv.cf}）＋ 発展度 ${dev} ＋ 体制 ${reg}`;
+  };
+  drawCalc();
+
+  // ---- 8 種族 ----
+  $('sp-body').innerHTML = Object.entries(G.SPECIES).sort((a, b) => b[1].order - a[1].order).map(([id, s]) =>
+    `<div class="cd ${id === 'ant' ? 'beg' : ''}"><span class="c">手番値${s.order}</span><b>${s.name}<span class="tag">${s.type}</span></b><span class="s">${s.hint}</span><span class="w">パッシブ：${s.passive}</span><span class="w">初期 E${s.stock.E}／G${s.stock.G}／P${s.stock.P}</span></div>`).join('');
+
+  // ---- 付録 ----
+  const sl = id => `${G.SLOT_BY_ID[id].name}（${slot(id)}）`;
+  const QT = [
+    ['基本収入（毎ラウンド）', `E+${inc.E}　G+${inc.G}　P+${inc.P}　L+1`],
+    ['進化トラック', sc.map((c, i) => `Lv${i + 1}→${i + 2} ${c}E`).join('　') + '（Wが必要。身体はP×3、知性はGでも可）'],
+    ['Lv3・Lv5', '到達で宝石+1。先着は強い報酬。Lv5の一番乗りは宝石2個'],
+    ['資源獲得（早取り）', G.RES_SLOTS.concat('PB').map(id => `${G.SLOT_BY_ID[id].name} ${slot(id)}`).join('／')],
+    ['大量消費（早取り）', ['MB', 'MI', 'MS', 'MM'].map(id => slot(id).replace(/^P20 → /, G.SLOT_BY_ID[id].name.replace('大量消費', '') + ' ')).join('／') + `（P${G.MASS_COST}）`],
+    ['その他（早取り）', [sl('TRT'), sl('GEM')].join('／')],
+    ['共用盤', ['BRD', 'ORG', 'SCAN', 'ADP', 'CNV', 'RSV'].map(sl).join('／')],
+    ['倍率', `×3〜×7。繁殖P${G.BREED_COST.join('・P')}／器官の系統完成／形質4・8枚目で+1`],
+    ['終了と得点', `${G.ROUNDS}ラウンド固定。（実宝石＋仮想宝石）×10×倍率＋（形質＋協調）×7＋体制完成50`],
+  ];
+  $('qt').innerHTML = QT.map(([a, b]) => `<tr><th>${a}</th><td>${b}</td></tr>`).join('');
+  const GL = [
+    ['E／G／P／L', 'エネルギー／遺伝子／個体数／生命核'], ['W', 'ワーカー。トラック進行・繁殖・適応進化に必要'], ['AT', 'アクショントークン。W専用の行動以外に使える'],
+    ['強W', '育ったワーカー。倍率2として数える（行動は1回）'], ['早取り盤', '各枠1ラウンドに1人だけ'], ['共用盤', '何人でも・何回でも'],
+    ['先着＝強', '最初に到達・取得した人が強い効果、後の人は弱い効果'], ['倍率（係数）', '5コマの合計。最終得点の宝石部分に掛かる'],
+    ['大量消費', `個体数${G.MASS_COST}を払う強力な行動（4種）`], ['繁殖', '個体数でATをWにして倍率を上げる'], ['協調', '終了時7点＋資源獲得で同じ資源が増える'],
+    ['仮想宝石', 'コンボ達成や宝石セット得点カードで得る、得点計算上の宝石'], ['系統完成', '同じ系統の器官3枚。倍率+1'], ['体制完成', '4系統の器官を1枚ずつ。収入+1と終了時+50点'],
+    ['緊急発進', '生命核1で使用済みの資源獲得スロットを使う'], ['適応進化', '生命核1でLv1のトラックを1段進める'], ['予備動員', '無料でE+2かG+1。置き場が無いとき用'],
+    ['Wなし実行権', '社会性Lv4・Lv5で得る。コマを使わずに資源獲得スロットを1回使える'],
+  ];
+  $('gl').innerHTML = GL.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('');
 })();
 </script>
 </body>

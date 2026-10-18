@@ -220,6 +220,7 @@
   function renderHeader() {
     const hd = $('#hdr'); hd.innerHTML = '';
     hd.appendChild(h('b', null, 'game01 モック'));
+    hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール'));
     if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'))); return; }
     hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.ROUNDS}`));
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));

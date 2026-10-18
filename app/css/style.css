@@ -6,6 +6,7 @@ body { margin:0; font: 14px/1.45 system-ui, "Segoe UI", "Yu Gothic UI", sans-ser
 #hdr .order .chip { display:inline-block; margin-left:6px; padding:2px 8px; border-radius:10px; background:#eef1f6; font-size:12px; }
 #hdr .order .chip.now { background:var(--hl); font-weight:700; outline:2px solid #e0b000; }
 #hdr .order .chip.done { opacity:.5; }
+#hdr .rulelink { font-size:13px; color:#2f6fdd; }
 #hdr .hbtns { margin-left:auto; display:flex; gap:6px; }
 button { font:inherit; cursor:pointer; border:1px solid var(--line); background:#fff; border-radius:6px; padding:4px 10px; }
 button:hover { background:#f0f3f8; } button:disabled { opacity:.45; cursor:default; }

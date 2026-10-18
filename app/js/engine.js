@@ -207,7 +207,7 @@
   function organCost(st, p, oid) {
     const lin = G.ORGANS[oid].lin; const n = lineageCount(p, lin);
     const tier = G.ORGANS[oid].tier; if (tier !== n + 1) return null; // 階層順に建造
-    const strong = !st.shared.organFirst[oid] || st.shared.organFirst[oid] === p.id;
+    const strong = st.shared.organFirst[oid] === undefined || st.shared.organFirst[oid] === p.id;
     let [e, g] = G.ORGAN_COST[n]; if (!strong) g = 0;
     const ca1 = organ(p, 'Ca1'); if (ca1 && (ca1.strong || p.uses.ca1 < 3)) e -= 1;
     const ca3 = organ(p, 'Ca3'); if (ca3) e -= ca3.strong ? 2 : 1;
@@ -217,7 +217,7 @@
   }
   function traitCost(st, p, tid, viaReward) {
     const t = G.TRAITS[tid];
-    const strong = !st.shared.traitFirst[tid] || st.shared.traitFirst[tid] === p.id || p.alwaysStrong;
+    const strong = st.shared.traitFirst[tid] === undefined || st.shared.traitFirst[tid] === p.id || p.alwaysStrong;
     let c = t.cost[strong ? 0 : 1];
     c -= p.traitDisc;
     const tr1 = organ(p, 'Tr1'); if (tr1 && (tr1.strong || p.uses.tr1 < 3)) c -= 1;
@@ -264,7 +264,7 @@
     opt = opt || {};
     const s = G.SLOT_BY_ID[slotId];
     if (!s.excl) return { bypass: null };
-    if (!st.shared.used[slotId]) { st.shared.used[slotId] = p.id; return { bypass: null }; }
+    if (st.shared.used[slotId] === undefined) { st.shared.used[slotId] = p.id; return { bypass: null }; }
     // 使用済み：突破手段
     if (opt.bodyMass && p.flags.strong['body5']) return { bypass: 'body5' };
     if (!p.round.firstDone) { const o = organ(p, 'Rh3'); if (o && (o.strong || p.uses.rh3 < 3)) { if (!o.strong) p.uses.rh3 += 1; return { bypass: 'Rh3' }; } }
@@ -309,7 +309,7 @@
     let strong = false;
     if (lv === 3 || lv === 5) {
       const key = track + lv;
-      if (!st.shared.firsts[key]) { st.shared.firsts[key] = p.id; strong = true; }
+      if (st.shared.firsts[key] === undefined) { st.shared.firsts[key] = p.id; strong = true; }
       // JI/JB 弱：Lv5★で必ず強効果
       if (lv === 5 && !strong) { const t = trait(p, track === 'intel' ? 'JI' : 'JB'); if (t && !t.strong) strong = true; }
       p.flags.strong[key] = strong;
@@ -352,8 +352,8 @@
     opt = opt || {};
     const t = G.TRAITS[tid];
     if (trait(p, tid)) throw new Error('同じ形質は1枚まで');
-    let strong = forceStrong || !st.shared.traitFirst[tid] || st.shared.traitFirst[tid] === p.id || p.alwaysStrong;
-    if (!st.shared.traitFirst[tid]) st.shared.traitFirst[tid] = p.id;
+    let strong = forceStrong || st.shared.traitFirst[tid] === undefined || st.shared.traitFirst[tid] === p.id || p.alwaysStrong;
+    if (st.shared.traitFirst[tid] === undefined) st.shared.traitFirst[tid] = p.id;
     const rec = { id: tid, strong };
     if (tid === 'IM') rec.res = opt.res || 'E';
     if (tid === 'DA' && strong) rec.track = opt.track || 'body';
@@ -497,7 +497,7 @@
     const from = trait(p, a.from); if (!from) throw new Error('手放す形質を持っていません');
     const defF = G.TRAITS[a.from], defT = G.TRAITS[a.to];
     if (trait(p, a.to)) throw new Error('取得済みの形質へはアップグレードできません');
-    const toStrong = !st.shared.traitFirst[a.to] || st.shared.traitFirst[a.to] === p.id || p.alwaysStrong;
+    const toStrong = st.shared.traitFirst[a.to] === undefined || st.shared.traitFirst[a.to] === p.id || p.alwaysStrong;
     const dispTo = defT.cost[toStrong ? 0 : 1], dispFrom = defF.cost[from.strong ? 0 : 1];
     if (dispTo <= dispFrom) throw new Error('コストの高い形質へのみ');
     let c = dispTo - dispFrom + 1;
@@ -752,7 +752,7 @@
   // ---------- 状況照会（UI用） ----------
   function availability(st, p) {
     const out = {};
-    G.SLOTS.forEach(s => { out[s.id] = { used: !!st.shared.used[s.id], usedBy: st.shared.used[s.id] }; });
+    G.SLOTS.forEach(s => { out[s.id] = { used: st.shared.used[s.id] !== undefined, usedBy: st.shared.used[s.id] }; });
     return out;
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
