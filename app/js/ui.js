@@ -430,7 +430,7 @@
     if (stOrgs.length) { const sa = h('div', { class: 'cards' }, h('b', null, '器官アクション：')); stOrgs.forEach(o => { const reason = can ? check({ pid: p.id, type: 'stAct', organ: o.id, pe: o.id === 'St2' ? 0 : 2, pg: o.id === 'St2' ? 3 : 0 }) : '他プレイヤーの手番'; sa.appendChild(actBtn({ class: 'cardbtn', title: o.strong ? G.ORGANS[o.id].strong : G.ORGANS[o.id].weak, onclick: () => onStAct(p, o) }, reason, h('b', null, `${o.id} ${G.ORGANS[o.id].name}`), h('small', null, o.strong ? G.ORGANS[o.id].strong : G.ORGANS[o.id].weak))); }); box.appendChild(sa); }
     const free = h('div', { class: 'free' }, h('b', null, '無料：'));
     if (p.freeConv || (G.organ(p, 'Fl3') && G.organ(p, 'Fl3').strong)) free.appendChild(h('button', { disabled: !can, onclick: () => onFreeConv(p) }, 'E↔G 1:1変換'));
-    if (p.shields > 0) free.appendChild(h('button', { disabled: !can, onclick: () => onSlot(p, null, true) }, 'Wなし実行（資源獲得・追加アクション）'));
+    if (p.shields > 0) free.appendChild(h('button', { disabled: !can, onclick: () => onSlot(p, null, true) }, 'Wなし実行（資源獲得スロット／個人カード・手番消費なし）'));
     if (free.childNodes.length > 1) box.appendChild(free);
     return box;
   }
@@ -459,7 +459,18 @@
     submit({ pid: p.id, type: 'track', track: t, pay: r.pay, useL: +r.useL });
   }
   async function onSlot(p, id, shield) {
-    if (shield) { const r = await ask('Wなし実行：資源獲得スロットを選択（追加アクション・手番は消費しません）', [{ type: 'select', name: 'slot', label: 'スロット', options: G.RES_SLOTS.map(s => ({ value: s, label: G.SLOT_BY_ID[s].name + (G.slotUsedBy(st, s) !== undefined ? '（使用済・不可）' : ''), disabled: G.slotUsedBy(st, s) !== undefined })) }, resSel('coopRes', '協調ボーナスの資源（全資源用）')]); if (!r) return; return submit({ pid: p.id, type: 'res', slot: r.slot, coopRes: r.coopRes, shield: true }); }
+    if (shield) {
+      // Wなし実行（社会性の権利）：資源獲得スロット1つ or 個人カード1枚。コマを置かないのでスロットを占有しない
+      const opts = G.RES_SLOTS.map(s => ({ value: s, label: G.SLOT_BY_ID[s].name + (G.slotUsedBy(st, s) !== undefined ? '（使用済・不可）' : ''), disabled: G.slotUsedBy(st, s) !== undefined }))
+        .concat(p.cards.map(c => ({ value: 'card:' + c, label: `個人カード ${c} ${G.CARDS[c].name}` })));
+      const r = await ask('Wなし実行：資源獲得スロット1つ または 個人カード1枚（コマを置かず・手番は消費しません）', [
+        { type: 'select', name: 'slot', label: '対象', options: opts, desc: v => v.slot && v.slot.startsWith('card:') ? G.CARDS[v.slot.slice(5)].text : (TIPS[v.slot] || '') },
+        Object.assign(resSel('coopRes', '協調ボーナスの資源（全資源用）'), { when: v => v.slot === 'ALL' && p.coop > 0 }),
+        { type: 'select', name: 'choice', label: 'カードJの変換', options: [{ value: 'E', label: 'E-2 → P+6' }, { value: 'G', label: 'G-1 → P+5' }], when: v => v.slot === 'card:J' },
+      ]); if (!r) return;
+      if (r.slot.startsWith('card:')) return submit({ pid: p.id, type: 'card', card: r.slot.slice(5), choice: r.choice, shield: true });
+      return submit({ pid: p.id, type: 'res', slot: r.slot, coopRes: r.coopRes, shield: true });
+    }
     const s = G.SLOT_BY_ID[id];
     if (s.group === 'res') {
       const used = G.slotUsedBy(st, id) !== undefined; const fields = [];

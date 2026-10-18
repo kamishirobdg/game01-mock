@@ -276,6 +276,14 @@
     if (opt.useL && G.RES_SLOTS.includes(slotId)) { if (p.L <= 0) throw new Error('生命核がありません'); p.L -= 1; return { bypass: 'L' }; }
     throw new Error(`このスロットは今ラウンド ${P(st, st.shared.used[key]).name} が使用済みです${G.RES_SLOTS.includes(slotId) ? (p.L > 0 ? '（緊急発進＝生命核1で使えます）' : '（生命核があれば緊急発進で使えます）') : '（次のラウンドまで待ってください）'}`);
   }
+  // コマを置かない実行（Wなし実行）用：使用可否だけ判定し、使用済みにはしない
+  function peekSlot(st, p, slotId, opt) {
+    opt = opt || {};
+    const key = usedKey(st, slotId);
+    if (st.shared.used[key] === undefined) return { bypass: null };
+    if (opt.useL && G.RES_SLOTS.includes(slotId)) { if (p.L <= 0) throw new Error('生命核がありません'); p.L -= 1; return { bypass: 'L' }; }
+    throw new Error(`このスロットは今ラウンド ${P(st, st.shared.used[key]).name} が使用済みです（Wなし実行でも不可${p.L > 0 ? '・緊急発進＝生命核1で使えます' : ''}）`);
+  }
   function afterAction(st, p, desc, tokenUsed) {
     p.round.firstDone = true;
     if (tokenUsed) log(st, p.id, `${p.name}：${desc}`, 'act'); else log(st, p.id, `${p.name}：${desc}（トークン消費なし）`, 'act');
@@ -391,7 +399,8 @@
     const s = G.SLOT_BY_ID[a.slot]; if (s.group !== 'res') throw new Error('資源スロットではありません');
     let tok = null;
     if (a.shield) { if (p.shields <= 0) throw new Error('Wなし実行権がありません'); if (a.slot === 'PB') throw new Error('Pブーストは対象外'); }
-    const cl = claimSlot(st, p, a.slot, { useL: a.useL });
+    // Wなし実行はコマを置かないのでスロットを占有しない（使用済みにしない）。既に使用済みのスロットは不可（緊急発進との併用は可）
+    const cl = a.shield ? peekSlot(st, p, a.slot, { useL: a.useL }) : claimSlot(st, p, a.slot, { useL: a.useL });
     if (a.shield) p.shields -= 1; else tok = useToken(p, false);
     const pt = Math.floor(p.P / 10);
     const desc = [];
@@ -583,15 +592,16 @@
     return !a.bonus;
   };
 
-  // 個人カード： {card, choice, bonus}
+  // 個人カード： {card, choice, bonus, shield}  shield＝Wなし実行（社会性の権利・コマを置かず手番も消費しない）
   ACTIONS.card = (st, p, a) => {
     if (!p.cards.includes(a.card)) throw new Error('そのカードを持っていません');
+    if (a.shield) { if (p.shields <= 0) throw new Error('Wなし実行権がありません'); if (a.bonus) throw new Error('追加アクション中はWなし実行できません'); }
     const c = a.card; const pt = Math.floor(p.P / 20); let desc = '';
     const before = { E: p.E, G: p.G, P: p.P };
     if (c === 'F' || c === 'G') { if (p.P < 5) throw new Error('Pが足りません'); }
     if (c === 'J') { if (a.choice === 'G') { if (p.G < 1) throw new Error('Gが足りません'); } else if (p.E < 2) throw new Error('Eが足りません'); }
     if (c === 'P') { if (p.E < 3) throw new Error('Eが足りません'); }
-    if (!a.bonus) useToken(p, false);
+    if (a.shield) p.shields -= 1; else if (!a.bonus) useToken(p, false);
     switch (c) {
       case 'A': p.E += 3; break; case 'B': p.G += 2; break; case 'C': p.E += 2; p.G += 1; break;
       case 'D': p.E += 2 + Math.min(3, pt); break; case 'E': p.G += 1 + Math.min(3, pt); break;
@@ -606,8 +616,8 @@
       case 'T': p.P += p.breed >= 1 ? 10 : 6; break;
     }
     const d = ['E', 'G', 'P'].map(k => { const v = p[k] - before[k]; return v ? `${k}${v > 0 ? '+' : ''}${v}` : null; }).filter(Boolean).join(' ');
-    afterAction(st, p, `カード${c} ${G.CARDS[c].name}（${d}）`, !a.bonus);
-    return !a.bonus;
+    afterAction(st, p, `カード${c} ${G.CARDS[c].name}（${d}）${a.shield ? '・Wなし実行' : ''}`, !a.bonus && !a.shield);
+    return !a.bonus && !a.shield;
   };
 
   // 応力系：器官アクション {organ:'St1'|'St2'|'St3', pe:n(P), pg:n(P), bonus}
