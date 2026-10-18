@@ -140,6 +140,8 @@ img.art.small { aspect-ratio:2/1; }
 .ocard, .tcard { padding-top:26px; }
 .phead { display:flex; align-items:center; gap:8px; } .phead h3 { margin:0; }
 img.art.portrait { width:56px; height:56px; aspect-ratio:1/1; border-radius:50%; margin:0; flex:none; }
+.bigbtn .sptype { font-style:normal; font-size:11px; padding:1px 6px; border-radius:8px; background:var(--line,#ddd); color:var(--mute); margin-left:6px; }
+.bigbtn .sphint { color:inherit; font-size:12px; flex-basis:100%; }
 .bigbtn.withart { flex-direction:row; align-items:center; gap:10px; flex-wrap:wrap; } .bigbtn.withart img.art.portrait { width:48px; height:48px; }
 @media (max-width: 1500px) { .ogrid, .tgrid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); } }
 .cards .cardbtn { width:168px; flex:none; }

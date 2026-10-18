@@ -137,6 +137,7 @@
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'アンドゥ'), h('select', { name: 'undoMode' }, h('option', { value: 'free' }, '自由（誰でも即時）'), h('option', { value: 'approve' }, '承認（他の参加者全員のOK）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'シード'), h('input', { type: 'number', name: 'seed', value: Math.floor(Math.random() * 100000) })));
     for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1) }), h('small', null, h('label', null, h('input', { type: 'checkbox', name: 'pas' + i, checked: true }), 'パッシブ有'), ' ', h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
+    form.appendChild(h('small', { class: 'note' }, 'パッシブ無しは意図的に弱くなります（特に群泳双盤は開始Pが0）'));
     form.appendChild(h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, okLabel)));
     form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: fd.get('pas' + i) === 'on' }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), undoMode: fd.get('undoMode'), players, bots }); });
     return form;
@@ -152,7 +153,7 @@
       box.appendChild(h('h2', null, `種族選択：${pl.name}（${i + 1}/${n}）`));
       if (!mine(i)) { box.appendChild(h('p', { class: 'note' }, `${pl.name} の端末で選択中です`)); return box; }
       const taken = st.players.map(q => q.species);
-      Object.entries(G.SPECIES).forEach(([id, sp]) => box.appendChild(h('button', { class: 'bigbtn withart', disabled: taken.includes(id), onclick: () => submit({ type: 'species', pid: i, species: id }) }, art(SPECIES_ART[id], 'portrait'), h('b', null, sp.name), h('span', null, `手番値${sp.order}・初期 E${sp.stock.E}/G${sp.stock.G}/P${sp.stock.P}`), h('small', null, 'パッシブ：' + sp.passive))));
+      Object.entries(G.SPECIES).forEach(([id, sp]) => box.appendChild(h('button', { class: 'bigbtn withart', disabled: taken.includes(id), onclick: () => submit({ type: 'species', pid: i, species: id }) }, art(SPECIES_ART[id], 'portrait'), h('b', null, sp.name), h('em', { class: 'sptype' }, sp.type), h('span', null, `手番値${sp.order}・初期 E${sp.stock.E}/G${sp.stock.G}/P${sp.stock.P}`), h('small', { class: 'sphint' }, sp.hint), h('small', null, 'パッシブ：' + sp.passive))));
     } else if (st.setupStep === 'armTrait') {
       const i = st.setupIdx; const pl = st.players[i];
       box.appendChild(h('h2', null, `${pl.name}（九腕知性体）：初期形質を1枚選択（G4以下）`));

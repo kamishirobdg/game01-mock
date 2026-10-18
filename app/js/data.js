@@ -119,10 +119,10 @@
 
   // 種族（基本4）
   G.SPECIES = {
-    wing:  { name: '光翼類',     order: 1, stock: { E: 2, G: 1, P: 4 }, passive: '身体トラックLv2スタート' },
-    arm:   { name: '九腕知性体', order: 2, stock: { E: 2, G: 2, P: 4 }, passive: 'コストG4以下の形質1枚を取得済みでスタート' },
-    ant:   { name: '万列協和衆', order: 4, stock: { E: 4, G: 1, P: 6 }, passive: '協調1でスタート' },
-    manta: { name: '群泳双盤',   order: 3, stock: { E: 2, G: 0, P: 0 }, passive: 'P+10 ＋ E収入+1（恒久）' },
+    wing:  { name: '光翼類',     order: 1, stock: { E: 2, G: 1, P: 4 }, passive: '身体トラックLv2スタート', type: '速攻', hint: '身体トラックをLv2から始められ、身体Lv3★の先着ボーナスを狙いやすい。' },
+    arm:   { name: '九腕知性体', order: 2, stock: { E: 2, G: 2, P: 4 }, passive: 'コストG4以下の形質1枚を取得済みでスタート', type: '形質', hint: '形質を1枚持って始まる。形質集めと知性トラックに向く。' },
+    ant:   { name: '万列協和衆', order: 4, stock: { E: 4, G: 1, P: 6 }, passive: '協調1でスタート', type: '協調・初心者向け', hint: '協調トークンで序盤から行動が強く、資源も多め。クセが少なく扱いやすい。' },
+    manta: { name: '群泳双盤',   order: 3, stock: { E: 2, G: 0, P: 0 }, passive: 'P+10 ＋ E収入+1（恒久）', type: '物量', hint: 'P+10とE収入+1で資源が豊富。形質の取得は遅め。' },
   };
 
   // コンボ
