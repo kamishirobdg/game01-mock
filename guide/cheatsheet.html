@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>game01 早見表</title>
+<style>
+:root { --ink:#1f2430; --mute:#5f6672; --line:#d9dce3; --bg:#ffffff; --sec:#f4f6fa; --hl:#fff3c4; --hlline:#e0b000;
+  --e:#d4a017; --g:#169e8c; --p:#d9534f; --l:#3b7ddd; --red:#d9534f; --blue:#3b7ddd; --white:#9aa3b2; --green:#3c9d5d; }
+* { box-sizing:border-box; }
+html, body { margin:0; background:var(--bg); color:var(--ink); }
+body { font:12px/1.5 system-ui, "Segoe UI", "Yu Gothic UI", "Hiragino Sans", sans-serif; width:390px; margin:0; padding:10px 10px 8px; }
+@media (min-width: 640px) { body { margin:0 auto; } }
+h1 { font-size:17px; margin:0; display:flex; align-items:baseline; gap:8px; }
+h1 small { font-size:10px; font-weight:400; color:var(--mute); }
+.blk { background:var(--sec); border-radius:8px; padding:6px 9px; margin-top:6px; }
+.blk h2 { font-size:12px; margin:0 0 2px; display:flex; align-items:center; gap:5px; }
+.blk h2 i { font-style:normal; display:inline-block; width:17px; height:17px; line-height:17px; text-align:center; border-radius:50%; background:var(--ink); color:#fff; font-size:10px; }
+.blk p, .blk ul { margin:0; } .blk ul { padding-left:1.1em; } .blk li { margin:0; }
+.two { display:grid; grid-template-columns:1fr 1fr; gap:6px; } .two .blk { margin-top:6px; }
+.ico { width:1em; height:1em; vertical-align:-.15em; }
+.c-e { color:var(--e); } .c-g { color:var(--g); } .c-p { color:var(--p); } .c-l { color:var(--l); }
+b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
+.score { border:2px solid var(--hlline); background:var(--hl); border-radius:8px; padding:6px 9px; margin-top:6px; text-align:center; font-weight:700; font-size:13px; line-height:1.45; }
+.score small { display:block; font-weight:400; font-size:11px; color:var(--mute); }
+.trk { display:grid; grid-template-columns:repeat(4, 1fr); gap:3px; margin-top:3px; text-align:center; font-size:11px; }
+.trk span { border-radius:4px; padding:1px 0; background:#fff; border:1px solid var(--line); }
+.trk span.s { background:var(--hl); border-color:var(--hlline); font-weight:700; }
+.tok { display:inline-block; width:11px; height:11px; border-radius:50%; vertical-align:-1px; margin-right:1px; }
+.tok.w { background:var(--ink); } .tok.at { border:2px solid var(--ink); } .tok.s { background:var(--hlline); box-shadow:0 0 0 2px var(--ink); }
+.foot { margin-top:6px; font-size:10px; color:var(--mute); text-align:center; }
+</style>
+</head>
+<body>
+<h1>game01 早見表 <small>数値はすべてテストプレイ用の仮値</small></h1>
+
+<div class="blk"><h2><i>1</i>ラウンドの流れ（<span id="rounds"></span>ラウンド固定）</h2>
+<p>① 収入 <span id="inc"></span>（Lを受け取るたびに残りラウンド−1）<br>
+② 手番順に1人1コマずつ行動 → 全員5コマ使い切ったら終了（パス不可）<br>
+③ 第2ラウンド以降、開始時に<b class="k">実宝石の少ない順</b>に並べ替え</p></div>
+
+<div class="blk"><h2><i>2</i>コマと倍率</h2>
+<p><span class="tok w"></span><span class="tok w"></span><span class="tok w"></span><span class="tok at"></span><span class="tok at"></span> W×3＋AT×2＝倍率×3。AT＝0／W＝1／強W＝2、最大×7。<br>
+<b class="k">Wのみ</b>：<span id="wonly"></span><br>
+倍率+1：繁殖 <span id="breed"></span>（ATが必要・×5まで）／器官の系統完成／形質4枚目・8枚目</p></div>
+
+<div class="blk"><h2><i>3</i>進化トラック（共用・Wが必要）</h2>
+<div class="trk" id="trk"></div>
+<p>身体はEの代わりにP×3、知性はGでも可。<b class="k">Lv3・Lv5</b>で宝石+1、<b class="k">先着＝強い報酬</b>。Lv5の一番乗りは宝石2個。</p></div>
+
+<div class="blk"><h2><i>4</i>早取り盤（各枠1ラウンドに1人）</h2>
+<ul>
+<li><b>資源獲得</b>：<span id="res"></span>　＋協調の数だけ同じ資源</li>
+<li><b>大量消費 P<span id="mass"></span></b>：<span id="massl"></span></li>
+<li><b>形質購入</b>（先着＝強。買い替えは差額＋G1）／<b>宝石セット</b>：G(10−形質数・最低5)→仮想宝石+1</li>
+</ul></div>
+
+<div class="blk"><h2><i>5</i>共用盤（何人でも）</h2>
+<ul>
+<li><b>器官</b> <span id="org"></span>（後から＝弱はG0）。系統内は段階順</li>
+<li><b>繁殖</b>（2を参照）／<b>環境スキャン</b> <span id="scan"></span></li>
+<li><b>資源変換</b> <span id="cnv"></span>／<b>予備動員</b> <span id="rsv"></span></li>
+<li><b>適応進化</b> L1でLv1のトラックを+1（Wが必要）</li>
+</ul></div>
+
+<div class="two">
+<div class="blk"><h2><i>6</i><svg class="ico c-l"><use href="#ico-life"/></svg>生命核 L</h2>
+<ul><li>E3かG3の代わり（お釣りなし）</li><li>適応進化</li><li>緊急発進：使用済みの<b>資源獲得</b>枠を使う</li></ul></div>
+<div class="blk"><h2><i>7</i>器官のそろえ方</h2>
+<ul><li>同じ系統3枚：倍率+1</li><li>4系統1枚ずつ：体制完成＝好きな資源の収入+1・終了時+50</li></ul></div>
+</div>
+
+<div class="score">（実宝石＋仮想宝石）× 10 × 倍率<br>＋（形質＋協調）× 7 ＋ 体制完成 50
+<small>仮想宝石＝コンボ（2色4種＋3色2種・別々に数える）＋宝石セット<br>同点：実宝石 → 形質＋協調 → 残り資源（E+G+P）</small></div>
+
+<div class="foot">詳しくは kamishirobdg.github.io/game01-mock/guide/</div>
+
+<script src="../app/js/icons.js"></script>
+<script src="../app/js/data.js"></script>
+<script>
+(function () {
+  const G = window.G1, $ = id => document.getElementById(id), s = id => G.SLOT_BY_ID[id].text;
+  const ico = (id, c) => `<svg class="ico ${c}"><use href="#${id}"/></svg>`;
+  const I = G.BASE_INCOME;
+  $('rounds').textContent = G.ROUNDS;
+  $('inc').innerHTML = `${ico('ico-e', 'c-e')}E+${I.E} ${ico('ico-g', 'c-g')}G+${I.G} ${ico('ico-pop', 'c-p')}P+${I.P} ${ico('ico-life', 'c-l')}L+1`;
+  $('wonly').textContent = G.SLOTS.filter(x => x.worker).map(x => x.name).join('・');
+  $('breed').textContent = `P${G.BREED_COST[0]}→×4／P${G.BREED_COST[1]}→×5`;
+  $('trk').innerHTML = G.STEP_COST.slice(1).map((c, i) => `<span class="${i === 1 || i === 3 ? 's' : ''}">Lv${i + 2}${i === 1 || i === 3 ? '★' : ''} ${c}E</span>`).join('');
+  $('res').textContent = G.RES_SLOTS.map(id => s(id).replace(/ /g, '')).join('／') + '／Pブースト ' + s('PB').replace(/ /g, '');
+  $('mass').textContent = G.MASS_COST;
+  $('massl').textContent = ['MB', 'MI', 'MS', 'MM'].map(id => G.SLOT_BY_ID[id].name.replace('大量消費', '').replace(/[()]/g, '') + ' ' + s(id).replace(/^P20 → /, '')).join('／');
+  $('org').textContent = G.ORGAN_COST.map(([e, g]) => `${e}E+${g}G`).join('／');
+  $('scan').textContent = s('SCAN').replace(/ /g, '');
+  $('cnv').textContent = s('CNV').replace(/ /g, '');
+  $('rsv').textContent = s('RSV');
+  // PDF化用：用紙サイズを内容の高さに合わせる
+  const st = document.createElement('style'); st.textContent = `@page { size: 390px ${document.documentElement.scrollHeight + 2}px; margin: 0; }`; document.head.appendChild(st);
+})();
+</script>
+</body>
+</html>
