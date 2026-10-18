@@ -153,6 +153,7 @@
     { id: 'MS',   group: 'mass', excl: true,  name: '大量消費(社会)', text: 'P20 → 協調+2' },
     { id: 'MM',   group: 'mass', excl: true,  name: '大量消費(代謝)', text: 'P20 → E+10 G+10' },
     { id: 'TRT',  group: 'oth',  excl: true,  name: '形質購入／アップグレード', text: 'Gを払い形質を取得・差額+1で上位へ' },
+    { id: 'TRT2', group: 'oth',  excl: true,  name: '形質購入（割増）', text: '通常コスト＋ラウンド数ぶんのE', ext: 'x1' }, // 拡張x1のみ
     { id: 'GEM',  group: 'oth',  excl: true,  name: '宝石セット得点カード', text: 'G(10−形質数・下限5) → 仮想宝石+1' },
     { id: 'SCAN', group: 'cu',   excl: false, name: '環境スキャン', text: 'E5 → 他者の最高Lv×2の資源' },
     { id: 'ADP',  group: 'cu',   excl: false, name: '適応進化',  text: 'L1 → Lv1のトラックを+1（W必須）', worker: true },
@@ -165,5 +166,9 @@
   G.RES_GROUPS = { RE: { name: 'E系', slots: ['E5', 'EG'] }, RG: { name: 'G系', slots: ['G3', 'GG'] }, RP: { name: 'P系', slots: ['P8', 'PB'] }, RA: { name: '全資源', slots: ['ALL'] } };
   G.RES_GROUP_OF = {}; Object.entries(G.RES_GROUPS).forEach(([g, v]) => v.slots.forEach(s => { G.RES_GROUP_OF[s] = g; }));
   G.SLOT_SET_NAME = { v7: '現行7スロット', m4: '統合4スロット' };
+  // 試作：拡張ルール（meta.ext）。x1＝①形質購入枠を2つ（通常／割増=ラウンド数ぶんのE追加）②緊急発進（L1）の対象に形質購入を追加
+  //   ③協調発進（協調トークン2個を取り除き、使用済みの資源獲得／形質購入スロットを使う）④大量消費（社会）の協調+2→+3。design.md 未変更
+  G.EXT_NAME = { none: 'なし', x1: '形質2枠＋緊急/協調発進＋社会+3' };
+  G.TRAIT_SLOTS = ['TRT', 'TRT2'];
   G.GROUP_NAME = { res: '資源獲得（早取り排他）', trk: 'トラック進行（排他なし）', org: '器官建造（排他なし）', mass: '大量消費（早取り排他）', oth: 'その他共有（早取り排他）', cu: 'キャッチアップ・運用（排他なし）' };
 })((typeof window !== "undefined" ? window : globalThis).G1 = (typeof window !== "undefined" ? window : globalThis).G1 || {});

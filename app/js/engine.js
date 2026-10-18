@@ -24,6 +24,7 @@
       mode: opts.mode || 'expert',
       slotSet: opts.slots === 'm4' ? 'm4' : 'v7', // 資源獲得スロット：v7=現行7／m4=統合4（試作）
       rules: G.RULESETS[opts.rules] ? opts.rules : 'v1', // ルールセット：v1=現行／t1=仮値セット（試作）
+      ext: opts.ext === 'x1' ? 'x1' : 'none', // 拡張：none=現行／x1=形質2枠＋緊急/協調発進＋社会+3（試作）
       nPlayers: opts.players.length,
       round: 0, phase: 'setup', setupStep: 'species', setupIdx: 0,
       turnOrder: [], cur: 0,
@@ -55,7 +56,7 @@
       const cum = shuffle(st, G.LINEAGE_TYPE.cumulative).slice(0, 2), fun = shuffle(st, G.LINEAGE_TYPE.functional).slice(0, 2);
       st.shared.lineages = cum.concat(fun); st.shared.organField = st.shared.lineages.flatMap(l => [1, 2, 3].map(t => l + t));
     }
-    log(st, null, `ゲーム開始（${st.nPlayers}人・${st.mode === 'beginner' ? '初心者' : '熟練者'}セットアップ・${G.SLOT_SET_NAME[st.slotSet]}・ルール${G.RULESETS[st.rules].name}・seed ${st.seed}）`);
+    log(st, null, `ゲーム開始（${st.nPlayers}人・${st.mode === 'beginner' ? '初心者' : '熟練者'}セットアップ・${G.SLOT_SET_NAME[st.slotSet]}・ルール${G.RULESETS[st.rules].name}・拡張${G.EXT_NAME[st.ext]}・seed ${st.seed}）`);
     log(st, null, 'コンボ：' + comboNames(st).join('／'));
     log(st, null, '器官の場：' + st.shared.lineages.map(l => G.LINEAGES[l]).join('・'));
     return st;
@@ -275,9 +276,15 @@
     // 使用済み：突破手段
     if (opt.bodyMass && p.flags.strong['body5']) return { bypass: 'body5' };
     if (!p.round.firstDone) { const o = organ(p, 'Rh3'); if (o && (o.strong || p.uses.rh3 < 3)) { if (!o.strong) p.uses.rh3 += 1; return { bypass: 'Rh3' }; } }
-    if (opt.useL && G.RES_SLOTS.includes(slotId)) { if (p.L <= 0) throw new Error('生命核がありません'); p.L -= 1; return { bypass: 'L' }; }
-    throw new Error(`このスロットは今ラウンド ${P(st, st.shared.used[key]).name} が使用済みです${G.RES_SLOTS.includes(slotId) ? (p.L > 0 ? '（緊急発進＝生命核1で使えます）' : '（生命核があれば緊急発進で使えます）') : '（次のラウンドまで待ってください）'}`);
+    // 突破できるスロット：資源獲得（現行）＋形質購入2枠（拡張x1）。手段＝緊急発進（L1）／協調発進（協調2個・拡張x1）
+    const byp = bypassable(st, slotId);
+    if (opt.useL && byp) { if (p.L <= 0) throw new Error('生命核がありません'); p.L -= 1; return { bypass: 'L' }; }
+    if (opt.useCoop && byp && st.ext === 'x1') { if (p.coop < 2) throw new Error('協調トークンが2個ありません'); p.coop -= 2; return { bypass: 'coop' }; }
+    const ways = byp ? [p.L > 0 ? '緊急発進＝生命核1' : null, st.ext === 'x1' && p.coop >= 2 ? '協調発進＝協調2' : null].filter(Boolean) : [];
+    throw new Error(`このスロットは今ラウンド ${P(st, st.shared.used[key]).name} が使用済みです${byp ? (ways.length ? `（${ways.join('／')}で使えます）` : '（生命核があれば緊急発進で使えます）') : '（次のラウンドまで待ってください）'}`);
   }
+  function bypassable(st, slotId) { return G.RES_SLOTS.includes(slotId) || (st.ext === 'x1' && G.TRAIT_SLOTS.includes(slotId)); }
+  const bypassDesc = (b) => b === 'L' ? '緊急発進（L-1）' : b === 'coop' ? '協調発進（協調-2）' : `排他突破（${b}）`;
   // コマを置かない実行（Wなし実行）用：使用可否だけ判定し、使用済みにはしない
   function peekSlot(st, p, slotId, opt) {
     opt = opt || {};
@@ -402,7 +409,7 @@
     let tok = null;
     if (a.shield) { if (p.shields <= 0) throw new Error('Wなし実行権がありません'); if (a.slot === 'PB') throw new Error('Pブーストは対象外'); }
     // Wなし実行はコマを置かないのでスロットを占有しない（使用済みにしない）。既に使用済みのスロットは不可（緊急発進との併用は可）
-    const cl = a.shield ? peekSlot(st, p, a.slot, { useL: a.useL }) : claimSlot(st, p, a.slot, { useL: a.useL });
+    const cl = a.shield ? peekSlot(st, p, a.slot, { useL: a.useL }) : claimSlot(st, p, a.slot, { useL: a.useL, useCoop: a.bypassCoop });
     if (a.shield) p.shields -= 1; else tok = useToken(p, false);
     const pt = Math.floor(p.P / 10);
     const desc = [];
@@ -414,7 +421,7 @@
     if (a.slot === 'P8') { p.P += 8; coopTo('P'); desc.unshift('P増加 +8P'); }
     if (a.slot === 'ALL') { p.E += 2; p.G += 1; p.P += 4; coopTo(a.coopRes || 'E'); desc.unshift('全資源 +2E+1G+4P'); }
     if (a.slot === 'PB') { const c = pbCost(p); if (p.G < c) throw new Error('Gが足りません'); p.G -= c; p.P += 10; desc.unshift(`Pブースト G${c}→P+10`); }
-    if (cl.bypass) desc.push(cl.bypass === 'L' ? '緊急発進（L-1）' : `排他突破（${cl.bypass}）`);
+    if (cl.bypass) desc.push(bypassDesc(cl.bypass));
     if (a.shield) desc.push('Wなし実行');
     afterAction(st, p, desc.join('・'), !a.shield);
     return !a.shield;
@@ -483,7 +490,7 @@
     const desc = `${G.SLOT_BY_ID[a.kind].name}（${a.free ? '無料・報酬' : 'P' + c}）`;
     afterAction(st, p, desc, !a.free);
     if (a.kind === 'MB') addGem(st, p, 'body', 1, '大量消費');
-    if (a.kind === 'MS') gainRes(p, 'coop', 2);
+    if (a.kind === 'MS') gainRes(p, 'coop', st.ext === 'x1' ? 3 : 2);
     if (a.kind === 'MM') { p.E += 10; p.G += 10; }
     if (a.kind === 'MI') {
       const ids = (a.traits || []).slice(0, 2);
@@ -494,16 +501,26 @@
     return !a.free;
   };
 
-  // 形質購入： {trait, useL, res, track, viaDG, viaReward}
+  // 形質購入枠の確保（拡張x1：slot='TRT2'＝割増枠＝ラウンド数ぶんのEを追加で支払う／bypassL・bypassCoop＝使用済み枠の突破）
+  function claimTraitSlot(st, p, a) {
+    const slot = a.slot === 'TRT2' ? 'TRT2' : 'TRT';
+    if (slot === 'TRT2' && st.ext !== 'x1') throw new Error('割増枠は拡張ルールでのみ使えます');
+    const extra = slot === 'TRT2' ? st.round : 0;
+    if (p.E < extra) throw new Error(`割増枠はラウンド数ぶんのE（E${extra}）が必要です`);
+    const cl = claimSlot(st, p, slot, { useL: a.bypassL, useCoop: a.bypassCoop });
+    p.E -= extra;
+    return (extra ? `・割増枠E${extra}` : '') + (cl.bypass ? '・' + bypassDesc(cl.bypass) : '');
+  }
+  // 形質購入： {trait, useL, res, track, viaDG, viaReward, slot, bypassL, bypassCoop}
   ACTIONS.trait = (st, p, a) => {
-    let disc = 0, tok = true;
+    let disc = 0, tok = true, how = '';
     if (a.viaDG) { disc = a.viaDG; tok = false; }
     else if (a.viaReward) { disc = a.viaReward; tok = false; }
-    else { claimSlot(st, p, 'TRT'); useToken(p, false); }
+    else { how = claimTraitSlot(st, p, a); useToken(p, false); }
     const c = traitCost(st, p, a.trait, disc);
     const r = payG(p, c.G, a.useL);
     const tr1 = organ(p, 'Tr1'); if (tr1 && !tr1.strong && p.uses.tr1 < 3) p.uses.tr1 += 1;
-    afterAction(st, p, `形質購入 ${a.trait}（G${r.G}${r.L ? '+L' + r.L : ''}${a.viaDG ? '・遺伝子図書館' : a.viaReward ? '・報酬' : ''}）`, tok);
+    afterAction(st, p, `形質購入 ${a.trait}（G${r.G}${r.L ? '+L' + r.L : ''}${a.viaDG ? '・遺伝子図書館' : a.viaReward ? '・報酬' : ''}${how}）`, tok);
     giveTrait(st, p, a.trait, false, '購入', { res: a.res, track: a.track });
     return tok;
   };
@@ -520,10 +537,10 @@
     const tr2 = organ(p, 'Tr2'); if (tr2) c -= tr2.strong ? 2 : 1;
     const tr3 = organ(p, 'Tr3'); if (tr3) c -= tr3.strong ? 3 : 2;
     c = Math.max(1, c);
-    claimSlot(st, p, 'TRT'); useToken(p, false);
+    const how = claimTraitSlot(st, p, a); useToken(p, false);
     removeTrait(st, p, a.from);
     const r = payG(p, c, a.useL);
-    afterAction(st, p, `形質アップグレード ${a.from}→${a.to}（G${r.G}${r.L ? '+L' + r.L : ''}）`, true);
+    afterAction(st, p, `形質アップグレード ${a.from}→${a.to}（G${r.G}${r.L ? '+L' + r.L : ''}${how}）`, true);
     // 枚数不変なので係数判定を避ける：一時的に枚数を保つ
     const n0 = p.traits.length;
     giveTraitNoCount(st, p, a.to, '購入(アップグレード)', { res: a.res, track: a.track });
@@ -775,5 +792,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

@@ -143,12 +143,13 @@
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '人数'), h('select', { name: 'n' }, h('option', { value: 3 }, '3人'), h('option', { value: 4, selected: true }, '4人'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'セットアップ'), h('select', { name: 'mode' }, h('option', { value: 'beginner' }, '初心者（宝石コンボ・器官の場を固定）'), h('option', { value: 'expert' }, '熟練者（宝石コンボ・器官の場を抽選）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'ルール数値'), h('select', { name: 'rules' }, h('option', { value: 'v1' }, '現行（進行2/3/5/8E・E収入3・宝石×10）'), h('option', { value: 't1' }, '仮値セットT1（進行3/5/8/13E・E収入2・宝石＝係数×2・形質協調3点・器官2点・体制15点・試作）'))));
+    form.appendChild(h('label', { class: 'frow' }, h('span', null, '拡張ルール'), h('select', { name: 'ext' }, h('option', { value: 'none' }, 'なし'), h('option', { value: 'x1' }, 'x1：形質購入2枠（割増＝ラウンド数のE）＋緊急発進の対象に形質＋協調発進（協調2個で使用済み枠）＋大量消費(社会)協調+3・試作'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '資源スロット'), h('select', { name: 'slots' }, h('option', { value: 'v7' }, '現行（7スロット・各1人）'), h('option', { value: 'm4' }, '統合4（E系／G系／P系／全資源・各1人・試作）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'アンドゥ'), h('select', { name: 'undoMode' }, h('option', { value: 'free' }, '自由（誰でも即時）'), h('option', { value: 'approve' }, '承認（他の参加者全員のOK）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'シード'), h('input', { type: 'number', name: 'seed', value: Math.floor(Math.random() * 100000) })));
     for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1) }), h('small', null, h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
     form.appendChild(h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, okLabel)));
-    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || 'v1', undoMode: fd.get('undoMode'), players, bots }); });
+    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || 'v1', ext: fd.get('ext') || 'none', undoMode: fd.get('undoMode'), players, bots }); });
     return form;
   }
   function bindNet() { Net.onChange = () => { rebuildState(); render(); }; rebuildState(); render(); }
@@ -327,17 +328,18 @@
   const TIPS = {
     E5: '固定E強：+5E（協調ぶん+E）', EG: '群体E：+2E＋個体数10ごとに+1E', G3: '固定G強：+3G', GG: '群体G：+1G＋個体数10ごとに+1G', P8: 'P増加：+8P', ALL: '全資源獲得：+2E+1G+4P（協調ぶんは好きな資源）', PB: 'Pブースト購入：G2→P+10（協調対象外）',
     MB: '大量消費(身体)：P20→赤宝石+1', MI: '大量消費(知性)：P20→G4以下の形質を異なる2種（排他不要）', MS: '大量消費(社会)：P20→協調+2', MM: '大量消費(代謝)：P20→E+10 G+10',
-    TRT: '形質購入：形質プールのカードをクリック。アップグレードは取得済みカードをクリック', GEM: '宝石セット得点カード：G(10−形質数・下限5)→仮想宝石+1（自分専用）',
+    TRT: '形質購入：形質プールのカードをクリック。アップグレードは取得済みカードをクリック', TRT2: '形質購入（割増枠・拡張x1）：通常コストに加えてラウンド数ぶんのEを支払う。形質プールのカードをクリック', GEM: '宝石セット得点カード：G(10−形質数・下限5)→仮想宝石+1（自分専用）',
     BRD: '繁殖変換：P30→係数×4／P50→×5（W必須・ATが残っていること）', ORG: '器官建造：器官の場のカードをクリック', SCAN: '環境スキャン：E5→他プレイヤーの最高Lv×2の資源（自分は除く）', ADP: '適応進化：生命核1→Lv1のトラックを+1（W必須）', CNV: '資源変換：E2→G1／G2→E1／P8→E3／P8→G2', RSV: '予備動員：無料でE+2またはG+1',
   };
   function slotButton(p, can, s, onclick, extra) {
     const used = G.slotUsedBy(st, s.id);
-    const reason = !can ? roMsg : (s.id === 'TRT' || s.id === 'ORG' || s.id === 'TRK') ? null : check(sample(p, s.id));
-    return actBtn({ class: 'slot' + (used !== undefined ? ' used' : ''), title: TIPS[s.id] || s.text, onclick }, reason, h('b', null, s.name), h('small', null, icost(s.text)), used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
+    const reason = !can ? roMsg : (s.id === 'TRT' || s.id === 'TRT2' || s.id === 'ORG' || s.id === 'TRK') ? null : check(sample(p, s.id));
+    const txt = s.id === 'MS' && st.ext === 'x1' ? 'P20 → 協調+3' : s.id === 'TRT2' ? `通常コスト＋E${st.round}（ラウンド数）` : s.text;
+    return actBtn({ class: 'slot' + (used !== undefined ? ' used' : ''), title: TIPS[s.id] || txt, onclick }, reason, h('b', null, s.name), h('small', null, icost(txt)), used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
   }
   function sample(p, id) { // 事前判定用の代表アクション
     const pid = p.id;
-    if (G.RES_SLOTS.includes(id)) return { pid, type: 'res', slot: id, coopRes: 'E', useL: p.L > 0 };
+    if (G.RES_SLOTS.includes(id)) return { pid, type: 'res', slot: id, coopRes: 'E', useL: p.L > 0, bypassCoop: st.ext === 'x1' && p.coop >= 2 };
     if (id === 'PB') return { pid, type: 'res', slot: 'PB' };
     if (['MB', 'MI', 'MS', 'MM'].includes(id)) return { pid, type: 'mass', kind: id, traits: G.TRAIT_ORDER.filter(t => G.TRAITS[t].cost[0] <= 4 && !G.trait(p, t)).slice(0, 2) };
     if (id === 'GEM') return { pid, type: 'gemset', useL: Math.min(p.L, 3) };
@@ -349,15 +351,17 @@
   }
   function renderExcl(p, can) {
     const m4 = st.slotSet === 'm4';
-    const box = h('div', { class: 'panel excl' }, h('h3', null, '早取り盤', h('small', { class: 'sub' }, m4 ? '　資源獲得は4枠（E系／G系／P系／全資源）・各枠1ラウンドに1人、枠内のどちらかを選ぶ。使用済み枠は生命核1の「緊急発進」で突破可（Pブーストは不可）' : '　各スロットは1ラウンドに1人だけ。使用済みは生命核1の「緊急発進」で資源獲得スロットのみ突破可')));
+    const x1 = st.ext === 'x1';
+    const box = h('div', { class: 'panel excl' }, h('h3', null, '早取り盤', h('small', { class: 'sub' }, (m4 ? '　資源獲得は4枠（E系／G系／P系／全資源）・各枠1ラウンドに1人、枠内のどちらかを選ぶ。使用済み枠は生命核1の「緊急発進」で突破可（Pブーストは不可）' : '　各スロットは1ラウンドに1人だけ。使用済みは生命核1の「緊急発進」で資源獲得スロットのみ突破可') + (x1 ? '　【拡張x1】形質購入は2枠（割増枠＝ラウンド数ぶんのE追加）。使用済みの資源／形質枠は緊急発進（L1）か協調発進（協調トークン2個）で突破可' : ''))));
     const g1 = h('div', { class: 'sgroup' }, h('h4', null, m4 ? '資源獲得（統合4・試作）' : '資源獲得'));
-    const resBtn = (s, used) => slotButton(p, can, s, () => onSlot(p, s.id), used !== undefined && G.RES_SLOTS.includes(s.id) && p.L > 0 ? h('small', { class: 'bypass' }, '緊急発進可（L1）') : null);
+    const bypassHint = () => { const w = [p.L > 0 ? '緊急発進可（L1）' : null, x1 && p.coop >= 2 ? '協調発進可（協調2）' : null].filter(Boolean); return w.length ? h('small', { class: 'bypass' }, w.join('・')) : null; };
+    const resBtn = (s, used) => slotButton(p, can, s, () => onSlot(p, s.id), used !== undefined && G.RES_SLOTS.includes(s.id) ? bypassHint() : null);
     if (m4) Object.entries(G.RES_GROUPS).forEach(([gid, grp]) => { const used = st.shared.used[gid]; const gb = h('div', { class: 'merged' + (used !== undefined ? ' used' : '') }, h('h5', null, grp.name)); grp.slots.forEach(id => gb.appendChild(resBtn(G.SLOT_BY_ID[id], used))); g1.appendChild(gb); });
     else G.SLOTS.filter(s => s.group === 'res').forEach(s => g1.appendChild(resBtn(s, st.shared.used[s.id])));
     const g2 = h('div', { class: 'sgroup' }, h('h4', null, '大量消費（P20）'));
     G.SLOTS.filter(s => s.group === 'mass').forEach(s => g2.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     const g3 = h('div', { class: 'sgroup' }, h('h4', null, 'その他'));
-    G.SLOTS.filter(s => s.group === 'oth').forEach(s => g3.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
+    G.SLOTS.filter(s => s.group === 'oth' && (!s.ext || s.ext === st.ext)).forEach(s => g3.appendChild(slotButton(p, can, s, () => onSlot(p, s.id), G.slotUsedBy(st, s.id) !== undefined && G.bypassable(st, s.id) ? bypassHint() : null)));
     box.appendChild(g1); box.appendChild(g2); box.appendChild(g3); return box;
   }
   function renderShared(p, can) {
@@ -384,7 +388,7 @@
     const grid = h('div', { class: 'tgrid' });
     G.TRAIT_ORDER.forEach(id => {
       const t = G.TRAITS[id]; const c = G.traitCost(st, p, id); const mine_ = G.trait(p, id); const first = st.shared.traitFirst[id];
-      const reason = !can ? '他プレイヤーの手番' : mine_ ? null : check({ pid: p.id, type: 'trait', trait: id, useL: Math.min(p.L, 3), res: 'E', track: 'body' });
+      const pl = traitPlan(p) || {}; const reason = !can ? '他プレイヤーの手番' : mine_ ? null : check(Object.assign({ pid: p.id, type: 'trait', trait: id, useL: Math.min(Math.max(0, p.L - (pl.bypassL ? 1 : 0)), 3), res: 'E', track: 'body' }, pl));
       const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, mine_ ? `取得済→交換` : [ic('G'), `${c.G}`, h('small', null, `（表示${t.cost[0]}/${t.cost[1]}）`)]), h('span', { class: 'sw ' + ((mine_ ? mine_.strong : c.strong) ? 'strong' : 'weak') }, (mine_ ? mine_.strong : c.strong) ? '強' : '弱'));
       grid.appendChild(actBtn({ class: 'tcard' + (mine_ ? ' mine' : ''), title: `${id} ${t.name}\n強：${t.strong}\n弱：${t.weak}`, onclick: () => onTrait(p, id) }, reason,
         hd, art(id), h('b', null, `${id} ${t.name}`), h('small', null, `強：${t.strong}`), h('small', null, `弱：${t.weak}`),
@@ -477,13 +481,13 @@
       const used = G.slotUsedBy(st, id) !== undefined; const fields = [];
       if (id === 'PB') return confirm(`Pブースト購入：G${G.pbCost(p)}→P+10。実行しますか？`) && submit({ pid: p.id, type: 'res', slot: 'PB' });
       if (id === 'ALL' && p.coop > 0) fields.push(resSel('coopRes', `協調ボーナス+${p.coop}の資源`));
-      if (used && G.RES_SLOTS.includes(id)) fields.push({ type: 'check', name: 'useL', label: '緊急発進（生命核1で使用済みスロットを使う）', value: p.L > 0 });
+      if (used && G.RES_SLOTS.includes(id)) { const bf = bypassField(p); if (!bf) return toast('使用済みです（生命核があれば緊急発進、拡張x1なら協調2個で協調発進ができます）', true); fields.push(bf); }
       if (!fields.length) return submit({ pid: p.id, type: 'res', slot: id });
-      const r = await ask(s.name, fields, { note: TIPS[id] }); if (!r) return; return submit({ pid: p.id, type: 'res', slot: id, coopRes: r.coopRes, useL: r.useL });
+      const r = await ask(s.name, fields, { note: TIPS[id] }); if (!r) return; return submit({ pid: p.id, type: 'res', slot: id, coopRes: r.coopRes, useL: r.bypass === 'L', bypassCoop: r.bypass === 'coop' });
     }
     if (id === 'BRD') { const c = G.breedCost(p); return c !== null && confirm(`繁殖変換：P${c}を支払い係数×${G.coef(p) + 1}。実行しますか？`) && submit({ pid: p.id, type: 'breed' }); }
     if (id === 'ORG') return toast('器官の場のカードをクリックしてください');
-    if (id === 'TRT') return toast('形質プールのカードをクリックしてください');
+    if (id === 'TRT' || id === 'TRT2') return toast('形質プールのカードをクリックしてください（購入枠はダイアログで選べます）');
     if (s.group === 'mass') {
       if (id === 'MI') { const r = await ask('大量消費(知性)：G4以下の形質を異なる2種', [{ type: 'multi', name: 'traits', label: '形質（2つまで・Ctrlで複数選択）', options: G.TRAIT_ORDER.filter(t => G.TRAITS[t].cost[0] <= 4 && !G.trait(p, t)).map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}` })) }], { note: `コスト P${G.massCost(p, 'MI')}` }); if (!r) return; return submit({ pid: p.id, type: 'mass', kind: 'MI', traits: r.traits.slice(0, 2) }); }
       const mc = G.massCost(p, id), floor = G.MASS_MIN[id === 'MB' ? 'body' : 'other'];
@@ -504,16 +508,40 @@
     const r = await ask(`器官建造 ${id} ${G.ORGANS[id].name}`, fields, { note: `コスト E${c.E}${c.G ? '+G' + c.G : ''}（${c.strong ? '強' : '弱'}）：${c.strong ? G.ORGANS[id].strong : G.ORGANS[id].weak}` }); if (!r) return;
     submit({ pid: p.id, type: 'organ', organ: id, useL: +r.useL, li2Res: r.li2Res, li3Res: r.li3Res, regimeRes: r.regimeRes });
   }
+  // 使用済み枠の突破手段（緊急発進＝L1／協調発進＝協調2・拡張x1）。手段が無ければ null
+  function bypassField(p) {
+    const o = [...(p.L > 0 ? [{ value: 'L', label: '緊急発進（生命核-1）' }] : []), ...(st.ext === 'x1' && p.coop >= 2 ? [{ value: 'coop', label: '協調発進（協調トークン-2）' }] : [])];
+    return o.length ? { type: 'select', name: 'bypass', label: '使用済み枠の突破', options: o } : null;
+  }
+  // 形質購入に使う枠と突破手段の既定（通常枠→割増枠→緊急発進→協調発進）。拡張なしで通常枠が使用済みなら null
+  function traitPlan(p) {
+    const free = (s) => G.slotUsedBy(st, s) === undefined;
+    if (free('TRT')) return { slot: 'TRT' };
+    if (st.ext !== 'x1') return null;
+    if (free('TRT2') && p.E >= st.round) return { slot: 'TRT2' };
+    if (p.L > 0) return { slot: 'TRT', bypassL: true };
+    if (p.coop >= 2) return { slot: 'TRT', bypassCoop: true };
+    return null;
+  }
+  function traitSlotFields(p) { // 拡張x1：購入枠の選択＋（使用済み枠なら）突破手段
+    if (st.ext !== 'x1') return [];
+    const usedBy = (s) => { const u = G.slotUsedBy(st, s); return u === undefined ? '' : `（${st.players[u].name} 使用済み）`; };
+    const pl = traitPlan(p) || { slot: 'TRT' };
+    const f = [{ type: 'select', name: 'slot', label: '購入枠', value: pl.slot, options: [{ value: 'TRT', label: '通常枠' + usedBy('TRT') }, { value: 'TRT2', label: `割増枠（＋E${st.round}）` + usedBy('TRT2') }] }];
+    const bf = bypassField(p); if (bf) f.push(Object.assign(bf, { when: v => G.slotUsedBy(st, v.slot) !== undefined }));
+    return f;
+  }
+  const slotArgs = (r) => { const slot = r.slot || 'TRT'; const used = G.slotUsedBy(st, slot) !== undefined; return { slot, bypassL: used && r.bypass === 'L', bypassCoop: used && r.bypass === 'coop' }; };
   async function onTrait(p, id) {
     if (G.trait(p, id)) {
       const from = id; const targets = G.TRAIT_ORDER.filter(t => !G.trait(p, t) && G.TRAITS[t].cost[0] > G.TRAITS[from].cost[0]);
       if (!targets.length) return toast('アップグレード先がありません', true);
-      const r = await ask(`形質アップグレード：${from} を手放して上位へ`, [{ type: 'select', name: 'to', label: '上位形質', options: targets.map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}（表示G${G.TRAITS[t].cost[0]}/${G.TRAITS[t].cost[1]}）` })), desc: traitDesc(p, 'to') }, { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel('to'), daSel('to')], { note: 'コスト＝表示コストの差額＋G1（下限G1）。即時効果の形質は手放せません' }); if (!r) return;
-      return submit({ pid: p.id, type: 'upgrade', from, to: r.to, useL: +r.useL, res: r.res, track: r.track });
+      const r = await ask(`形質アップグレード：${from} を手放して上位へ`, [{ type: 'select', name: 'to', label: '上位形質', options: targets.map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}（表示G${G.TRAITS[t].cost[0]}/${G.TRAITS[t].cost[1]}）` })), desc: traitDesc(p, 'to') }, ...traitSlotFields(p), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel('to'), daSel('to')], { note: 'コスト＝表示コストの差額＋G1（下限G1）。即時効果の形質は手放せません' }); if (!r) return;
+      return submit(Object.assign({ pid: p.id, type: 'upgrade', from, to: r.to, useL: +r.useL, res: r.res, track: r.track }, slotArgs(r)));
     }
     const c = G.traitCost(st, p, id);
-    const r = await ask(`形質購入 ${id} ${G.TRAITS[id].name}`, [{ type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, ...(id === 'IM' ? [imSel()] : []), ...(id === 'DA' ? [daSel()] : [])], { note: `コスト G${c.G}（${c.strong ? '強' : '弱'}）：${c.strong ? G.TRAITS[id].strong : G.TRAITS[id].weak}` }); if (!r) return;
-    submit({ pid: p.id, type: 'trait', trait: id, useL: +r.useL, res: r.res, track: r.track });
+    const r = await ask(`形質購入 ${id} ${G.TRAITS[id].name}`, [...traitSlotFields(p), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, ...(id === 'IM' ? [imSel()] : []), ...(id === 'DA' ? [daSel()] : [])], { note: `コスト G${c.G}（${c.strong ? '強' : '弱'}）：${c.strong ? G.TRAITS[id].strong : G.TRAITS[id].weak}` }); if (!r) return;
+    submit(Object.assign({ pid: p.id, type: 'trait', trait: id, useL: +r.useL, res: r.res, track: r.track }, slotArgs(r)));
   }
   async function onCard(p, c) {
     if (c === 'J') { const r = await ask('カードJ 資源→P変換', [{ type: 'select', name: 'choice', label: '変換', options: [{ value: 'E', label: 'E-2 → P+6' }, { value: 'G', label: 'G-1 → P+5' }] }]); if (!r) return; return submit({ pid: p.id, type: 'card', card: c, choice: r.choice }); }
@@ -571,7 +599,7 @@
   // ?demo=seed[&n=3] で自動セットアップ（ローカル・確認用）
   function demoGame(seed, n) {
     const q = new URLSearchParams(location.search); const bots = (q.get('bots') || '').split(',').filter(Boolean).map(Number);
-    const meta = { seed, mode: q.get('mode') || 'expert', slots: q.get('slots') || 'v7', rules: q.get('rules') || 'v1', undoMode: 'free', players: Array.from({ length: n }, (_, i) => ({ name: 'P' + (i + 1), passive: true })), bots };
+    const meta = { seed, mode: q.get('mode') || 'expert', slots: q.get('slots') || 'v7', rules: q.get('rules') || 'v1', ext: q.get('ext') || 'none', undoMode: 'free', players: Array.from({ length: n }, (_, i) => ({ name: 'P' + (i + 1), passive: true })), bots };
     const sps = ['wing', 'arm', 'ant', 'manta']; const entries = [];
     for (let i = 0; i < n; i++) { entries.push({ type: 'species', pid: i, species: sps[i] }); if (sps[i] === 'arm') entries.push({ type: 'startTrait', pid: i, trait: 'IG' }); }
     const hands = { 3: [['A', 'Q'], ['B', 'N'], ['H', 'T']], 4: [['A', 'Q', 'D'], ['B', 'N', 'S'], ['H', 'T', 'R'], ['C', 'K', 'I']] }[n];
