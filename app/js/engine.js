@@ -21,6 +21,7 @@
       version: 1,
       seed: opts.seed | 0, rngState: opts.seed | 0,
       mode: opts.mode || 'expert',
+      slotSet: opts.slots === 'm4' ? 'm4' : 'v7', // 資源獲得スロット：v7=現行7／m4=統合4（試作）
       nPlayers: opts.players.length,
       round: 0, phase: 'setup', setupStep: 'species', setupIdx: 0,
       turnOrder: [], cur: 0,
@@ -52,7 +53,7 @@
       const cum = shuffle(st, G.LINEAGE_TYPE.cumulative).slice(0, 2), fun = shuffle(st, G.LINEAGE_TYPE.functional).slice(0, 2);
       st.shared.lineages = cum.concat(fun); st.shared.organField = st.shared.lineages.flatMap(l => [1, 2, 3].map(t => l + t));
     }
-    log(st, null, `ゲーム開始（${st.nPlayers}人・${st.mode === 'beginner' ? '初心者' : '熟練者'}セットアップ・seed ${st.seed}）`);
+    log(st, null, `ゲーム開始（${st.nPlayers}人・${st.mode === 'beginner' ? '初心者' : '熟練者'}セットアップ・${G.SLOT_SET_NAME[st.slotSet]}・seed ${st.seed}）`);
     log(st, null, 'コンボ：' + comboNames(st).join('／'));
     log(st, null, '器官の場：' + st.shared.lineages.map(l => G.LINEAGES[l]).join('・'));
     return st;
@@ -260,16 +261,20 @@
     if (p.left.W > 0) { p.left.W -= 1; return 'W'; }
     throw new Error('このラウンドのトークンを使い切っています');
   }
+  // 早取り排他のキー：統合4ではグループ（RE/RG/RP/RA）単位、現行はスロット単位
+  function usedKey(st, slotId) { return st.slotSet === 'm4' && G.RES_GROUP_OF[slotId] ? G.RES_GROUP_OF[slotId] : slotId; }
+  function slotUsedBy(st, slotId) { return st.shared.used[usedKey(st, slotId)]; }
   function claimSlot(st, p, slotId, opt) {
     opt = opt || {};
     const s = G.SLOT_BY_ID[slotId];
     if (!s.excl) return { bypass: null };
-    if (st.shared.used[slotId] === undefined) { st.shared.used[slotId] = p.id; return { bypass: null }; }
+    const key = usedKey(st, slotId);
+    if (st.shared.used[key] === undefined) { st.shared.used[key] = p.id; return { bypass: null }; }
     // 使用済み：突破手段
     if (opt.bodyMass && p.flags.strong['body5']) return { bypass: 'body5' };
     if (!p.round.firstDone) { const o = organ(p, 'Rh3'); if (o && (o.strong || p.uses.rh3 < 3)) { if (!o.strong) p.uses.rh3 += 1; return { bypass: 'Rh3' }; } }
     if (opt.useL && G.RES_SLOTS.includes(slotId)) { if (p.L <= 0) throw new Error('生命核がありません'); p.L -= 1; return { bypass: 'L' }; }
-    throw new Error(`このスロットは今ラウンド ${P(st, st.shared.used[slotId]).name} が使用済みです${G.RES_SLOTS.includes(slotId) ? (p.L > 0 ? '（緊急発進＝生命核1で使えます）' : '（生命核があれば緊急発進で使えます）') : '（次のラウンドまで待ってください）'}`);
+    throw new Error(`このスロットは今ラウンド ${P(st, st.shared.used[key]).name} が使用済みです${G.RES_SLOTS.includes(slotId) ? (p.L > 0 ? '（緊急発進＝生命核1で使えます）' : '（生命核があれば緊急発進で使えます）') : '（次のラウンドまで待ってください）'}`);
   }
   function afterAction(st, p, desc, tokenUsed) {
     p.round.firstDone = true;
@@ -752,10 +757,10 @@
   // ---------- 状況照会（UI用） ----------
   function availability(st, p) {
     const out = {};
-    G.SLOTS.forEach(s => { out[s.id] = { used: st.shared.used[s.id] !== undefined, usedBy: st.shared.used[s.id] }; });
+    G.SLOTS.forEach(s => { const u = slotUsedBy(st, s.id); out[s.id] = { used: u !== undefined, usedBy: u }; });
     return out;
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

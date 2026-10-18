@@ -29,6 +29,8 @@ table.tracks td .first { display:block; font-size:10px; color:#a0760a; }
 .slot { display:flex; flex-direction:column; align-items:flex-start; text-align:left; width:calc(25% - 5px); min-width:150px; padding:6px 8px; }
 .slot b { font-size:13px; } .slot small { color:var(--mute); font-size:11px; } .slot em { font-size:11px; color:#b00; font-style:normal; }
 .slot.used { background:#f3f3f3; border-style:dashed; }
+.merged { display:flex; flex-direction:column; gap:4px; width:calc(25% - 5px); min-width:150px; padding:4px; border:1px dashed var(--mute); border-radius:6px; }
+.merged h5 { margin:0 2px; font-size:12px; } .merged .slot { width:auto; min-width:0; } .merged.used { background:#f7f7f7; }
 .ogrid, .tgrid { display:grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap:6px; }
 .ocard, .tcard { display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding:6px 8px; min-height:92px; }
 .ocard small, .tcard small { color:var(--mute); font-size:11px; line-height:1.3; }

@@ -1,6 +1,6 @@
 /* game01 デジタルモック — オンライン同期（Firebase Realtime Database）
    共有するのは「エントリ列」（セットアップ＋アクション＋アンドゥ）だけ。各端末は先頭から再生して状態を作る。
-   rooms/{code}/meta   : { seed, mode, undoMode, players:[{name,passive}], createdAt }
+   rooms/{code}/meta   : { seed, mode, slots('v7'|'m4'), undoMode, players:[{name,passive}], createdAt }
    rooms/{code}/seats  : { "0": {uid,name}, ... }   座席→端末
    rooms/{code}/entries: push({ ...entry, uid, ts })
    設定は js/config.js（window.G1_FIREBASE）。未設定ならオンライン機能は無効。 */

@@ -134,11 +134,12 @@
     const form = h('form', { class: 'sec' }, h('h3', null, title));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '人数'), h('select', { name: 'n' }, h('option', { value: 3 }, '3人'), h('option', { value: 4, selected: true }, '4人'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'セットアップ'), h('select', { name: 'mode' }, h('option', { value: 'beginner' }, '初心者（宝石コンボ・器官の場を固定）'), h('option', { value: 'expert' }, '熟練者（宝石コンボ・器官の場を抽選）'))));
+    form.appendChild(h('label', { class: 'frow' }, h('span', null, '資源スロット'), h('select', { name: 'slots' }, h('option', { value: 'v7' }, '現行（7スロット・各1人）'), h('option', { value: 'm4' }, '統合4（E系／G系／P系／全資源・各1人・試作）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'アンドゥ'), h('select', { name: 'undoMode' }, h('option', { value: 'free' }, '自由（誰でも即時）'), h('option', { value: 'approve' }, '承認（他の参加者全員のOK）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'シード'), h('input', { type: 'number', name: 'seed', value: Math.floor(Math.random() * 100000) })));
     for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1) }), h('small', null, h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
     form.appendChild(h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, okLabel)));
-    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), undoMode: fd.get('undoMode'), players, bots }); });
+    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', undoMode: fd.get('undoMode'), players, bots }); });
     return form;
   }
   function bindNet() { Net.onChange = () => { rebuildState(); render(); }; rebuildState(); render(); }
@@ -321,7 +322,7 @@
     BRD: '繁殖変換：P30→係数×4／P50→×5（W必須・ATが残っていること）', ORG: '器官建造：器官の場のカードをクリック', SCAN: '環境スキャン：E5→他プレイヤーの最高Lv×2の資源（自分は除く）', ADP: '適応進化：生命核1→Lv1のトラックを+1（W必須）', CNV: '資源変換：E2→G1／G2→E1／P8→E3／P8→G2', RSV: '予備動員：無料でE+2またはG+1',
   };
   function slotButton(p, can, s, onclick, extra) {
-    const used = st.shared.used[s.id];
+    const used = G.slotUsedBy(st, s.id);
     const reason = !can ? roMsg : (s.id === 'TRT' || s.id === 'ORG' || s.id === 'TRK') ? null : check(sample(p, s.id));
     return actBtn({ class: 'slot' + (used !== undefined ? ' used' : ''), title: TIPS[s.id] || s.text, onclick }, reason, h('b', null, s.name), h('small', null, icost(s.text)), used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
   }
@@ -338,9 +339,12 @@
     return { pid, type: 'reserve', res: 'E' };
   }
   function renderExcl(p, can) {
-    const box = h('div', { class: 'panel excl' }, h('h3', null, '早取り盤', h('small', { class: 'sub' }, '　各スロットは1ラウンドに1人だけ。使用済みは生命核1の「緊急発進」で資源獲得スロットのみ突破可')));
-    const g1 = h('div', { class: 'sgroup' }, h('h4', null, '資源獲得'));
-    G.SLOTS.filter(s => s.group === 'res').forEach(s => g1.appendChild(slotButton(p, can, s, () => onSlot(p, s.id), st.shared.used[s.id] !== undefined && G.RES_SLOTS.includes(s.id) && p.L > 0 ? h('small', { class: 'bypass' }, '緊急発進可（L1）') : null)));
+    const m4 = st.slotSet === 'm4';
+    const box = h('div', { class: 'panel excl' }, h('h3', null, '早取り盤', h('small', { class: 'sub' }, m4 ? '　資源獲得は4枠（E系／G系／P系／全資源）・各枠1ラウンドに1人、枠内のどちらかを選ぶ。使用済み枠は生命核1の「緊急発進」で突破可（Pブーストは不可）' : '　各スロットは1ラウンドに1人だけ。使用済みは生命核1の「緊急発進」で資源獲得スロットのみ突破可')));
+    const g1 = h('div', { class: 'sgroup' }, h('h4', null, m4 ? '資源獲得（統合4・試作）' : '資源獲得'));
+    const resBtn = (s, used) => slotButton(p, can, s, () => onSlot(p, s.id), used !== undefined && G.RES_SLOTS.includes(s.id) && p.L > 0 ? h('small', { class: 'bypass' }, '緊急発進可（L1）') : null);
+    if (m4) Object.entries(G.RES_GROUPS).forEach(([gid, grp]) => { const used = st.shared.used[gid]; const gb = h('div', { class: 'merged' + (used !== undefined ? ' used' : '') }, h('h5', null, grp.name)); grp.slots.forEach(id => gb.appendChild(resBtn(G.SLOT_BY_ID[id], used))); g1.appendChild(gb); });
+    else G.SLOTS.filter(s => s.group === 'res').forEach(s => g1.appendChild(resBtn(s, st.shared.used[s.id])));
     const g2 = h('div', { class: 'sgroup' }, h('h4', null, '大量消費（P20）'));
     G.SLOTS.filter(s => s.group === 'mass').forEach(s => g2.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     const g3 = h('div', { class: 'sgroup' }, h('h4', null, 'その他'));
@@ -447,10 +451,10 @@
     submit({ pid: p.id, type: 'track', track: t, pay: r.pay, useL: +r.useL });
   }
   async function onSlot(p, id, shield) {
-    if (shield) { const r = await ask('Wなし実行：資源獲得スロットを選択（追加アクション・手番は消費しません）', [{ type: 'select', name: 'slot', label: 'スロット', options: G.RES_SLOTS.map(s => ({ value: s, label: G.SLOT_BY_ID[s].name + (st.shared.used[s] !== undefined ? '（使用済・不可）' : ''), disabled: st.shared.used[s] !== undefined })) }, resSel('coopRes', '協調ボーナスの資源（全資源用）')]); if (!r) return; return submit({ pid: p.id, type: 'res', slot: r.slot, coopRes: r.coopRes, shield: true }); }
+    if (shield) { const r = await ask('Wなし実行：資源獲得スロットを選択（追加アクション・手番は消費しません）', [{ type: 'select', name: 'slot', label: 'スロット', options: G.RES_SLOTS.map(s => ({ value: s, label: G.SLOT_BY_ID[s].name + (G.slotUsedBy(st, s) !== undefined ? '（使用済・不可）' : ''), disabled: G.slotUsedBy(st, s) !== undefined })) }, resSel('coopRes', '協調ボーナスの資源（全資源用）')]); if (!r) return; return submit({ pid: p.id, type: 'res', slot: r.slot, coopRes: r.coopRes, shield: true }); }
     const s = G.SLOT_BY_ID[id];
     if (s.group === 'res') {
-      const used = st.shared.used[id] !== undefined; const fields = [];
+      const used = G.slotUsedBy(st, id) !== undefined; const fields = [];
       if (id === 'PB') return confirm(`Pブースト購入：G${G.pbCost(p)}→P+10。実行しますか？`) && submit({ pid: p.id, type: 'res', slot: 'PB' });
       if (id === 'ALL' && p.coop > 0) fields.push(resSel('coopRes', `協調ボーナス+${p.coop}の資源`));
       if (used && G.RES_SLOTS.includes(id)) fields.push({ type: 'check', name: 'useL', label: '緊急発進（生命核1で使用済みスロットを使う）', value: p.L > 0 });
@@ -546,7 +550,7 @@
   // ?demo=seed[&n=3] で自動セットアップ（ローカル・確認用）
   function demoGame(seed, n) {
     const q = new URLSearchParams(location.search); const bots = (q.get('bots') || '').split(',').filter(Boolean).map(Number);
-    const meta = { seed, mode: q.get('mode') || 'expert', undoMode: 'free', players: Array.from({ length: n }, (_, i) => ({ name: 'P' + (i + 1), passive: true })), bots };
+    const meta = { seed, mode: q.get('mode') || 'expert', slots: q.get('slots') || 'v7', undoMode: 'free', players: Array.from({ length: n }, (_, i) => ({ name: 'P' + (i + 1), passive: true })), bots };
     const sps = ['wing', 'arm', 'ant', 'manta']; const entries = [];
     for (let i = 0; i < n; i++) { entries.push({ type: 'species', pid: i, species: sps[i] }); if (sps[i] === 'arm') entries.push({ type: 'startTrait', pid: i, trait: 'IG' }); }
     const hands = { 3: [['A', 'Q'], ['B', 'N'], ['H', 'T']], 4: [['A', 'Q', 'D'], ['B', 'N', 'S'], ['H', 'T', 'R'], ['C', 'K', 'I']] }[n];
