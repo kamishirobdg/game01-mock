@@ -18,17 +18,18 @@
 
   // ---------- 初期化 ----------
   function newGame(opts) {
+    const rules = G.RULESETS[opts.rules] ? opts.rules : 'v1';
     const st = {
       version: 1,
       seed: opts.seed | 0, rngState: opts.seed | 0,
       mode: opts.mode || 'expert',
       slotSet: opts.slots === 'm4' ? 'm4' : 'v7', // 資源獲得スロット：v7=現行7／m4=統合4（試作）
-      rules: G.RULESETS[opts.rules] ? opts.rules : 'v1', // ルールセット：v1=現行／t1=仮値セット（試作）
-      ext: opts.ext === 'x1' ? 'x1' : 'none', // 拡張：none=現行／x1=形質2枠＋緊急/協調発進＋社会+3（試作）
+      rules, // ルールセット：v1=現行／t1・t2=仮値セット（試作）
+      ext: (opts.ext === 'x1' || G.RULESETS[rules].x1) ? 'x1' : 'none', // 拡張：none=現行／x1=形質2枠＋緊急/協調発進＋社会+3（試作。T2は常に込み）
       nPlayers: opts.players.length,
       round: 0, phase: 'setup', setupStep: 'species', setupIdx: 0,
       turnOrder: [], cur: 0,
-      shared: { used: {}, firsts: {}, traitFirst: {}, organFirst: {}, combos: { two: [], three: [] }, organField: G.ORGAN_FIELD.slice(), lineages: ['Li', 'Tr', 'Fl', 'Rh'], cardPool: G.CARD_ORDER.slice() },
+      shared: { used: {}, organUsed: {}, firsts: {}, traitFirst: {}, organFirst: {}, combos: { two: [], three: [] }, organField: G.ORGAN_FIELD.slice(), lineages: ['Li', 'Tr', 'Fl', 'Rh'], cardPool: G.CARD_ORDER.slice() },
       players: [], log: [], history: [], roundStart: null, ended: false, result: null,
     };
     opts.players.forEach((p, i) => {
@@ -38,7 +39,7 @@
         lv: { body: 1, intel: 1, social: 1, metab: 1 },
         gems: { body: 0, intel: 0, social: 0, metab: 0 },
         traits: [], organs: [], cards: [], coop: 0, breed: 0, upgrades: 0,
-        tokens: ['W', 'W', 'W', 'AT', 'AT'], left: { W: 0, AT: 0 },
+        tokens: G.RULESETS[rules].gauge ? ['W', 'W', 'W', 'W', 'W'] : ['W', 'W', 'W', 'AT', 'AT'], left: { W: 0, AT: 0 }, // 係数ゲージ方式ではAT/強Wなし（係数は p.upgrades）
         shields: 0, gemsets: 0, inc: { E: 0, G: 0, P: 0 }, regime: false,
         massDisc: 0, traitDisc: 0, alwaysStrong: false, freeConv: false,
         next: { body: 0, intel: 0, any: 0, mass: 0 }, // 次の1回限りの軽減
@@ -139,7 +140,7 @@
       }
     }
     st.cur = 0;
-    st.shared.used = {};
+    st.shared.used = {}; st.shared.organUsed = {};
     st.players.forEach(p => {
       // 収入
       p.lRemain -= 1; p.L += 1;
@@ -165,7 +166,7 @@
   function income(p) {
     const inc = { E: 0, G: 0, P: 0, parts: [] };
     const add = (label, e, g, pp) => { if (!e && !g && !pp) return; inc.E += e; inc.G += g; inc.P += pp; inc.parts.push(`${label}${e ? ' E+' + e : ''}${g ? ' G+' + g : ''}${pp ? ' P+' + pp : ''}`); };
-    add('基礎', RS(p).incE, G.BASE_INCOME.G, G.BASE_INCOME.P);
+    add('基礎', RS(p).incE, RS(p).incG, RS(p).incP);
     add('恒久(種族/体制)', p.inc.E, p.inc.G, p.inc.P);
     if (p.lv.metab >= 2) add('代謝Lv2', 1, 0, 0);
     if (p.lv.metab >= 3 && p.flags.strong['metab3']) add('代謝Lv3強', 1, 1, 0);
@@ -231,12 +232,12 @@
     return { G: Math.max(1, c), strong };
   }
   function massCost(p, kind) {
-    let c = G.MASS_COST;
+    const R = RS(p); let c = R.massCost;
     const mc = trait(p, 'MC'); if (mc && mc.strong) c -= 6; c -= p.next.mass;
-    if (kind === 'MB') { c -= p.massDisc; const mb = trait(p, 'MB'); if (mb) c -= 8; return Math.max(G.MASS_MIN.body, c); }
-    return Math.max(G.MASS_MIN.other, c);
+    if (kind === 'MB') { c -= p.massDisc; const mb = trait(p, 'MB'); if (mb) c -= 8; return Math.max(R.massMin.body, c); }
+    return Math.max(R.massMin.other, c);
   }
-  function breedCost(p) { if (p.breed >= 2) return null; const mb = trait(p, 'MB'); const c = G.BREED_COST[p.breed]; return mb && mb.strong ? c / 2 : c; }
+  function breedCost(p) { if (p.breed >= 2) return null; const mb = trait(p, 'MB'); const c = RS(p).breed[p.breed]; return mb && mb.strong ? Math.ceil(c / 2) : c; }
   function gemsetPrice(p) { return Math.max(G.GEMSET_FLOOR, G.GEMSET_BASE - p.traits.length); }
   function pbCost(p) { const tr3 = organ(p, 'Tr3'); return Math.max(1, 2 - (tr3 ? (tr3.strong ? 3 : 2) : 0)); }
 
@@ -315,11 +316,13 @@
   function gainRes(p, res, n) { if (res === 'coop') p.coop = Math.min(G.COOP_MAX, p.coop + n); else p[res] += n; }
   function addUpgrade(st, p, why) {
     if (p.upgrades >= 4) { log(st, p.id, `（係数は上限×7のため ${why} の+1は無効）`); return; }
-    const i = p.tokens.indexOf('AT');
-    if (i >= 0) { p.tokens[i] = 'W'; p.left.W += 1; p.left.AT = Math.max(0, p.left.AT - 0); // 活性化：今Rの残トークンは AT→W に読み替え
-      // 残っていたATを1つWへ振替
-      if (p.left.AT > 0) { p.left.AT -= 1; } else { p.left.W -= 1; } // 活性化は未使用ATがあれば振替、なければ使用済み扱い
-    } else { const j = p.tokens.indexOf('W'); if (j >= 0) p.tokens[j] = 'S'; }
+    if (!RS(p).gauge) { // コマ方式：AT→W→強W に置き換える（係数ゲージ方式ではコマは触らない）
+      const i = p.tokens.indexOf('AT');
+      if (i >= 0) { p.tokens[i] = 'W'; p.left.W += 1; p.left.AT = Math.max(0, p.left.AT - 0); // 活性化：今Rの残トークンは AT→W に読み替え
+        // 残っていたATを1つWへ振替
+        if (p.left.AT > 0) { p.left.AT -= 1; } else { p.left.W -= 1; } // 活性化は未使用ATがあれば振替、なければ使用済み扱い
+      } else { const j = p.tokens.indexOf('W'); if (j >= 0) p.tokens[j] = 'S'; }
+    }
     p.upgrades += 1;
     log(st, p.id, `${p.name}：${why} → 係数 ×${coef(p)}`);
   }
@@ -432,6 +435,7 @@
     const c = stepCost(p, a.track, a.bonus); if (c === null) throw new Error('Lv5です');
     if (!a.bonus) useToken(p, true);
     let paid;
+    if ((a.pay === 'P' || a.pay === 'G') && RS(p).noAlt) throw new Error('この数値セットでは代替払い（P／G）はありません');
     if (a.pay === 'P') { if (a.track !== 'body') throw new Error('Pで払えるのは身体のみ'); if (p.P < c * 3) throw new Error('Pが足りません'); p.P -= c * 3; paid = `P${c * 3}`; }
     else if (a.pay === 'G') { if (a.track !== 'intel') throw new Error('Gで払えるのは知性のみ'); if (p.G < c) throw new Error('Gが足りません'); p.G -= c; paid = `G${c}`; }
     else { const r = payE(p, c, a.useL); paid = `E${r.E}${r.L ? '+L' + r.L : ''}`; }
@@ -445,7 +449,7 @@
   // 繁殖変換： {bonus}
   ACTIONS.breed = (st, p, a) => {
     const c = breedCost(p); if (c === null) throw new Error('繁殖は×5が上限');
-    if (!p.tokens.includes('AT')) throw new Error('活性化できる追加コマ（AT）がありません');
+    if (!RS(p).gauge && !p.tokens.includes('AT')) throw new Error('活性化できる追加コマ（AT）がありません');
     if (p.P < c) throw new Error(`個体数が足りません（必要P${c}・所持P${p.P}）`);
     if (!a.bonus) useToken(p, true);
     p.P -= c; p.breed += 1;
@@ -458,6 +462,7 @@
   ACTIONS.organ = (st, p, a) => {
     const c = organCost(st, p, a.organ); if (!c) throw new Error('その器官は今は建造できません（系統内は階層順）');
     if (organ(p, a.organ)) throw new Error('建造済みです');
+    if (RS(st).organExcl) { const u = st.shared.organUsed[a.organ]; if (u !== undefined && u !== p.id) throw new Error(`このカードは今ラウンド ${P(st, u).name} が建造しました（1ラウンド1人）`); }
     let e = c.E; if (a.bonus) e = ceilHalf(e);
     if (!a.bonus) useToken(p, false);
     const r = payE(p, e, a.useL); if (c.G) { if (p.G < c.G) throw new Error('Gが足りません'); p.G -= c.G; }
@@ -466,7 +471,7 @@
     // 建造前の連結効果（既存の器官が反応）
     const li1 = organ(p, 'Li1'); if (li1) { if (li1.strong) p.E += 1; else if (p.uses.li1 < 3) { p.uses.li1 += 1; p.E += 1; } }
     const li2 = organ(p, 'Li2'); if (li2) gainRes(p, a.li2Res || 'E', li2.strong ? 2 : 1);
-    p.organs.push({ id: a.organ, strong: c.strong });
+    p.organs.push({ id: a.organ, strong: c.strong }); if (RS(st).organExcl) st.shared.organUsed[a.organ] = p.id;
     afterAction(st, p, `器官 ${a.organ} ${G.ORGANS[a.organ].name} を建造（${c.strong ? '強' : '弱'}・E${r.E}${r.L ? '+L' + r.L : ''}${c.G ? '+G' + c.G : ''}）`, !a.bonus);
     const lin = G.ORGANS[a.organ].lin;
     if (lineageCount(p, lin) === 3) {
@@ -527,6 +532,7 @@
 
   // 形質アップグレード： {from, to, useL, res, track}
   ACTIONS.upgrade = (st, p, a) => {
+    if (RS(st).noUpgrade) throw new Error('この数値セットでは形質の買い替え（アップグレード）はありません');
     const from = trait(p, a.from); if (!from) throw new Error('手放す形質を持っていません');
     const defF = G.TRAITS[a.from], defT = G.TRAITS[a.to];
     if (trait(p, a.to)) throw new Error('取得済みの形質へはアップグレードできません');
@@ -738,20 +744,26 @@
       list.forEach((x, i) => { applyEntry(s, x); if (s.round > lastRound) { s.roundStarts.push(i + 1); lastRound = s.round; } });
       return s;
     };
-    const eff = []; let st = replay(eff); let pendingUndo = null; const rejected = [];
+    const eff = []; let st = replay(eff); let pendingUndo = null; const rejected = []; let undoInfo = null;
     const canUndo = (e) => { if (meta.undoMode !== 'approve') return true; const need = opts.otherUids ? opts.otherUids(e.uid) : []; const oks = opts.oks ? opts.oks(e.id) : []; return need.every(u => oks.includes(u)); };
-    for (const e of entries) {
+    entries.forEach((e, idx) => {
       if (e.type === 'undo' || e.type === 'undoRound') {
-        if (!canUndo(e)) { pendingUndo = e; continue; }
-        if (e.type === 'undo') { if (eff.length && eff[eff.length - 1].type !== 'finish') eff.pop(); }
-        else { const rs = st.roundStarts.length ? st.roundStarts[st.roundStarts.length - 1] : 0; eff.length = Math.min(eff.length, rs); }
-        st = replay(eff); pendingUndo = null; continue;
+        if (!canUndo(e)) { pendingUndo = e; return; }
+        const removed = [];
+        if (e.type === 'undo') {
+          // pids 指定あり＝要求者の（人間の）席。直前の自分の手まで戻す（間にある AI・他プレイヤーの手も取り消す）。自分の手が無ければ何も戻さない
+          const pids = Array.isArray(e.pids) && e.pids.length ? e.pids : null;
+          while (eff.length && eff[eff.length - 1].type !== 'finish') { const x = eff.pop(); removed.unshift(x); if (!pids || pids.includes(x.pid)) break; }
+          if (pids && !removed.some(x => pids.includes(x.pid))) { removed.forEach(x => eff.push(x)); removed.length = 0; }
+        } else { const rs = st.roundStarts.length ? st.roundStarts[st.roundStarts.length - 1] : 0; const cut = Math.min(eff.length, rs); removed.push(...eff.slice(cut)); eff.length = cut; }
+        undoInfo = { key: e.id || ('local' + idx), uid: e.uid, type: e.type, removed: removed.map(x => ({ pid: x.pid, type: x.type })) };
+        st = replay(eff); pendingUndo = null; return;
       }
-      if (e.type === 'undoOk' || e.type === 'undoCancel' || e.type === 'chat' || e.type === 'seat') { if (e.type === 'undoCancel') pendingUndo = null; continue; }
+      if (e.type === 'undoOk' || e.type === 'undoCancel' || e.type === 'chat' || e.type === 'seat') { if (e.type === 'undoCancel') pendingUndo = null; return; }
       try { applyEntry(st, e); eff.push(e); if (st.round > (st.roundStarts.length ? st._lr || 0 : 0)) { if (!st.roundStarts.length || st.roundStarts[st.roundStarts.length - 1] !== eff.length) { if (st.round > (st._lr || 0)) st.roundStarts.push(eff.length); } } st._lr = st.round; }
       catch (err) { rejected.push({ entry: e, error: err.message }); }
-    }
-    st.pendingUndo = pendingUndo; st.rejected = rejected; st.effective = eff.length;
+    });
+    st.pendingUndo = pendingUndo; st.rejected = rejected; st.effective = eff.length; st.undoInfo = undoInfo; // undoInfo＝直近に成立したアンドゥ（巻き込まれた手の通知用）
     return st;
   }
   function tryApply(st, action) { const lg = st.log, hist = st.history; st.log = []; st.history = []; const s = clone(st); st.log = lg; st.history = hist; apply(s, action); return s; }
@@ -770,9 +782,12 @@
   }
   function score(st, p) {
     const real = realGems(p), vg = virtualGems(st, p), cf = coef(p);
-    const R = RS(st);
-    const core = (real + vg) * R.gemPt * cf, dev = (p.traits.length + p.coop) * R.devPt, org = p.organs.length * R.organPt, reg = p.regime ? R.regimePt : 0;
-    return { total: core + dev + org + reg, core, dev, org, reg, real, vg, cf, gemPt: R.gemPt, devPt: R.devPt, organPt: R.organPt, tie: [real, p.traits.length + p.coop, p.E + p.G + p.P] };
+    const R = RS(st); const colors = G.TRACKS.filter(t => p.gems[t] > 0).length;
+    const core = (real + vg) * R.gemPt * cf, reg = p.regime ? R.regimePt : 0;
+    let dev, org;
+    if (R.scoreMode === 'mult') { dev = p.traits.length * Math.max(1, colors); org = p.organs.length * Math.min(4, p.coop); } // 掛け算：形質×宝石色数（1〜4）・器官×協調（上限4）
+    else { dev = (p.traits.length + p.coop) * R.devPt; org = p.organs.length * R.organPt; }
+    return { total: core + dev + org + reg, core, dev, org, reg, real, vg, cf, colors, mode: R.scoreMode, gemPt: R.gemPt, devPt: R.devPt, organPt: R.organPt, tie: [real, p.traits.length + p.coop, p.E + p.G + p.P] };
   }
   function endGame(st) {
     st.ended = true; st.phase = 'end';
@@ -781,7 +796,7 @@
     rows.sort((a, b) => b.total - a.total || b.tie[0] - a.tie[0] || b.tie[1] - a.tie[1] || b.tie[2] - a.tie[2]);
     st.result = rows;
     log(st, null, '=== ゲーム終了 ===', 'round');
-    rows.forEach((r, i) => log(st, r.pid, `${i + 1}位 ${r.name}：${r.total}点（宝石${r.real}+仮想${r.vg} ×${r.gemPt}×${r.cf}＝${r.core}／発展度${r.dev}${r.organPt ? '／器官' + r.org : ''}／体制${r.reg}）`, 'gem'));
+    rows.forEach((r, i) => log(st, r.pid, `${i + 1}位 ${r.name}：${r.total}点（宝石${r.real}+仮想${r.vg} ×${r.gemPt}×${r.cf}＝${r.core}／発展度${r.dev}${r.organPt || r.mode === 'mult' ? '／器官' + r.org : ''}／体制${r.reg}）`, 'gem'));
   }
 
   // ---------- 状況照会（UI用） ----------

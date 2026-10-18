@@ -15,9 +15,14 @@
   G.BASE_INCOME = { E: 3, G: 1, P: 4 };  // E は G.RULESETS[st.rules].incE が優先
   // 試作：ルールセット（meta.rules）。v1＝現行（design.md）／t1＝初回テストプレイ後の仮値セット（design.md 未変更・A/B比較用）
   //   step=進行コスト(index=現在Lv)／incE=基礎E収入／gemPt=宝石1個の点数（×係数）／devPt=形質・協調1つの点数／organPt=器官1枚の点数／regimePt=体制完成
+  //   incG/incP=基礎G/P収入／massCost・massMin=大量消費／breed=繁殖コスト2段／scoreMode='add'（加算）|'mult'（形質×宝石色数・器官×協調〔上限4〕）
+  //   gauge=係数ゲージ（コマは全てW・AT/強Wなし）／noUpgrade=形質買い替えなし／organExcl=器官の場の各カードは1R1人／noAlt=代替払いなし／x1=拡張x1を含む
+  const base = { incG: 1, incP: 4, massCost: 20, massMin: { other: 8, body: 10 }, breed: [30, 50], scoreMode: 'add', gauge: false, noUpgrade: false, organExcl: false, noAlt: false, x1: false };
   G.RULESETS = {
-    v1: { name: '現行', step: [0, 2, 3, 5, 8], incE: 3, gemPt: 10, devPt: 7, organPt: 0, regimePt: 50 },
-    t1: { name: '仮値セットT1', step: [0, 3, 5, 8, 13], incE: 2, gemPt: 2, devPt: 3, organPt: 2, regimePt: 15 },
+    v1: Object.assign({}, base, { name: '現行', step: [0, 2, 3, 5, 8], incE: 3, gemPt: 10, devPt: 7, organPt: 0, regimePt: 50 }),
+    t1: Object.assign({}, base, { name: '仮値セットT1', step: [0, 3, 5, 8, 13], incE: 2, gemPt: 2, devPt: 3, organPt: 2, regimePt: 15 }),
+    // T2（2026-10-18・ユーザー承認の推奨案）：基礎収入ゼロ（生命核のみ）・掛け算得点・係数ゲージ・形質買い替えなし・器官1R1人・代替払いなし・Pコスト再スケール・拡張x1込み
+    t2: Object.assign({}, base, { name: '仮値セットT2', step: [0, 3, 5, 8, 13], incE: 0, incG: 0, incP: 0, gemPt: 2, devPt: 3, organPt: 2, regimePt: 15, massCost: 12, massMin: { other: 6, body: 6 }, breed: [20, 35], scoreMode: 'mult', gauge: true, noUpgrade: true, organExcl: true, noAlt: true, x1: true }),
   };
   G.MASS_COST = 20;
   G.MASS_MIN = { other: 8, body: 10 }; // 身体は2026-10-18に12→10
