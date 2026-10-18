@@ -240,6 +240,15 @@
   // T3：トラックの次のLvに必要な収集物（gates）。無ければ null
   function gateCount(p, track) { return track === 'metab' ? p.organs.length : track === 'intel' ? p.traits.length : track === 'social' ? p.coop : (p.pInv || 0); }
   function gateReq(p, track) { const g = RS(p).gates; if (!g) return null; const next = p.lv[track] + 1; if (next > 5) return null; return { need: g[track][next], have: gateCount(p, track) }; }
+  // T3：収集物が条件に達したトラックは自動で上がる（Eコストなし）。報酬の連鎖（協調+1→社会 等）も拾うため、安定するまで繰り返す
+  function syncGates(st, p) {
+    if (!RS(p).gates) return;
+    for (let guard = 0; guard < 20; guard++) {
+      const t = G.TRACKS.find(tr => { const g = gateReq(p, tr); return g && g.have >= g.need; });
+      if (!t) break;
+      advanceTrack(st, p, t, `${G.GATE_LABEL[t]}${gateCount(p, t)}で自動進行`);
+    }
+  }
   function breedCost(p) { if (p.breed >= 2) return null; const mb = trait(p, 'MB'); const c = RS(p).breed[p.breed]; return mb && mb.strong ? Math.ceil(c / 2) : c; }
   function gemsetPrice(p) { return Math.max(G.GEMSET_FLOOR, G.GEMSET_BASE - p.traits.length); }
   function pbCost(p) { const tr3 = organ(p, 'Tr3'); return Math.max(1, 2 - (tr3 ? (tr3.strong ? 3 : 2) : 0)); }
@@ -436,7 +445,7 @@
   // トラック進行： {track, pay:'E'|'P'|'G', useL, bonus}
   ACTIONS.track = (st, p, a) => {
     const c = stepCost(p, a.track, a.bonus); if (c === null) throw new Error('Lv5です');
-    const gq = gateReq(p, a.track); if (gq && gq.have < gq.need) throw new Error(`${G.TRACK_INFO[a.track].name}Lv${p.lv[a.track] + 1}には${G.GATE_LABEL[a.track]}${gq.need}が必要です（現在${gq.have}）`);
+    { const gq = gateReq(p, a.track); if (gq) throw new Error(`この数値セットではトラックは収集物で自動的に上がります（${G.TRACK_INFO[a.track].name}Lv${p.lv[a.track] + 1}＝${G.GATE_LABEL[a.track]}${gq.need}・現在${gq.have}。Eでの進行なし・適応進化は可）`); }
     if (!a.bonus) useToken(p, true);
     let paid;
     if ((a.pay === 'P' || a.pay === 'G') && RS(p).noAlt) throw new Error('この数値セットでは代替払い（P／G）はありません');
@@ -720,6 +729,7 @@
     st.log = lg; st.history = hist; st.roundStart = rs;
     try {
       const consumed = ACTIONS[action.type](st, p, action);
+      syncGates(st, p);
       if (viaBonus) { const i = p.pending.findIndex(x => x.type === 'bonusAction'); if (i >= 0) p.pending.splice(i, 1); }
       if (consumed !== false || action.type === 'resolve') advanceTurn(st);
       else if (!p.pending.length && p.left.W + p.left.AT === 0) advanceTurn(st);
