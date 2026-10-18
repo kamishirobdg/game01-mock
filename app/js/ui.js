@@ -164,11 +164,34 @@
       box.appendChild(h('h2', null, `個人アクションカードのドラフト：${pl.name}（${need}枚・残り${order.length - st.setupIdx}人）`));
       box.appendChild(h('p', { class: 'note' }, '種族選択の逆順で、必要枚数を一度に選びます。'));
       if (!mine(i)) { box.appendChild(h('p', { class: 'note' }, `${pl.name} の端末で選択中です`)); return box; }
+      box.classList.add('wide');
       const chosen = new Set(); const sel = h('div', { class: 'cardgrid' });
       st.shared.cardPool.forEach(c => { const b = h('button', { class: 'cardbtn', onclick: () => { if (chosen.has(c)) { chosen.delete(c); b.classList.remove('sel'); } else if (chosen.size < need) { chosen.add(c); b.classList.add('sel'); } } }, art(c, 'small'), h('b', null, `${c} ${G.CARDS[c].name}`), h('small', null, G.CARDS[c].text)); sel.appendChild(b); });
-      box.appendChild(sel);
-      box.appendChild(h('button', { class: 'primary', onclick: () => submit({ type: 'draft', pid: i, cards: Array.from(chosen) }) }, '決定'));
+      const pick = h('div', { class: 'panel' }, h('h3', null, `カードを${need}枚選択`), sel, h('button', { class: 'primary', onclick: () => submit({ type: 'draft', pid: i, cards: Array.from(chosen) }) }, '決定'));
+      roMsg = 'ドラフト中（参照のみ）';
+      box.appendChild(h('div', { class: 'grid draftgrid' },
+        h('div', { class: 'col me' }, renderDraftMe(pl), pick),
+        h('div', { class: 'col shared preview' }, renderTracks(pl, false), renderExcl(pl, false), renderShared(pl, false))));
+      roMsg = '他プレイヤーの手番';
     }
+    return box;
+  }
+  // ドラフト時の自分の状況（種族・資源・第1ラウンドの収入・手番順）
+  function renderDraftMe(p) {
+    const sp = G.SPECIES[p.species]; const inc = G.income(p);
+    const box = h('div', { class: 'panel player p' + p.id }, h('div', { class: 'phead' }, art(SPECIES_ART[p.species], 'portrait'), h('h3', null, h('span', { class: 'mk p' + p.id }, p.id + 1), ` ${p.name}（${sp.name}）`, h('em', { class: 'sptype' }, sp.type))));
+    box.appendChild(h('div', { class: 'res' }, ...['E', 'G', 'P', 'L'].map(k => h('span', { class: 'rbox r' + k, title: RES_JP[k] }, ic(k), h('b', null, String(p[k])), h('small', null, `+${k === 'L' ? 1 : inc[k]}/R`)))));
+    box.appendChild(h('div', { class: 'note' }, `第1ラウンド開始時に E+${inc.E} G+${inc.G} P+${inc.P} L+1 を受け取ります`));
+    const st0 = [p.passive ? 'パッシブ：' + sp.passive : 'パッシブ無し'];
+    G.TRACKS.forEach(t => { if (p.lv[t] > 1) st0.push(`${G.TRACK_INFO[t].name}Lv${p.lv[t]}`); });
+    if (p.coop) st0.push(`協調${p.coop}`);
+    if (p.traits.length) st0.push('形質 ' + p.traits.map(t => `${t.id} ${G.TRAITS[t.id].name}`).join('・'));
+    box.appendChild(h('div', { class: 'note' }, st0.join('／')));
+    box.appendChild(h('div', { class: 'note' }, sp.hint));
+    const order = st.players.slice().sort((a, b) => G.SPECIES[b.species].order - G.SPECIES[a.species].order);
+    box.appendChild(h('div', { class: 'note' }, '第1ラウンドの手番順：' + order.map(q => `${q.name}（${G.SPECIES[q.species].name}）`).join(' → ')));
+    const done = st.players.filter(q => q.cards.length);
+    if (done.length) box.appendChild(h('div', { class: 'note' }, '選択済み：' + done.map(q => `${q.name} ${q.cards.join('・')}`).join('／')));
     return box;
   }
   function renderSeats() {
@@ -263,11 +286,12 @@
     social: { 2: '協調+1', 3: ['協調+2', '協調+1 G+3'], 4: 'Wなし実行権+1', 5: ['協調+1 権+2', '協調+1 権+1'] },
     metab:  { 2: 'E収入+1', 3: ['E・G収入+1', 'E+8'], 4: 'E↔G無料変換', 5: ['収入全種+2', '収入全種+1'] },
   };
+  let roMsg = '他プレイヤーの手番'; // 操作できないときの理由表示（ドラフト中の参照表示で差し替え）
   function renderTracks(p, can) {
     const box = h('div', { class: 'panel tracksp' }, h('h3', null, '進化トラック', h('small', { class: 'sub' }, '　次の段（点線）をクリックで進行（W必須・排他なし）。★＝宝石・先着は強い報酬')));
     G.TRACKS.forEach(t => {
       const info = G.TRACK_INFO[t]; const nxt = p.lv[t] + 1;
-      const reason = can ? check({ pid: p.id, type: 'track', track: t, pay: 'E', useL: Math.min(p.L, 3) }) : '他プレイヤーの手番';
+      const reason = can ? check({ pid: p.id, type: 'track', track: t, pay: 'E', useL: Math.min(p.L, 3) }) : roMsg;
       const lane = h('div', { class: 'lane lane-' + info.color });
       lane.appendChild(h('div', { class: 'lane-lbl' }, h('b', null, info.name), h('small', null, `${info.jp}宝石`)));
       const body = h('div', { class: 'lane-body' });
@@ -298,7 +322,7 @@
   };
   function slotButton(p, can, s, onclick, extra) {
     const used = st.shared.used[s.id];
-    const reason = !can ? '他プレイヤーの手番' : (s.id === 'TRT' || s.id === 'ORG' || s.id === 'TRK') ? null : check(sample(p, s.id));
+    const reason = !can ? roMsg : (s.id === 'TRT' || s.id === 'ORG' || s.id === 'TRK') ? null : check(sample(p, s.id));
     return actBtn({ class: 'slot' + (used !== undefined ? ' used' : ''), title: TIPS[s.id] || s.text, onclick }, reason, h('b', null, s.name), h('small', null, icost(s.text)), used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
   }
   function sample(p, id) { // 事前判定用の代表アクション

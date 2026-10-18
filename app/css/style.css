@@ -56,6 +56,12 @@ table.tracks td .first { display:block; font-size:10px; color:#a0760a; }
 .others .orow { font-size:12px; padding:3px 0; border-top:1px dashed var(--line); }
 .logp .log { max-height:300px; overflow:auto; font-size:12px; }
 .log .l { padding:1px 4px; border-bottom:1px dotted #eee; } .log .l.round { background:#eef1f6; font-weight:600; } .log .l.gem { color:#8a5a00; } .log .l.act { color:#1f2430; }
+.setup.wide { max-width:none; margin:12px; }
+.draftgrid { padding:0; grid-template-columns: minmax(360px, 1fr) minmax(0, 1.35fr); }
+.draftgrid .cardgrid { grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); } .draftgrid .cardgrid img.art.small { height:44px; } .draftgrid .cardbtn { min-width:0; }
+@media (max-width: 600px) { .setup.wide { margin:8px; padding:12px; } }
+.preview button, .preview .node { pointer-events:none; } .preview button.na, .preview .lane .node.next.na { opacity:1; }
+@media (max-width: 1100px) { .draftgrid { grid-template-columns: 1fr; } }
 .setup { max-width:860px; margin:20px auto; background:#fff; border:1px solid var(--line); border-radius:8px; padding:16px 20px; }
 .frow { display:flex; align-items:center; gap:10px; margin:6px 0; } .frow > span { width:190px; color:var(--mute); font-size:12px; } .frow small { color:var(--mute); font-size:11px; }
 .frow select, .frow input[type=text], .frow input[type=number] { flex:1; min-width:120px; font:inherit; padding:4px 6px; }
