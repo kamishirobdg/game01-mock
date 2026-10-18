@@ -131,6 +131,7 @@
     else {
       on.appendChild(metaForm('新しいルームを作る', 'ルーム作成', async (meta) => { try { const code = await Net.createRoom(meta); game = { kind: 'online', code }; bindNet(); toast('ルーム ' + code + ' を作成'); } catch (e) { toast(e.message, true); } }));
       const jf = h('form', { class: 'sec' }, h('label', { class: 'frow' }, h('span', null, 'ルームコード'), h('input', { type: 'text', name: 'code', placeholder: '例 ABC12', value: (localStorage.getItem('g01_room') || '') })), h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, '参加')));
+      jf.querySelector('.mbtns').appendChild(h('button', { type: 'button', title: 'テストで作ったルームを消す（コードを知っていれば誰でも）', onclick: async () => { const code = new FormData(jf).get('code'); if (!confirm(`ルーム ${code} を削除しますか？（元に戻せません）`)) return; try { await Net.deleteRoom(code); toast('ルーム ' + code.toUpperCase() + ' を削除'); } catch (e) { toast(e.message, true); } } }, 'ルーム削除'));
       jf.addEventListener('submit', async ev => { ev.preventDefault(); try { const code = await Net.join(new FormData(jf).get('code')); game = { kind: 'online', code }; bindNet(); } catch (e) { toast(e.message, true); } });
       on.appendChild(jf);
     }
@@ -149,8 +150,17 @@
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'シード'), h('input', { type: 'number', name: 'seed', value: Math.floor(Math.random() * 100000) })));
     for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1) }), h('small', null, h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
     form.appendChild(h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, okLabel)));
-    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || 'v1', ext: fd.get('ext') || 'none', undoMode: fd.get('undoMode'), players, bots }); });
+    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); rememberForm(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || 'v1', ext: fd.get('ext') || 'none', undoMode: fd.get('undoMode'), players, bots }); });
+    restoreForm(form);
     return form;
+  }
+  // 前回の設定値（シード以外）を localStorage に残し、次回のフォームに引き継ぐ
+  const META_KEY = 'g01_meta';
+  function rememberForm(form) { try { const keep = {}; Array.from(form.elements).forEach(el => { if (el.name && el.name !== 'seed') keep[el.name] = el.type === 'checkbox' ? el.checked : el.value; }); localStorage.setItem(META_KEY, JSON.stringify(keep)); } catch (e) { } }
+  function restoreForm(form) {
+    let saved = null; try { saved = JSON.parse(localStorage.getItem(META_KEY) || 'null'); } catch (e) { }
+    if (!saved) return;
+    Array.from(form.elements).forEach(el => { if (!el.name || !(el.name in saved)) return; if (el.type === 'checkbox') el.checked = !!saved[el.name]; else el.value = saved[el.name]; });
   }
   function bindNet() { Net.onChange = () => { rebuildState(); render(); }; rebuildState(); render(); }
 
@@ -231,7 +241,7 @@
     const hd = $('#hdr'); hd.innerHTML = '';
     hd.appendChild(h('b', null, 'game01 モック'));
     hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール'));
-    if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'))); return; }
+    if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); return; }
     hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.ROUNDS}`));
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
     const to = h('span', { class: 'order' }, '手番順：');
@@ -245,6 +255,7 @@
     btns.appendChild(h('button', { onclick: exportCsv }, 'ログCSV'));
     btns.appendChild(h('button', { title: '検証用：手番プレイヤーの資源を書き換える（ログに残ります）', onclick: debugPanel }, 'デバッグ'));
     btns.appendChild(h('button', { onclick: quit }, '退出／新規'));
+    if (isOnline()) btns.appendChild(h('button', { title: 'このルームをサーバから削除して入口に戻る', onclick: deleteThisRoom }, 'ルーム削除'));
     hd.appendChild(btns);
     const curPid = G.cur(st).id;
     if (renderHeader._last !== undefined && renderHeader._last !== curPid) { toast(`${G.cur(st).name} の手番`); }
@@ -256,6 +267,7 @@
     submit({ pid: p.id, type: 'cheat', E: r.E, G: r.G, P: r.P, L: r.L, coop: r.coop });
   }
   function quit() { if (!confirm('この画面を閉じて入口に戻りますか？（ローカルの進行は自動保存されています）')) return; if (isOnline()) Net.leave(); game = null; st = null; render(); }
+  async function deleteThisRoom() { if (!isOnline() || !confirm(`ルーム ${game.code} を削除しますか？（全員の進行が消えます・元に戻せません）`)) return; try { await Net.deleteRoom(game.code); game = null; st = null; toast('ルームを削除しました'); render(); } catch (e) { toast(e.message, true); } }
   function renderUndoBanner() {
     const u = st.pendingUndo; const isMine = u.uid === Net.uid; const oks = Net.oksFor(u.id);
     return h('div', { class: 'banner' }, `アンドゥ要求（${u.type === 'undo' ? '1手' : 'ラウンド頭'}）が承認待ち：承認 ${oks.length}/${Net.otherUids(u.uid).length}　`,
@@ -375,14 +387,25 @@
     const grid = h('div', { class: 'ogrid' });
     st.shared.organField.forEach(id => {
       const o = G.ORGANS[id]; const c = G.organCost(st, p, id); const mine_ = G.organ(p, id); const first = st.shared.organFirst[id];
-      const reason = !can ? '他プレイヤーの手番' : !c ? (mine_ ? '建造済み' : '階層順で未解放') : check({ pid: p.id, type: 'organ', organ: id, useL: Math.min(p.L, 2), li2Res: 'E', li3Res: 'E', regimeRes: 'E' });
+      const locked = !c && !mine_; // 階層順で未解放
+      const reason = !can ? '他プレイヤーの手番' : mine_ ? null : locked ? '階層順で未解放' : check({ pid: p.id, type: 'organ', organ: id, useL: Math.min(p.L, 2), li2Res: 'E', li3Res: 'E', regimeRes: 'E' });
       const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, c ? icost(`E${c.E}${c.G ? '+G' + c.G : ''}`) : (mine_ ? '建造済' : `T${o.tier}`)), h('span', { class: 'sw ' + (c ? (c.strong ? 'strong' : 'weak') : '') }, c ? (c.strong ? '強' : '弱') : `${G.LINEAGES[o.lin]}`));
-      grid.appendChild(actBtn({ class: 'ocard' + (mine_ ? ' mine' : ''), title: `${id} ${o.name}（${G.LINEAGES[o.lin]}系 T${o.tier}）\n強：${o.strong}\n弱：${o.weak}`, onclick: () => onOrgan(p, id) }, reason,
+      grid.appendChild(actBtn({ class: 'ocard' + (mine_ ? ' mine' : locked ? ' locked' : ''), title: `${id} ${o.name}（${G.LINEAGES[o.lin]}系 T${o.tier}）\n強：${o.strong}\n弱：${o.weak}`, onclick: () => onOrgan(p, id) }, reason,
         hd, art(id), h('b', null, `${id} ${o.name}`), h('small', null, `強：${o.strong}`), h('small', null, `弱：${o.weak}`),
-        first !== undefined ? h('small', { class: 'first' }, `先着:${st.players[first].name}`) : null));
+        ownersRow(p, id, 'organ'), statusLine(mine_ ? 'ok' : locked ? 'lock' : reason && can ? 'no' : null, mine_ ? '建造済み' : locked ? '未解放（階層順）' : reason)));
     });
     box.appendChild(grid); return box;
   }
+  // 所有トークン置き場：全プレイヤーぶんの枠を並べ、所有者の枠にマーカー（★＝強）。自分の枠は太枠
+  function ownersRow(p, id, kind) {
+    const own = (q) => kind === 'organ' ? G.organ(q, id) : G.trait(q, id);
+    const names = st.players.filter(own).map(q => q.name).join('・');
+    const row = h('div', { class: 'owners', title: '所有：' + (names || 'なし') });
+    st.players.forEach(q => { const o = own(q); row.appendChild(h('span', { class: 'mk p' + q.id + (o ? '' : ' empty') + (q.id === p.id ? ' me' : ''), title: `${q.name}${o ? (o.strong ? '：強' : '：弱') : '：未取得'}` }, o ? (o.strong ? '★' : String(q.id + 1)) : '')); });
+    return row;
+  }
+  // グレーの理由を一目で：ok＝取得済み（緑）／lock＝未解放（縞）／no＝今は不可（赤・理由つき）
+  function statusLine(kind, text) { return kind ? h('small', { class: 'status ' + kind }, (kind === 'no' ? '× ' : '') + text) : null; }
   function renderTraitPool(p, can) {
     const box = h('div', { class: 'panel' }, h('h3', null, '形質プール（14種・購入は早取り）', h('small', { class: 'sub' }, '　先着＝強・後続＝弱（安い）。4枚目・8枚目で係数+1。取得済み（緑）をクリックでアップグレード')));
     const grid = h('div', { class: 'tgrid' });
@@ -392,7 +415,7 @@
       const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, mine_ ? `取得済→交換` : [ic('G'), `${c.G}`, h('small', null, `（表示${t.cost[0]}/${t.cost[1]}）`)]), h('span', { class: 'sw ' + ((mine_ ? mine_.strong : c.strong) ? 'strong' : 'weak') }, (mine_ ? mine_.strong : c.strong) ? '強' : '弱'));
       grid.appendChild(actBtn({ class: 'tcard' + (mine_ ? ' mine' : ''), title: `${id} ${t.name}\n強：${t.strong}\n弱：${t.weak}`, onclick: () => onTrait(p, id) }, reason,
         hd, art(id), h('b', null, `${id} ${t.name}`), h('small', null, `強：${t.strong}`), h('small', null, `弱：${t.weak}`),
-        first !== undefined ? h('small', { class: 'first' }, `先着:${st.players[first].name}`) : null));
+        ownersRow(p, id, 'trait'), statusLine(mine_ ? 'ok' : reason && can ? 'no' : null, mine_ ? '取得済み（クリックで上位へ交換）' : reason)));
     });
     box.appendChild(grid); return box;
   }

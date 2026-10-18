@@ -38,6 +38,10 @@ table.tracks td .first { display:block; font-size:10px; color:#a0760a; }
 .ocard em, .tcard em { font-style:normal; font-size:11px; color:#2f6fdd; margin-top:auto; }
 .ocard.mine, .tcard.mine { background:#eefbf0; border-color:#9ad0a8; }
 .ocard.na { opacity:.6; }
+.ocard.locked, .tcard.locked { opacity:.55; background:repeating-linear-gradient(45deg,#f7f7f7,#f7f7f7 6px,#ebebeb 6px,#ebebeb 12px); }
+.owners { display:flex; gap:3px; margin-top:4px; } .owners .mk { width:16px; height:16px; line-height:16px; font-size:9px; margin:0; }
+.owners .mk.empty { background:#fff; color:transparent; border:1px dashed #bbb; box-sizing:border-box; } .owners .mk.me { box-shadow:0 0 0 2px #2f6fdd; }
+.ocard .status, .tcard .status { font-size:10px; font-weight:600; } .status.ok { color:#1f7a3a; } .status.lock { color:#777; } .status.no { color:#b00; }
 .first { color:#a0760a; font-size:10px; }
 .player { border-width:3px; }
 .player h3 .mk { width:26px; height:26px; line-height:26px; font-size:13px; vertical-align:middle; }

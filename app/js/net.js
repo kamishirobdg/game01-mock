@@ -39,6 +39,15 @@
     return Net.code;
   }
   function leave() { (Net._refs || []).forEach(r => r.off()); Net._refs = null; }
+  // ルームごと削除（テストで作った部屋の片付け用。コードを知っている人なら誰でも消せる）
+  async function deleteRoom(code) {
+    if (!Net.ready && !init()) throw new Error(Net.error);
+    code = (code || '').toUpperCase().trim(); if (!code) throw new Error('ルームコードを入力してください');
+    const r = Net.db.ref('rooms/' + code); const s = await r.child('meta').get(); if (!s.exists()) throw new Error('そのルームは存在しません');
+    if (Net.code === code) leave();
+    await r.remove();
+  }
+  Net.deleteRoom = deleteRoom;
   function fire() { if (Net.onChange) Net.onChange(); }
   async function claimSeat(i, name) {
     const cur = Net.seats[i]; if (cur && cur.uid !== Net.uid) throw new Error('その席は使用中です');
