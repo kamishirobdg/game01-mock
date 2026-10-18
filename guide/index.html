@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>game01 遊び方</title>
+<style>
+:root {
+  --bg:#f4f5f7; --panel:#fff; --line:#d9dce3; --ink:#1f2430; --mute:#6b7280; --accent:#2f6fdd; --hl:#fff3c4; --hlline:#e0b000;
+  --e:#d4a017; --g:#169e8c; --p:#d9534f; --l:#3b7ddd;
+  --red:#d9534f; --blue:#3b7ddd; --white:#9aa3b2; --green:#3c9d5d;
+  --tipbg:#eef4ff; --okbg:#eefbf0; --ngbg:#fdeeee;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#15181e; --panel:#1e222a; --line:#343a46; --ink:#e6e8ec; --mute:#9aa1ad; --accent:#6ea2ff; --hl:#3a3418; --hlline:#c9a227;
+    --tipbg:#1d2a40; --okbg:#1b3324; --ngbg:#3a1f1f;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#15181e; --panel:#1e222a; --line:#343a46; --ink:#e6e8ec; --mute:#9aa1ad; --accent:#6ea2ff; --hl:#3a3418; --hlline:#c9a227;
+  --tipbg:#1d2a40; --okbg:#1b3324; --ngbg:#3a1f1f;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.7 system-ui, "Segoe UI", "Yu Gothic UI", "Hiragino Sans", sans-serif; }
+a { color:var(--accent); }
+header { position:sticky; top:0; z-index:5; background:var(--panel); border-bottom:1px solid var(--line); }
+header .bar { max-width:760px; margin:0 auto; padding:8px 16px; display:flex; gap:12px; align-items:center; }
+header b { font-size:15px; } header .sp { margin-left:auto; }
+nav.toc { max-width:760px; margin:0 auto; padding:0 16px 8px; display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; }
+nav.toc a { flex:none; text-decoration:none; font-size:12px; padding:3px 10px; border-radius:12px; background:var(--bg); color:var(--ink); border:1px solid var(--line); white-space:nowrap; }
+nav.toc a.off { color:var(--mute); border-style:dashed; }
+main { max-width:760px; margin:0 auto; padding:16px; }
+section { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px 18px 14px; margin-bottom:18px; scroll-margin-top:96px; }
+h1 { font-size:22px; margin:6px 0 4px; } .lead { color:var(--mute); margin:0 0 18px; font-size:13px; }
+h2 { font-size:18px; margin:0 0 10px; display:flex; align-items:baseline; gap:8px; }
+h2 .no { font-size:12px; color:var(--mute); font-weight:600; }
+h3 { font-size:15px; margin:16px 0 6px; }
+p { margin:6px 0 10px; }
+.ico { width:1em; height:1em; vertical-align:-.15em; }
+.c-e { color:var(--e); } .c-g { color:var(--g); } .c-p { color:var(--p); } .c-l { color:var(--l); }
+.tip { background:var(--tipbg); border-radius:8px; padding:8px 12px; font-size:13px; margin:10px 0; }
+.kv { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin:10px 0; }
+.kv > div { border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+.kv b { display:block; font-size:20px; line-height:1.3; } .kv span { display:block; font-size:12px; line-height:1.4; color:var(--mute); }
+@media (max-width: 480px) { .kv b { font-size:16px; } .kv > div { padding:6px 8px; } section { padding:14px 14px 10px; } }
+.formula { text-align:center; font-weight:700; font-size:16px; padding:12px 8px; border:2px solid var(--hlline); background:var(--hl); border-radius:10px; margin:10px 0; line-height:1.6; }
+.formula small { display:block; font-weight:400; font-size:12px; color:var(--mute); }
+.prov { font-size:11px; color:var(--mute); }
+/* 例題 */
+.ex { border:1px dashed var(--line); border-radius:8px; padding:10px 12px; margin:14px 0 4px; }
+.ex .q { font-weight:600; } .ex .q::before { content:"例題　"; color:var(--accent); }
+.choices { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 0; }
+button { font:inherit; font-size:14px; cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:6px; padding:5px 12px; }
+button:disabled { opacity:.4; cursor:default; }
+button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+.ans { display:none; margin-top:8px; padding:8px 10px; border-radius:6px; font-size:13px; }
+.ans.ok { display:block; background:var(--okbg); } .ans.ng { display:block; background:var(--ngbg); }
+/* 画面の見方 */
+.shot { position:relative; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+.shot img { display:block; width:100%; height:auto; }
+.shot .hs { position:absolute; border:2px solid transparent; border-radius:6px; cursor:pointer; padding:0; background:transparent; }
+.shot .hs i { position:absolute; left:-2px; top:-2px; font-style:normal; font-size:12px; font-weight:700; width:22px; height:22px; line-height:22px; text-align:center; border-radius:0 0 8px 0; background:var(--accent); color:#fff; }
+.shot .hs.on { border-color:var(--hlline); background:rgba(255, 214, 10, .14); }
+.hslist { list-style:none; padding:0; margin:10px 0 0; }
+.hslist li { display:flex; gap:10px; padding:7px 8px; border-radius:6px; cursor:pointer; }
+.hslist li.on { background:var(--hl); }
+.hslist .n { flex:none; width:22px; height:22px; line-height:22px; text-align:center; border-radius:50%; background:var(--accent); color:#fff; font-size:12px; font-weight:700; margin-top:2px; }
+.hslist b { display:block; font-size:14px; } .hslist span { font-size:13px; color:var(--mute); }
+.hslist li.on span { color:var(--ink); }
+/* ラウンドの流れ */
+.stepper { border:1px solid var(--line); border-radius:8px; padding:12px; }
+.dots { display:flex; gap:4px; margin-bottom:8px; } .dots i { flex:1; height:4px; border-radius:2px; background:var(--line); } .dots i.on { background:var(--accent); }
+.st-title { font-weight:700; } .st-body { font-size:14px; min-height:3.4em; }
+.rows { margin:10px 0; display:grid; gap:4px; }
+.prow { display:grid; grid-template-columns:68px 1fr auto; align-items:center; gap:8px; padding:4px 8px; border-radius:6px; font-size:13px; }
+.prow.now { background:var(--hl); outline:2px solid var(--hlline); }
+.prow .nm { font-weight:600; } .prow .gm { color:var(--mute); font-size:12px; white-space:nowrap; }
+.tok { display:inline-block; width:16px; height:16px; margin-right:3px; border-radius:50%; vertical-align:-3px; }
+.tok.w { background:var(--ink); } .tok.at { border:2px solid var(--ink); } .tok.used { opacity:.15; }
+.st-nav { display:flex; justify-content:space-between; align-items:center; }
+.legend { font-size:12px; color:var(--mute); }
+.soon { color:var(--mute); font-size:13px; }
+footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; color:var(--mute); }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar"><b>game01 遊び方</b><a class="sp" href="../app/">アプリを開く</a></div>
+  <nav class="toc">
+    <a href="#c0">0 全体像</a><a href="#c1">1 画面</a><a href="#c2">2 ラウンド</a>
+    <a class="off">3 資源</a><a class="off">4 進化トラック</a><a class="off">5 倍率</a><a class="off">6 形質・器官</a><a class="off">7 得点</a><a class="off">8 種族</a>
+  </nav>
+</header>
+
+<main>
+<h1>game01 遊び方</h1>
+<p class="lead">オンライン版モックで初めて遊ぶ人向けの説明です。数値はすべてテストプレイ用の仮値です。</p>
+
+<!-- 0 -->
+<section id="c0">
+<h2><span class="no">0</span>3分で全体像</h2>
+<p>あなたは宇宙生物の種族のリーダーです。資源を集めて種族を進化させ、ゲーム終了時に<strong>得点がいちばん高い人</strong>が勝ちます。</p>
+<div class="kv">
+  <div><b id="k-rounds">7ラウンド</b><span>必ずこの回数で終わる</span></div>
+  <div><b id="k-acts">5回</b><span>1ラウンドに1人が行動する回数</span></div>
+  <div><b>1回ずつ</b><span>手番順に1人1回ずつ交代</span></div>
+</div>
+<h3>得点の骨格</h3>
+<div class="formula">
+  （<svg class="ico c-p"><use href="#ico-gem"/></svg> 宝石の数）× 10 ×（倍率 ×3〜×7）<br>＋ おまけ点
+  <small>おまけ点＝（形質の数＋協調の数）× 7　＋　器官4系統をそろえたら 50</small>
+</div>
+<p>宝石は「進化トラック」を進めて節目に届くともらえます。倍率は手元のコマを育てると上がります。<strong>宝石を集めるか、倍率を育てるか</strong>が、このゲームのいちばんの悩みどころです。</p>
+<div class="ex" data-ex="score">
+  <div class="q">宝石4個・倍率×4・形質3枚・協調2。得点は？</div>
+  <div class="choices"><button data-a="0">180点</button><button data-a="1">195点</button><button data-a="2">200点</button></div>
+  <div class="ans"></div>
+</div>
+</section>
+
+<!-- 1 -->
+<section id="c1">
+<h2><span class="no">1</span>画面の見方</h2>
+<p>番号をタップすると説明が出ます。スマホでは画面が縦1列に並び、<strong>個人ボード（⑥）は進化トラックや盤の下</strong>にあります。</p>
+<div class="shot" id="shot">
+  <img src="img/app_overview.jpg" alt="アプリの対局画面（4人・第1ラウンド）" width="1200" height="937">
+</div>
+<ul class="hslist" id="hslist"></ul>
+<div class="tip">PCでは、アプリ上の項目にマウスを乗せると説明が出ます。実行できないカードは薄く表示されます。</div>
+</section>
+
+<!-- 2 -->
+<section id="c2">
+<h2><span class="no">2</span>1ラウンドの流れ</h2>
+<p>各プレイヤーは<strong>コマを5個</strong>持っています。黒丸がワーカー（W）、白丸がアクショントークン（AT）です。手番が来たらコマを1個使って行動を1つ行い、次の人へ交代します。</p>
+<div class="stepper">
+  <div class="dots" id="dots"></div>
+  <div class="st-title" id="st-title"></div>
+  <div class="st-body" id="st-body"></div>
+  <div class="rows" id="rows"></div>
+  <div class="st-nav"><button id="prev">← 戻る</button><span class="legend"><span class="tok w"></span>W　<span class="tok at"></span>AT</span><button id="next" class="on">次へ →</button></div>
+</div>
+<h3>WとATの違い</h3>
+<p>どちらも行動1回分ですが、<strong id="w-only"></strong>は<strong>Wでしか</strong>できません。それ以外はATでもできます。</p>
+<h3>早取り盤と共用盤</h3>
+<p><strong>早取り盤</strong>の枠は1ラウンドに1人だけ使えます（先に使った人の勝ち）。<strong>共用盤</strong>と<strong>進化トラック</strong>、自分の<strong>個人カード</strong>は何人でも使えます。手番順が早いほど、早取り盤の良い枠を取りやすくなります。</p>
+<div class="ex" data-ex="token">
+  <div class="q">残っているコマがATだけ。このラウンド中に進化トラックを進められる？</div>
+  <div class="choices"><button data-a="0">進められる</button><button data-a="1">進められない</button></div>
+  <div class="ans"></div>
+</div>
+<div class="ex" data-ex="order">
+  <div class="q">ラウンド開始時の実宝石が P1=2個、P2=0個、P3=1個。新しい手番順は？</div>
+  <div class="choices"><button data-a="0">P1→P3→P2</button><button data-a="1">P2→P3→P1</button></div>
+  <div class="ans"></div>
+</div>
+</section>
+
+<section>
+<h2><span class="no">3〜8</span>準備中</h2>
+<p class="soon">資源・進化トラック・倍率・形質と器官・得点・種族の選び方を順に追加します。</p>
+</section>
+</main>
+<footer>ルールの正本は design.md。数値は data.js（アプリと同じもの）から読み込んでいます。</footer>
+
+<script src="../app/js/icons.js"></script>
+<script src="../app/js/data.js"></script>
+<script>
+(function () {
+  'use strict';
+  const G = window.G1, $ = id => document.getElementById(id);
+  const ico = (id, c) => `<svg class="ico ${c || ''}"><use href="#${id}"/></svg>`;
+  const E = ico('ico-e', 'c-e') + 'E', Gg = ico('ico-g', 'c-g') + 'G', P = ico('ico-pop', 'c-p') + 'P', L = ico('ico-life', 'c-l') + 'L';
+
+  // ---- 0 ----
+  $('k-rounds').textContent = G.ROUNDS + 'ラウンド';
+
+  // ---- 例題（共通） ----
+  const EX = {
+    score: { ok: 1, text: '（4）×10×4＝160、おまけ点（3＋2）×7＝35、合計195点。宝石1個の価値は倍率で変わります（×4なら40点、×7なら70点）。' },
+    token: { ok: 1, text: '進化トラックを進めるにはWが必要です。Wを先に使い切らないよう、手番の順番を考えましょう。' },
+    order: { ok: 1, text: '第2ラウンドからは、ラウンド開始時に「実宝石の少ない順」に並べ替えます（同数なら前のラウンドの順）。先行している人ほど後手に回ります。' },
+  };
+  document.querySelectorAll('.ex').forEach(box => {
+    const d = EX[box.dataset.ex], ans = box.querySelector('.ans');
+    box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      box.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+      const ok = +b.dataset.a === d.ok;
+      ans.className = 'ans ' + (ok ? 'ok' : 'ng');
+      ans.innerHTML = (ok ? '<b>正解。</b>' : '<b>違います。</b>') + d.text;
+    }));
+  });
+
+  // ---- 1 画面の見方（座標は img の % ） ----
+  const HS = [
+    [0, 0, 99, 4.1, 'ヘッダー', 'ラウンド数（1/7）と手番順。枠で光っているのが今の手番です。右側に「1手戻す」「ログCSV」などのボタン。'],
+    [0.8, 5.1, 58, 36.3, '進化トラック', '4本×Lv1〜5。点線の枠が次に進める段で、クリックで進みます（Wが必要）。宝石マークの付いたLv3・Lv5で宝石がもらえ、先に着いた人ほど良い報酬です。'],
+    [0.8, 42.5, 58, 29.4, '早取り盤', '1ラウンドに1人だけ使える枠。資源の獲得・大量消費・形質の購入など。使われた枠には使った人の印が付きます。'],
+    [0.8, 73, 58, 13.9, '共用盤', '何人でも使える枠。繁殖・器官の建造・資源の変換・予備動員など。'],
+    [0.8, 87.2, 58, 12.8, '器官の場／形質プール', 'タブで切り替え。カードをクリックすると建造・購入します。'],
+    [59.6, 5.1, 38.6, 55.4, '個人ボード（手番の人）', '資源（E・G・P・L）と次の収入、コマ（W・AT）と倍率、協調、宝石、現在の点、持っている器官・形質、個人カード。'],
+    [59.6, 61.6, 38.6, 15.9, '他プレイヤー', '他の人の点・資源・トラックの段・倍率の一覧。'],
+    [59.6, 78.5, 38.6, 21.5, 'ログ', 'これまでの行動の記録。ヘッダーのボタンで表示を切り替えられます。'],
+  ];
+  const shot = $('shot'), list = $('hslist');
+  const select = i => {
+    shot.querySelectorAll('.hs').forEach((el, k) => el.classList.toggle('on', k === i));
+    list.querySelectorAll('li').forEach((el, k) => el.classList.toggle('on', k === i));
+  };
+  HS.forEach(([x, y, w, h, t, d], i) => {
+    const b = document.createElement('button');
+    b.className = 'hs'; b.setAttribute('aria-label', t);
+    Object.assign(b.style, { left: x + '%', top: y + '%', width: w + '%', height: h + '%' });
+    b.innerHTML = `<i>${i + 1}</i>`;
+    b.addEventListener('click', () => { select(i); list.children[i].scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+    shot.appendChild(b);
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="n">${i + 1}</span><div><b>${t}</b><span>${d}</span></div>`;
+    li.addEventListener('click', () => select(i));
+    list.appendChild(li);
+  });
+
+  // ---- 2 ラウンドの流れ ----
+  $('w-only').textContent = G.SLOTS.filter(s => s.worker).map(s => s.name).join('・');
+  const inc = G.BASE_INCOME;
+  const NAMES = ['P1', 'P2', 'P3', 'P4'];
+  // 例：第3ラウンド開始。実宝石 P1=1 P2=0 P3=2 P4=0、前ラウンドの順 P1→P2→P3→P4
+  const GEMS = [1, 0, 2, 0], ORDER = [1, 3, 0, 2];
+  const STEPS = [
+    { t: '① 収入', b: `ラウンド開始時、全員が自動で収入を受け取ります。基本は ${E}+${inc.E}・${Gg}+${inc.G}・${P}+${inc.P}・${L}+1。${L}（生命核）を受け取るたびに残りラウンドが1減ります。`, order: [0, 1, 2, 3], used: 0 },
+    { t: '② 手番順の並べ替え', b: '第2ラウンドからは、<strong>実宝石の少ない順</strong>に並べ替えます（同数なら前のラウンドの順）。アプリが自動で行います。', order: ORDER, used: 0 },
+    { t: '③ 1人1回ずつ行動', b: '手番の人はコマを1個使って行動を1つ行い、次の人へ。1周すると全員のコマが1個ずつ減ります。', order: ORDER, used: 1 },
+    { t: '③ これを繰り返す', b: 'パスはできません。コマは必ず使い切ります（置き場に困ったら共用盤の「予備動員」）。', order: ORDER, used: 3 },
+    { t: '④ ラウンド終了', b: `全員のコマが無くなったらラウンド終了。コマは手元に戻り、次のラウンドの①へ。${G.ROUNDS}ラウンド目が終わったらゲーム終了です。`, order: ORDER, used: 5 },
+  ];
+  let cur = 0;
+  $('dots').innerHTML = STEPS.map(() => '<i></i>').join('');
+  const draw = () => {
+    const s = STEPS[cur];
+    $('dots').querySelectorAll('i').forEach((el, k) => el.classList.toggle('on', k <= cur));
+    $('st-title').textContent = s.t + '　（例：第3ラウンド）';
+    $('st-body').innerHTML = s.b;
+    const nowIdx = s.used >= 5 ? -1 : (cur >= 2 ? 0 : -1);
+    $('rows').innerHTML = s.order.map((p, k) => {
+      const toks = [0, 1, 2, 3, 4].map(j => `<span class="tok ${j < 3 ? 'w' : 'at'} ${j >= 5 - s.used ? 'used' : ''}"></span>`).join('');
+      return `<div class="prow ${k === nowIdx ? 'now' : ''}"><span class="nm">${k + 1}. ${NAMES[p]}</span><span>${toks}</span><span class="gm">${ico('ico-gem')} ${GEMS[p]}</span></div>`;
+    }).join('');
+    $('prev').disabled = cur === 0;
+    $('next').disabled = cur === STEPS.length - 1;
+  };
+  $('prev').addEventListener('click', () => { cur = Math.max(0, cur - 1); draw(); });
+  $('next').addEventListener('click', () => { cur = Math.min(STEPS.length - 1, cur + 1); draw(); });
+  draw();
+})();
+</script>
+</body>
+</html>
