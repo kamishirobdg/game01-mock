@@ -234,14 +234,14 @@
   }
   function massCost(p, kind) {
     const R = RS(p); let c = R.massCost;
-    const mc = trait(p, 'MC'); if (mc && mc.strong) c -= 6; c -= p.next.mass;
-    if (kind === 'MB') { c -= p.massDisc; const mb = trait(p, 'MB'); if (mb) c -= 8; return Math.max(R.massMin.body, c); }
+    const mc = trait(p, 'MC'); if (mc && mc.strong) c -= R.mcDisc; c -= p.next.mass;
+    if (kind === 'MB') { c -= p.massDisc; const mb = trait(p, 'MB'); if (mb) c -= R.mbDisc; return Math.max(R.massMin.body, c); }
     return Math.max(R.massMin.other, c);
   }
   // T3：トラックの次のLvに必要な収集物（gates）。無ければ null
   function gateCount(p, track) { return track === 'metab' ? p.organs.length : track === 'intel' ? p.traits.length : track === 'social' ? p.coop : (p.pInv || 0); }
   function gateReq(p, track) { const g = RS(p).gates; if (!g) return null; const next = p.lv[track] + 1; if (next > 5) return null; return { need: g[track][next], have: gateCount(p, track) }; }
-  // T3：収集物の数で「到達済みとみなす段」（autoLv）。この段までは自動で上がり、Eでの進行はその1つ先まで先買いできる
+  // T3：収集物の数で「到達済みとみなす段」（autoLv）。この段までは自動で上がる。Eでの進行は制限なし（v3.16で先買い1段の制限を撤廃）
   function autoLv(p, track) { const g = RS(p).gates; if (!g) return null; const have = gateCount(p, track); let l = 1; while (l < 5 && have >= g[track][l + 1]) l++; return l; }
   // 報酬の連鎖（協調+1→社会 等）も拾うため、安定するまで繰り返す
   function syncGates(st, p) {
@@ -365,8 +365,8 @@
     if (track === 'body') {
       if (lv === 2) p.P += 8;
       if (lv === 3) { if (strong) p.pending.push({ type: 'freeMass' }); else p.P += 15; }
-      if (lv === 4) p.massDisc += 5;
-      if (lv === 5) p.massDisc += 5;
+      if (lv === 4) p.massDisc += RS(p).massDiscLv;
+      if (lv === 5) p.massDisc += RS(p).massDiscLv;
     }
     if (track === 'intel') {
       if (lv === 2) p.G += 3;
@@ -402,7 +402,7 @@
     // 即時効果
     if (!strong) {
       if (tid === 'IE') p.E += 6; if (tid === 'IG') p.G += 3; if (tid === 'IP') p.P += 9; if (tid === 'IB') { p.E += 3; p.G += 3; }
-      if (tid === 'DB') p.next.body += 2; if (tid === 'DI') p.next.intel += 2; if (tid === 'MC') p.next.mass += 6; if (tid === 'DA') p.next.any += 1;
+      if (tid === 'DB') p.next.body += 2; if (tid === 'DI') p.next.intel += 2; if (tid === 'MC') p.next.mass += RS(p).mcDisc; if (tid === 'DA') p.next.any += 1;
     }
     if (tid === 'JI') { advanceTrack(st, p, 'intel', '知的跳躍'); if (strong) advanceTrack(st, p, 'intel', '知的跳躍'); }
     if (tid === 'JB') { advanceTrack(st, p, 'body', '身体覚醒'); if (strong) advanceTrack(st, p, 'body', '身体覚醒'); }
@@ -448,7 +448,6 @@
   // トラック進行： {track, pay:'E'|'P'|'G', useL, bonus}
   ACTIONS.track = (st, p, a) => {
     const c = stepCost(p, a.track, a.bonus); if (c === null) throw new Error('Lv5です');
-    { const al = autoLv(p, a.track); if (al !== null && p.lv[a.track] > al) { const gq = gateReq(p, a.track); throw new Error(`Eで先買いできるのは収集物の条件を満たした段の1つ先まで（${G.TRACK_INFO[a.track].name}Lv${p.lv[a.track] + 1}には${G.GATE_LABEL[a.track]}${RS(p).gates[a.track][p.lv[a.track]]}以上が必要・現在${gq ? gq.have : gateCount(p, a.track)}）`); } }
     if (!a.bonus) useToken(p, true);
     let paid;
     if ((a.pay === 'P' || a.pay === 'G') && RS(p).noAlt) throw new Error('この数値セットでは代替払い（P／G）はありません');
