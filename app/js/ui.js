@@ -142,12 +142,13 @@
     const form = h('form', { class: 'sec' }, h('h3', null, title));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '人数'), h('select', { name: 'n' }, h('option', { value: 3 }, '3人'), h('option', { value: 4, selected: true }, '4人'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'セットアップ'), h('select', { name: 'mode' }, h('option', { value: 'beginner' }, '初心者（宝石コンボ・器官の場を固定）'), h('option', { value: 'expert' }, '熟練者（宝石コンボ・器官の場を抽選）'))));
+    form.appendChild(h('label', { class: 'frow' }, h('span', null, 'ルール数値'), h('select', { name: 'rules' }, h('option', { value: 'v1' }, '現行（進行2/3/5/8E・E収入3・宝石×10）'), h('option', { value: 't1' }, '仮値セットT1（進行3/5/8/13E・E収入2・宝石＝係数×2・形質協調3点・器官2点・体制15点・試作）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '資源スロット'), h('select', { name: 'slots' }, h('option', { value: 'v7' }, '現行（7スロット・各1人）'), h('option', { value: 'm4' }, '統合4（E系／G系／P系／全資源・各1人・試作）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'アンドゥ'), h('select', { name: 'undoMode' }, h('option', { value: 'free' }, '自由（誰でも即時）'), h('option', { value: 'approve' }, '承認（他の参加者全員のOK）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'シード'), h('input', { type: 'number', name: 'seed', value: Math.floor(Math.random() * 100000) })));
     for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1) }), h('small', null, h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
     form.appendChild(h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, okLabel)));
-    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', undoMode: fd.get('undoMode'), players, bots }); });
+    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || 'v1', undoMode: fd.get('undoMode'), players, bots }); });
     return form;
   }
   function bindNet() { Net.onChange = () => { rebuildState(); render(); }; rebuildState(); render(); }
@@ -262,8 +263,8 @@
   }
   function renderResult() {
     const box = h('div', { class: 'result' }, h('h2', null, '最終結果'));
-    const tb = h('table', null, h('tr', null, ...['順位', '名前', '合計', '宝石', '仮想', '係数', '宝石点', '発展度', '体制'].map(x => h('th', null, x))));
-    st.result.forEach((r, i) => tb.appendChild(h('tr', null, ...[i + 1, r.name, r.total, r.real, r.vg, '×' + r.cf, r.core, r.dev, r.reg].map(x => h('td', null, String(x))))));
+    const tb = h('table', null, h('tr', null, ...['順位', '名前', '合計', '宝石', '仮想', '係数', '宝石点', '発展度', '器官', '体制'].map(x => h('th', null, x))));
+    st.result.forEach((r, i) => tb.appendChild(h('tr', null, ...[i + 1, r.name, r.total, r.real, r.vg, '×' + r.cf, r.core, r.dev, r.org || 0, r.reg].map(x => h('td', null, String(x))))));
     box.appendChild(tb);
     if (st.hist && st.hist.length) {
       const hb = h('div', { class: 'hist' }, h('h3', null, 'ラウンド推移（各ラウンド開始時の得点）'));
@@ -305,7 +306,7 @@
       lane.appendChild(h('div', { class: 'lane-lbl' }, h('b', null, info.name), h('small', null, `${info.jp}宝石`)));
       const body = h('div', { class: 'lane-body' });
       for (let l = 1; l <= 5; l++) {
-        if (l > 1) body.appendChild(h('div', { class: 'conn' }, h('span', null, '▶'), h('small', null, `${G.STEP_COST[l - 1]}E`)));
+        if (l > 1) body.appendChild(h('div', { class: 'conn' }, h('span', null, '▶'), h('small', null, `${G.RULESETS[st.rules || 'v1'].step[l - 1]}E`)));
         const isNext = l === nxt; const cost = isNext ? G.stepCost(p, t) : null; const r = REW_SHORT[t][l];
         const node = h('div', { class: 'node' + (isNext ? ' next' : '') + (isNext && reason ? ' na' : '') + (l === 3 || l === 5 ? ' star' : ''), title: `Lv${l}：${G.TRACK_REWARDS[t][l] || '開始'}${isNext ? `\nコスト E${cost}${t === 'body' ? '／P' + cost * 3 : t === 'intel' ? '／G' + cost : ''}` : ''}${isNext && reason ? '\n× ' + reason : ''}`, onclick: isNext && can ? () => onTrack(p, t) : null });
         node.appendChild(h('div', { class: 'node-lv' }, `Lv${l}`, (l === 3 || l === 5) ? ic('gem') : null, l === 4 ? '↗' : ''));
@@ -414,7 +415,7 @@
     G.TRACKS.forEach(t => gm.appendChild(h('span', { class: 'gem ' + G.TRACK_INFO[t].color, title: G.TRACK_INFO[t].name }, String(p.gems[t]))));
     gm.appendChild(h('span', null, ` 仮想 ${G.virtualGems(st, p)}（セット${p.gemsets}）`));
     box.appendChild(gm);
-    box.appendChild(h('div', { class: 'score', title: `（実宝石${sc.real}＋仮想${sc.vg}）×10×係数${sc.cf}＝${sc.core}　発展度（形質${p.traits.length}＋協調${p.coop}）×7＝${sc.dev}　体制${sc.reg}` }, h('b', null, `現在 ${sc.total} 点`), h('small', null, ` ＝ 宝石${sc.core}（${sc.real}+${sc.vg}個×10×${sc.cf}）＋発展度${sc.dev}＋体制${sc.reg}`)));
+    box.appendChild(h('div', { class: 'score', title: `（実宝石${sc.real}＋仮想${sc.vg}）×${sc.gemPt}×係数${sc.cf}＝${sc.core}　発展度（形質${p.traits.length}＋協調${p.coop}）×${sc.devPt}＝${sc.dev}${sc.organPt ? `　器官${p.organs.length}枚×${sc.organPt}＝${sc.org}` : ''}　体制${sc.reg}` }, h('b', null, `現在 ${sc.total} 点`), h('small', null, ` ＝ 宝石${sc.core}（${sc.real}+${sc.vg}個×${sc.gemPt}×${sc.cf}）＋発展度${sc.dev}${sc.organPt ? '＋器官' + sc.org : ''}＋体制${sc.reg}`)));
     const flags = h('div', { class: 'stat' }, p.regime ? h('span', { class: 'hl' }, '体制完成') : null, p.alwaysStrong ? h('span', { class: 'hl' }, '形質常に強') : null, p.freeConv ? h('span', { class: 'hl' }, '無料E↔G変換') : null, p.wild ? h('span', { class: 'hl' }, `ワイルド色 ${G.TRACK_INFO[p.wild].jp}`) : null);
     if (flags.childNodes.length) box.appendChild(flags);
     if (p.pending.length) box.appendChild(h('div', { class: 'banner small' }, pendingText(p.pending[0]), ' ', p.pending[0].type === 'bonusAction' && can ? h('button', { onclick: () => submit({ pid: p.id, type: 'resolve', skip: true }) }, '見送る') : null));
@@ -570,7 +571,7 @@
   // ?demo=seed[&n=3] で自動セットアップ（ローカル・確認用）
   function demoGame(seed, n) {
     const q = new URLSearchParams(location.search); const bots = (q.get('bots') || '').split(',').filter(Boolean).map(Number);
-    const meta = { seed, mode: q.get('mode') || 'expert', slots: q.get('slots') || 'v7', undoMode: 'free', players: Array.from({ length: n }, (_, i) => ({ name: 'P' + (i + 1), passive: true })), bots };
+    const meta = { seed, mode: q.get('mode') || 'expert', slots: q.get('slots') || 'v7', rules: q.get('rules') || 'v1', undoMode: 'free', players: Array.from({ length: n }, (_, i) => ({ name: 'P' + (i + 1), passive: true })), bots };
     const sps = ['wing', 'arm', 'ant', 'manta']; const entries = [];
     for (let i = 0; i < n; i++) { entries.push({ type: 'species', pid: i, species: sps[i] }); if (sps[i] === 'arm') entries.push({ type: 'startTrait', pid: i, trait: 'IG' }); }
     const hands = { 3: [['A', 'Q'], ['B', 'N'], ['H', 'T']], 4: [['A', 'Q', 'D'], ['B', 'N', 'S'], ['H', 'T', 'R'], ['C', 'K', 'I']] }[n];

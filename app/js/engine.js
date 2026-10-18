@@ -11,6 +11,7 @@
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
+  const RS = (x) => G.RULESETS[(x && x.rules) || 'v1']; // st または player からルールセットを引く
   function shuffle(st, arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rngNext(st) * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
   function ceilHalf(n) { return Math.ceil(n / 2); }
@@ -22,6 +23,7 @@
       seed: opts.seed | 0, rngState: opts.seed | 0,
       mode: opts.mode || 'expert',
       slotSet: opts.slots === 'm4' ? 'm4' : 'v7', // 資源獲得スロット：v7=現行7／m4=統合4（試作）
+      rules: G.RULESETS[opts.rules] ? opts.rules : 'v1', // ルールセット：v1=現行／t1=仮値セット（試作）
       nPlayers: opts.players.length,
       round: 0, phase: 'setup', setupStep: 'species', setupIdx: 0,
       turnOrder: [], cur: 0,
@@ -30,7 +32,7 @@
     };
     opts.players.forEach((p, i) => {
       st.players.push({
-        id: i, name: p.name || ('P' + (i + 1)), species: null, passive: p.passive !== false,
+        id: i, name: p.name || ('P' + (i + 1)), species: null, passive: p.passive !== false, rules: st.rules,
         E: 0, G: 0, P: 0, L: 0, lRemain: G.ROUNDS,
         lv: { body: 1, intel: 1, social: 1, metab: 1 },
         gems: { body: 0, intel: 0, social: 0, metab: 0 },
@@ -53,7 +55,7 @@
       const cum = shuffle(st, G.LINEAGE_TYPE.cumulative).slice(0, 2), fun = shuffle(st, G.LINEAGE_TYPE.functional).slice(0, 2);
       st.shared.lineages = cum.concat(fun); st.shared.organField = st.shared.lineages.flatMap(l => [1, 2, 3].map(t => l + t));
     }
-    log(st, null, `ゲーム開始（${st.nPlayers}人・${st.mode === 'beginner' ? '初心者' : '熟練者'}セットアップ・${G.SLOT_SET_NAME[st.slotSet]}・seed ${st.seed}）`);
+    log(st, null, `ゲーム開始（${st.nPlayers}人・${st.mode === 'beginner' ? '初心者' : '熟練者'}セットアップ・${G.SLOT_SET_NAME[st.slotSet]}・ルール${G.RULESETS[st.rules].name}・seed ${st.seed}）`);
     log(st, null, 'コンボ：' + comboNames(st).join('／'));
     log(st, null, '器官の場：' + st.shared.lineages.map(l => G.LINEAGES[l]).join('・'));
     return st;
@@ -162,7 +164,7 @@
   function income(p) {
     const inc = { E: 0, G: 0, P: 0, parts: [] };
     const add = (label, e, g, pp) => { if (!e && !g && !pp) return; inc.E += e; inc.G += g; inc.P += pp; inc.parts.push(`${label}${e ? ' E+' + e : ''}${g ? ' G+' + g : ''}${pp ? ' P+' + pp : ''}`); };
-    add('基礎', G.BASE_INCOME.E, G.BASE_INCOME.G, G.BASE_INCOME.P);
+    add('基礎', RS(p).incE, G.BASE_INCOME.G, G.BASE_INCOME.P);
     add('恒久(種族/体制)', p.inc.E, p.inc.G, p.inc.P);
     if (p.lv.metab >= 2) add('代謝Lv2', 1, 0, 0);
     if (p.lv.metab >= 3 && p.flags.strong['metab3']) add('代謝Lv3強', 1, 1, 0);
@@ -187,7 +189,7 @@
   // ---------- コスト計算 ----------
   function stepCost(p, track, forBonus) {
     const lv = p.lv[track]; if (lv >= 5) return null;
-    const base = G.STEP_COST[lv]; let d = 0;
+    const base = RS(p).step[lv]; let d = 0;
     if (track === 'body') { if (trait(p, 'DB') && trait(p, 'DB').strong) d += 2; d += p.next.body; }
     if (track === 'intel') { if (trait(p, 'DI') && trait(p, 'DI').strong) d += 2; d += p.next.intel; }
     const dv = trait(p, 'DV'); if (dv) d += dv.strong ? 2 : 1;
@@ -465,7 +467,7 @@
       const li3 = organ(p, 'Li3'); if (li3) gainRes(p, a.li3Res || 'E', li3.strong ? 5 : 3);
     }
     const lins = new Set(p.organs.map(o => G.ORGANS[o.id].lin));
-    if (lins.size >= 4 && !p.regime) { p.regime = true; p.inc[a.regimeRes || 'E'] += 1; log(st, p.id, `${p.name}：体制完成（収入+1・終了時+50点）`); }
+    if (lins.size >= 4 && !p.regime) { p.regime = true; p.inc[a.regimeRes || 'E'] += 1; log(st, p.id, `${p.name}：体制完成（収入+1・終了時+${RS(st).regimePt}点）`); }
     // 収斂T2：3/6/9枚（弱4枚ごと）で協調+1（遡って算入）
     const cv2 = organ(p, 'Cv2'); if (cv2) { const step = cv2.strong ? 3 : 4; const due = Math.floor(p.organs.length / step); while (p.cv2Granted < due) { p.cv2Granted += 1; gainRes(p, 'coop', 1); log(st, p.id, `${p.name}：群心器で協調+1`); } }
     // 感応系：建造時の再発動／ワイルド色
@@ -751,8 +753,9 @@
   }
   function score(st, p) {
     const real = realGems(p), vg = virtualGems(st, p), cf = coef(p);
-    const core = (real + vg) * 10 * cf, dev = (p.traits.length + p.coop) * 7, reg = p.regime ? 50 : 0;
-    return { total: core + dev + reg, core, dev, reg, real, vg, cf, tie: [real, p.traits.length + p.coop, p.E + p.G + p.P] };
+    const R = RS(st);
+    const core = (real + vg) * R.gemPt * cf, dev = (p.traits.length + p.coop) * R.devPt, org = p.organs.length * R.organPt, reg = p.regime ? R.regimePt : 0;
+    return { total: core + dev + org + reg, core, dev, org, reg, real, vg, cf, gemPt: R.gemPt, devPt: R.devPt, organPt: R.organPt, tie: [real, p.traits.length + p.coop, p.E + p.G + p.P] };
   }
   function endGame(st) {
     st.ended = true; st.phase = 'end';
@@ -761,7 +764,7 @@
     rows.sort((a, b) => b.total - a.total || b.tie[0] - a.tie[0] || b.tie[1] - a.tie[1] || b.tie[2] - a.tie[2]);
     st.result = rows;
     log(st, null, '=== ゲーム終了 ===', 'round');
-    rows.forEach((r, i) => log(st, r.pid, `${i + 1}位 ${r.name}：${r.total}点（宝石${r.real}+仮想${r.vg} ×10×${r.cf}＝${r.core}／発展度${r.dev}／体制${r.reg}）`, 'gem'));
+    rows.forEach((r, i) => log(st, r.pid, `${i + 1}位 ${r.name}：${r.total}点（宝石${r.real}+仮想${r.vg} ×${r.gemPt}×${r.cf}＝${r.core}／発展度${r.dev}${r.organPt ? '／器官' + r.org : ''}／体制${r.reg}）`, 'gem'));
   }
 
   // ---------- 状況照会（UI用） ----------

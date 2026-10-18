@@ -11,8 +11,14 @@
     social: { name: '社会性',     color: 'white', jp: '白', res: 'coop' },
     metab:  { name: '代謝・資源効率', color: 'green', jp: '緑', res: 'E' },
   };
-  G.STEP_COST = [0, 2, 3, 5, 8]; // index = 現在Lv（1→2 は STEP_COST[1]）
-  G.BASE_INCOME = { E: 3, G: 1, P: 4 };
+  G.STEP_COST = [0, 2, 3, 5, 8]; // index = 現在Lv（1→2 は STEP_COST[1]）※現行値。実際の参照は G.RULESETS[st.rules]
+  G.BASE_INCOME = { E: 3, G: 1, P: 4 };  // E は G.RULESETS[st.rules].incE が優先
+  // 試作：ルールセット（meta.rules）。v1＝現行（design.md）／t1＝初回テストプレイ後の仮値セット（design.md 未変更・A/B比較用）
+  //   step=進行コスト(index=現在Lv)／incE=基礎E収入／gemPt=宝石1個の点数（×係数）／devPt=形質・協調1つの点数／organPt=器官1枚の点数／regimePt=体制完成
+  G.RULESETS = {
+    v1: { name: '現行', step: [0, 2, 3, 5, 8], incE: 3, gemPt: 10, devPt: 7, organPt: 0, regimePt: 50 },
+    t1: { name: '仮値セットT1', step: [0, 3, 5, 8, 13], incE: 2, gemPt: 2, devPt: 3, organPt: 2, regimePt: 15 },
+  };
   G.MASS_COST = 20;
   G.MASS_MIN = { other: 8, body: 10 }; // 身体は2026-10-18に12→10
   G.BREED_COST = [30, 50];
