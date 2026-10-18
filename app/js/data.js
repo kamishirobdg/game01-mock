@@ -24,6 +24,11 @@
     // T2（2026-10-18・ユーザー承認の推奨案）：基礎収入ゼロ（生命核のみ）・掛け算得点・係数ゲージ・形質買い替えなし・器官1R1人・代替払いなし・Pコスト再スケール・拡張x1込み
     t2: Object.assign({}, base, { name: '仮値セットT2', step: [0, 3, 5, 8, 13], incE: 0, incG: 0, incP: 0, gemPt: 2, devPt: 3, organPt: 2, regimePt: 15, massCost: 12, massMin: { other: 6, body: 6 }, breed: [20, 35], scoreMode: 'mult', gauge: true, noUpgrade: true, organExcl: true, noAlt: true, x1: true }),
   };
+  // T3（2026-10-18・案A改）：T2をベースに、トラックの各Lvへ上がるには対応する収集物の数が条件（Eコストはそのまま）。得点は宝石×係数＋体制に戻す（形質・器官・協調はトラック経由で宝石に化ける）
+  //   gates[track][目標Lv] = 必要数。緑=器官枚数／青=形質枚数／白=協調トークン数／赤=個体数の投入回数（繁殖変換＋大量消費）。適応進化は条件なし（追い上げ用）
+  G.RULESETS.t3 = Object.assign({}, G.RULESETS.t2, { name: '仮値セットT3', scoreMode: 'add', devPt: 0, organPt: 0, gates: { metab: [0, 0, 2, 4, 6, 8], intel: [0, 0, 2, 4, 6, 8], social: [0, 0, 2, 4, 6, 8], body: [0, 0, 1, 2, 3, 4] } });
+  G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
+  G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: 'P投入' };
   G.MASS_COST = 20;
   G.MASS_MIN = { other: 8, body: 10 }; // 身体は2026-10-18に12→10
   G.BREED_COST = [30, 50];

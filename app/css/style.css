@@ -105,6 +105,7 @@ table.tracks th small { color:var(--mute); font-weight:400; }
 .banner { background:var(--hl); border:1px solid #e0b000; border-radius:6px; padding:6px 10px; margin:8px 12px 0; font-size:13px; }
 .banner.small { margin:4px 0; }
 .banner.warn { background:#fdecec; border-color:#d33; color:#7a1010; }
+.conn .gate { display:block; color:#a0760a; font-size:9px; }
 .gauge { display:inline-flex; gap:2px; margin-left:6px; } .gauge .gs { font-size:11px; padding:1px 5px; border:1px solid #bbb; border-radius:3px; color:#999; background:#fff; } .gauge .gs.on { background:var(--hl); border-color:#e0b000; color:#222; font-weight:700; }
 .grid.ro .panel.shared button, .grid.ro .cardbtn { pointer-events:none; }
 .sec { border-top:1px solid var(--line); margin-top:12px; padding-top:8px; }

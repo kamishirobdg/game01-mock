@@ -156,7 +156,7 @@
     const form = h('form', { class: 'sec' }, h('h3', null, title));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '人数'), h('select', { name: 'n' }, h('option', { value: 3 }, '3人'), h('option', { value: 4, selected: true }, '4人'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'セットアップ'), h('select', { name: 'mode' }, h('option', { value: 'beginner' }, '初心者（宝石コンボ・器官の場を固定）'), h('option', { value: 'expert' }, '熟練者（宝石コンボ・器官の場を抽選）'))));
-    form.appendChild(h('label', { class: 'frow' }, h('span', null, 'ルール数値'), h('select', { name: 'rules' }, h('option', { value: 'v1' }, '現行（進行2/3/5/8E・E収入3・宝石×10）'), h('option', { value: 't1' }, '仮値セットT1（進行3/5/8/13E・E収入2・宝石＝係数×2・形質協調3点・器官2点・体制15点・試作）'), h('option', { value: 't2' }, '仮値セットT2（基礎収入なし・進行3/5/8/13E・得点＝宝石×係数×2＋形質×宝石色数＋器官×協調＋体制15・係数ゲージ・形質買い替えなし・器官1R1人・代替払いなし・大量消費12/繁殖20,35・拡張x1込み・試作）'))));
+    form.appendChild(h('label', { class: 'frow' }, h('span', null, 'ルール数値'), h('select', { name: 'rules' }, h('option', { value: 'v1' }, '現行（進行2/3/5/8E・E収入3・宝石×10）'), h('option', { value: 't1' }, '仮値セットT1（進行3/5/8/13E・E収入2・宝石＝係数×2・形質協調3点・器官2点・体制15点・試作）'), h('option', { value: 't2' }, '仮値セットT2（基礎収入なし・進行3/5/8/13E・得点＝宝石×係数×2＋形質×宝石色数＋器官×協調＋体制15・係数ゲージ・形質買い替えなし・器官1R1人・代替払いなし・大量消費12/繁殖20,35・拡張x1込み・試作）'), h('option', { value: 't3' }, '仮値セットT3（T2＋トラックの各Lvに収集物の条件：緑＝器官2/4/6/8・青＝形質2/4/6/8・白＝協調2/4/6/8・赤＝P投入1/2/3/4。得点＝宝石×係数×2＋体制15・試作）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '拡張ルール'), h('select', { name: 'ext' }, h('option', { value: 'none' }, 'なし'), h('option', { value: 'x1' }, 'x1：形質購入2枠（割増＝ラウンド数のE）＋緊急発進の対象に形質＋協調発進（協調2個で使用済み枠）＋大量消費(社会)協調+3・試作'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '資源スロット'), h('select', { name: 'slots' }, h('option', { value: 'v7' }, '現行（7スロット・各1人）'), h('option', { value: 'm4' }, '統合4（E系／G系／P系／全資源・各1人・試作）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'アンドゥ'), h('select', { name: 'undoMode' }, h('option', { value: 'free' }, '自由（誰でも即時）'), h('option', { value: 'approve' }, '承認（他の参加者全員のOK）'))));
@@ -333,7 +333,7 @@
       lane.appendChild(h('div', { class: 'lane-lbl' }, h('b', null, info.name), h('small', null, `${info.jp}宝石`)));
       const body = h('div', { class: 'lane-body' });
       for (let l = 1; l <= 5; l++) {
-        if (l > 1) body.appendChild(h('div', { class: 'conn' }, h('span', null, '▶'), h('small', null, `${G.RULESETS[st.rules || 'v1'].step[l - 1]}E`)));
+        if (l > 1) { const RSx = G.RULESETS[st.rules || 'v1']; body.appendChild(h('div', { class: 'conn' }, h('span', null, '▶'), h('small', null, `${RSx.step[l - 1]}E`), RSx.gates ? h('small', { class: 'gate', title: `Lv${l}に上がる条件：${G.GATE_LABEL[t]}${RSx.gates[t][l]}以上` }, `${G.GATE_SHORT[t]}${RSx.gates[t][l]}`) : null)); }
         const isNext = l === nxt; const cost = isNext ? G.stepCost(p, t) : null; const r = REW_SHORT[t][l];
         const node = h('div', { class: 'node' + (isNext ? ' next' : '') + (isNext && reason ? ' na' : '') + (l === 3 || l === 5 ? ' star' : ''), title: `Lv${l}：${G.TRACK_REWARDS[t][l] || '開始'}${isNext ? `\nコスト E${cost}${t === 'body' ? '／P' + cost * 3 : t === 'intel' ? '／G' + cost : ''}` : ''}${isNext && reason ? '\n× ' + reason : ''}`, onclick: isNext && can ? () => onTrack(p, t) : null });
         node.appendChild(h('div', { class: 'node-lv' }, `Lv${l}`, (l === 3 || l === 5) ? ic('gem') : null, l === 4 ? '↗' : ''));

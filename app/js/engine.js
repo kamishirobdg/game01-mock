@@ -38,7 +38,7 @@
         E: 0, G: 0, P: 0, L: 0, lRemain: G.ROUNDS,
         lv: { body: 1, intel: 1, social: 1, metab: 1 },
         gems: { body: 0, intel: 0, social: 0, metab: 0 },
-        traits: [], organs: [], cards: [], coop: 0, breed: 0, upgrades: 0,
+        traits: [], organs: [], cards: [], coop: 0, breed: 0, upgrades: 0, pInv: 0, // pInv＝個体数の投入回数（繁殖変換＋大量消費。T3の身体トラック条件）
         tokens: G.RULESETS[rules].gauge ? ['W', 'W', 'W', 'W', 'W'] : ['W', 'W', 'W', 'AT', 'AT'], left: { W: 0, AT: 0 }, // 係数ゲージ方式ではAT/強Wなし（係数は p.upgrades）
         shields: 0, gemsets: 0, inc: { E: 0, G: 0, P: 0 }, regime: false,
         massDisc: 0, traitDisc: 0, alwaysStrong: false, freeConv: false,
@@ -237,6 +237,9 @@
     if (kind === 'MB') { c -= p.massDisc; const mb = trait(p, 'MB'); if (mb) c -= 8; return Math.max(R.massMin.body, c); }
     return Math.max(R.massMin.other, c);
   }
+  // T3：トラックの次のLvに必要な収集物（gates）。無ければ null
+  function gateCount(p, track) { return track === 'metab' ? p.organs.length : track === 'intel' ? p.traits.length : track === 'social' ? p.coop : (p.pInv || 0); }
+  function gateReq(p, track) { const g = RS(p).gates; if (!g) return null; const next = p.lv[track] + 1; if (next > 5) return null; return { need: g[track][next], have: gateCount(p, track) }; }
   function breedCost(p) { if (p.breed >= 2) return null; const mb = trait(p, 'MB'); const c = RS(p).breed[p.breed]; return mb && mb.strong ? Math.ceil(c / 2) : c; }
   function gemsetPrice(p) { return Math.max(G.GEMSET_FLOOR, G.GEMSET_BASE - p.traits.length); }
   function pbCost(p) { const tr3 = organ(p, 'Tr3'); return Math.max(1, 2 - (tr3 ? (tr3.strong ? 3 : 2) : 0)); }
@@ -433,6 +436,7 @@
   // トラック進行： {track, pay:'E'|'P'|'G', useL, bonus}
   ACTIONS.track = (st, p, a) => {
     const c = stepCost(p, a.track, a.bonus); if (c === null) throw new Error('Lv5です');
+    const gq = gateReq(p, a.track); if (gq && gq.have < gq.need) throw new Error(`${G.TRACK_INFO[a.track].name}Lv${p.lv[a.track] + 1}には${G.GATE_LABEL[a.track]}${gq.need}が必要です（現在${gq.have}）`);
     if (!a.bonus) useToken(p, true);
     let paid;
     if ((a.pay === 'P' || a.pay === 'G') && RS(p).noAlt) throw new Error('この数値セットでは代替払い（P／G）はありません');
@@ -452,7 +456,7 @@
     if (!RS(p).gauge && !p.tokens.includes('AT')) throw new Error('活性化できる追加コマ（AT）がありません');
     if (p.P < c) throw new Error(`個体数が足りません（必要P${c}・所持P${p.P}）`);
     if (!a.bonus) useToken(p, true);
-    p.P -= c; p.breed += 1;
+    p.P -= c; p.breed += 1; p.pInv = (p.pInv || 0) + 1;
     afterAction(st, p, `繁殖変換（P${c}）`, !a.bonus);
     addUpgrade(st, p, `繁殖×${3 + p.breed}`);
     return !a.bonus;
@@ -496,6 +500,7 @@
     afterAction(st, p, desc, !a.free);
     if (a.kind === 'MB') addGem(st, p, 'body', 1, '大量消費');
     if (a.kind === 'MS') gainRes(p, 'coop', st.ext === 'x1' ? 3 : 2);
+    p.pInv = (p.pInv || 0) + 1;
     if (a.kind === 'MM') { p.E += 10; p.G += 10; }
     if (a.kind === 'MI') {
       const ids = (a.traits || []).slice(0, 2);
@@ -807,5 +812,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, gateReq, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});
