@@ -47,7 +47,8 @@
   async function releaseSeat(i) { const cur = Net.seats[i]; if (cur && cur.uid === Net.uid) await ref('seats/' + i).remove(); }
   function mySeats() { return Object.entries(Net.seats || {}).filter(([, v]) => v && v.uid === Net.uid).map(([k]) => +k); }
   function seatUids() { return Array.from(new Set(Object.values(Net.seats || {}).filter(Boolean).map(v => v.uid))); }
-  async function push(entry) { await ref('entries').push(Object.assign({}, entry, { uid: Net.uid, ts: Date.now() })); }
+  // Firebase は undefined を含む値を拒否する（例：Li2 を持たないときの li2Res）→ JSON 経由で undefined のキーを落とす
+  async function push(entry) { await ref('entries').push(JSON.parse(JSON.stringify(Object.assign({}, entry, { uid: Net.uid, ts: Date.now() })))); }
   async function setMeta(patch) { await ref('meta').update(patch); }
 
   // 承認モードの補助：undo要求に対する承認uid一覧

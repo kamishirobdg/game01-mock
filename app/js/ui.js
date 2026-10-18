@@ -133,13 +133,12 @@
   function metaForm(title, okLabel, onOk) {
     const form = h('form', { class: 'sec' }, h('h3', null, title));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '人数'), h('select', { name: 'n' }, h('option', { value: 3 }, '3人'), h('option', { value: 4, selected: true }, '4人'))));
-    form.appendChild(h('label', { class: 'frow' }, h('span', null, 'セットアップ'), h('select', { name: 'mode' }, h('option', { value: 'beginner' }, '初心者（コンボ固定）'), h('option', { value: 'expert' }, '熟練者（コンボ抽選）'))));
+    form.appendChild(h('label', { class: 'frow' }, h('span', null, 'セットアップ'), h('select', { name: 'mode' }, h('option', { value: 'beginner' }, '初心者（宝石コンボ・器官の場を固定）'), h('option', { value: 'expert' }, '熟練者（宝石コンボ・器官の場を抽選）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'アンドゥ'), h('select', { name: 'undoMode' }, h('option', { value: 'free' }, '自由（誰でも即時）'), h('option', { value: 'approve' }, '承認（他の参加者全員のOK）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'シード'), h('input', { type: 'number', name: 'seed', value: Math.floor(Math.random() * 100000) })));
-    for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1) }), h('small', null, h('label', null, h('input', { type: 'checkbox', name: 'pas' + i, checked: true }), 'パッシブ有'), ' ', h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
-    form.appendChild(h('small', { class: 'note' }, 'パッシブ無しは意図的に弱くなります（特に群泳双盤は開始Pが0）'));
+    for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1) }), h('small', null, h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
     form.appendChild(h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, okLabel)));
-    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: fd.get('pas' + i) === 'on' }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), undoMode: fd.get('undoMode'), players, bots }); });
+    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), undoMode: fd.get('undoMode'), players, bots }); });
     return form;
   }
   function bindNet() { Net.onChange = () => { rebuildState(); render(); }; rebuildState(); render(); }
