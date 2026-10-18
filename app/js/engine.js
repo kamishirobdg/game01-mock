@@ -57,6 +57,7 @@
       const cum = shuffle(st, G.LINEAGE_TYPE.cumulative).slice(0, 2), fun = shuffle(st, G.LINEAGE_TYPE.functional).slice(0, 2);
       st.shared.lineages = cum.concat(fun); st.shared.organField = st.shared.lineages.flatMap(l => [1, 2, 3].map(t => l + t));
     }
+    if (G.RULESETS[rules].organLineages === 8) { st.shared.lineages = G.LINEAGE_TYPE.cumulative.concat(G.LINEAGE_TYPE.functional); st.shared.organField = st.shared.lineages.flatMap(l => [1, 2, 3].map(t => l + t)); } // T3：全8系統24枚
     log(st, null, `ゲーム開始（${st.nPlayers}人・${st.mode === 'beginner' ? '初心者' : '熟練者'}セットアップ・${G.SLOT_SET_NAME[st.slotSet]}・ルール${G.RULESETS[st.rules].name}・拡張${G.EXT_NAME[st.ext]}・seed ${st.seed}）`);
     log(st, null, 'コンボ：' + comboNames(st).join('／'));
     log(st, null, '器官の場：' + st.shared.lineages.map(l => G.LINEAGES[l]).join('・'));
@@ -77,7 +78,7 @@
     if (st.players.some(q => q.species === spId)) throw new Error('その種族は選択済みです');
     p.species = spId; p.E = sp.stock.E; p.G = sp.stock.G; p.P = sp.stock.P;
     if (p.passive) {
-      if (spId === 'wing') p.lv.body = 2;
+      if (spId === 'wing') advanceTrack(st, p, 'body', '種族パッシブ'); // Lv2到達扱い＝Lv2報酬（P+8）も得る
       if (spId === 'ant') p.coop = 1;
       if (spId === 'manta') { p.P += 10; p.inc.E += 1; }
       // arm: 形質1枚は setup の別ステップで選ぶ
@@ -240,11 +241,13 @@
   // T3：トラックの次のLvに必要な収集物（gates）。無ければ null
   function gateCount(p, track) { return track === 'metab' ? p.organs.length : track === 'intel' ? p.traits.length : track === 'social' ? p.coop : (p.pInv || 0); }
   function gateReq(p, track) { const g = RS(p).gates; if (!g) return null; const next = p.lv[track] + 1; if (next > 5) return null; return { need: g[track][next], have: gateCount(p, track) }; }
-  // T3：収集物が条件に達したトラックは自動で上がる（Eコストなし）。報酬の連鎖（協調+1→社会 等）も拾うため、安定するまで繰り返す
+  // T3：収集物の数で「到達済みとみなす段」（autoLv）。この段までは自動で上がり、Eでの進行はその1つ先まで先買いできる
+  function autoLv(p, track) { const g = RS(p).gates; if (!g) return null; const have = gateCount(p, track); let l = 1; while (l < 5 && have >= g[track][l + 1]) l++; return l; }
+  // 報酬の連鎖（協調+1→社会 等）も拾うため、安定するまで繰り返す
   function syncGates(st, p) {
     if (!RS(p).gates) return;
     for (let guard = 0; guard < 20; guard++) {
-      const t = G.TRACKS.find(tr => { const g = gateReq(p, tr); return g && g.have >= g.need; });
+      const t = G.TRACKS.find(tr => p.lv[tr] < autoLv(p, tr));
       if (!t) break;
       advanceTrack(st, p, t, `${G.GATE_LABEL[t]}${gateCount(p, t)}で自動進行`);
     }
@@ -445,7 +448,7 @@
   // トラック進行： {track, pay:'E'|'P'|'G', useL, bonus}
   ACTIONS.track = (st, p, a) => {
     const c = stepCost(p, a.track, a.bonus); if (c === null) throw new Error('Lv5です');
-    { const gq = gateReq(p, a.track); if (gq) throw new Error(`この数値セットではトラックは収集物で自動的に上がります（${G.TRACK_INFO[a.track].name}Lv${p.lv[a.track] + 1}＝${G.GATE_LABEL[a.track]}${gq.need}・現在${gq.have}。Eでの進行なし・適応進化は可）`); }
+    { const al = autoLv(p, a.track); if (al !== null && p.lv[a.track] > al) { const gq = gateReq(p, a.track); throw new Error(`Eで先買いできるのは収集物の条件を満たした段の1つ先まで（${G.TRACK_INFO[a.track].name}Lv${p.lv[a.track] + 1}には${G.GATE_LABEL[a.track]}${RS(p).gates[a.track][p.lv[a.track]]}以上が必要・現在${gq ? gq.have : gateCount(p, a.track)}）`); } }
     if (!a.bonus) useToken(p, true);
     let paid;
     if ((a.pay === 'P' || a.pay === 'G') && RS(p).noAlt) throw new Error('この数値セットでは代替払い（P／G）はありません');
@@ -822,5 +825,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, gateReq, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

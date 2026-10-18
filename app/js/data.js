@@ -26,7 +26,8 @@
   };
   // T3（2026-10-18）：T2をベースに、トラックは対応する収集物の数が閾値に達すると自動で上がる（Eでの進行は廃止・適応進化のみ可）。得点は宝石×係数＋体制に戻す（形質・器官・協調はトラック経由で宝石に化ける）
   //   gates[track][目標Lv] = 必要数。緑=器官枚数／青=形質枚数／白=協調トークン数／赤=個体数の投入回数（繁殖変換＋大量消費）
-  G.RULESETS.t3 = Object.assign({}, G.RULESETS.t2, { name: '仮値セットT3', scoreMode: 'add', devPt: 0, organPt: 0, gates: { metab: [0, 0, 3, 6, 8, 10], intel: [0, 0, 2, 4, 6, 8], social: [0, 0, 2, 4, 6, 8], body: [0, 0, 1, 2, 3, 4] } });
+  //   Eでの進行は「収集物の条件を満たしている段の1つ先まで」先買いできる（E先行の手筋を1段に制限）。器官の場は8系統24枚・1R1人の制限なし（弱版の意味を残す）
+  G.RULESETS.t3 = Object.assign({}, G.RULESETS.t2, { name: '仮値セットT3', scoreMode: 'add', devPt: 0, organPt: 0, organExcl: false, organLineages: 8, gates: { metab: [0, 0, 3, 6, 9, 12], intel: [0, 0, 2, 4, 6, 8], social: [0, 0, 2, 4, 6, 8], body: [0, 0, 1, 2, 3, 4] } });
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: 'P投入' };
   G.MASS_COST = 20;
