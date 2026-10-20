@@ -158,7 +158,7 @@
     v += k * (p.E * w.E + p.G * w.G + p.P * w.P + p.L * w.L);
     if (RSo(st).lYield) v += p.L * rem * RSo(st).lYield * (p.yieldMul || 1) * w.E; // T5：保有Lは残ラウンド分の利回りを生む
     const le = RSo(st).lEndGem; if (le) v += Math.min(le.max, Math.floor(p.L / le.per)) * sc.cf * 2 * (rem === 0 ? 1 : 0.6); // T6 S2：終了時の保有L仮想宝石
-    const cv6 = RSo(st).lv6Convert; if (cv6) { const cnt = { body: p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; G.TRACKS.forEach(t => { if (p.lv[t] >= 6) v += Math.floor(cnt[t] / cv6) * sc.cf * 2 * (rem === 0 ? 1 : 0.7); }); } // T6 L6-A：Lv6 の転換見込み
+    const cv6 = RSo(st).lv6Convert; const R6 = RSo(st); if ((R6.maxLv || 5) >= 6) { const cnt = { body: R6.lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; const by6 = R6.lv6ConvertBy || {}; G.TRACKS.forEach(t => { const conv = cv6 ? Math.floor(cnt[t] / (by6[t] || cv6)) : 0; if (p.lv[t] >= 6) v += conv * sc.cf * 2 * (rem === 0 ? 1 : 0.7); else if (p.lv[t] === 5 && rem > 0) { const c6 = G.stepCost(p, t); if (c6 !== null) { const afford = Math.min(1, (p.E + p.L * (p.lValue || 3)) / c6); v += (1 + conv) * sc.cf * 2 * 0.35 * afford; } } }); } // T6 L6-A：Lv6 の宝石＋転換の見込み（Lv5 のトラックは E で届く分だけ先読み）
     const inc = G.income(p); v += rem * w.inc * (inc.E * w.E + inc.G * w.G + inc.P * w.P);
     if (RSo(st).gates) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cf * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
     v += (sc.cf - 3) * rem * w.coefFuture;

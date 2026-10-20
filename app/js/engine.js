@@ -898,7 +898,7 @@
   function virtualGems(st, p) {
     let n = p.gemsets;
     const le = RS(st).lEndGem; if (le && st.ended) n += Math.min(le.max, Math.floor(p.L / le.per)); // T6 S2：終了時、保有L per個につき仮想宝石+1（上限）
-    const cv = RS(st).lv6Convert; if (cv && st.ended) { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; G.TRACKS.forEach(t => { if (p.lv[t] >= 6) n += Math.floor(cnt[t] / cv); }); } // T6 L6-A：Lv6 の色は収集物 cv 個につき仮想宝石+1
+    const cv = RS(st).lv6Convert; if (cv && st.ended) { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; G.TRACKS.forEach(t => { if (p.lv[t] >= 6) n += Math.floor(cnt[t] / (by[t] || cv)); }); } // T6 L6-A：Lv6 の色は収集物 cv 個につき仮想宝石+1（lv6ConvertBy で色別に変更可）
     const re2 = organ(p, 'Re2'); let wildLeft = re2 ? (re2.strong ? 99 : 1) : 0;
     st.shared.combos.two.forEach(i => {
       const c = G.COMBOS2[i];
@@ -925,6 +925,42 @@
     st.result = rows;
     log(st, null, '=== ゲーム終了 ===', 'round');
     rows.forEach((r, i) => log(st, r.pid, `${i + 1}位 ${r.name}：${r.total}点（宝石${r.real}+仮想${r.vg} ×${r.gemPt}×${r.cf}＝${r.core}／発展度${r.dev}${r.organPt || r.mode === 'mult' ? '／器官' + r.org : ''}／体制${r.reg}）`, 'gem'));
+  }
+
+  // ---------- 獲得量プレビュー（UI用）：アクションを試し打ちして資源の差分を返す。実行不可なら null ----------
+  function previewGain(st, action) {
+    let s2; try { s2 = tryApply(st, action); } catch (e) { return null; }
+    const a = st.players[action.pid], b = s2.players[action.pid]; const d = {};
+    ['E', 'G', 'P', 'L', 'coop', 'gemsets'].forEach(k => { const v = (b[k] || 0) - (a[k] || 0); if (v) d[k] = v; });
+    G.TRACKS.forEach(t => { const v = b.gems[t] - a.gems[t]; if (v) d['gem_' + t] = v; });
+    return d;
+  }
+  function gainText(d) {
+    if (!d) return '';
+    const jp = { E: 'E', G: 'G', P: 'P', L: '生命核', coop: '協調', gemsets: '仮想宝石' };
+    const parts = Object.entries(d).filter(([k]) => !k.startsWith('gem_')).map(([k, v]) => `${jp[k] || k}${v > 0 ? '+' : ''}${v}`);
+    G.TRACKS.forEach(t => { if (d['gem_' + t]) parts.push(`${G.TRACK_INFO[t].jp}宝石+${d['gem_' + t]}`); });
+    return parts.join(' ');
+  }
+  // 数値セット連動の説明文（ツールチップ用。静的な TIPS の代わり）
+  function slotTip(st, id) {
+    const R = RS(st); const cb = R.coopBonusCap !== undefined ? `協調ボーナス＝＋協調数（上限+${R.coopBonusCap}）` : '協調ボーナス＝＋協調数';
+    const byp = `使用済みは緊急発進（生命核1）${st.ext === 'x1' ? '・協調発進（協調2）' : ''}で突破可`;
+    const m = {
+      E5: `固定E強：E+5。${cb}。${byp}`, G3: `固定G強：G+3。${cb}。${byp}`, P8: `P増加：P+${R.p8 || 8}。${cb}。${byp}`,
+      EG: R.herd ? `群体E：P${R.herdCost || 6}を払って E+3＋協調+${R.herdCoop || 1}。${cb}。${byp}` : `群体E：E+2＋P10ごとに+1E。${cb}。${byp}`,
+      GG: R.herd ? `群体G：P${R.herdCost || 6}を払って G+2＋協調+${R.herdCoop || 1}。${cb}。${byp}` : `群体G：G+1＋P10ごとに+1G。${cb}。${byp}`,
+      ALL: `全資源獲得：E+2 G+1 P+4。${cb}（資源を選ぶ）。${byp}`, PB: `Pブースト購入：G${G.GEMSET_FLOOR ? 2 : 2}→P+10（全翻訳で割引）。緊急発進の対象外`,
+      MB: `大量消費(身体)：P${R.massCost}（下限${R.massMin.body}）→赤宝石+1。${R.bodyAxis === 'L' ? '誰でもP→宝石の出口' : '身体Lv4/5で軽減'}`,
+      MI: `大量消費(知性)：P${R.massCost}→G4以下の形質を異なる2種（無料）`, MS: `大量消費(社会)：P${R.msCost || R.massCost}→協調+${R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)}`, MM: `大量消費(代謝)：P${R.mmCost || R.massCost}→E+10 G+10`,
+      TRT: R.traitShared ? '形質購入：共用（排他なし）。形質プールのカードをクリック。先着＝強・後続＝弱。' + (R.traitHalfFloor ? 'コストの下限＝元コストの半分（切上）' : '') : '形質購入：形質プールのカードをクリック（1ラウンド1人）',
+      TRT2: `形質購入（割増枠）：通常コスト＋E${st.round}`, GEM: `宝石セット：G(10−形質数・下限5${R.gemsetEscalate ? '・購入ごとに+' + R.gemsetEscalate : ''})→仮想宝石+1（自分専用）${R.gemsetShared ? '。共用（排他なし）' : '。1ラウンド1人'}`,
+      BRD: `繁殖変換：P${R.breed[0]}→×4／P${R.breed[1]}→×5${R.breedL ? `。生命核L${R.breedL}でも払える（身体の投入回数に数える）` : ''}。係数の上限×7`,
+      ORG: `器官建造：器官の場のカードをクリック。コスト${(R.organCost || G.ORGAN_COST).map(c => c[0] + 'E+' + c[1] + 'G').join('／')}（弱はG0${R.organEscalate ? '・所持' + R.organEscalate + '枚ごとに+1E' : ''}）${R.organExcl ? '・各カード1ラウンド1人' : ''}`,
+      SCAN: `環境スキャン：E5→他プレイヤーの最高Lv×2の資源（身体=P／知性=G／社会=協調${R.scanCoop !== undefined ? '〔+' + R.scanCoop + 'のみ〕' : ''}／代謝=E）`,
+      ADP: `適応進化：生命核1→Lv1のトラックを+1（W必須）${R.bodyAxis === 'L' ? '。身体の投入回数に数える' : ''}`, CNV: '資源変換：E2→G1／G2→E1／P8→E3／P8→G2（1アクション1種類・回数自由）', RSV: '予備動員：無料で E+2 または G+1',
+    };
+    return m[id] || (G.SLOT_BY_ID[id] ? G.SLOT_BY_ID[id].text : '');
   }
 
   // ---------- 表示文（数値セット連動） ----------
@@ -969,5 +1005,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { handSize, slotText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

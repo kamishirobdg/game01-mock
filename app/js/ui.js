@@ -372,7 +372,10 @@
     const used = (s.id === 'GEM' && G.RULESETS[st.rules || 'v1'].gemsetShared) ? undefined : G.slotUsedBy(st, s.id); // 共用の宝石セットは使用済み表示なし
     const reason = !can ? roMsg : (s.id === 'TRT' || s.id === 'TRT2' || s.id === 'ORG' || s.id === 'TRK') ? null : check(sample(p, s.id));
     const txt = G.slotText(st, s.id);
-    return actBtn({ class: 'slot' + (used !== undefined ? ' used' : ''), title: (TIPS[s.id] || txt).replace(/P20/g, 'P' + G.RULESETS[st.rules || 'v1'].massCost), onclick }, reason, h('b', null, s.name), h('small', null, icost(txt)), used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
+    // 獲得量プレビュー：今この枠を使うと実際にいくつ得られるか（協調ボーナス・群体のP・Pブースト等を含む）
+    let gain = null; if (can && !reason && (s.group === 'res' || s.group === 'mass' || s.id === 'GEM')) { const d = G.previewGain(st, sample(p, s.id)); if (d) gain = G.gainText(d); }
+    const tip = (G.slotTip(st, s.id) || txt) + (gain ? `\n今実行すると：${gain}` : '');
+    return actBtn({ class: 'slot' + (used !== undefined ? ' used' : ''), title: tip, onclick }, reason, h('b', null, s.name), h('small', null, icost(txt)), gain ? h('small', { class: 'gain' }, `→ ${gain}`) : null, used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
   }
   function sample(p, id) { // 事前判定用の代表アクション
     const pid = p.id;

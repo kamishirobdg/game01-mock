@@ -164,3 +164,6 @@ img.art.portrait { width:56px; height:56px; aspect-ratio:1/1; border-radius:50%;
 .cards .cardbtn { width:168px; flex:none; }
 .cards img.art.small, .cardgrid img.art.small { height:64px; aspect-ratio:auto; }
 .cardgrid .cardbtn { width:auto; }
+
+/* 獲得量プレビュー（カーソル／枠内） */
+.slot .gain { display: block; color: #0a6; font-weight: 600; margin-top: 2px; }
