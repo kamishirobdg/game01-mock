@@ -239,7 +239,8 @@
     const tr2 = organ(p, 'Tr2'); if (tr2) c -= tr2.strong ? 2 : 1;
     const tr3 = organ(p, 'Tr3'); if (tr3) c -= tr3.strong ? 3 : 2;
     if (viaReward) c -= viaReward;
-    return { G: Math.max(1, c), strong };
+    const floor = RS(p).traitHalfFloor ? Math.max(1, ceilHalf(t.cost[strong ? 0 : 1])) : 1; // 試作 traitHalfFloor：元コストの半分（切上）を下回らない
+    return { G: Math.max(floor, c), strong };
   }
   function massCost(p, kind) {
     const R = RS(p); let c = R.massCost;
@@ -441,8 +442,9 @@
       if (tid === 'IE') p.E += 6; if (tid === 'IG') p.G += 3; if (tid === 'IP') p.P += 9; if (tid === 'IB') { p.E += 3; p.G += 3; }
       if (tid === 'DB') p.next.body += 2; if (tid === 'DI') p.next.intel += 2; if (tid === 'MC') p.next.mass += RS(p).mcDisc; if (tid === 'DA') p.next.any += 1;
     }
-    if (tid === 'JI') { advanceTrack(st, p, 'intel', '知的跳躍'); if (strong) advanceTrack(st, p, 'intel', '知的跳躍'); }
-    if (tid === 'JB') { advanceTrack(st, p, 'body', '身体覚醒'); if (strong) advanceTrack(st, p, 'body', '身体覚醒'); }
+    const jmax = RS(p).jumpMaxLv || 99; // 試作 jumpMaxLv：跳躍で上がれる上限（Lv6 は飛び越えない）
+    if (tid === 'JI') { if (p.lv.intel < jmax) advanceTrack(st, p, 'intel', '知的跳躍'); if (strong && p.lv.intel < jmax) advanceTrack(st, p, 'intel', '知的跳躍'); }
+    if (tid === 'JB') { if (p.lv.body < jmax) advanceTrack(st, p, 'body', '身体覚醒'); if (strong && p.lv.body < jmax) advanceTrack(st, p, 'body', '身体覚醒'); }
     const n = p.traits.length; if ((RS(p).traitCoef || [4, 8]).includes(n)) addUpgrade(st, p, `形質${n}枚目`);
   }
   function removeTrait(st, p, tid) {

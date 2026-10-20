@@ -255,7 +255,7 @@
     const hd = $('#hdr'); hd.innerHTML = '';
     hd.appendChild(h('b', null, 'game01 モック'));
     hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール'));
-    if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); return; }
+    if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (st && st.phase === 'end') hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: exportJson }, '保存(JSON)'), h('button', { onclick: exportCsv }, 'ログCSV'))); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); return; }
     hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`));
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
     const to = h('span', { class: 'order' }, '手番順：');
@@ -624,7 +624,12 @@
   let pendingBusy = false;
   async function handlePending(p, pd) {
     if (pendingBusy) return; pendingBusy = true;
-    try {
+    try { await handlePendingBody(p, pd); } finally { pendingBusy = false; } // 送信の完了（await）まで待ってから解放する（return submit(...) だと finally が先に走る）
+    // 送信中の再描画は pendingBusy で弾かれるため、次の保留が残っていればここで描画し直して続きのダイアログを出す
+    const q = st && st.players[p.id]; if (q && q.pending.length && st.phase === 'play' && G.cur(st).id === q.id) setTimeout(render, 0);
+  }
+  async function handlePendingBody(p, pd) {
+    {
       if (pd.type === 'flSwap') {
         const r = await ask(`収入時の転流：E↔Gを最大${pd.max}振替（1:1）`, [{ type: 'select', name: 'dir', label: '方向', options: [{ value: 'EG', label: 'E→G' }, { value: 'GE', label: 'G→E' }] }, { type: 'number', name: 'n', label: '個数', value: 1, min: 1, max: pd.max }], { skipLabel: '振替しない', noCancel: true });
         if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit({ pid: p.id, type: 'resolve', dir: r.dir, n: r.n });
@@ -646,7 +651,7 @@
       if (pd.type === 'wildColor') { const r = await ask('共鳴膜：ワイルド扱いにする色（自分の2色コンボ判定）', [{ type: 'select', name: 'track', label: '色', options: G.TRACKS.map(t => ({ value: t, label: `${G.TRACK_INFO[t].jp}（${G.TRACK_INFO[t].name}）` })) }], { noCancel: true }); if (!r) return; return submit({ pid: p.id, type: 'resolve', track: r.track }); }
       if (pd.type === 'reMilestone') { const ms = G.reachedMilestones(p); const r = await ask(`${G.ORGANS[pd.organ].name}：到達済み報酬を再発動（${pd.organ === 'Re3' && pd.strong ? '強版' : '弱版'}）`, [{ type: 'select', name: 'm', label: '報酬', options: ms.map((m, i) => ({ value: i, label: `${G.TRACK_INFO[m.track].name} Lv${m.lv}★：${G.TRACK_REWARDS[m.track][m.lv]}` })) }], { noCancel: true }); if (!r) return; const m = ms[+r.m]; return submit({ pid: p.id, type: 'resolve', track: m.track, lv: m.lv }); }
       if (pd.type === 'bonusAction') { toast('知性Lv4↗：追加アクションを今すぐ選んでください（対象以外はグレー表示）'); }
-    } finally { pendingBusy = false; }
+    }
   }
 
   // ---------- 保存・書き出し ----------

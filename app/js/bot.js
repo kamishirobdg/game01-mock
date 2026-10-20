@@ -231,7 +231,7 @@
     const p = st.players[pid];
     const pd = pending(st, p); if (pd) return pd;
     const gate = !!RSo(st).gates;
-    style = style || (gate ? GATE_STYLES[pid % 4] : STYLES[pid % 4]);
+    style = style || (gate ? ['greedy', 'greenG', 'blueG', 'redG'][pid % 4] : STYLES[pid % 4]); // 画面のAI席：ゲート型では混合greedy＋色寄せ（純ルート台本は弱すぎるため）
     if (style === 'greedy') return chooseGreedy(st, pid);
     if (BIAS[style]) return chooseGreedy(st, pid, BIAS[style]);
     if (GATE_STYLES.includes(style)) return chooseGate(st, pid, style);
