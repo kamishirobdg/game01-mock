@@ -20,9 +20,9 @@
       case 'freeMass': return first(st, [R({ kind: 'MB' }), R({ kind: 'MM' }), R({ kind: 'MS' })]);
       case 'rewardTrait': return first(st, cheapTraits(st, p).map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })]));
       case 'dgBuy': return first(st, cheapTraits(st, p).map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })]));
-      case 'flSwap': return first(st, [p.E > p.G + 4 ? R({ dir: 'EG', n: Math.min(pd.max, 2) }) : null, R({ skip: true })]);
-      case 'cvIncome': return R({ res: p.E < 6 ? 'E' : p.G < 4 ? 'G' : 'P' });
-      case 'lYield': { const pref = [p.E < 6 ? 'E' : null, p.G < 4 ? 'G' : null, 'E', 'G', 'P'].filter(Boolean).filter(r => pd.opts.includes(r)); return R({ res: pref[0] || pd.opts[0] }); }
+      case 'flSwap': return first(st, [p.E > p.G + G.sc(st, 4) ? R({ dir: 'EG', n: Math.min(pd.max, 2) }) : null, R({ skip: true })]);
+      case 'cvIncome': return R({ res: p.E < G.sc(st, 6) ? 'E' : p.G < G.sc(st, 4) ? 'G' : 'P' });
+      case 'lYield': { const pref = [p.E < G.sc(st, 6) ? 'E' : null, p.G < G.sc(st, 4) ? 'G' : null, 'E', 'G', 'P'].filter(Boolean).filter(r => pd.opts.includes(r)); return R({ res: pref[0] || pd.opts[0] }); }
       case 'wildColor': return R({ track: G.TRACKS.find(t => p.gems[t] === 0) || 'body' });
       case 'learn': { const miss = G.TRACKS.find(t => p.gems[t] === 0); return first(st, [R({ kind: 'express', track: miss || 'body' }), R({ kind: 'mimic', effect: 'metab3w' }), R({ kind: 'mimic', effect: 'social3w' }), R({ kind: 'mimic', effect: 'intel2' }), R({ kind: 'mimic', effect: 'social2' }), R({ skip: true })]); }
       case 'reMilestone': { const m = G.reachedMilestones(p); const best = m.find(x => x.lv === 5) || m[0]; return R({ track: best.track, lv: best.lv }); }
@@ -61,7 +61,7 @@
     } else {
       plan = [...endgame, ...wanted.slice(0, 4), breed, mass('MB'), ...['body'].filter(t => p.lv[t] < 5).map(t => track(t, 'P')), ...['body'].filter(t => p.lv[t] < 5).map(t => track(t)), ...['metab', 'social', 'intel'].filter(t => p.lv[t] < 3).map(t => track(t)), adapt, res('P8'), ...cards, A({ type: 'convert', kind: 'PG', n: 1 }), res('ALL'), mass('MM'), ...anyTrait];
     }
-    plan.push(res('E5'), res('ALL'), A({ type: 'reserve', res: p.G < 2 ? 'G' : 'E' }));
+    plan.push(res('E5'), res('ALL'), A({ type: 'reserve', res: p.G < G.sc(st, 2) ? 'G' : 'E' }));
     return first(st, plan.filter(Boolean));
   }
 
@@ -90,7 +90,7 @@
       const list = st.shared.organField.filter(o => !G.organ(p, o)).map(o => ({ o, c: G.organCost(st, p, o) })).filter(x => x.c);
       // 系統を完成に近づけるものを優先、次に安いもの、強を優先
       list.sort((a, b) => (G.ORGANS[b.o].tier - G.ORGANS[a.o].tier) || (b.c.strong - a.c.strong) || (a.c.E - b.c.E));
-      return list.map(x => A({ type: 'organ', organ: x.o, useL: Math.max(0, Math.min(p.L, Math.ceil((x.c.E - p.E) / 3))), li2Res: p.G < 2 ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' }));
+      return list.map(x => A({ type: 'organ', organ: x.o, useL: Math.max(0, Math.min(p.L, Math.ceil((x.c.E - p.E) / 3))), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' }));
     };
     const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM'].filter(t => G.traitPool(st).includes(t));
     const traitCands = (slots) => traitPref.filter(t => !G.trait(p, t)).flatMap(t => slots.map(sl => A(Object.assign({ type: 'trait', trait: t, useL: Math.max(0, Math.min(p.L, Math.ceil((G.traitCost(st, p, t).G - p.G) / 3))), res: pref[0], track: 'intel' }, sl))));
@@ -146,8 +146,8 @@
     const adaptX = (style === 'red' && R.bodyAxis === 'L') ? null : adapt; // 生命核軸の赤は L を適応進化に使わない
     const collectX = (style === 'red' && R.bodyAxis === 'L') ? collect.filter(a => a && !a.useL) : collect;
     const plan = mainDone
-      ? [...shield, ...endgame, ...scoreMode, ...gte, ...collectX, adaptX, mass('MM'), A({ type: 'reserve', res: p.G < 2 ? 'G' : 'E' })]
-      : [...shield, ...endgame, ...mainFirst, st.round >= 2 && gemsetOk ? gemset : null, ...main, ...buyGem, ...gte, late ? breed : null, ...collectX, adaptX, mass('MM'), A({ type: 'convert', kind: 'PE', n: 1 }), A({ type: 'reserve', res: p.G < 2 ? 'G' : 'E' })];
+      ? [...shield, ...endgame, ...scoreMode, ...gte, ...collectX, adaptX, mass('MM'), A({ type: 'reserve', res: p.G < G.sc(st, 2) ? 'G' : 'E' })]
+      : [...shield, ...endgame, ...mainFirst, st.round >= 2 && gemsetOk ? gemset : null, ...main, ...buyGem, ...gte, late ? breed : null, ...collectX, adaptX, mass('MM'), A({ type: 'convert', kind: 'PE', n: 1 }), A({ type: 'reserve', res: p.G < G.sc(st, 2) ? 'G' : 'E' })];
     return first(st, plan.filter(Boolean));
   }
 
@@ -169,10 +169,19 @@
     if (RSo(st).gates) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cfB * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
     v += ((sc.cfB - 3) + (sc.cfC - 3)) / 2 * rem * w.coefFuture; // C2 では2本の平均（1本なら cf-3 と同値）
     if (rem > 0) v += p.shields * w.shield;
+    if (p.round.resBoost > 1 && !st.ended) { const freeRes = G.RES_SLOTS.filter(s => G.slotUsedBy(st, s) === undefined).length; v += Math.min(p.left.W + p.left.AT, freeRes) * G.sc(st, 5) * (p.round.resBoost - 1) * w.E * 0.8; } // 第35部 神の加護：残りの手番で資源枠を使う見込み
     const R = RSo(st);
     if (R.coopMode === 'spend') { if (rem > 0) v += Math.min(p.coop, rem * 2) * (R.coopSpendGain || 3) * w.E * 0.6; } // K3：持っている協調＝あとで払える資源（即時より割り引く）
-    else { let cb = R.coopBonusCap !== undefined ? Math.min(p.coop, R.coopBonusCap + (p.coopCapAdd || 0)) : p.coop; if (R.coopMode === 'tier') cb = p.coop >= 8 ? 3 : p.coop >= 4 ? 2 : p.coop >= 1 ? 1 : 0; if (R.coopMode === 'half') cb = p.coopRoundUp ? Math.ceil(cb / 2) : Math.floor(cb / 2); if (R.coopBonusSlots) cb *= 0.5; v += rem * cb * w.coop; }
+    else { let cb = R.coopBonusCap !== undefined ? Math.min(p.coop, R.coopBonusCap + (p.coopCapAdd || 0)) : p.coop; if (R.coopMode === 'tier') cb = p.coop >= 8 ? 3 : p.coop >= 4 ? 2 : p.coop >= 1 ? 1 : 0; if (R.coopMode === 'half') cb = p.coopRoundUp ? Math.ceil(cb / 2) : Math.floor(cb / 2); if (p.coopBonusAdd && p.coop > 0) cb += p.coopBonusAdd; if (R.coopBonusSlots) cb *= 0.5; v += rem * cb * w.coop; }
     v += k * (p.organs.length * w.organ + p.traits.length * w.trait);
+    if (rem > 0) { // 将来の割引・資源を生む器官/形質の見込み（1ラウンドあたりの期待使用回数 × 割引・資源）
+      const k1 = R.scale || 1; const lm = (lin, sv, wv) => { let m = 0; p.organs.forEach(o => { const d = G.ORGANS[o.id]; if (d && d.lin === lin) m = Math.max(m, (o.strong ? sv : wv)[d.tier - 1]); }); return m * k1; };
+      v += rem * 0.6 * lm('Tl', [2, 3, 4], [1, 2, 3]) * w.G; // 転写：形質 0.6枚/R
+      v += rem * 0.9 * lm('Cx', [1, 2, 3], [1, 1, 2]) * w.E; // 促進：進行 0.9回/R
+      const li1 = G.organ(p, 'Li1'); if (li1) v += rem * 0.6 * (li1.strong ? 2 : 1) * k1 * w.E; const li2 = G.organ(p, 'Li2'); if (li2) v += rem * 0.6 * (li2.strong ? 3 : 2) * k1 * w.E;
+      const dv = G.trait(p, 'DV'); if (dv) v += rem * 0.9 * (dv.strong ? 2 : 1) * k1 * w.E; const dg = G.trait(p, 'DG'); if (dg) v += rem * 0.5 * (R.dgDisc ? R.dgDisc[dg.strong ? 0 : 1] : 2 * k1) * w.G;
+      const mb = G.trait(p, 'MB'); if (mb && mb.strong && R.mbBreedDisc) v += Math.min(rem, (R.breed.length - p.breed)) * 0.5 * R.mbBreedDisc * k1 * w.P;
+    }
     // 得点に変換できる資源の潜在価値：P は大量消費(身体)（1宝石＝係数×2点）、G は宝石セット（1R1人）に化ける。残ラウンドがあるときだけ
     if (rem > 0) { const gemValR = (RSo(st).massBodyVirtual ? sc.cfC : sc.cfB) * 2, gemValV = sc.cfC * 2; v += Math.min(2, Math.floor(p.P / Math.max(1, G.massCost(p, 'MB')))) * gemValR * 0.5; if (p.G >= G.gemsetPrice(p)) v += gemValV * 0.3; }
     return v;
@@ -182,7 +191,7 @@
     const used = (s) => G.slotUsedBy(st, s) !== undefined;
     const byp = (base, slot) => { if (RSo(st).coopMode === 'spend' && p.coop >= 1 && slot !== 'PB') { const b2 = Object.assign({}, base, { coopSpend: true }); out.push(A(b2)); if (used(slot)) { if (p.L > 0) out.push(A(Object.assign({}, b2, { useL: true }))); } } out.push(A(base)); if (used(slot) && p.mimic && !p.round.mimicUsed) out.push(A(Object.assign({}, base, { bypassMimic: true }))); if (used(slot)) { if (p.coop >= (RSo(st).bypassCoopCost || 2) && st.ext === 'x1') out.push(A(Object.assign({}, base, { bypassCoop: true }))); if (p.L > 0) out.push(A(Object.assign({}, base, { useL: true, bypassL: true }))); } };
     G.RES_SLOTS.concat(['PB']).forEach(s => { if (s === 'ALL') ['E', 'G', 'P'].forEach(r => byp({ type: 'res', slot: s, coopRes: r }, s)); else byp({ type: 'res', slot: s, coopRes: 'E' }, s); if (p.shields > 0 && s !== 'PB') ['E', 'G', 'P'].forEach(r => out.push(A({ type: 'res', slot: s, coopRes: r, shield: true }))); });
-    const lFor = (cost, have) => Math.max(0, Math.min(p.L, Math.ceil((cost - have) / 3)));
+    const lFor = (cost, have) => Math.max(0, Math.min(p.L, Math.ceil((cost - have) / (p.lValue || G.sc(st, 3)))));
     G.TRACKS.forEach(t => { const c = G.stepCost(p, t); if (c !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c, p.E) })); if (RSo(st).bodyBulkLv4 && p.L >= 2 && c >= 2 * (p.lValue || 3) && !p.lBulk) out.push(A({ type: 'track', track: t, pay: 'E', useL: 2 })); } });
     if (RSo(st).bodyBulkLv4 && p.L >= 2 && !p.lBulk) st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (c && c.E >= 2 * (p.lValue || 3)) out.push(A({ type: 'organ', organ: o, useL: 2, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); });
     out.push(A({ type: 'breed' })); if (RSo(st).breedE) out.push(A({ type: 'breed', pay: 'E' })); if (RSo(st).breedL) out.push(A({ type: 'breed', pay: 'L' }));
@@ -191,12 +200,20 @@
     if (RSo(st).lCrystal) out.push(A({ type: 'lCrystal' }));
     if (RSo(st).coopCrystal) out.push(A({ type: 'coopCrystal' }));
     if (RSo(st).premium) G.PREMIUM_ORDER.filter(t => !G.trait(p, t)).forEach(t => out.push(A({ type: 'premium', trait: t, useL: 0 })));
-    st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (!c) return; out.push(A({ type: 'organ', organ: o, useL: lFor(c.E, p.E), li2Res: p.G < 2 ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' })); });
+    st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (!c) return; out.push(A({ type: 'organ', organ: o, useL: lFor(c.E, p.E), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' })); });
     const cheap2 = G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RSo(st).miMaxCost || 4) && !G.trait(p, t)).slice(0, RSo(st).miCount || 2);
     ['MB', 'MI', 'MS', 'MM'].forEach(k => { out.push(A({ type: 'mass', kind: k, traits: cheap2 })); if (used(k) && p.bypassWide && p.L > 0) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassL: true })); });
     const tslots = [{}, { slot: 'TRT2' }]; if (used('TRT') || used('TRT2')) { if (p.coop >= (RSo(st).bypassCoopCost || 2) && st.ext === 'x1') tslots.push({ bypassCoop: true }); if (p.L > 0) tslots.push({ bypassL: true }); }
-    G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => { const c = G.traitCost(st, p, t).G; tslots.forEach(sl => out.push(A(Object.assign({ type: 'trait', trait: t, useL: lFor(c, p.G), res: 'E', track: 'intel' }, sl)))); });
+    G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => { const tc = G.traitCost(st, p, t); const c = tc.G; tslots.forEach(sl => out.push(A(Object.assign({ type: 'trait', trait: t, useL: lFor(c, p.G), res: 'E', track: 'intel' }, sl)))); if (RSo(st).traitChoice && tc.strong) { const cw = G.traitCost(st, p, t, undefined, true).G; out.push(A({ type: 'trait', trait: t, useL: lFor(cw, p.G), res: 'E', track: 'intel', weak: true })); } }); // traitChoice：弱（安い）も候補に
     out.push(A({ type: 'gemset', useL: lFor(G.gemsetPrice(p), p.G) }));
+    { const T = RSo(st).tribute; if (T && st.round >= (T.openRound || 6)) { out.push(A({ type: 'tribute', res: 'E' }), A({ type: 'tribute', res: 'P' })); G.tribSlots(st).forEach(sl => { const def = T.slots[sl]; if (!def) return; // 献上（第33部）・献上枠（第35部：この卓で開いている枠だけ）
+      if (!def.kind) { if (def.real) { const miss = G.TRACKS.find(t => p.gems[t] === 0) || 'body'; out.push(A({ type: 'tributeSlot', slot: sl, track: miss })); } else out.push(A({ type: 'tributeSlot', slot: sl })); return; }
+      if (def.kind === 'organ') { const bl = st.shared.organField.filter(o => G.organCost(st, p, o)); bl.forEach(o => { out.push(A({ type: 'tributeSlot', slot: sl, organ: o, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); if (def.half) { const lin = G.ORGANS[o].lin, tier = G.ORGANS[o].tier; const nxt = lin + (tier + 1); const second = (st.shared.organField.includes(nxt) ? [nxt] : []).concat(bl.filter(x => x !== o)); second.slice(0, 4).forEach(o2 => out.push(A({ type: 'tributeSlot', slot: sl, organ: o, organ2: o2, useL: 0, li2Res: 'E', li3Res: 'E', regimeRes: 'E' }))); } }); return; }
+      if (def.kind === 'trait') { const un = G.traitPool(st).filter(t => !G.trait(p, t)); const top = un.slice().sort((x, y) => G.baseTraitCost(st, y) - G.baseTraitCost(st, x)).slice(0, 5); un.forEach(t => out.push(A({ type: 'tributeSlot', slot: sl, traits: [t], useL: 0, res: 'E', track: 'intel' }))); if ((def.n || 2) >= 2) for (let i = 0; i < top.length; i++) for (let j = i + 1; j < top.length; j++) out.push(A({ type: 'tributeSlot', slot: sl, traits: [top[i], top[j]], useL: 0, res: 'E', track: 'intel' })); return; }
+      if (def.kind === 'alchemy') { const singles = []; G.TRACKS.forEach(f => { if (p.gems[f] < 1) return; G.TRACKS.forEach(t => { if (t !== f) singles.push({ from: f, to: t }); }); }); singles.forEach(c => out.push(A({ type: 'tributeSlot', slot: sl, changes: [c] }))); if ((def.n || 2) >= 2) { const need = new Set(); st.shared.combos.two.forEach(i => { const c = G.COMBOS2[i]; const miss = c.filter(t => p.gems[t] === 0); if (miss.length === 1) need.add(miss[0]); }); st.shared.combos.three.forEach(i => { const c = G.COMBOS3[i]; const miss = c.filter(t => p.gems[t] === 0); if (miss.length >= 1 && miss.length <= 2) miss.forEach(t => need.add(t)); }); const ns = singles.filter(c => need.has(c.to)); for (let i = 0; i < ns.length; i++) for (let j = i + 1; j < ns.length; j++) { const a1 = ns[i], a2 = ns[j]; if (a1.to === a2.to) continue; if (a1.from === a2.from && p.gems[a1.from] < 2) continue; if (a2.from === a1.to || a1.from === a2.to) continue; out.push(A({ type: 'tributeSlot', slot: sl, changes: [a1, a2] })); } } return; }
+      if (def.kind === 'boost') { if (def.instant) G.RES_SLOTS.concat(['PB']).forEach(s => { if (s === 'ALL') ['E', 'G', 'P'].forEach(r => out.push(A({ type: 'tributeSlot', slot: sl, res: s, coopRes: r }))); else out.push(A({ type: 'tributeSlot', slot: sl, res: s, coopRes: 'E' })); }); else out.push(A({ type: 'tributeSlot', slot: sl })); return; }
+      if (def.kind === 'leap') { const ok = G.TRACKS.filter(t => G.stepCost(p, t) !== null); ok.forEach((t1, i) => ok.forEach((t2, j) => { if (j < i) return; out.push(A({ type: 'tributeSlot', slot: sl, tracks: [t1, t2], useL: 0 })); })); return; }
+    }); } }
     if (RSo(st).gSlots) { const mc = G.gSlotCost(p, RSo(st).mimicCost || 4), ec = G.gSlotCost(p, RSo(st).expressCost || 10); G.mimicOptions(st, p).forEach(e => out.push(A({ type: 'mimic', effect: e.id, useL: lFor(mc, p.G) }))); G.TRACKS.forEach(t => out.push(A({ type: 'express', track: t, useL: lFor(ec, p.G) }))); } if (used('GEM') && p.bypassWide && p.L > 0) out.push(A({ type: 'gemset', useL: 0, bypassL: true }));
     G.scanCandidates(st, p).slice(0, 2).forEach(tg => out.push(A({ type: 'scan', target: tg, useL: 0 })));
     if (!RSo(st).noAdapt) G.TRACKS.filter(t => p.lv[t] === 1).forEach(t => out.push(A({ type: 'adapt', track: t })));
@@ -209,7 +226,8 @@
   }
   function chooseGreedy(st, pid, w) {
     const p = st.players[pid]; const R = RSo(st);
-    w = Object.assign({}, w || W); if (R.gToE) w.G = Math.max(w.G, w.E * R.gToE[1] / R.gToE[0]); // G→E変換があるならGはE換算以上の価値
+    w = Object.assign({}, w || W); { const k = R.scale || 1; if (k !== 1) ['E', 'G', 'P'].forEach(r => { w[r] = w[r] / k; }); } // 資源の規模に合わせて1個あたりの価値を下げる
+    if (R.gToE) w.G = Math.max(w.G, w.E * R.gToE[1] / R.gToE[0]); // G→E変換があるならGはE換算以上の価値
     const isFree = (a) => a.shield || a.type === 'gToE' || a.type === 'freeConv';
     const base = evaluate(st, p, w);
     let best = null, bv = -Infinity, bestFree = null, bfv = base + 0.2;

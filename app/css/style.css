@@ -167,3 +167,8 @@ img.art.portrait { width:56px; height:56px; aspect-ratio:1/1; border-radius:50%;
 
 /* 獲得量プレビュー（カーソル／枠内） */
 .slot .gain { display: block; color: #0a6; font-weight: 600; margin-top: 2px; }
+/* 献上（第33部）：R6 の神の到来で開く枠 */
+.sgroup.god { background:linear-gradient(90deg,#fff7e0,#fbe9c8); border:1px solid #d9b56a; border-radius:6px; padding:4px 6px; }
+.sgroup .glabel { display:block; width:100%; font-size:12px; color:#7a5a1e; margin:2px 0 4px; }
+.slot.god { border-color:#d9b56a; background:#fffaf0; }
+.slot.locked { opacity:.55; border-style:dashed; }
