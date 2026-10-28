@@ -89,6 +89,8 @@
     // 2026-10-22 ユーザー採用（第27部）：器官は「早い者が安い」＝各カード1R1人なし・効果は先着も後続も同じ・後続は後追い料 +1E（T8 で +3E）。形質は「早い者が強い」のまま
     organExcl: false, organSameEffect: true, organLateFee: 1,
     endMajorityGem: true, endMajorityMinLv: 2,
+    regimePt: 0, noRegime: true,
+    lInvestByCount: true, nbCrystalInvest: true, // 2026-10-25 ユーザー採用（結晶体質 案2）：強は献上（生命核）で払った L も身体の収集物に // 2026-10-24 ユーザー判断：身体の収集物（生命核の投入）は払った回数でなく「個数」で数える（ゲート 1/3/5/7 は据え置き） // 2026-10-24 ユーザー判断：体制完成（4系統1枚ずつ→収入+1・終了時+15点）は T1 の値が残っていただけで機能していないため廃止
     // 2026-10-23 ユーザー採用（第32〜33部）：献上＝資源を仮想宝石に換える経路を統一。共用は定額・各品目1ラウンド1回（遺伝子 G6／生命核 L2／協調4。R6 からエネルギー E12／個体数 P24 が開く＝「神の到来」）。
     //   早取りの献上枠（R6 から・1R1人ずつ）＝エネルギー E8／個体数 P16／宝石 E10+P10→好きな色の実宝石。研究（知性Lv4）＝献上（遺伝子）が1ラウンドに何度でも。数値は基準単位（T8 は3倍）
     tribute: { openRound: 6, shared: { E: 12, P: 24 }, flatG: 6, onceEach: true,
@@ -150,7 +152,12 @@
   G.RULESETS.t8 = G.scaleRuleset(G.RULESETS.t7, 3, { name: '仮値セットT8（T7の資源3倍）', coopMode: undefined, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 2,
     // 2026-10-22 形質の強／弱の選択制（traitChoice）に合わせて弱の値段を効果比で個別に（T8 単位の絶対値・第28部）：弱が安すぎると「安い収集物」として買い占められ、初期資源の多い種族が突出した
     traitCosts: { JI: [33, 27], JB: [39, 33], DV: [18, 15], MB: [30, 24], MC: [15, 12], DG: [15, 13], NC: [21, 17], NB: [15, 11], NM: [21, 18], NL: [30, 26], NF: [18, 15], NR: [15, 12] } }); // mg3Inc＝代謝核の収入（T8 の絶対値・2026-10-22 全種+3→+2：物差しの比 1.6→1.33） // 2026-10-22 ユーザー判断：2倍では協調の効きが残るため3倍（微調整の余地も広がる）
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8'];
+  // 2026-10-24 ユーザー採用：T9＝T7 の資源1倍（数字を直感的に）。協調は上限12・社会の自動進行 3/6/9/12・協調ボーナス＝協調3個につき+1（coopMode 'third'＝T8 の「＋協調数」を 1/3 単位にした等価）・協調9到達で白宝石・群心核＝ボーナス+1。
+  //   形質の値段は T8 の絶対値を 1/3 に丸めた（13→4・17→6・11→4・26→9）。代謝核の収入 +2 は +1（1.5倍相当）。献上（協調）4・協調発進 3 は据え置き
+  G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
+    gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
+    traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
   G.GATE_LABEL_L = '生命核の投入（代用払い・緊急発進・適応進化）'; G.GATE_SHORT_L = 'L投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: 'P投入' };
@@ -201,11 +208,11 @@
     IP: { name: 'P収入強化', cat: 'I', cost: [2, 1], strong: 'P+3/R（恒久）', weak: '即時P+9', permWeak: false },
     DB: { name: '身体加速', cat: 'D', cost: [3, 2], strong: '身体進行コスト-2（恒久）', weak: '次の身体進行1回だけ-2', permWeak: false },
     DI: { name: '知性加速', cat: 'D', cost: [3, 2], strong: '知性進行コスト-2（恒久）', weak: '次の知性進行1回だけ-2', permWeak: false },
-    MC: { name: '消費軽減', cat: 'M', cost: [3, 2], strong: '大量消費コスト-6P（恒久）', weak: '次の大量消費1回だけ-6P', permWeak: false },
+    MC: { name: '消費軽減', cat: 'M', cost: [3, 2], strong: '大量消費コスト-{mcDisc:6}P（恒久）', weak: '次の大量消費1回だけ-{mcDisc:6}P', permWeak: false },
     IB: { name: '複合収入', cat: 'I', cost: [4, 3], strong: 'E+1/RかつG+1/R（恒久）', weak: '即時E+3かつG+3', permWeak: false },
     DA: { name: '適応効率', cat: 'D', cost: [2, 1], strong: '選んだ1トラックの進行コスト-1（恒久）', weak: '次の進行1回だけ-1', permWeak: false },
     DV: { name: '進化加速', cat: 'D', cost: [8, 6], strong: '全トラック進行コスト-{2}（恒久）', weak: '全トラック-{1}（恒久）', permWeak: true },
-    MB: { name: '増殖暴走', cat: 'M', cost: [7, 5], strong: '繁殖変換 -{15}P（各段）＋大量消費(身体)-8P', weak: '大量消費(身体)-8Pのみ', permWeak: true }, // 2026-10-22 半減→各段-15P（4段で半減だと P300 の価値になるため）
+    MB: { name: '増殖暴走', cat: 'M', cost: [7, 5], strong: '繁殖変換 -{15}P（各段）＋大量消費(身体)-{mbDisc:8}P', weak: '大量消費(身体)-{mbDisc:8}Pのみ', permWeak: true }, // 2026-10-22 半減→各段-15P（4段で半減だと P300 の価値になるため）
     IM: { name: '代謝亢進', cat: 'I', cost: [8, 6], strong: '好きな1種の収入+3（取得時固定）', weak: '好きな1種の収入+2（取得時固定）', permWeak: true },
     DG: { name: '遺伝子図書館', cat: 'D', cost: [7, 5], strong: '毎R形質1枚を-{2}Gで購入可（排他不要）', weak: '同 -{1}G', permWeak: true },
     JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', weak: '知性+1段階＋Lv5★で必ず強効果', permWeak: false, instant: true },
@@ -214,8 +221,8 @@
   G.TRAIT_ORDER = ['IE', 'IG', 'IP', 'IB', 'DB', 'DI', 'DA', 'MC', 'DV', 'MB', 'IM', 'DG', 'JI', 'JB'];
   // T7（第14部）の新形質＝突然変異。値段は数値セット側（RULESETS.t7.traitCosts）で上書きする
   Object.assign(G.TRAITS, {
-    NC: { name: '群れ本能', cat: 'N', cost: [8, 6], strong: '即時 協調+3', weak: '即時 協調+2', permWeak: false, instant: true },
-    NB: { name: '結晶体質', cat: 'N', cost: [10, 8], strong: '献上（生命核）と献上（協調）の必要数が1つ少ない', weak: '献上（生命核）の必要数が1つ少ない', permWeak: true, strongNoCoop: '献上（生命核）の必要数が1つ少ない（強：先着）' }, // T7 nbCoopDisc=false では強も結晶化側のみ
+    NC: { name: '群れ本能', cat: 'N', cost: [8, 6], strong: '即時 協調+2', weak: '即時 協調+1', permWeak: false, instant: true }, // 文言は T7 の ncCoop [2,1] に合わせた（2026-10-24）
+    NB: { name: '結晶体質', cat: 'N', cost: [10, 8], strong: '献上（生命核）の必要数が1つ少なく、払った生命核を身体の収集物に数える', weak: '献上（生命核）の必要数が1つ少ない', permWeak: true, strongNoCoop: '献上（生命核）の必要数が1つ少ない（強：先着）' }, // T7 nbCoopDisc=false では強も結晶化側のみ // 文言は T7 の nbCoopDisc=false（協調側の割引なし）に合わせた。強弱で効果が同じ点は要検討（2026-10-24）
     NM: { name: '擬態', cat: 'N', cost: [12, 9], strong: '1ラウンド1回、他者が使用済みの資源獲得枠を無償で使える', weak: '同（E{3}を払う）', permWeak: true },
     NL: { name: '長命', cat: 'N', cost: [9, 7], strong: '即時 生命核+2', weak: '即時 生命核+1', permWeak: false, instant: true },
     NF: { name: '先見', cat: 'N', cost: [11, 8], strong: 'Lv3★／Lv5★を後着でも強の報酬で受け取る（宝石の先着ボーナスは除く）', weak: 'Lv5★のみ', permWeak: true },
@@ -267,7 +274,7 @@
     Tl1: { lin: 'Tl', tier: 1, name: '転写膜', strong: '形質のGコスト-{2}', weak: '-{1}' },
     Tl2: { lin: 'Tl', tier: 2, name: '転写体', strong: '形質のGコスト-{3}（系統内の最大値）', weak: '-{2}' },
     Tl3: { lin: 'Tl', tier: 3, name: '全転写', strong: '形質のGコスト-{4} ＋ 知性のゲート+1', weak: '-{3}' },
-    Hc1: { lin: 'Hc', tier: 1, name: '群心点', strong: '建造時 協調+2', weak: '建造時 協調+1' },
+    Hc1: { lin: 'Hc', tier: 1, name: '群心点', strong: '建造時 協調+1', weak: '建造時 協調+1' }, // 文言は T7 の hc1Coop [1,1] に合わせた（2026-10-24）
     Hc2: { lin: 'Hc', tier: 2, name: '群心網', strong: '群体E/Gで協調+2追加', weak: '群体E/Gで協調+1追加' },
     Hc3: { lin: 'Hc', tier: 3, name: '群心核', strong: '協調ボーナスの端数を切り上げ ＋ 社会のゲート+1', weak: '協調ボーナスの端数を切り上げ', strongB: '協調ボーナス+1 ＋ 社会のゲート+1', weakB: '協調ボーナス+1' }, // 2026-10-20 上限撤廃に伴い「上限+2/+1」から差し替え。倍化版（hc3Bonus）では strongB/weakB
     Pu1: { lin: 'Pu', tier: 1, name: '脈動点', strong: '建造時 生命核+1', weak: '同' },

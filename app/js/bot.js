@@ -172,7 +172,7 @@
     if (p.round.resBoost > 1 && !st.ended) { const freeRes = G.RES_SLOTS.filter(s => G.slotUsedBy(st, s) === undefined).length; v += Math.min(p.left.W + p.left.AT, freeRes) * G.sc(st, 5) * (p.round.resBoost - 1) * w.E * 0.8; } // 第35部 神の加護：残りの手番で資源枠を使う見込み
     const R = RSo(st);
     if (R.coopMode === 'spend') { if (rem > 0) v += Math.min(p.coop, rem * 2) * (R.coopSpendGain || 3) * w.E * 0.6; } // K3：持っている協調＝あとで払える資源（即時より割り引く）
-    else { let cb = R.coopBonusCap !== undefined ? Math.min(p.coop, R.coopBonusCap + (p.coopCapAdd || 0)) : p.coop; if (R.coopMode === 'tier') cb = p.coop >= 8 ? 3 : p.coop >= 4 ? 2 : p.coop >= 1 ? 1 : 0; if (R.coopMode === 'half') cb = p.coopRoundUp ? Math.ceil(cb / 2) : Math.floor(cb / 2); if (p.coopBonusAdd && p.coop > 0) cb += p.coopBonusAdd; if (R.coopBonusSlots) cb *= 0.5; v += rem * cb * w.coop; }
+    else { let cb = R.coopBonusCap !== undefined ? Math.min(p.coop, R.coopBonusCap + (p.coopCapAdd || 0)) : p.coop; if (R.coopMode === 'tier') cb = p.coop >= 8 ? 3 : p.coop >= 4 ? 2 : p.coop >= 1 ? 1 : 0; if (R.coopMode === 'half') cb = p.coopRoundUp ? Math.ceil(cb / 2) : Math.floor(cb / 2); if (R.coopMode === 'third') cb = R.coopThirdRound ? Math.floor((cb + 1) / 3) : Math.floor(cb / 3); if (p.coopBonusAdd && p.coop > 0) cb += p.coopBonusAdd; if (R.coopBonusSlots) cb *= 0.5; v += rem * cb * w.coop; }
     v += k * (p.organs.length * w.organ + p.traits.length * w.trait);
     if (rem > 0) { // 将来の割引・資源を生む器官/形質の見込み（1ラウンドあたりの期待使用回数 × 割引・資源）
       const k1 = R.scale || 1; const lm = (lin, sv, wv) => { let m = 0; p.organs.forEach(o => { const d = G.ORGANS[o.id]; if (d && d.lin === lin) m = Math.max(m, (o.strong ? sv : wv)[d.tier - 1]); }); return m * k1; };
@@ -202,7 +202,7 @@
     if (RSo(st).premium) G.PREMIUM_ORDER.filter(t => !G.trait(p, t)).forEach(t => out.push(A({ type: 'premium', trait: t, useL: 0 })));
     st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (!c) return; out.push(A({ type: 'organ', organ: o, useL: lFor(c.E, p.E), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' })); });
     const cheap2 = G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RSo(st).miMaxCost || 4) && !G.trait(p, t)).slice(0, RSo(st).miCount || 2);
-    ['MB', 'MI', 'MS', 'MM'].forEach(k => { out.push(A({ type: 'mass', kind: k, traits: cheap2 })); if (used(k) && p.bypassWide && p.L > 0) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassL: true })); });
+    ['MB', 'MI', 'MS', 'MM'].forEach(k => { out.push(A({ type: 'mass', kind: k, traits: cheap2 })); if (used(k) && p.bypassWide && p.L > 0) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassL: true })); if (used(k) && G.coopBypassable(st, k, p) && p.coop >= (RSo(st).bypassCoopCost || 2)) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassCoop: true })); }); // bypassCoopWide：使用済みの大量消費を協調発進で
     const tslots = [{}, { slot: 'TRT2' }]; if (used('TRT') || used('TRT2')) { if (p.coop >= (RSo(st).bypassCoopCost || 2) && st.ext === 'x1') tslots.push({ bypassCoop: true }); if (p.L > 0) tslots.push({ bypassL: true }); }
     G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => { const tc = G.traitCost(st, p, t); const c = tc.G; tslots.forEach(sl => out.push(A(Object.assign({ type: 'trait', trait: t, useL: lFor(c, p.G), res: 'E', track: 'intel' }, sl)))); if (RSo(st).traitChoice && tc.strong) { const cw = G.traitCost(st, p, t, undefined, true).G; out.push(A({ type: 'trait', trait: t, useL: lFor(cw, p.G), res: 'E', track: 'intel', weak: true })); } }); // traitChoice：弱（安い）も候補に
     out.push(A({ type: 'gemset', useL: lFor(G.gemsetPrice(p), p.G) }));
@@ -214,7 +214,7 @@
       if (def.kind === 'boost') { if (def.instant) G.RES_SLOTS.concat(['PB']).forEach(s => { if (s === 'ALL') ['E', 'G', 'P'].forEach(r => out.push(A({ type: 'tributeSlot', slot: sl, res: s, coopRes: r }))); else out.push(A({ type: 'tributeSlot', slot: sl, res: s, coopRes: 'E' })); }); else out.push(A({ type: 'tributeSlot', slot: sl })); return; }
       if (def.kind === 'leap') { const ok = G.TRACKS.filter(t => G.stepCost(p, t) !== null); ok.forEach((t1, i) => ok.forEach((t2, j) => { if (j < i) return; out.push(A({ type: 'tributeSlot', slot: sl, tracks: [t1, t2], useL: 0 })); })); return; }
     }); } }
-    if (RSo(st).gSlots) { const mc = G.gSlotCost(p, RSo(st).mimicCost || 4), ec = G.gSlotCost(p, RSo(st).expressCost || 10); G.mimicOptions(st, p).forEach(e => out.push(A({ type: 'mimic', effect: e.id, useL: lFor(mc, p.G) }))); G.TRACKS.forEach(t => out.push(A({ type: 'express', track: t, useL: lFor(ec, p.G) }))); } if (used('GEM') && p.bypassWide && p.L > 0) out.push(A({ type: 'gemset', useL: 0, bypassL: true }));
+    if (RSo(st).gSlots) { const mc = G.gSlotCost(p, RSo(st).mimicCost || 4), ec = G.gSlotCost(p, RSo(st).expressCost || 10); G.mimicOptions(st, p).forEach(e => out.push(A({ type: 'mimic', effect: e.id, useL: lFor(mc, p.G) }))); G.TRACKS.forEach(t => { out.push(A({ type: 'express', track: t, useL: lFor(ec, p.G) })); if (used('EXP') && G.coopBypassable(st, 'EXP', p) && p.coop >= (RSo(st).bypassCoopCost || 2)) out.push(A({ type: 'express', track: t, useL: lFor(ec, p.G), bypassCoop: true })); }); } if (used('GEM') && p.bypassWide && p.L > 0) out.push(A({ type: 'gemset', useL: 0, bypassL: true }));
     G.scanCandidates(st, p).slice(0, 2).forEach(tg => out.push(A({ type: 'scan', target: tg, useL: 0 })));
     if (!RSo(st).noAdapt) G.TRACKS.filter(t => p.lv[t] === 1).forEach(t => out.push(A({ type: 'adapt', track: t })));
     ['EG', 'GE', 'PE', 'PG'].forEach(k => [1, 2].forEach(n => out.push(A({ type: 'convert', kind: k, n }))));
@@ -230,7 +230,7 @@
     if (R.gToE) w.G = Math.max(w.G, w.E * R.gToE[1] / R.gToE[0]); // G→E変換があるならGはE換算以上の価値
     const isFree = (a) => a.shield || a.type === 'gToE' || a.type === 'freeConv';
     const base = evaluate(st, p, w);
-    let best = null, bv = -Infinity, bestFree = null, bfv = base + 0.2;
+    let best = null, bv = -Infinity, bestFree = null, bfv = base + 0.2, ties = 0; // ties：最良値と同点の候補数（検証用 G.TIES）
     for (const a of candidates(st, p)) {
       let s2; try { s2 = G.tryApply(st, a); } catch (e) {
         // E不足で打てない手は、G→E変換（無料）を挟めば打てるか試す＝複合候補。成立すれば先に変換を返す
@@ -242,8 +242,9 @@
       }
       const v = evaluate(s2, s2.players[pid], w);
       if (isFree(a)) { if (v > bfv) { bfv = v; bestFree = a; } } // 手番を消費しない手は「今の状態より良くなる」なら先に実行
-      else if (v > bv) { bv = v; best = a; }
+      else if (v > bv) { bv = v; best = a; ties = 1; } else if (v === bv) ties++;
     }
+    if (G.TIES) { G.TIES.n++; G.TIES.sum += ties; if (ties > 1) G.TIES.tied++; }
     return bestFree || best;
   }
 

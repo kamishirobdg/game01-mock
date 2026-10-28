@@ -8,6 +8,16 @@ body { margin:0; font: 14px/1.45 system-ui, "Segoe UI", "Yu Gothic UI", sans-ser
 #hdr .order .chip.done { opacity:.5; }
 #hdr .rulelink { font-size:13px; color:#2f6fdd; }
 #hdr .hbtns { margin-left:auto; display:flex; gap:6px; }
+#hdr .hbtns.menu { margin-left:0; flex-basis:100%; flex-wrap:wrap; }
+#hdr .hbtns.hidden { display:none; }
+#hdr .hmenu { margin-left:auto; min-width:34px; padding:2px 8px; font-size:16px; line-height:1.2; }
+#hdr .hres { display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center; }
+#hdr .hres .hresp { display:inline-flex; align-items:center; gap:4px; }
+#hdr .hres .mk { width:16px; height:16px; line-height:16px; font-size:10px; }
+#hdr .hres .hrb { display:inline-flex; align-items:baseline; gap:2px; padding:1px 6px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:12px; }
+#hdr .hres .hrb b { font-size:16px; }
+#hdr .hres .hrb small { font-size:10px; color:var(--mute); }
+#hdr .hres .hrb svg.ic { width:15px; height:15px; align-self:center; }
 button { font:inherit; cursor:pointer; border:1px solid var(--line); background:#fff; border-radius:6px; padding:4px 10px; }
 button:hover { background:#f0f3f8; } button:disabled { opacity:.45; cursor:default; }
 button.primary { background:#2f6fdd; color:#fff; border-color:#2f6fdd; }
