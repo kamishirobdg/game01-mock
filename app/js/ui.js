@@ -255,11 +255,12 @@
   }
   function renderHeader() {
     const hd = $('#hdr'); hd.innerHTML = '';
-    hd.appendChild(h('b', null, 'game01 モック'));
-    hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール'));
+    hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール')); // 2026-10-28：「game01 モック」の表記は不要（1行に収める）
     if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (st && st.phase === 'end') hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: exportJson }, '保存(JSON)'), h('button', { onclick: exportCsv }, 'ログCSV'))); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); return; }
     hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`));
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
+    // 版の小文字＋ボタン群の開閉「≡」は1行目の右端（2026-10-28 ユーザー要望：1行を占有させない）
+    hd.appendChild(h('span', { class: 'hmenuwrap' }, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
     const to = h('span', { class: 'order' }, '手番順：');
     st.turnOrder.forEach((pid, i) => { const q = st.players[pid]; to.appendChild(h('span', { class: 'chip' + (i === st.cur ? ' now' : '') + (q.left.W + q.left.AT === 0 ? ' done' : '') }, h('span', { class: 'mk p' + q.id }, q.id + 1), `${q.name} ${leftTxt(q)}`)); });
     hd.appendChild(to);
@@ -269,7 +270,6 @@
       ['E', 'G', 'P', 'L', 'coop'].forEach(k => row.appendChild(h('span', { class: 'hrb r' + k, title: k === 'coop' ? '協調トークン' : RES_JP[k] + (k !== 'L' ? '　次の収入 +' + inc[k] : '　毎ラウンド+1') }, ic(k), h('b', null, String(q[k])), (k === 'L' || k === 'coop') ? null : h('small', null, `+${inc[k]}`))));
       hres.appendChild(row); });
     if (hres.childNodes.length) hd.appendChild(hres);
-    hd.appendChild(h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡'));
     const btns = h('span', { class: 'hbtns menu' + (menuOpen ? '' : ' hidden') });
     btns.appendChild(h('button', { title: '自分の直前の行動まで戻す（間にあるAI・他プレイヤーの行動も取り消される）', onclick: () => submit({ type: 'undo', pids: myHumanPids() }) }, '1手戻す'));
     btns.appendChild(h('button', { title: 'このラウンドの頭（収入直後）まで戻す', onclick: () => { if (confirm('ラウンドの頭まで戻しますか？')) submit({ type: 'undoRound' }); } }, 'ラウンド頭へ'));
@@ -347,6 +347,7 @@
   }
   function renderTracks(p, can) {
     const box = h('div', { class: 'panel tracksp' }, h('h3', null, '進化トラック', h('small', { class: 'sub' }, G.RULESETS[st.rules || 'v1'].gates ? '　収集物（器官・形質・協調・P投入）が矢印の数に達すると自動で上がる。Eでの進行（点線をクリック）も自由。★＝宝石・先着は強い報酬' : '　次の段（点線）をクリックで進行（W必須・排他なし）。★＝宝石・先着は強い報酬')));
+    const lanes = h('div', { class: 'lanes' }); box.appendChild(lanes); // レーンだけ横スクロール（スマホ）
     G.TRACKS.forEach(t => {
       const info = G.TRACK_INFO[t]; const nxt = p.lv[t] + 1;
       const reason = can ? check({ pid: p.id, type: 'track', track: t, pay: 'E', useL: Math.min(p.L, 3) }) : roMsg;
@@ -368,7 +369,7 @@
         node.appendChild(mks);
         body.appendChild(node);
       }
-      lane.appendChild(body); box.appendChild(lane);
+      lane.appendChild(body); lanes.appendChild(lane);
     });
     box.appendChild(h('p', { class: 'note' }, 'コンボ：' + G.comboNames(st).join('／') + '　（対応色の宝石を揃えると仮想宝石+1）'));
     return box;
@@ -422,18 +423,20 @@
     G.SLOTS.filter(s => s.group === 'mass').forEach(s => g2.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     { const T = G.RULESETS[st.rules || 'v1'].tribute; if (T) { const open = st.round >= (T.openRound || 6); const gt = h('div', { class: 'sgroup' + (open ? ' god' : '') }, h('b', { class: 'glabel' }, open ? '神の到来：献上枠（早取り）' : `献上枠（ラウンド${T.openRound || 6}から・神の到来）`)); G.tribSlots(st).map(id => G.SLOT_BY_ID[id]).forEach(s => { if (open) gt.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))); else gt.appendChild(h('button', { class: 'slot locked', disabled: true, title: G.slotTip(st, s.id) }, h('b', null, s.name), h('small', null, G.slotText(st, s.id)))); }); box.appendChild(gt); } }
     const g3 = h('div', { class: 'sgroup' }, h('h4', null, 'その他'));
-    G.SLOTS.filter(s => s.group === 'oth' && (!s.ext || s.ext === st.ext) && (!s.rs || G.RULESETS[st.rules || 'v1'][s.rs]) && !(s.id === 'TRT2' && G.RULESETS[st.rules || 'v1'].traitShared)).forEach(s => g3.appendChild(slotButton(p, can, s, () => onSlot(p, s.id), G.slotUsedBy(st, s.id) !== undefined && G.bypassable(st, s.id) ? bypassHint() : null)));
+    G.SLOTS.filter(s => s.group === 'oth' && (!s.ext || s.ext === st.ext) && (!s.rs || G.RULESETS[st.rules || 'v1'][s.rs]) && !(s.id === 'TRT2' && G.RULESETS[st.rules || 'v1'].traitShared) && !(s.id === 'GEM' && G.RULESETS[st.rules || 'v1'].gemsetShared)).forEach(s => g3.appendChild(slotButton(p, can, s, () => onSlot(p, s.id), G.slotUsedBy(st, s.id) !== undefined && G.bypassable(st, s.id) ? bypassHint() : null)));
     box.appendChild(g1); box.appendChild(g2); box.appendChild(g3); return box;
   }
   function renderShared(p, can) {
     const box = h('div', { class: 'panel shared2' }, h('h3', null, '共用盤', h('small', { class: 'sub' }, '　何人でも・何回でも（トークンがある限り）')));
+    const gTop = h('div', { class: 'sgroup' }, h('h4', null, '献上（共用・各自各品目1ラウンド1回）')); // 2026-10-28：早取りでない献上は共用盤の先頭にまとめる（ユーザー要望）
+    if (G.RULESETS[st.rules || 'v1'].gemsetShared) gTop.appendChild(slotButton(p, can, G.SLOT_BY_ID.GEM, () => onSlot(p, 'GEM')));
     const g = h('div', { class: 'sgroup' });
     G.SLOTS.filter(s => ['trk', 'org', 'cu'].includes(s.group) && s.id !== 'TRK' && !(s.id === 'ADP' && G.RULESETS[st.rules || 'v1'].noAdapt)).forEach(s => g.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     const R6 = G.RULESETS[st.rules || 'v1'];
-    if (R6.lCrystal) { const a = { pid: p.id, type: 'lCrystal' }; const reason = can ? check(a) : roMsg; g.appendChild(actBtn({ class: 'slot', title: `献上（生命核）：生命核L${R6.lCrystal}を払って仮想宝石+1。身体Lv${R6.lCrystalLv || 4}で解放・共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W。投入回数には数えない`, onclick: () => confirm(`献上（生命核）：L${R6.lCrystal}→仮想宝石+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（生命核）'), h('small', null, `L${R6.lCrystal} → 仮想宝石+1`))); }
-    if (R6.coopCrystal) { const a = { pid: p.id, type: 'coopCrystal' }; const reason = can ? check(a) : roMsg; g.appendChild(actBtn({ class: 'slot', title: `献上（協調）：協調トークン${R6.coopCrystal}を払って仮想宝石+1。共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W`, onclick: () => confirm(`献上（協調）：協調${R6.coopCrystal}→仮想宝石+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（協調）'), h('small', null, `協調${R6.coopCrystal} → 仮想宝石+1`))); }
-    if (R6.tribute) { const T = R6.tribute; const open = st.round >= (T.openRound || 6); ['E', 'P'].forEach(res => { const a = { pid: p.id, type: 'tribute', res }; const c = G.sc(st, T.shared[res]); const reason = !open ? `ラウンド${T.openRound || 6}から（神の到来）` : can ? check(a) : roMsg; g.appendChild(actBtn({ class: 'slot' + (open ? ' god' : ' locked'), title: `献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}を払って仮想宝石+1。ラウンド${T.openRound || 6}から・共用・各自1ラウンド1回・W`, onclick: () => open && confirm(`献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}→仮想宝石+1。実行しますか？`) && submit(a) }, reason, h('b', null, `献上（${res === 'E' ? 'エネルギー' : '個体数'}）`), h('small', null, `${res}${c} → 仮想宝石+1`))); }); }
-    box.appendChild(g); return box;
+    if (R6.lCrystal) { const a = { pid: p.id, type: 'lCrystal' }; const reason = can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot', title: `献上（生命核）：生命核L${R6.lCrystal}を払って仮想宝石+1。身体Lv${R6.lCrystalLv || 4}で解放・共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W。投入回数には数えない`, onclick: () => confirm(`献上（生命核）：L${R6.lCrystal}→仮想宝石+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（生命核）'), h('small', null, `L${R6.lCrystal} → 仮想宝石+1`))); }
+    if (R6.coopCrystal) { const a = { pid: p.id, type: 'coopCrystal' }; const reason = can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot', title: `献上（協調）：協調トークン${R6.coopCrystal}を払って仮想宝石+1。共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W`, onclick: () => confirm(`献上（協調）：協調${R6.coopCrystal}→仮想宝石+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（協調）'), h('small', null, `協調${R6.coopCrystal} → 仮想宝石+1`))); }
+    if (R6.tribute) { const T = R6.tribute; const open = st.round >= (T.openRound || 6); ['E', 'P'].forEach(res => { const a = { pid: p.id, type: 'tribute', res }; const c = G.sc(st, T.shared[res]); const reason = !open ? `ラウンド${T.openRound || 6}から（神の到来）` : can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot' + (open ? ' god' : ' locked'), title: `献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}を払って仮想宝石+1。ラウンド${T.openRound || 6}から・共用・各自1ラウンド1回・W`, onclick: () => open && confirm(`献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}→仮想宝石+1。実行しますか？`) && submit(a) }, reason, h('b', null, `献上（${res === 'E' ? 'エネルギー' : '個体数'}）`), h('small', null, `${res}${c} → 仮想宝石+1`))); }); }
+    if (gTop.childNodes.length > 1) box.appendChild(gTop); box.appendChild(g); return box;
   }
   function renderOrganField(p, can) {
     const oex = G.RULESETS[st.rules || 'v1'].organExcl;

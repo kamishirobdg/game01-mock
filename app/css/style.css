@@ -2,7 +2,7 @@
 * { box-sizing: border-box; }
 body { margin:0; font: 14px/1.45 system-ui, "Segoe UI", "Yu Gothic UI", sans-serif; color:var(--ink); background:var(--bg); }
 #hdr { position:sticky; top:0; z-index:5; display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:8px 14px; background:#fff; border-bottom:1px solid var(--line); }
-#hdr .pill { background:#eef1f6; border-radius:12px; padding:2px 10px; font-weight:600; }
+#hdr .pill { background:#eef1f6; border-radius:12px; padding:1px 8px; font-weight:600; font-size:12px; }
 #hdr .order .chip { display:inline-block; margin-left:6px; padding:2px 8px; border-radius:10px; background:#eef1f6; font-size:12px; }
 #hdr .order .chip.now { background:var(--hl); font-weight:700; outline:2px solid #e0b000; }
 #hdr .order .chip.done { opacity:.5; }
@@ -10,7 +10,10 @@ body { margin:0; font: 14px/1.45 system-ui, "Segoe UI", "Yu Gothic UI", sans-ser
 #hdr .hbtns { margin-left:auto; display:flex; gap:6px; }
 #hdr .hbtns.menu { margin-left:0; flex-basis:100%; flex-wrap:wrap; }
 #hdr .hbtns.hidden { display:none; }
-#hdr .hmenu { margin-left:auto; min-width:34px; padding:2px 8px; font-size:16px; line-height:1.2; }
+#hdr .hmenuwrap { margin-left:auto; display:inline-flex; align-items:center; gap:6px; }
+#hdr .hmenuwrap .ver { color:var(--mute); font-size:10px; }
+#hdr .hmenu { min-width:34px; padding:2px 8px; font-size:16px; line-height:1.2; }
+#hdr .order { flex-basis:100%; }
 #hdr .hres { display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center; }
 #hdr .hres .hresp { display:inline-flex; align-items:center; gap:4px; }
 #hdr .hres .mk { width:16px; height:16px; line-height:16px; font-size:10px; }
@@ -186,9 +189,8 @@ img.art.portrait { width:56px; height:56px; aspect-ratio:1/1; border-radius:50%;
 /* ---- v3.45：スマホ幅（〜600px）の見栄え（2026-10-28 ユーザー要望） ---- */
 @media (max-width: 600px) {
   body { overflow-x:hidden; }                                   /* ページ全体は横にはみ出させない */
-  .panel.tracksp { overflow-x:auto; -webkit-overflow-scrolling:touch; padding-left:0; padding-right:0; } /* 進化トラックはパネル内で横スクロール */
-  .panel.tracksp h3 { padding:0 12px; }
-  .lane { min-width:680px; margin:4px 8px; }                    /* 6段＋矢印が読める幅を確保（画面幅では各段が縦長に潰れる） */
+  .panel.tracksp .lanes { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -12px; padding:0 8px; } /* 進化トラックはレーンだけ横スクロール（見出し・コンボ注記は固定） */
+  .lane { min-width:680px; }                    /* 6段＋矢印が読める幅を確保（画面幅では各段が縦長に潰れる） */
   .lane-lbl { position:sticky; left:0; z-index:2; width:72px; padding:6px 6px; box-shadow:2px 0 4px rgba(0,0,0,.12); } /* 色の見出しは固定表示 */
   .lane .node { font-size:11px; }
   .ocard img.art, .tcard img.art, .cardbtn img.art:not(.portrait) { display:none; } /* 器官・形質のイラストは携帯では非表示（必須でない） */
