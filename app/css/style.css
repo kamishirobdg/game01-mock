@@ -182,3 +182,16 @@ img.art.portrait { width:56px; height:56px; aspect-ratio:1/1; border-radius:50%;
 .sgroup .glabel { display:block; width:100%; font-size:12px; color:#7a5a1e; margin:2px 0 4px; }
 .slot.god { border-color:#d9b56a; background:#fffaf0; }
 .slot.locked { opacity:.55; border-style:dashed; }
+
+/* ---- v3.45：スマホ幅（〜600px）の見栄え（2026-10-28 ユーザー要望） ---- */
+@media (max-width: 600px) {
+  body { overflow-x:hidden; }                                   /* ページ全体は横にはみ出させない */
+  .panel.tracksp { overflow-x:auto; -webkit-overflow-scrolling:touch; padding-left:0; padding-right:0; } /* 進化トラックはパネル内で横スクロール */
+  .panel.tracksp h3 { padding:0 12px; }
+  .lane { min-width:680px; margin:4px 8px; }                    /* 6段＋矢印が読める幅を確保（画面幅では各段が縦長に潰れる） */
+  .lane-lbl { position:sticky; left:0; z-index:2; width:72px; padding:6px 6px; box-shadow:2px 0 4px rgba(0,0,0,.12); } /* 色の見出しは固定表示 */
+  .lane .node { font-size:11px; }
+  .ocard img.art, .tcard img.art, .cardbtn img.art:not(.portrait) { display:none; } /* 器官・形質のイラストは携帯では非表示（必須でない） */
+  .ocard, .tcard { min-height:0; }
+}
+
