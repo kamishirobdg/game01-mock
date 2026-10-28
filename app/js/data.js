@@ -119,6 +119,7 @@
     gSlots: true, mimicCost: 4, expressCost: 12, intelRewards: 'learn',
     // 2026-10-22 ユーザー採用（AI25）：形質×0.75・発現 G12・群れの結晶 協調4（結晶体質の協調側 -1 は無し＝nbCoopDisc）・協調発進 協調3（bypassCoopCost）・社会の自動進行 2/5/8/11
     coopCrystal: 4, nbCoopDisc: false, bypassCoopCost: 3, mbBreedDisc: 15,
+    jumpNoFirst: true, lv6First: true, // 2026-10-28 ユーザー採用（第40部）：跳躍形質で着いた★は後着扱い（K2）／Lv6 は先着＝実宝石+1＋仮想宝石+1・後着＝実宝石+1（案B）
     gates: Object.assign({}, G.RULESETS.t6.gates, { metab: [0, 0, 2, 4, 7, 10], social: [0, 0, 2, 5, 8, 11] }),
     // 2026-10-22 ユーザー採用（第23部 AI29）：C2 2本係数＝実宝石×2×繁殖係数（×3＋繁殖の段数・4段・全段 P50）＋仮想宝石×2×収集係数（×3＋形質4/7枚目・系統完成〔上限+4〕）。手当て(a)は不採用
     coef2: { breedBase: 3, breedMax: 4, collectBase: 3, collectMax: 4 }, breed: [50, 50, 50, 50] });
@@ -149,7 +150,8 @@
     return R;
   };
   // T8＝T7 の資源3倍版（2026-10-22 ユーザー採用）：協調ボーナスは「＋協調数」（半分・切り捨てを廃止）、群心核は「協調ボーナス+1」（hc3Bonus）
-  G.RULESETS.t8 = G.scaleRuleset(G.RULESETS.t7, 3, { name: '仮値セットT8（T7の資源3倍）', coopMode: undefined, coopMax: 12, gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }), /* 2026-10-28 ユーザー判断：協調の上限 8→12・社会のゲート 2/5/8/11→3/6/9/12（上限8では白だけ途中から E 必須だった）*/ hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 2,
+  G.RULESETS.t8 = G.scaleRuleset(G.RULESETS.t7, 3, { name: '仮値セットT8（T7の資源3倍）', coopMode: undefined, coopMax: 12, gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
+    lv6Pay: { body: { L: 5 }, intel: { G: 42 }, social: { coop: 8 }, metab: { E: 90 } }, // 2026-10-28 案B：Lv6 はその色の資源で払う（T8 の絶対値・仮値。E63 相当：L1≈9＋利回り・G1＝1.5E・協調1≈3E） /* 2026-10-28 ユーザー判断：協調の上限 8→12・社会のゲート 2/5/8/11→3/6/9/12（上限8では白だけ途中から E 必須だった）*/ hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 2,
     // 2026-10-22 形質の強／弱の選択制（traitChoice）に合わせて弱の値段を効果比で個別に（T8 単位の絶対値・第28部）：弱が安すぎると「安い収集物」として買い占められ、初期資源の多い種族が突出した
     traitCosts: { JI: [33, 27], JB: [39, 33], DV: [18, 15], MB: [30, 24], MC: [15, 12], DG: [15, 13], NC: [21, 17], NB: [15, 11], NM: [21, 18], NL: [30, 26], NF: [18, 15], NR: [15, 12] } }); // mg3Inc＝代謝核の収入（T8 の絶対値・2026-10-22 全種+3→+2：物差しの比 1.6→1.33） // 2026-10-22 ユーザー判断：2倍では協調の効きが残るため3倍（微調整の余地も広がる）
   // 2026-10-24 ユーザー採用：T9＝T7 の資源1倍（数字を直感的に）。協調は上限12・社会の自動進行 3/6/9/12・協調ボーナス＝協調3個につき+1（coopMode 'third'＝T8 の「＋協調数」を 1/3 単位にした等価）・協調9到達で白宝石・群心核＝ボーナス+1。
@@ -157,7 +159,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.47'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.48'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
   G.GATE_LABEL_L = '生命核の投入（代用払い・緊急発進・適応進化）'; G.GATE_SHORT_L = 'L投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）

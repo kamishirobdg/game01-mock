@@ -213,11 +213,25 @@
   function lineageCount(p, lin) { return p.organs.filter(o => G.ORGANS[o.id].lin === lin).length; }
 
   // ---------- コスト計算 ----------
+  // 案B（第40部・2026-10-28）：Lv6 はその色の資源で払う。lv6Pay = { body:{L:n}, intel:{G:n}, social:{coop:n}, metab:{E:n} }（数値セットの絶対値）
+  function lv6PayDef(x, track) { const d = RS(x).lv6Pay; return d && d[track] ? d[track] : null; }
+  function lv6PayE(p, track) { const d = lv6PayDef(p, track); if (!d) return 0; return (d.E || 0) + Math.round((d.G || 0) * 1.5) + (d.L || 0) * (p.lValue || sc(p, 3)) + (d.coop || 0) * sc(p, 1); } // E 換算の目安（物差し：G1＝1.5E・L1＝代用額・協調1≈E1×倍率）
+  function lv6CostText(x, track) { const d = lv6PayDef(x, track); if (!d) return ''; return [d.E ? `E${d.E}` : null, d.G ? `G${d.G}` : null, d.L ? `L${d.L}` : null, d.coop ? `協調${d.coop}` : null].filter(Boolean).join('+'); }
+  function lv6PayNow(st, p, track, useL, discE) { // 支払いを実行して表示文を返す（discE＝跳躍の割引を E の部分にだけ適用）
+    const d = lv6PayDef(p, track); const parts = [];
+    if (d.L) { if (p.L < d.L) throw new Error(`Lv6には生命核L${d.L}が必要です`); p.L -= d.L; investL(p, st, d.L); parts.push(`L${d.L}`); }
+    if (d.G) { const r = payG(p, d.G, useL); parts.push(`G${r.G}${r.L ? '+L' + r.L : ''}`); }
+    if (d.coop) { if (p.coop < d.coop) throw new Error(`Lv6には協調トークン${d.coop}が必要です`); p.coop -= d.coop; parts.push(`協調${d.coop}`); }
+    if (d.E) { const e = Math.max(0, d.E - (discE || 0)); const r = payE(p, e, useL); parts.push(`E${r.E}${r.L ? '+L' + r.L : ''}`); }
+    return parts.join('+');
+  }
+  function lv6Preview(st, p) { const cv = RS(st).lv6Convert; if (!cv) return 0; const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; let n = 0; G.TRACKS.forEach(t => { if (p.lv[t] >= 6 && !(RS(st).lv6RealTracks || []).includes(t)) n += Math.floor(cnt[t] / (by[t] || cv)); }); return n; } // 終了時換算の見込み（画面用）
   function stepCost(p, track, forBonus) {
     const lv = p.lv[track]; if (lv >= (RS(p).maxLv || 5)) return null;
     if (lv === 4 && RS(p).lv5G) { const g = gateReq(p, track); if (g && g.have >= g.need) return 0; } // 試作 lv5G：ゲート充足ならEは不要（Gのみ）
     let base = (track === 'body' && RS(p).bodyStep) ? RS(p).bodyStep[lv] : RS(p).step[lv]; let d = 0; // 試作 bodyStep：身体だけ別のコスト表
     if (lv === 5 && RS(p).lv6E) base = RS(p).lv6E; // 試作 lv6E：Lv6 のEコストを全トラック統一
+    if (lv === 5 && lv6PayDef(p, track)) return lv6PayE(p, track); // 案B：Lv6 は色別コスト。ここでは E 換算の目安を返す（支払いは lv6PayNow）
     if (track === 'body') { if (trait(p, 'DB') && trait(p, 'DB').strong) d += sc(p, 2); d += p.next.body; }
     if (track === 'intel') { if (trait(p, 'DI') && trait(p, 'DI').strong) d += sc(p, 2); d += p.next.intel; }
     const dv = trait(p, 'DV'); if (dv) d += sc(p, dv.strong ? 2 : 1);
@@ -405,13 +419,17 @@
   function advanceTrack(st, p, track, why) {
     if (p.lv[track] >= (RS(p).maxLv || 5)) return false;
     p.lv[track] += 1; const lv = p.lv[track];
-    if (lv === 6) { addGem(st, p, track, 1, `${G.TRACK_INFO[track].name} Lv6`); log(st, p.id, `${p.name}：${G.TRACK_INFO[track].name} Lv6（${why}）`); return true; } // 試作 maxLv=6：Lv6 は宝石+1のみ（先着なし・固有報酬なし）
+    if (lv === 6) { // 案B（lv6First）：先着＝実宝石+1＋仮想宝石+1／後着＝実宝石+1。lv6First なしなら宝石+1 のみ（先着なし）
+      const key = track + 6; let first = false; if (RS(p).lv6First && st.shared.firsts[key] === undefined) { st.shared.firsts[key] = p.id; first = true; }
+      addGem(st, p, track, 1, `${G.TRACK_INFO[track].name} Lv6${first ? '・先着' : ''}`); if (first) { p.gemsets += 1; log(st, p.id, `${p.name}：仮想宝石+1（${G.TRACK_INFO[track].name} Lv6 先着ボーナス）→ 仮想宝石 ${p.gemsets}`); }
+      log(st, p.id, `${p.name}：${G.TRACK_INFO[track].name} Lv6（${why}）`); return true; }
     let strong = false;
     if (lv === 3 || lv === 5) {
       const key = track + lv;
-      let isFirst = false; if (st.shared.firsts[key] === undefined) { st.shared.firsts[key] = p.id; strong = true; isFirst = true; }
-      // JI/JB 弱：Lv5★で必ず強効果
-      if (lv === 5 && !strong) { const t = trait(p, track === 'intel' ? 'JI' : 'JB'); if (t && !t.strong) strong = true; }
+      const viaJump = RS(p).jumpNoFirst && (why === '知的跳躍' || why === '身体覚醒'); // 試作 jumpNoFirst（第40部 K2）：跳躍形質で着いた★は先着を取らず後着扱い（宝石は得る・先着ボーナスと強効果なし・先着は次に自力で着いた人のもの）
+      let isFirst = false; if (!viaJump && st.shared.firsts[key] === undefined) { st.shared.firsts[key] = p.id; strong = true; isFirst = true; }
+      // JI/JB 弱：Lv5★で必ず強効果（jumpNoFirst では跳躍で着いた段には適用しない）
+      if (lv === 5 && !strong && !viaJump) { const t = trait(p, track === 'intel' ? 'JI' : 'JB'); if (t && !t.strong) strong = true; }
       if (!strong && p.foresight && (p.foresight === 'all' || lv === 5)) strong = true; // T7 先見
       p.flags.strong[key] = strong;
       if (track === 'body' && RS(p).bodyCoef) { addUpgrade(st, p, `身体適応 Lv${lv}★（係数軸）`); if (lv === 5 && strong) { p.P += sc(p, 10); log(st, p.id, `${p.name}：先着ボーナス P+${sc(p, 10)}`); } } // 試作 bodyCoef：身体は宝石でなく係数の軸
@@ -558,7 +576,8 @@
     if (!a.bonus) useToken(p, true);
     let paid;
     if ((a.pay === 'P' || a.pay === 'G') && RS(p).noAlt) throw new Error('この数値セットでは代替払い（P／G）はありません');
-    if (a.pay === 'P') { if (a.track !== 'body') throw new Error('Pで払えるのは身体のみ'); if (p.P < c * 3) throw new Error('Pが足りません'); p.P -= c * 3; paid = `P${c * 3}`; }
+    if (p.lv[a.track] === 5 && lv6PayDef(p, a.track)) paid = lv6PayNow(st, p, a.track, a.useL, 0); // 案B：Lv6 はその色の資源で払う（P/G 代替払いは不可）
+    else if (a.pay === 'P') { if (a.track !== 'body') throw new Error('Pで払えるのは身体のみ'); if (p.P < c * 3) throw new Error('Pが足りません'); p.P -= c * 3; paid = `P${c * 3}`; }
     else if (a.pay === 'G') { if (a.track !== 'intel') throw new Error('Gで払えるのは知性のみ'); if (p.G < c) throw new Error('Gが足りません'); p.G -= c; paid = `G${c}`; }
     else { const r = payE(p, c, a.useL); paid = `E${r.E}${r.L ? '+L' + r.L : ''}`; }
     if (g5) { p.G -= g5; paid += `+G${g5}`; }
@@ -913,6 +932,7 @@
           const c = stepCost(p, t); if (c === null) throw new Error(`${G.TRACK_INFO[t].name}はこれ以上進めません`);
           if (t === 'body' && RS(p).bodyNoE && p.lv.body < 5) throw new Error('身体は生命核の投入でのみ上がります');
           const g5 = (p.lv[t] === 4 && RS(p).lv5G) ? RS(p).lv5G : (p.lv[t] === 5 && RS(p).lv6G) ? RS(p).lv6G : 0; if (g5 && p.G < g5) throw new Error(`Lv${p.lv[t] + 1}に入るには遺伝子G${g5}が必要です`);
+          if (p.lv[t] === 5 && lv6PayDef(p, t)) { const e0 = (lv6PayDef(p, t).E || 0); const useD = Math.min(d, e0); d -= useD; const txt = lv6PayNow(st, p, t, i === 0 ? a.useL : 0, useD); consumeNext(p, t); p.lv[t] += 1; paid.push(`${G.TRACK_INFO[t].name} Lv6（${txt}）`); return; } // 案B：Lv6 は色別コスト（割引は E の部分にだけ効く）
           const pay = Math.max(0, c - d); d -= (c - pay); const r = payE(p, pay, i === 0 ? a.useL : 0); if (g5) p.G -= g5; consumeNext(p, t);
           p.lv[t] += 1; paid.push(`${G.TRACK_INFO[t].name} Lv${p.lv[t]}（E${r.E}${r.L ? '+L' + r.L : ''}${g5 ? '+G' + g5 : ''}）`);
         });
@@ -1174,7 +1194,7 @@
   }
   function trackRewardText(st, track, lv) {
     const R = RS(st);
-    if (lv === 6) return `${G.TRACK_INFO[track].jp}宝石+1（先着なし）${R.lv6Convert ? `＋終了時、${G.GATE_SHORT_L && track === 'body' && R.bodyAxis === 'L' ? '保有L' : G.GATE_SHORT[track]}${R.lv6Convert}個につき仮想宝石+1` : ''}`;
+    if (lv === 6) return `${R.lv6First ? `先着：${G.TRACK_INFO[track].jp}宝石+1＋仮想宝石+1／後着：${G.TRACK_INFO[track].jp}宝石+1` : `${G.TRACK_INFO[track].jp}宝石+1（先着なし）`}${R.lv6Convert ? `＋終了時、${G.GATE_SHORT_L && track === 'body' && R.bodyAxis === 'L' ? '払ったL' : G.GATE_SHORT[track]}${R.lv6Convert}個につき仮想宝石+1` : ''}${lv6PayDef(st, track) ? `。コスト＝${lv6CostText(st, track)}（その色の資源で払う）` : ''}`;
     if (R.bodyAxis === 'L' && track === 'body' && R.bodyRewards === 'P') { const m = { 2: ['今すぐL+1', R.lCrystal && (R.lCrystalLv || 4) === 2 ? `献上（生命核）（L${R.lCrystal}→仮想宝石+1）を解放` : null].filter(Boolean).join('＋'), 3: `1L＝E${sc(st, 4)}／G${sc(st, 4)}（代用払いの価値上昇）＋強は今すぐL+1`, 4: (R.bodyLv4Gem ? '赤宝石+1＋' : '') + '生命核の利回り（P）が2倍', 5: `強：1L＝E${sc(st, 5)}／G${sc(st, 5)}＋今すぐL+1／弱：今すぐL+1` }; if (m[lv]) return txt(st, m[lv]); }
     if (R.bodyAxis === 'L' && track === 'body') { // T5/T6：生命核軸の身体（フラグで文を組み立てる）
       const t2 = ['利回りの資源をLごとにE/Gから選べる']; if (R.body2L) t2.push('今すぐL+1'); if (R.body2Gem) t2.push('赤宝石+1'); if (R.lCrystal && (R.lCrystalLv || 4) === 2) t2.push(`結晶化（L${R.lCrystal}→仮想宝石+1・排他なし）を解放`);
@@ -1199,5 +1219,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});
