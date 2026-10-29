@@ -132,450 +132,278 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <header>
   <div class="bar"><b>game01 遊び方</b><a class="sp" href="../app/">アプリを開く</a></div>
   <nav class="toc">
-    <a href="#c0">0 全体像</a><a href="#c1">1 画面</a><a href="#c2">2 ラウンド</a>
-    <a href="#c3">3 資源</a><a href="#c4">4 進化トラック</a><a href="#c5">5 倍率</a><a href="#c6">6 形質・器官</a><a href="#c7">7 得点</a><a href="#c8">8 種族</a><a href="#ax">付録</a>
+    <a href="#c0">0 全体像</a><a href="#c1">1 画面</a><a href="#c2">2 ラウンド</a><a href="#c3">3 資源</a><a href="#c4">4 進化トラック</a><a href="#c5">5 繁栄度・成熟度</a><a href="#c6">6 形質・器官</a><a href="#c7">7 盤と行動</a><a href="#c8">8 献上と神の到来</a><a href="#c9">9 得点</a><a href="#c10">10 種族</a><a href="#ax">付録</a>
   </nav>
 </header>
 
 <main>
 <h1>game01 遊び方</h1>
-<p class="lead">オンライン版モックで初めて遊ぶ人向けの説明です。数値はすべてテストプレイ用の仮値です。</p>
+<p class="lead">オンライン版モック（<span id="k-ver"></span>・数値セット <span id="k-rules"></span>）で初めて遊ぶ人向けの説明です。数値はすべてテストプレイ用の仮値で、このページはアプリと同じデータ（data.js／engine.js）から数値を読んでいます。迷ったら、アプリ画面の各要素にマウスを載せる（スマホは長押し）と出る説明が正本です。</p>
 
-<!-- 0 -->
 <section id="c0">
 <h2><span class="no">0</span>3分で全体像</h2>
-<p>あなたは宇宙生物の種族のリーダーです。資源を集めて種族を進化させ、ゲーム終了時に<strong>得点がいちばん高い人</strong>が勝ちます。</p>
-<div class="kv">
-  <div><b id="k-rounds">7ラウンド</b><span>必ずこの回数で終わる</span></div>
-  <div><b id="k-acts">5回</b><span>1ラウンドに1人が行動する回数</span></div>
-  <div><b>1回ずつ</b><span>手番順に1人1回ずつ交代</span></div>
-</div>
-<h3>得点の骨格</h3>
+<p>あなたは宇宙生物の一種族を率い、<strong id="k-rounds"></strong>で進化を競います。終了時の得点は2本立てです。</p>
 <div class="formula">
-  （<svg class="ico c-p"><use href="#ico-gem"/></svg> 宝石の数）× 10 ×（倍率 ×3〜×7）<br>＋ おまけ点
-  <small>おまけ点＝（形質の数＋協調の数）× 7　＋　器官4系統をそろえたら 50</small>
+  <svg class="ico"><use href="#ico-gem"/></svg> 痕跡 × 繁栄度 ＋ 祝福 × 成熟度
+  <small>痕跡＝宇宙に残した影響（トラックの節目・Lv6・大量消費(身体)・発現・最果ての痕跡で得る）／祝福＝神からの評価（献上・Lv6 先着・終了時の換算で得る）<br>繁栄度＝×3〜×7（繁殖で上がる）／成熟度＝×3〜×7（形質3・6枚目と器官の系統完成で上がる）</small>
 </div>
-<p>宝石は「進化トラック」を進めて節目に届くともらえます。倍率は手元のコマを育てると上がります。<strong>宝石を集めるか、倍率を育てるか</strong>が、このゲームのいちばんの悩みどころです。</p>
-<div class="ex" data-ex="score">
-  <div class="q">宝石4個・倍率×4・形質3枚・協調2。得点は？</div>
-  <div class="choices"><button data-a="0">180点</button><button data-a="1">195点</button><button data-a="2">200点</button></div>
-  <div class="ans"></div>
+<p>毎ラウンド、<strong>ワーカー5個</strong>を1個ずつ置いて行動します。資源は4種（<span id="k-res"></span>）。基礎収入はなく、<strong>生命核（L）が毎ラウンド1個</strong>届き、持っている L が個体数（P）を生みます。E・G・P は早取り盤の資源枠、器官、形質から得ます。</p>
+<div class="kv">
+  <div><b>4本のトラック</b><span>身体・知性・社会・代謝。収集物（L投入・形質・協調・器官）が一定数になると自動で上がる。E を払って先に上がってもよい。</span></div>
+  <div><b>先着＝強</b><span>Lv3★・Lv5★は到達者全員が痕跡+1。最初に着いた人だけ強い報酬（Lv5★は痕跡をもう+1）。</span></div>
+  <div><b>献上</b><span>資源を神に捧げて祝福を得る。ラウンド6から「神の到来」で選択肢が増える。</span></div>
 </div>
+<div class="ex"><div class="q">痕跡4・繁栄度×4・祝福2・成熟度×5。得点は？</div>
+  <div class="choices"><button data-ex="score" data-v="0">26点</button><button data-ex="score" data-v="1">26点＋おまけ</button><button data-ex="score" data-v="2">36点</button></div><div class="ans" id="ans-score"></div></div>
 </section>
 
-<!-- 1 -->
 <section id="c1">
 <h2><span class="no">1</span>画面の見方</h2>
-<p>番号をタップすると説明が出ます。スマホでは画面が縦1列に並び、<strong>個人ボード（⑥）は進化トラックや盤の下</strong>にあります。</p>
-<div class="shot" id="shot">
-  <img src="img/app_overview.jpg" alt="アプリの対局画面（4人・第1ラウンド）" width="1200" height="937">
-</div>
+<p>番号を押すと、その場所が光ります（画像は4人・P1 が人間、P2〜P4 が AI の例）。</p>
+<div class="shot"><img src="img/app_overview.jpg" alt="アプリ画面"><div id="hs"></div></div>
 <ul class="hslist" id="hslist"></ul>
-<div class="tip">PCでは、アプリ上の項目にマウスを乗せると説明が出ます。実行できないカードは薄く表示されます。</div>
 </section>
 
-<!-- 2 -->
 <section id="c2">
 <h2><span class="no">2</span>1ラウンドの流れ</h2>
-<p>各プレイヤーは<strong>コマを5個</strong>持っています。黒丸がワーカー（W）、白丸がアクショントークン（AT）です。手番が来たらコマを1個使って行動を1つ行い、次の人へ交代します。</p>
-<div class="stepper">
-  <div class="dots" id="dots"></div>
-  <div class="st-title" id="st-title"></div>
-  <div class="st-body" id="st-body"></div>
-  <div class="rows" id="rows"></div>
-  <div class="st-nav"><button id="prev">← 戻る</button><span class="legend"><span class="tok w"></span>W　<span class="tok at"></span>AT</span><button id="next" class="on">次へ →</button></div>
-</div>
-<h3>WとATの違い</h3>
-<p>どちらも行動1回分ですが、<strong id="w-only"></strong>は<strong>Wでしか</strong>できません。それ以外はATでもできます。</p>
-<h3>早取り盤と共用盤</h3>
-<p><strong>早取り盤</strong>の枠は1ラウンドに1人だけ使えます（先に使った人の勝ち）。<strong>共用盤</strong>と<strong>進化トラック</strong>、自分の<strong>個人カード</strong>は何人でも使えます。手番順が早いほど、早取り盤の良い枠を取りやすくなります。</p>
-<div class="ex" data-ex="token">
-  <div class="q">残っているコマがATだけ。このラウンド中に進化トラックを進められる？</div>
-  <div class="choices"><button data-a="0">進められる</button><button data-a="1">進められない</button></div>
-  <div class="ans"></div>
-</div>
-<div class="ex" data-ex="order">
-  <div class="q">ラウンド開始時の実宝石が P1=2個、P2=0個、P3=1個。新しい手番順は？</div>
-  <div class="choices"><button data-a="0">P1→P3→P2</button><button data-a="1">P2→P3→P1</button></div>
-  <div class="ans"></div>
-</div>
+<ol class="pts">
+  <li><strong>収入</strong>：生命核 L+1。持っている L 1個につき <strong>P+<span id="k-yield"></span></strong>（身体 Lv4 で2倍）。器官や形質の収入もここで入る。</li>
+  <li><strong>手番順</strong>：ラウンド2からは「<strong>痕跡の少ない人が先</strong>」（同数なら前のラウンドの順）。先行している人ほど後手に回る。</li>
+  <li><strong>行動</strong>：手番順に<strong>ワーカー1個ずつ</strong>置く。全員が5個使い切るまで繰り返す（パスはできない。置き場がなければ予備動員＝無料で E+<span id="k-rsvE"></span> か G+<span id="k-rsvG"></span>）。</li>
+  <li><strong>終了判定</strong>：<span id="k-rounds2"></span>ラウンド目が終わったら得点計算。</li>
+</ol>
+<div class="tip">早取り盤の枠は「1ラウンドに1人だけ」。使用済みの資源枠は <strong>緊急発進</strong>（生命核1個を払う）か <strong>協調発進</strong>（協調3個を払う）で突破できます。生命核を払うたびに、払った個数が身体トラックの収集物になります。</div>
+<div class="ex"><div class="q">ラウンド3の開始時、痕跡が P1＝2個、P2＝0個、P3＝1個。新しい手番順は？</div>
+  <div class="choices"><button data-ex="order" data-v="0">P1→P3→P2</button><button data-ex="order" data-v="1">P2→P3→P1</button><button data-ex="order" data-v="2">前のラウンドと同じ</button></div><div class="ans" id="ans-order"></div></div>
 </section>
 
-<!-- 3 -->
 <section id="c3">
-<h2><span class="no">3</span>資源4種</h2>
-<p>資源は4種類です。<strong>EとGは別の資源</strong>で、そのままでは代わりに使えません。橋渡しは共用盤の「資源変換」か、万能資源の生命核（L）です。</p>
-<div class="tabs" id="res-tabs"></div>
-<div class="tabbody" id="res-body"></div>
-<h3>橋渡し（共用盤・何人でも）</h3>
-<p><strong>資源変換</strong>：<span id="cnv"></span>（1回の行動で1種類、量は自由）。<br><strong>予備動員</strong>：<span id="rsv"></span>。置き場に困ったときの受け皿です。</p>
-<div class="ex" data-ex="em1">
-  <div class="q">早取り盤の「固定E強」を前の人に使われた。それでも使いたい。</div>
-  <div class="choices"><button data-a="0">使えない</button><button data-a="1">生命核1個で使える</button></div>
-  <div class="ans"></div>
+<h2><span class="no">3</span>資源4種と協調</h2>
+<div class="kv kv3">
+  <div><b><svg class="ico c-e"><use href="#ico-e"/></svg> エネルギー（E）</b><span>トラック進行・器官建造・献上。最も使う資源。</span></div>
+  <div><b><svg class="ico c-g"><use href="#ico-g"/></svg> 遺伝子（G）</b><span>形質の購入専用に近い。模倣・発現・献上（遺伝子）にも。</span></div>
+  <div><b><svg class="ico c-p"><use href="#ico-pop"/></svg> 個体数（P）</b><span>大量消費・繁殖（繁栄度）・群体枠の支払い。生命核が生む。</span></div>
+  <div><b><svg class="ico c-l"><use href="#ico-life"/></svg> 生命核（L）</b><span>毎ラウンド1個。持てば P を生み、払えば E<span id="k-lval"></span>／G<span id="k-lval2"></span> の代わり（身体 Lv3 で上がる）。払った個数が身体の収集物。</span></div>
+  <div><b>協調トークン</b><span>群体E/G・大量消費(社会)・群れ本能・群心系の器官で増える（上限 <span id="k-coopmax"></span>）。資源枠を使うたび<strong>協調数ぶん同じ資源が増える</strong>。社会トラックの収集物。献上（協調4）・協調発進（3）で払う。</span></div>
+  <div><b>Wなし実行権</b><span>社会 Lv3★〜Lv5 で得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）。</span></div>
 </div>
-<div class="ex" data-ex="em2">
-  <div class="q">「大量消費（身体）」を前の人に使われた。生命核で使える？</div>
-  <div class="choices"><button data-a="0">使えない</button><button data-a="1">生命核1個で使える</button></div>
-  <div class="ans"></div>
-</div>
+<p class="prov">初期資源は種族で異なります（10章）。資源変換（共用盤）：<span id="k-cnv"></span>。環境スキャン：<span id="k-scan"></span>。</p>
 </section>
 
-<!-- 4 -->
 <section id="c4">
 <h2><span class="no">4</span>進化トラックと先着＝強</h2>
-<p>進化トラックは4本、それぞれLv1〜5です。1段進めるコストは <strong id="stepcost"></strong>。<strong>Wが必要</strong>で、何人でも同じ段に進めます。</p>
-<p class="prov">代わりの払い方：身体はEの代わりに個体数（Eの3倍）、知性は遺伝子（Eと同数）でも払えます。1段ごとにどちらか一方で払います。</p>
-<div class="tabs" id="trk-tabs"></div>
-<div class="lanev" id="trk-body"></div>
-<h3>Lv3・Lv5は「先着＝強」</h3>
-<p>Lv3とLv5に着くと、到達した全員が<strong>宝石を1個</strong>もらえます。ただし報酬は、<strong>最初に着いた人が強い方、後から着いた人は弱い方</strong>です。さらに<strong>Lv5の一番乗りだけは宝石2個</strong>です。</p>
-<div class="race">
-  <div class="race-h">Lv5に着いた順にタップ：</div>
-  <div class="choices" id="race-btns"></div>
-  <div id="race-out" class="race-out"></div>
-</div>
-<div class="tip">トラックを進めずに強い効果を得る道もあります。早取り盤の<strong>大量消費</strong>（個体数<span class="mass"></span>）は、トラックごとの強力な効果を1回得られます（身体なら宝石1個）。</div>
-<div class="ex" data-ex="lv5">
-  <div class="q">知性のLv5に2番目に着いた。宝石は何個？</div>
-  <div class="choices"><button data-a="0">0個</button><button data-a="1">1個</button><button data-a="2">2個</button></div>
-  <div class="ans"></div>
-</div>
+<p>4本のトラックはそれぞれ Lv1〜6。<strong>収集物が矢印の数に達すると自動で上がります</strong>（E を払って先に上がってもよい。E コストは <span id="k-step"></span>、身体だけ1段高い <span id="k-bstep"></span>）。</p>
+<table class="qt" id="gates"></table>
+<p>Lv3★・Lv5★は、到達した全員が<strong>痕跡+1</strong>。報酬は<strong>最初に着いた人が強い方、後の人は弱い方</strong>。Lv5★の一番乗りは痕跡をもう1個もらえます。<strong>Lv6</strong>はそのトラックの資源で払い（<span id="k-lv6"></span>）、先着＝痕跡+1＋祝福+1、後着＝痕跡+1。終了時、Lv6 に達したトラックの収集物3個につき祝福+1。</p>
+<div class="tabs" id="tr-tabs"></div><div class="tabbody" id="tr-body"></div>
+<div class="tip">知的跳躍・身体覚醒（形質）で着いた★は「後着」扱いです（痕跡はもらえるが、先着ボーナスと強い報酬はなし）。先着は次に自力で着いた人のものになります。</div>
+<div class="ex"><div class="q">知性の Lv5★に2番目に着いた。痕跡は何個？</div>
+  <div class="choices"><button data-ex="lv5" data-v="0">0個</button><button data-ex="lv5" data-v="1">1個</button><button data-ex="lv5" data-v="2">2個</button></div><div class="ans" id="ans-lv5"></div></div>
 </section>
 
-<!-- 5 -->
 <section id="c5">
-<h2><span class="no">5</span>倍率（係数）を育てる</h2>
-<p>最終得点の倍率は、<strong>手元の5コマの合計</strong>です。AT＝0、W＝1、強W＝2。最初はW3個とAT2個なので<strong>×3</strong>、最大<strong>×7</strong>です。コマが育っても<strong>行動は1ラウンド5回のまま</strong>なので、損はありません。</p>
-<div class="coef">
-  <div class="coef-toks" id="cf-toks"></div>
-  <div class="coef-x" id="cf-x"></div>
-  <div class="choices" id="cf-btns"></div>
-  <div class="coef-msg" id="cf-msg"></div>
+<h2><span class="no">5</span>繁栄度と成熟度を育てる</h2>
+<div class="kv">
+  <div><b>繁栄度 ×3→×7</b><span><strong>繁殖変換</strong>（共用盤・P<span id="k-breed"></span> または生命核 <span id="k-breedL"></span> 個・W 必須）で +1。4段まで。痕跡に掛かる。</span></div>
+  <div><b>成熟度 ×3→×7</b><span>形質 <span id="k-tc"></span> 枚目で +1。器官の<strong>系統完成</strong>（同じ系統3枚）で +1（2系統目まで。適応放散で3系統目）。祝福に掛かる。</span></div>
+  <div><b>どちらを育てる？</b><span>痕跡が多いなら繁栄度、祝福（献上）が多いなら成熟度。終盤に P が余るなら繁殖。</span></div>
 </div>
-<h3>倍率を上げる3つの道</h3>
-<div class="kv kv3">
-  <div><b><svg class="ico c-p"><use href="#ico-pop"/></svg> 繁殖</b><span id="cf-breed"></span></div>
-  <div><b>器官</b><span>同じ系統の器官を3枚そろえるたびに +1</span></div>
-  <div><b><svg class="ico c-g"><use href="#ico-g"/></svg> 形質</b><span>4枚目と8枚目を取ったときに +1</span></div>
-</div>
-<p class="prov">器官・形質の+1は、ATが残っていればATをWに、無ければWを強Wに自動で変えます。×6・×7に届くのは器官か形質だけです。</p>
-<div class="ex" data-ex="coef">
-  <div class="q">宝石5個のまま、倍率が×5から×6に上がった。得点はいくつ増える？</div>
-  <div class="choices"><button data-a="0">10点</button><button data-a="1">50点</button><button data-a="2">60点</button></div>
-  <div class="ans"></div>
-</div>
+<div class="ex"><div class="q">痕跡5個・祝福2個・成熟度×4のまま、繁栄度が×5から×6に上がった。得点はいくつ増える？</div>
+  <div class="choices"><button data-ex="coef" data-v="0">1点</button><button data-ex="coef" data-v="1">5点</button><button data-ex="coef" data-v="2">7点</button></div><div class="ans" id="ans-coef"></div></div>
 </section>
 
-<!-- 6 -->
 <section id="c6">
 <h2><span class="no">6</span>形質と器官</h2>
-<p>どちらも「持っていると効き続けるカード」です。<strong>同じカードを何人でも取れます</strong>が、<strong>最初に取った人が強い効果</strong>、後から取った人は弱い効果（そのぶん安い）になります。</p>
-<h3><svg class="ico c-g"><use href="#ico-g"/></svg> 形質（遺伝子で買う・14種）</h3>
+<h3>形質（知性の収集物・G で買う・<span id="k-ntraits"></span>種）</h3>
 <ul class="pts">
-  <li>早取り盤の「形質購入」で買います（1ラウンドに1人）。知性Lv3の一番乗り・大量消費（知性）などの特典で手に入れるときは、この枠を使いません。</li>
-  <li><strong>4枚目・8枚目</strong>で倍率+1。1枚ごとに終了時の発展度+7点。</li>
-  <li>持っている形質を、より高い形質に<strong>買い替え</strong>られます（差額＋G1。枚数は変わりません）。</li>
+  <li><strong>強い版は1枚だけ（早い者勝ち）、弱い版は何枚でも</strong>。強が残っていても安い弱を選んでよい。共用（排他なし）。</li>
+  <li>買い替え（アップグレード）：持っている形質をより高い形質に差額で替えられる（枚数は変わらない）。</li>
+  <li><span id="k-tc2"></span>枚目で成熟度+1。献上（遺伝子）は G<span id="k-flatG"></span> 定額（各自1ラウンド1回。知性 Lv4「研究」で何度でも）。</li>
 </ul>
-<div class="tabs" id="tr-tabs"></div>
-<div class="clist" id="tr-body"></div>
-<h3>器官（主にエネルギーでつくる）</h3>
+<div class="clist" id="tr-list"></div>
+<h3>器官（代謝の収集物・E＋少しの G で建てる）</h3>
 <ul class="pts">
-  <li>器官は8系統×3段階。毎ゲーム<strong>4系統</strong>が並びます（初心者セットアップは連結・翻訳・転流・律動で固定＝下のタブの★）。共用盤なので何人でも何回でもつくれます。</li>
-  <li>コスト：<span id="org-cost"></span>。後からつくる人（弱）は遺伝子が要りません。</li>
-  <li>系統の中は<strong>段階順</strong>（1→2→3）にしかつくれません。</li>
-  <li><strong>同じ系統3枚</strong>で倍率+1。<strong>4系統を1枚ずつ</strong>そろえると体制完成：好きな資源1種の収入+1と、終了時+50点。</li>
+  <li>場には<strong>4系統×3段階</strong>（初心者セットアップは <span id="k-beglin"></span> の固定。熟練者は6系統から4系統を抽選）。系統内は階層順に建てる。</li>
+  <li>コスト <span id="k-ocost"></span>。<strong>効果は先着も後続も同じ。後続は後追い料 +<span id="k-late"></span>E</strong>（器官＝早い者が安い、形質＝早い者が強い）。</li>
+  <li>同じ系統3枚＝<strong>系統完成</strong>で成熟度+1。3段目は、そのトラックの収集物の数え方を1つ有利にする（ゲート+1）。</li>
 </ul>
-<div class="tabs" id="og-tabs"></div>
-<div class="clist" id="og-body"></div>
-<div class="ex" data-ex="organ">
-  <div class="q">連結の1段階目（Li1）を持っていない。連結の2段階目（Li2）をつくれる？</div>
-  <div class="choices"><button data-a="0">つくれる</button><button data-a="1">つくれない</button></div>
-  <div class="ans"></div>
-</div>
+<div class="tabs" id="og-tabs"></div><div class="tabbody" id="og-body"></div>
 </section>
 
-<!-- 7 -->
 <section id="c7">
-<h2><span class="no">7</span>得点と勝ち筋</h2>
-<div class="formula">
-  （実宝石＋仮想宝石）× 10 × 倍率<br>＋（形質＋協調）× 7 ＋ 体制完成 50
-</div>
-<h3>仮想宝石</h3>
-<ul class="pts">
-  <li><strong>コンボ</strong>：盤の下に並ぶ色の組み合わせ（2色4種＋3色2種）。その色の宝石を全部持っていれば、コンボ1つにつき仮想宝石+1。3色と2色は別々に数えます。<span id="combo-beg"></span></li>
-  <li><strong>宝石セット得点カード</strong>（早取り盤）：遺伝子（10−持っている形質の数・最低5）で仮想宝石+1。</li>
-</ul>
-<h3>協調</h3>
-<p>協調は終了時に1つ7点。さらに早取り盤の資源獲得で、<strong>協調の数だけ同じ資源が増えます</strong>（例：協調2で「固定E強」なら+5E+2E）。最大<span id="coopmax"></span>。</p>
-<h3>得点計算機</h3>
+<h2><span class="no">7</span>盤と行動</h2>
+<p><strong>早取り盤</strong>＝各枠1ラウンドに1人だけ。<strong>共用盤</strong>＝何人でも何回でも（ワーカーがある限り）。</p>
+<h3>早取り盤</h3>
+<table class="qt" id="fast"></table>
+<h3>共用盤</h3>
+<table class="qt" id="shared"></table>
+<div class="tip"><strong>大量消費</strong>は個体数 P<span id="k-mass"></span> を払う早取り枠（身体＝痕跡+1、知性＝形質、社会＝協調+3、代謝＝P<span id="k-mm"></span> で E+30 G+30）。<strong>模倣</strong>は誰かが到達済みの Lv2／Lv3★ の即時効果を1つ買う、<strong>発現</strong>は G で痕跡を1つ買う（どちらも1ラウンド1人）。</div>
+</section>
+
+<section id="c8">
+<h2><span class="no">8</span>献上と神の到来</h2>
+<p><strong>献上</strong>（共用盤）＝資源を捧げて<strong>祝福+1</strong>。各品目は各自1ラウンド1回。</p>
+<table class="qt" id="trib"></table>
+<p><strong>ラウンド<span id="k-tribR"></span>の開始＝神の到来</strong>。献上の品目が増え（エネルギー E<span id="k-tribE"></span>・個体数 P<span id="k-tribP"></span>）、早取り盤に<strong>献上枠が3つ</strong>開きます（<span id="k-tribpool"></span>種からゲームごとに3種を抽選・1ラウンド1人）。</p>
+<div class="clist" id="trib-list"></div>
+</section>
+
+<section id="c9">
+<h2><span class="no">9</span>得点と勝ち筋</h2>
+<div class="formula">痕跡 × 繁栄度 ＋ 祝福 × 成熟度<small>終了時、各トラックで Lv が最も高い人（単独・Lv2 以上）に痕跡+1（<strong>最果ての痕跡</strong>）。同点なら誰ももらえない。</small></div>
+<h3>痕跡の出どころ</h3>
+<ul class="pts"><li>トラックの Lv3★・Lv5★（先着は Lv5★でもう+1）・Lv6（全員）</li><li>大量消費(身体)・発現（G<span id="k-exp"></span>）・身体 Lv4・初めて協調8に達したとき</li><li>最果ての痕跡（終了時）</li></ul>
+<h3>祝福の出どころ</h3>
+<ul class="pts"><li>献上（遺伝子 G<span id="k-flatG2"></span>／生命核 L<span id="k-lcry"></span>〔身体 Lv2 で解放〕／協調 <span id="k-ccry"></span>／ラウンド<span id="k-tribR2"></span>から E・P でも）</li><li>Lv6 の先着・終了時の換算（Lv6 のトラックの収集物3個につき+1）</li></ul>
 <div class="calc" id="calc"></div>
 <h3>勝ち筋の例</h3>
 <div class="routes">
-  <div><b>宝石を急ぐ</b><span>トラックを早く進めてLv3・Lv5の一番乗りを狙う。身体の大量消費でも宝石が取れる。手番が後ろに回りやすい。</span></div>
-  <div><b>器官を広げる</b><span>器官で倍率と収入を育て、体制完成の+50を取る。前半は宝石が少なめ。</span></div>
-  <div><b>形質を集める</b><span>形質4・8枚で倍率+1、1枚7点。形質が多いほど宝石セットも安くなる。</span></div>
-  <div><b>個体数で押す</b><span>個体数を繁殖（倍率）と大量消費に回す。群泳双盤と相性が良い。</span></div>
+  <div><b>痕跡を急ぐ</b><span>トラックを早く進めて Lv3★・Lv5★の一番乗りを狙い、繁殖で繁栄度を上げる。手番が後ろに回りやすい。</span></div>
+  <div><b>器官を広げる</b><span>器官で収入と成熟度を育て、余った資源を献上に回す。</span></div>
+  <div><b>形質を集める</b><span>形質で成熟度と知性トラック。献上（遺伝子）・発現で G を点に換える。</span></div>
+  <div><b>協調で回す</b><span>協調ボーナスで資源枠の取り分を増やし、社会トラックと献上（協調）へ。</span></div>
 </div>
-<p class="prov">勝ち筋は混ぜて構いません。どの道が強すぎる・弱すぎるかを見るのが今回のテストプレイの目的です。</p>
-<p>同点のときは、実宝石が多い人 → 形質＋協調が多い人 → 残った資源（E＋G＋P）が多い人の順に上位です。</p>
+<p>同点のときは、痕跡が多い人 → 形質＋協調が多い人 → 残った資源（E＋G＋P）が多い人の順に上位です。</p>
 </section>
 
-<!-- 8 -->
-<section id="c8">
-<h2><span class="no">8</span>種族の選び方</h2>
-<p>種族ごとに初期資源とパッシブ（最初から持っている特典）が違います。<strong>手番値が大きいほど第1ラウンドの手番が早く</strong>なります。迷ったら<strong>万列協和衆</strong>がおすすめです。</p>
+<section id="c10">
+<h2><span class="no">10</span>種族の選び方</h2>
 <div class="clist" id="sp-body"></div>
-<p class="prov">ゲーム設定で「パッシブ有」を外すと、パッシブ無しで遊べます（意図的に弱くなります）。</p>
+<p class="prov">手番値が小さい種族ほど最初のラウンドで先に動けます。初心者には万列協和衆（協調2で始まり資源枠のボーナスが早い）か群泳双盤（初期資源が多い）が扱いやすいです。</p>
 </section>
 
-<!-- 付録 -->
 <section id="ax">
-<h2><span class="no">付録</span>早見表と用語集</h2>
-<p>スマホ用の1枚版：<a href="img/cheatsheet.png">画像</a>／<a href="img/cheatsheet.pdf">PDF</a>／<a href="cheatsheet.html">ページ</a></p>
-<h3>早見表</h3>
+<h2><span class="no">付録</span>早見表と用語</h2>
 <table class="qt" id="qt"></table>
-<h3>用語集</h3>
+<h3>用語</h3>
 <dl class="gl" id="gl"></dl>
+<p>スマホ用の1枚版：<a href="img/cheatsheet.png">画像</a>／<a href="img/cheatsheet.pdf">PDF</a>／<a href="cheatsheet.html">ページ</a></p>
 </section>
 </main>
-<footer>ルールの正本は design.md。数値は data.js（アプリと同じもの）から読み込んでいます。</footer>
+<footer>ルールの正本は design.md。数値はアプリと同じ data.js／engine.js（数値セット T8）から読み込んでいます。2026-10-29 改訂（痕跡／祝福／繁栄度／成熟度）。</footer>
 
 <script src="../app/js/icons.js"></script>
 <script src="../app/js/data.js"></script>
+<script src="../app/js/engine.js"></script>
 <script>
 (function () {
   'use strict';
   const G = window.G1, $ = id => document.getElementById(id);
-  const ico = (id, c) => `<svg class="ico ${c || ''}"><use href="#${id}"/></svg>`;
-  const E = ico('ico-e', 'c-e') + 'E', Gg = ico('ico-g', 'c-g') + 'G', P = ico('ico-pop', 'c-p') + 'P', L = ico('ico-life', 'c-l') + 'L';
+  const RULES = 't8'; const R = G.RULESETS[RULES];
+  const st = G.newGame({ rules: RULES, ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
+  const p0 = st.players[0];
+  const txt = s => G.txt(st, s);
+  const num = (id, v) => { const el = $(id); if (el) el.textContent = String(v); };
 
   // ---- 0 ----
-  $('k-rounds').textContent = G.ROUNDS + 'ラウンド';
+  num('k-ver', 'v' + G.VERSION); num('k-rules', R.name); num('k-rounds', G.ROUNDS + 'ラウンド'); num('k-rounds2', G.ROUNDS);
+  num('k-res', 'エネルギー E／遺伝子 G／個体数 P／生命核 L');
 
-  // ---- 例題（共通） ----
+  // ---- 例題 ----
   const EX = {
-    score: { ok: 1, text: '（4）×10×4＝160、おまけ点（3＋2）×7＝35、合計195点。宝石1個の価値は倍率で変わります（×4なら40点、×7なら70点）。' },
-    token: { ok: 1, text: '進化トラックを進めるにはWが必要です。Wを先に使い切らないよう、手番の順番を考えましょう。' },
-    order: { ok: 1, text: '第2ラウンドからは、ラウンド開始時に「実宝石の少ない順」に並べ替えます（同数なら前のラウンドの順）。先行している人ほど後手に回ります。' },
-    em1: { ok: 1, text: '「緊急発進」です。生命核1個を払うと、使用済みの資源獲得スロットを使えます（コマは普段どおり1個使います）。' },
-    em2: { ok: 0, text: '緊急発進で使えるのは資源獲得スロットだけです。大量消費・形質購入・宝石セットは対象外です。' },
-    lv5: { ok: 1, text: '2番目以降は弱い方の報酬と宝石1個です。宝石2個は一番乗りだけの特典です。' },
-    organ: { ok: 1, text: '系統の中は段階順です。自分の手元にLi1があってはじめてLi2をつくれます（他の人のLi1は関係ありません）。' },
-    coef: { ok: 1, text: '宝石1個の価値は「10×倍率」。宝石5個×10×（6−5）＝50点増えます。宝石が多いほど倍率の価値も上がります。' },
+    score: { ok: 2, text: '痕跡4×繁栄度4＝16、祝福2×成熟度5＝10、合計26点…ではなく、計算し直すと 16＋10＝26点。選択肢「26点」が正解です。' },
+    order: { ok: 1, text: 'ラウンド2からは「痕跡の少ない順」。P2（0個）→P3（1個）→P1（2個）です。' },
+    lv5: { ok: 1, text: '2番目以降は弱い方の報酬と痕跡1個。痕跡2個は一番乗りだけの特典です。' },
+    coef: { ok: 1, text: '痕跡の項は 5×5＝25 → 5×6＝30 で 5点増。祝福の項は変わりません。' },
   };
-  document.querySelectorAll('.ex').forEach(box => {
-    const d = EX[box.dataset.ex], ans = box.querySelector('.ans');
-    box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-      box.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-      const ok = +b.dataset.a === d.ok;
-      ans.className = 'ans ' + (ok ? 'ok' : 'ng');
-      ans.innerHTML = (ok ? '<b>正解。</b>' : '<b>違います。</b>') + d.text;
-    }));
-  });
+  EX.score = { ok: 0, text: '痕跡4×繁栄度4＝16、祝福2×成熟度5＝10、合計26点。おまけ点はありません（発展度・体制完成は廃止）。' };
+  document.querySelectorAll('button[data-ex]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.ex, ok = +b.dataset.v === EX[k].ok; const a = $('ans-' + k);
+    b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    a.className = 'ans ' + (ok ? 'ok' : 'ng'); a.textContent = (ok ? '正解。' : 'ちがいます。') + EX[k].text;
+  }));
 
-  // ---- 1 画面の見方（座標は img の % ） ----
+  // ---- 1 画面 ----
   const HS = [
-    [0, 0, 99, 4.1, 'ヘッダー', 'ラウンド数（1/7）と手番順。枠で光っているのが今の手番です。右側に「1手戻す」「ログCSV」などのボタン。'],
-    [0.8, 5.1, 58, 36.3, '進化トラック', '4本×Lv1〜5。点線の枠が次に進める段で、クリックで進みます（Wが必要）。宝石マークの付いたLv3・Lv5で宝石がもらえ、先に着いた人ほど良い報酬です。'],
-    [0.8, 42.5, 58, 29.4, '早取り盤', '1ラウンドに1人だけ使える枠。資源の獲得・大量消費・形質の購入など。使われた枠には使った人の印が付きます。'],
-    [0.8, 73, 58, 13.9, '共用盤', '何人でも使える枠。繁殖・器官の建造・資源の変換・予備動員など。'],
-    [0.8, 87.2, 58, 12.8, '器官の場／形質プール', 'タブで切り替え。カードをクリックすると建造・購入します。'],
-    [59.6, 5.1, 38.6, 55.4, '個人ボード（手番の人）', '資源（E・G・P・L）と次の収入、コマ（W・AT）と倍率、協調、宝石、現在の点、持っている器官・形質、個人カード。'],
-    [59.6, 61.6, 38.6, 15.9, '他プレイヤー', '他の人の点・資源・トラックの段・倍率の一覧。'],
-    [59.6, 78.5, 38.6, 21.5, 'ログ', 'これまでの行動の記録。ヘッダーのボタンで表示を切り替えられます。'],
+    ['進化トラック', '4本×Lv1〜6。矢印の下の数字が「自動で上がる収集物の数」と E コスト。点線の枠をクリックで E を払って進む。★の段で痕跡。', [0.9, 7, 56, 28.9]],
+    ['早取り盤', '各枠1ラウンドに1人。資源獲得・大量消費・形質購入・模倣・発現。ラウンド6から献上枠が開く。', [0.9, 36.6, 56, 28.7]],
+    ['共用盤', '何人でも何回でも。献上・繁殖変換・器官建造・環境スキャン・資源変換・予備動員。', [0.9, 66, 56, 16.4]],
+    ['器官の場／形質プール', 'タブで切替。器官は4系統×3段、形質は強1枚＋弱。カードをクリックで建造／購入。', [0.9, 85.1, 56, 14.9]],
+    ['手番の人の個人ボード', '資源と次の収入、ワーカー、繁栄度・成熟度のゲージ、協調、痕跡・祝福、現在の点、持っている器官・形質。', [57.7, 7, 41.5, 21.5]],
+    ['他プレイヤー', '各自の点・資源・Lv・痕跡・祝福・形質・器官・協調・残りワーカー。', [57.7, 29.4, 41.5, 9.6]],
+    ['ログ', '誰が何をしたか。「保存(JSON)」で記録を残せる。', [57.7, 39.7, 41.5, 15.5]],
   ];
-  const shot = $('shot'), list = $('hslist');
-  const select = i => {
-    shot.querySelectorAll('.hs').forEach((el, k) => el.classList.toggle('on', k === i));
-    list.querySelectorAll('li').forEach((el, k) => el.classList.toggle('on', k === i));
-  };
-  HS.forEach(([x, y, w, h, t, d], i) => {
-    const b = document.createElement('button');
-    b.className = 'hs'; b.setAttribute('aria-label', t);
-    Object.assign(b.style, { left: x + '%', top: y + '%', width: w + '%', height: h + '%' });
-    b.innerHTML = `<i>${i + 1}</i>`;
-    b.addEventListener('click', () => { select(i); list.children[i].scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
-    shot.appendChild(b);
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="n">${i + 1}</span><div><b>${t}</b><span>${d}</span></div>`;
-    li.addEventListener('click', () => select(i));
-    list.appendChild(li);
+  const hs = $('hs'), hl = $('hslist');
+  HS.forEach(([t, d, [x, y, w, h]], i) => {
+    const b = document.createElement('button'); b.className = 'hs'; b.style.cssText = `left:${x}%;top:${y}%;width:${w}%;height:${h}%`; b.innerHTML = `<i>${i + 1}</i>`; hs.appendChild(b);
+    const li = document.createElement('li'); li.innerHTML = `<span class="n">${i + 1}</span><div><b>${t}</b><span>${d}</span></div>`; hl.appendChild(li);
+    const on = () => { hs.querySelectorAll('.hs').forEach(x => x.classList.toggle('on', x === b)); hl.querySelectorAll('li').forEach(x => x.classList.toggle('on', x === li)); };
+    b.addEventListener('click', on); li.addEventListener('click', on);
   });
 
-  // ---- 2 ラウンドの流れ ----
-  $('w-only').textContent = G.SLOTS.filter(s => s.worker).map(s => s.name).join('・');
-  const inc = G.BASE_INCOME;
-  const NAMES = ['P1', 'P2', 'P3', 'P4'];
-  // 例：第3ラウンド開始。実宝石 P1=1 P2=0 P3=2 P4=0、前ラウンドの順 P1→P2→P3→P4
-  const GEMS = [1, 0, 2, 0], ORDER = [1, 3, 0, 2];
-  const STEPS = [
-    { t: '① 収入', b: `ラウンド開始時、全員が自動で収入を受け取ります。基本は ${E}+${inc.E}・${Gg}+${inc.G}・${P}+${inc.P}・${L}+1。${L}（生命核）を受け取るたびに残りラウンドが1減ります。`, order: [0, 1, 2, 3], used: 0 },
-    { t: '② 手番順の並べ替え', b: '第2ラウンドからは、<strong>実宝石の少ない順</strong>に並べ替えます（同数なら前のラウンドの順）。アプリが自動で行います。', order: ORDER, used: 0 },
-    { t: '③ 1人1回ずつ行動', b: '手番の人はコマを1個使って行動を1つ行い、次の人へ。1周すると全員のコマが1個ずつ減ります。', order: ORDER, used: 1 },
-    { t: '③ これを繰り返す', b: 'パスはできません。コマは必ず使い切ります（置き場に困ったら共用盤の「予備動員」）。', order: ORDER, used: 3 },
-    { t: '④ ラウンド終了', b: `全員のコマが無くなったらラウンド終了。コマは手元に戻り、次のラウンドの①へ。${G.ROUNDS}ラウンド目が終わったらゲーム終了です。`, order: ORDER, used: 5 },
-  ];
-  let cur = 0;
-  $('dots').innerHTML = STEPS.map(() => '<i></i>').join('');
-  const draw = () => {
-    const s = STEPS[cur];
-    $('dots').querySelectorAll('i').forEach((el, k) => el.classList.toggle('on', k <= cur));
-    $('st-title').textContent = s.t + '　（例：第3ラウンド）';
-    $('st-body').innerHTML = s.b;
-    const nowIdx = s.used >= 5 ? -1 : (cur >= 2 ? 0 : -1);
-    $('rows').innerHTML = s.order.map((p, k) => {
-      const toks = [0, 1, 2, 3, 4].map(j => `<span class="tok ${j < 3 ? 'w' : 'at'} ${j >= 5 - s.used ? 'used' : ''}"></span>`).join('');
-      return `<div class="prow ${k === nowIdx ? 'now' : ''}"><span class="nm">${k + 1}. ${NAMES[p]}</span><span>${toks}</span><span class="gm">${ico('ico-gem')} ${GEMS[p]}</span></div>`;
-    }).join('');
-    $('prev').disabled = cur === 0;
-    $('next').disabled = cur === STEPS.length - 1;
-  };
-  $('prev').addEventListener('click', () => { cur = Math.max(0, cur - 1); draw(); });
-  $('next').addEventListener('click', () => { cur = Math.min(STEPS.length - 1, cur + 1); draw(); });
-  draw();
+  // ---- 2・3 ----
+  num('k-yield', R.lYield || 9); num('k-rsvE', R.reserveE); num('k-rsvG', R.reserveG); num('k-lval', G.sc(st, 3)); num('k-lval2', G.sc(st, 3)); num('k-coopmax', R.coopMax || G.COOP_MAX);
+  num('k-cnv', G.slotText(st, 'CNV')); num('k-scan', G.slotText(st, 'SCAN'));
 
-  // 共通：タブ
-  const tabs = (wrap, body, items, renderBody) => {
-    let on = 0;
-    const paint = () => { wrap.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === on)); body.innerHTML = renderBody(items[on]); };
-    items.forEach((it, k) => { const b = document.createElement('button'); b.innerHTML = it.label; b.addEventListener('click', () => { on = k; paint(); }); wrap.appendChild(b); });
-    paint();
+  // ---- 4 トラック ----
+  const stepArr = R.step.slice(1), bstep = (R.bodyStep || R.step).slice(1);
+  num('k-step', stepArr.map(c => c + 'E').join('／')); num('k-bstep', bstep.map(c => c + 'E').join('／'));
+  num('k-lv6', G.TRACKS.map(t => G.TRACK_INFO[t].name.split('・')[0] + ' ' + G.lv6CostText(st, t)).join('／'));
+  $('gates').innerHTML = '<tr><th>トラック</th><td>収集物</td><td>Lv2／3／4／5／6 に上がる数</td></tr>' + G.TRACKS.map(t => `<tr><th>${G.TRACK_INFO[t].name}</th><td>${G.gateLabel(st, t)}</td><td>${R.gates[t].slice(2).join('／')}／（Lv6 は ${G.lv6CostText(st, t)}）</td></tr>`).join('');
+  const tabs = (tabEl, bodyEl, items, render) => {
+    items.forEach((it, i) => { const b = document.createElement('button'); b.textContent = it.label; b.addEventListener('click', () => { tabEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); bodyEl.innerHTML = render(it); }); tabEl.appendChild(b); if (i === 0) b.click(); });
   };
-  const slot = id => G.SLOT_BY_ID[id].text;
-  const sc = G.STEP_COST.slice(1);
+  tabs($('tr-tabs'), $('tr-body'), G.TRACKS.map(t => ({ t, label: G.TRACK_INFO[t].name })), ({ t }) =>
+    '<div class="lanev">' + [2, 3, 4, 5, 6].map(l => `<div class="nd ${l === 3 || l === 5 || l === 6 ? 'star' : ''}" style="border-left-color:var(--${G.TRACK_INFO[t].color})"><div><b>Lv${l}${l === 3 || l === 5 ? '★' : ''}</b><small>${l === 6 ? G.lv6CostText(st, t) : (t === 'body' ? bstep : stepArr)[l - 2] + 'E'}</small></div><div>${G.trackRewardText(st, t, l)}</div></div>`).join('') + '</div>');
 
-  // ---- 3 資源 ----
-  $('cnv').textContent = slot('CNV');
-  $('rsv').textContent = slot('RSV');
-  const RES = [
-    { label: E + '　エネルギー', get: [`収入 +${inc.E}/R`, '早取り盤の資源獲得（固定E強など）', '個人カード'],
-      use: [`進化トラックを進める（${sc.join('/')}E）`, '器官をつくる', '環境スキャン・資源変換'] },
-    { label: Gg + '　遺伝子', get: [`収入 +${inc.G}/R`, '早取り盤の資源獲得（固定G強など）', '個人カード'],
-      use: ['形質を買う', '器官をつくる（＋G1）', '宝石セット得点カード', `Pブースト購入（${slot('PB')}）`, '知性トラックをEの代わりに進める（同数）'] },
-    { label: P + '　個体数', get: [`収入 +${inc.P}/R`, `早取り盤の「P増加」（${slot('P8')}）`, 'Pブースト購入'],
-      use: [`大量消費（P${G.MASS_COST}）`, `繁殖で倍率を上げる（P${G.BREED_COST.join('・P')}）`, '身体トラックをEの代わりに進める（Eの3倍）', '資源変換（P8→E3／P8→G2）'] },
-    { label: L + '　生命核', get: ['毎ラウンド1個だけ（他に入手手段なし）', '受け取るたびに残りラウンドが1減る'],
-      use: ['EかGの代わりに払う（1個＝3つ分・お釣りなし）', '適応進化：Lv1のトラックを1段進める（Wが必要）', '緊急発進：使用済みの資源獲得スロットを使う'] },
-  ];
-  tabs($('res-tabs'), $('res-body'), RES, r => `<h4>主な入手</h4><ul>${r.get.map(x => `<li>${x}</li>`).join('')}</ul><h4>主な使い道</h4><ul>${r.use.map(x => `<li>${x}</li>`).join('')}</ul>`);
-
-  // ---- 4 進化トラック ----
-  $('stepcost').textContent = sc.map((c, i) => `Lv${i + 1}→${i + 2}：${c}E`).join('　');
-  document.querySelectorAll('.mass').forEach(el => { el.textContent = G.MASS_COST; });
-  const COLOR = { red: 'var(--red)', blue: 'var(--blue)', white: 'var(--white)', green: 'var(--green)' };
-  tabs($('trk-tabs'), $('trk-body'), G.TRACKS.map(t => ({ t, label: G.TRACK_INFO[t].name })), ({ t }) => {
-    const info = G.TRACK_INFO[t], rw = G.TRACK_REWARDS[t];
-    return [1, 2, 3, 4, 5].map(l => {
-      const star = l === 3 || l === 5; const r = rw[l] || 'スタート';
-      const parts = star ? r.split('／').map(s => s.replace(/^(強|弱)：/, '')) : [r];
-      const body = star ? `<span class="rs">先着：${parts[0]}</span><span class="rw">後着：${parts[1]}</span>` : `<span>${r}</span>`;
-      return `<div class="nd ${star ? 'star' : ''}" style="border-left-color:${COLOR[info.color]}"><div><b>Lv${l}${star ? ' ' + ico('ico-gem') : ''}</b>${l > 1 ? `<small>${sc[l - 2]}Eで到達</small>` : ''}</div><div>${body}</div></div>`;
-    }).join('');
-  });
-  const race = [];
-  const drawRace = () => {
-    $('race-out').innerHTML = race.length ? race.map((p, k) => `<div class="${k === 0 ? 'first' : ''}">${k + 1}番目 ${p}：${k === 0 ? '強い報酬＋宝石2個' : '弱い報酬＋宝石1個'}</div>`).join('') : '';
-    $('race-btns').querySelectorAll('button').forEach(b => { b.disabled = race.includes(b.textContent); });
-  };
-  ['P1', 'P2', 'P3'].forEach(n => { const b = document.createElement('button'); b.textContent = n; b.addEventListener('click', () => { race.push(n); drawRace(); }); $('race-btns').appendChild(b); });
-  const rb = document.createElement('button'); rb.textContent = 'やり直す'; rb.addEventListener('click', () => { race.length = 0; drawRace(); }); $('race-btns').appendChild(rb);
-  drawRace();
-
-  // ---- 5 倍率 ----
-  $('cf-breed').textContent = `個体数${G.BREED_COST[0]}で×4、${G.BREED_COST[1]}で×5（ATをWにする。ATが残っていないと使えず、繁殖だけでは×5まで）`;
-  const cf = { toks: ['W', 'W', 'W', 'AT', 'AT'], breed: 0, organ: 0, trait: 0, msg: '' };
-  const VAL = { AT: 0, W: 1, S: 2 }, NAME = { AT: 'AT', W: 'W', S: '強W' };
-  const up = why => {
-    const i = cf.toks.indexOf('AT');
-    if (i >= 0) { cf.toks[i] = 'W'; return `${why}：ATがWになった`; }
-    const j = cf.toks.lastIndexOf('W'); if (j >= 3) { cf.toks[j] = 'S'; return `${why}：Wが強Wになった`; }
-    return `${why}：もう×7（上限）です`;
-  };
-  const CFB = [
-    { label: () => cf.breed >= 2 ? '繁殖（済）' : cf.toks.includes('AT') ? `繁殖（P${G.BREED_COST[cf.breed]}）` : '繁殖（ATなし）', ok: () => cf.breed < 2 && cf.toks.includes('AT'),
-      run: () => { cf.breed++; return up('繁殖'); } },
-    { label: () => '器官の系統完成', ok: () => cf.toks.some(t => t !== 'S') && cf.toks.slice(3).some(t => t !== 'S'), run: () => { cf.organ++; return up(`器官の系統完成（${cf.organ}回目）`); } },
-    { label: () => cf.trait < 2 ? `形質${cf.trait === 0 ? 4 : 8}枚目` : '形質（済）', ok: () => cf.trait < 2 && cf.toks.slice(3).some(t => t !== 'S'), run: () => { cf.trait++; return up(`形質${cf.trait === 1 ? 4 : 8}枚目`); } },
-    { label: () => '最初に戻す', ok: () => true, run: () => { cf.toks = ['W', 'W', 'W', 'AT', 'AT']; cf.breed = cf.organ = cf.trait = 0; return ''; } },
-  ];
-  const drawCf = () => {
-    $('cf-toks').innerHTML = cf.toks.map(t => `<span><i class="${t}"></i>${NAME[t]}</span>`).join('');
-    $('cf-x').textContent = '×' + cf.toks.reduce((s, t) => s + VAL[t], 0);
-    $('cf-msg').textContent = cf.msg || 'ボタンを押して倍率の上がり方を試せます';
-    $('cf-btns').innerHTML = '';
-    CFB.forEach(c => { const b = document.createElement('button'); b.textContent = c.label(); b.disabled = !c.ok(); b.addEventListener('click', () => { cf.msg = c.run(); drawCf(); }); $('cf-btns').appendChild(b); });
-  };
-  drawCf();
+  // ---- 5 ----
+  num('k-breed', R.breed[0]); num('k-breedL', R.breedL || '—'); num('k-tc', (R.traitCoef || [4, 8]).join('・')); num('k-tc2', (R.traitCoef || [4, 8]).join('・'));
 
   // ---- 6 形質・器官 ----
-  const CAT = [{ k: 'I', label: '収入' }, { k: 'D', label: 'コスト減' }, { k: 'M', label: '大量消費・繁殖' }, { k: 'J', label: '跳躍' }];
-  tabs($('tr-tabs'), $('tr-body'), CAT, c => G.TRAIT_ORDER.filter(id => G.TRAITS[id].cat === c.k).map(id => {
-    const t = G.TRAITS[id];
-    return `<div class="cd"><span class="c">${ico('ico-g', 'c-g')}強${t.cost[0]}／弱${t.cost[1]}</span><b>${id} ${t.name}</b><span class="s">強：${t.strong}</span><span class="w">弱：${t.weak}</span></div>`;
-  }).join(''));
-  $('org-cost').textContent = G.ORGAN_COST.map(([e, g], i) => `${i + 1}段階目 E${e}+G${g}`).join('／');
-  const BEG = G.ORGAN_FIELD.map(id => G.ORGANS[id].lin).filter((v, i, a) => a.indexOf(v) === i);
-  const LIN = Object.keys(G.LINEAGES).map(l => ({ l, label: G.LINEAGES[l] + (BEG.includes(l) ? '★' : '') }));
-  tabs($('og-tabs'), $('og-body'), LIN, ({ l }) => {
-    const type = G.LINEAGE_TYPE.cumulative.includes(l) ? '建てるほど効く' : '使うたび効く';
-    return [1, 2, 3].map(n => { const id = l + n, o = G.ORGANS[id];
-      return `<div class="cd ${BEG.includes(l) ? 'beg' : ''}"><span class="c">${n}段階目</span><b>${id} ${o.name}<span class="tag">${type}</span></b><span class="s">強：${o.strong}</span><span class="w">弱：${o.weak}</span></div>`; }).join('');
-  });
+  const pool = G.traitPool(st); num('k-ntraits', pool.length); num('k-flatG', G.sc(st, R.tribute.flatG));
+  $('tr-list').innerHTML = pool.map(t => { const c = R.traitCosts[t]; const tr = G.TRAITS[t]; return `<div class="cd"><span class="c">G${c[0]}／弱 G${c[1]}</span><b>${t} ${tr.name}</b><span class="s">強：${txt(tr.strong)}</span><span class="w">弱：${txt(tr.weak)}</span></div>`; }).join('');
+  const BEG = R.organSetBeginner || []; num('k-beglin', BEG.map(l => G.LINEAGES[l]).join('・'));
+  num('k-ocost', R.organCost.map(([e, g]) => `${e}E+${g}G`).join('／') + (R.organCostBy ? '（' + Object.entries(R.organCostBy).map(([l, arr]) => G.LINEAGES[l] + 'だけ ' + arr.map(([e, g]) => `${e}E+${g}G`).join('／')).join('・') + '）' : ''));
+  num('k-late', G.sc(st, R.organLateFee || 1));
+  const LIN = (R.organSet || Object.keys(G.LINEAGES)).map(l => ({ l, label: G.LINEAGES[l] + (BEG.includes(l) ? '★' : '') }));
+  const otxt = o => txt(R.hc3Bonus && o.strongB ? o.strongB : o.strong);
+  tabs($('og-tabs'), $('og-body'), LIN, ({ l }) => '<div class="clist">' + [1, 2, 3].map(n => { const id = l + n, o = G.ORGANS[id]; return `<div class="cd ${BEG.includes(l) ? 'beg' : ''}"><span class="c">${n}段階目</span><b>${id} ${o.name}</b><span class="s">${otxt(o)}</span></div>`; }).join('') + '</div>' + (BEG.length ? '<p class="prov">★＝初心者セットアップの4系統</p>' : ''));
 
-  // ---- 7 得点 ----
-  const cname = c => c.map(t => G.TRACK_INFO[t].jp).join('+');
-  $('combo-beg').textContent = '初心者セットアップのコンボは ' + G.BEGINNER_COMBOS.two.map(i => cname(G.COMBOS2[i])).concat(G.BEGINNER_COMBOS.three.map(i => cname(G.COMBOS3[i]))).join('・') + '。';
-  $('coopmax').textContent = G.COOP_MAX;
-  const CALC = [
-    { k: 'real', label: '実宝石', min: 0, max: 10, v: 4 }, { k: 'vg', label: '仮想宝石', min: 0, max: 8, v: 1 },
-    { k: 'cf', label: '倍率', min: 3, max: 7, v: 4 }, { k: 'tr', label: '形質', min: 0, max: 14, v: 3 }, { k: 'co', label: '協調', min: 0, max: G.COOP_MAX, v: 2 },
-  ];
+  // ---- 7 盤 ----
+  const row = id => { const s = G.SLOT_BY_ID[id]; return `<tr><th>${s.name}</th><td>${G.slotText(st, id)}</td></tr>`; };
+  $('fast').innerHTML = ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB', 'MB', 'MI', 'MS', 'MM', 'TRT', 'MIM', 'EXP'].map(row).join('');
+  $('shared').innerHTML = ['GEM', 'BRD', 'ORG', 'SCAN', 'CNV', 'RSV'].map(row).join('') + `<tr><th>献上（生命核）</th><td>L${R.lCrystal} → 祝福+1（身体 Lv2 で解放・各自1R1回）</td></tr><tr><th>献上（協調）</th><td>協調${R.coopCrystal} → 祝福+1（各自1R1回）</td></tr>`;
+  num('k-mass', R.massCost); num('k-mm', R.mmCost);
+
+  // ---- 8 献上 ----
+  const T = R.tribute; num('k-tribR', T.openRound || 6); num('k-tribR2', T.openRound || 6); num('k-tribE', G.sc(st, T.shared.E)); num('k-tribP', G.sc(st, T.shared.P)); num('k-tribpool', T.pool.length);
+  $('trib').innerHTML = [['遺伝子', `G${G.sc(st, T.flatG)}（知性 Lv4「研究」で1ラウンドに何度でも）`], ['生命核', `L${R.lCrystal}（身体 Lv2 で解放。結晶体質で1つ少なく）`], ['協調', `協調${R.coopCrystal}`], [`エネルギー（R${T.openRound || 6}〜）`, `E${G.sc(st, T.shared.E)}`], [`個体数（R${T.openRound || 6}〜）`, `P${G.sc(st, T.shared.P)}`]].map(([a, b]) => `<tr><th>献上（${a}）</th><td>${b} → 祝福+1</td></tr>`).join('');
+  $('trib-list').innerHTML = T.pool.map(id => `<div class="cd"><b>${G.SLOT_BY_ID[id].name}</b><span class="s">${G.slotTip(st, id)}</span></div>`).join('');
+
+  // ---- 9 得点 ----
+  num('k-exp', R.expressCost); num('k-flatG2', G.sc(st, T.flatG)); num('k-lcry', R.lCrystal); num('k-ccry', R.coopCrystal);
+  const CALC = [{ k: 'real', label: '痕跡', min: 0, max: 20, v: 6 }, { k: 'cfB', label: '繁栄度', min: 3, max: 7, v: 4 }, { k: 'vg', label: '祝福', min: 0, max: 20, v: 5 }, { k: 'cfC', label: '成熟度', min: 3, max: 7, v: 4 }];
   const cv = {}; const calc = $('calc');
-  CALC.forEach(c => {
-    cv[c.k] = c.v;
-    const lab = document.createElement('label');
-    lab.innerHTML = `<span>${c.label}</span><input type="range" min="${c.min}" max="${c.max}" value="${c.v}"><output>${c.v}</output>`;
-    lab.querySelector('input').addEventListener('input', e => { cv[c.k] = +e.target.value; lab.querySelector('output').textContent = (c.k === 'cf' ? '×' : '') + cv[c.k]; drawCalc(); });
-    if (c.k === 'cf') lab.querySelector('output').textContent = '×' + c.v;
-    calc.appendChild(lab);
-  });
-  const rg = document.createElement('label'); rg.innerHTML = '<span>体制完成</span><input type="checkbox"><output></output>';
-  rg.querySelector('input').addEventListener('change', e => { cv.reg = e.target.checked; drawCalc(); }); calc.appendChild(rg);
-  const tot = document.createElement('div'); tot.className = 'tot'; const bd = document.createElement('div'); bd.className = 'bd'; calc.appendChild(tot); calc.appendChild(bd);
-  const drawCalc = () => {
-    const core = (cv.real + cv.vg) * 10 * cv.cf, dev = (cv.tr + cv.co) * 7, reg = cv.reg ? 50 : 0;
-    tot.textContent = (core + dev + reg) + '点';
-    bd.textContent = `宝石 ${core}（${cv.real + cv.vg}個×10×${cv.cf}）＋ 発展度 ${dev} ＋ 体制 ${reg}`;
-  };
-  drawCalc();
+  const tot = document.createElement('div'); tot.className = 'tot'; const bd = document.createElement('div'); bd.className = 'bd';
+  const drawCalc = () => { const a = cv.real * cv.cfB, b = cv.vg * cv.cfC; tot.textContent = (a + b) + '点'; bd.textContent = `痕跡 ${cv.real}×${cv.cfB}＝${a} ＋ 祝福 ${cv.vg}×${cv.cfC}＝${b}`; };
+  CALC.forEach(c => { cv[c.k] = c.v; const lab = document.createElement('label'); lab.innerHTML = `<span>${c.label}</span><input type="range" min="${c.min}" max="${c.max}" value="${c.v}"><output>${c.k.startsWith('cf') ? '×' : ''}${c.v}</output>`; lab.querySelector('input').addEventListener('input', e => { cv[c.k] = +e.target.value; lab.querySelector('output').textContent = (c.k.startsWith('cf') ? '×' : '') + cv[c.k]; drawCalc(); }); calc.appendChild(lab); });
+  calc.appendChild(tot); calc.appendChild(bd); drawCalc();
 
-  // ---- 8 種族 ----
-  $('sp-body').innerHTML = Object.entries(G.SPECIES).sort((a, b) => b[1].order - a[1].order).map(([id, s]) =>
-    `<div class="cd ${id === 'ant' ? 'beg' : ''}"><span class="c">手番値${s.order}</span><b>${s.name}<span class="tag">${s.type}</span></b><span class="s">${s.hint}</span><span class="w">パッシブ：${s.passive}</span><span class="w">初期 E${s.stock.E}／G${s.stock.G}／P${s.stock.P}</span></div>`).join('');
+  // ---- 10 種族 ----
+  $('sp-body').innerHTML = Object.keys(G.SPECIES).sort((a, b) => G.SPECIES[a].order - G.SPECIES[b].order).map(id => { const s = G.speciesInfo(st, id); return `<div class="cd ${id === 'ant' ? 'beg' : ''}"><span class="c">手番値${G.SPECIES[id].order}・初期 E${s.stock.E}/G${s.stock.G}/P${s.stock.P}</span><b>${s.name}<span class="tag">${s.type}</span></b><span class="s">${s.hint}</span><span class="w">パッシブ：${s.passive}</span></div>`; }).join('');
 
   // ---- 付録 ----
-  const sl = id => `${G.SLOT_BY_ID[id].name}（${slot(id)}）`;
   const QT = [
-    ['基本収入（毎ラウンド）', `E+${inc.E}　G+${inc.G}　P+${inc.P}　L+1`],
-    ['進化トラック', sc.map((c, i) => `Lv${i + 1}→${i + 2} ${c}E`).join('　') + '（Wが必要。身体はP×3、知性はGでも可）'],
-    ['Lv3・Lv5', '到達で宝石+1。先着は強い報酬。Lv5の一番乗りは宝石2個'],
-    ['資源獲得（早取り）', G.RES_SLOTS.concat('PB').map(id => `${G.SLOT_BY_ID[id].name} ${slot(id)}`).join('／')],
-    ['大量消費（早取り）', ['MB', 'MI', 'MS', 'MM'].map(id => slot(id).replace(/^P20 → /, G.SLOT_BY_ID[id].name.replace('大量消費', '') + ' ')).join('／') + `（P${G.MASS_COST}）`],
-    ['その他（早取り）', [sl('TRT'), sl('GEM')].join('／')],
-    ['共用盤', ['BRD', 'ORG', 'SCAN', 'ADP', 'CNV', 'RSV'].map(sl).join('／')],
-    ['倍率', `×3〜×7。繁殖P${G.BREED_COST.join('・P')}／器官の系統完成／形質4・8枚目で+1`],
-    ['終了と得点', `${G.ROUNDS}ラウンド固定。（実宝石＋仮想宝石）×10×倍率＋（形質＋協調）×7＋体制完成50`],
+    ['収入（毎ラウンド）', `L+1。持っている L 1個につき P+${R.lYield || 9}（身体 Lv4 で2倍）。基礎収入なし`],
+    ['手番', `ワーカー5個を1個ずつ。ラウンド2から痕跡の少ない順。予備動員＝無料で E+${R.reserveE}／G+${R.reserveG}`],
+    ['トラック進行（E）', `${stepArr.map(c => c + 'E').join('／')}（身体 ${bstep.map(c => c + 'E').join('／')}）。自動進行：` + G.TRACKS.map(t => `${G.GATE_SHORT[t] || G.TRACK_INFO[t].jp} ${R.gates[t].slice(2).join('/')}`).join('・')],
+    ['Lv3★・Lv5★・Lv6', '到達で痕跡+1。先着は強い報酬（Lv5★の一番乗りは痕跡+2）。Lv6＝' + G.TRACKS.map(t => G.lv6CostText(st, t)).join('／') + '。先着は祝福+1も'],
+    ['資源獲得（早取り）', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
+    ['大量消費（早取り）', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace('大量消費', '')} ${G.slotText(st, id)}`).join('／')],
+    ['G の枠（早取り）', ['MIM', 'EXP'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
+    ['献上（共用）', `遺伝子 G${G.sc(st, T.flatG)}／生命核 L${R.lCrystal}／協調${R.coopCrystal}／R${T.openRound || 6}から E${G.sc(st, T.shared.E)}・P${G.sc(st, T.shared.P)} → 祝福+1（各自各品目1R1回）`],
+    ['共用盤', ['BRD', 'ORG', 'SCAN', 'CNV', 'RSV'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
+    ['繁栄度・成熟度', `×3〜×7。繁栄度＝繁殖 P${R.breed[0]}（または L${R.breedL}）で+1／成熟度＝形質${(R.traitCoef || [4, 8]).join('・')}枚目・系統完成で+1`],
+    ['終了と得点', `${G.ROUNDS}ラウンド固定。痕跡×繁栄度＋祝福×成熟度。最果ての痕跡＝各トラック単独首位（Lv2以上）に痕跡+1`],
   ];
   $('qt').innerHTML = QT.map(([a, b]) => `<tr><th>${a}</th><td>${b}</td></tr>`).join('');
   const GL = [
-    ['E／G／P／L', 'エネルギー／遺伝子／個体数／生命核'], ['W', 'ワーカー。トラック進行・繁殖・適応進化に必要'], ['AT', 'アクショントークン。W専用の行動以外に使える'],
-    ['強W', '育ったワーカー。倍率2として数える（行動は1回）'], ['早取り盤', '各枠1ラウンドに1人だけ'], ['共用盤', '何人でも・何回でも'],
-    ['先着＝強', '最初に到達・取得した人が強い効果、後の人は弱い効果'], ['倍率（係数）', '5コマの合計。最終得点の宝石部分に掛かる'],
-    ['大量消費', `個体数${G.MASS_COST}を払う強力な行動（4種）`], ['繁殖', '個体数でATをWにして倍率を上げる'], ['協調', '終了時7点＋資源獲得で同じ資源が増える'],
-    ['仮想宝石', 'コンボ達成や宝石セット得点カードで得る、得点計算上の宝石'], ['系統完成', '同じ系統の器官3枚。倍率+1'], ['体制完成', '4系統の器官を1枚ずつ。収入+1と終了時+50点'],
-    ['緊急発進', '生命核1で使用済みの資源獲得スロットを使う'], ['適応進化', '生命核1でLv1のトラックを1段進める'], ['予備動員', '無料でE+2かG+1。置き場が無いとき用'],
-    ['Wなし実行権', '社会性Lv4・Lv5で得る。コマを使わずに資源獲得スロット1つか個人カード1枚を使える（コマを置かないのでスロットは埋まらない）'],
+    ['E／G／P／L', 'エネルギー／遺伝子／個体数／生命核'], ['痕跡', '宇宙に残した影響。終了時に繁栄度を掛ける'], ['祝福', '神からの評価。終了時に成熟度を掛ける'],
+    ['繁栄度', '×3〜×7。繁殖変換で上がる'], ['成熟度', '×3〜×7。形質3・6枚目と系統完成で上がる'], ['早取り盤', '各枠1ラウンドに1人だけ'], ['共用盤', '何人でも・何回でも'],
+    ['先着＝強', '最初に到達・取得した人が強い効果、後の人は弱い効果'], ['収集物', 'トラックを自動で上げる材料（L投入・形質・協調・器官）'],
+    ['緊急発進', '生命核1個で使用済みの資源枠を使う'], ['協調発進', '協調3個で使用済みの資源枠を使う'], ['Wなし実行権', '社会トラックで得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）'],
+    ['献上', '資源を捧げて祝福+1。各品目各自1ラウンド1回'], ['神の到来', `ラウンド${T.openRound || 6}の開始。献上の品目が増え、献上枠が3つ開く`], ['最果ての痕跡', '終了時、各トラックの単独首位（Lv2以上）に痕跡+1'],
+    ['系統完成', '同じ系統の器官3枚。成熟度+1'], ['模倣／発現', 'G を払う早取り枠。到達済みの即時効果を買う／痕跡を買う'],
   ];
   $('gl').innerHTML = GL.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('');
 })();

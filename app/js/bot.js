@@ -92,7 +92,7 @@
       list.sort((a, b) => (G.ORGANS[b.o].tier - G.ORGANS[a.o].tier) || (b.c.strong - a.c.strong) || (a.c.E - b.c.E));
       return list.map(x => A({ type: 'organ', organ: x.o, useL: Math.max(0, Math.min(p.L, Math.ceil((x.c.E - p.E) / 3))), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' }));
     };
-    const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM'].filter(t => G.traitPool(st).includes(t));
+    const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'NP', 'NE', 'NS', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM'].filter(t => G.traitPool(st).includes(t));
     const traitCands = (slots) => traitPref.filter(t => !G.trait(p, t)).flatMap(t => slots.map(sl => A(Object.assign({ type: 'trait', trait: t, useL: Math.max(0, Math.min(p.L, Math.ceil((G.traitCost(st, p, t).G - p.G) / 3))), res: pref[0], track: 'intel' }, sl))));
     const traitSlots = [{}, { slot: 'TRT2' }, p.coop >= 2 && style !== 'white' ? { bypassCoop: true } : null, p.L >= 2 ? { bypassL: true } : null].filter(Boolean);
     const mass = (k) => A({ type: 'mass', kind: k, traits: G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RSo(st).miMaxCost || 4) && !G.trait(p, t)).slice(0, RSo(st).miCount || 2) });
@@ -107,7 +107,7 @@
     const exhausted = style === 'blue' ? G.traitPool(st).every(t => G.trait(p, t)) : style === 'green' ? st.shared.organField.every(o => G.organ(p, o)) : false;
     const mainDone = p.lv[mainTrack] >= 5 || exhausted;
     const canGemset = p.G >= G.gemsetPrice(p);
-    const nextCoefTrait = (p.traits.length === 3 || p.traits.length === 7) ? cheapTraits(st, p).slice(0, 3).map(t => A({ type: 'trait', trait: t, useL: 0, res: pref[0], track: 'intel' })) : [];
+    const nextCoefTrait = (RSo(st).traitCoef || [4, 8]).includes(p.traits.length + 1) ? /* 2026-10-28：次の1枚が成熟度+1 になるとき（T8 は 3/6枚目） */ cheapTraits(st, p).slice(0, 3).map(t => A({ type: 'trait', trait: t, useL: 0, res: pref[0], track: 'intel' })) : [];
     const lineageFinish = st.shared.organField.filter(o => !G.organ(p, o) && G.ORGANS[o].tier === 3 && G.lineageCount(p, G.ORGANS[o].lin) === 2).map(o => A({ type: 'organ', organ: o, useL: 0, li2Res: 'E', li3Res: 'E', regimeRes: 'E' }));
     const anyStep = G.TRACKS.filter(t => p.lv[t] < (R.maxLv || 5)).map(t => ({ t, c: G.stepCost(p, t), gem: (p.lv[t] + 1 === 3 || p.lv[t] + 1 === 5 || p.lv[t] + 1 === 6) ? 0 : 1 })).filter(x => x.c !== null && p.E >= x.c).sort((a, b) => (a.gem - b.gem) || (a.c - b.c)).map(x => A({ type: 'track', track: x.t, pay: 'E', useL: 0 }));
     const toP = p.G >= G.pbCost(p) + 2 && p.P < G.massCost(p, 'MB') ? [res('PB', 'P')[0]] : [];
@@ -120,7 +120,7 @@
     const endgame = last ? [gemset, mass('MB'), breed, ...lineageFinish, ...nextCoefTrait, ...anyStep, ...gConvForStep, ...sinks, ...(coopNear ? [...herdSlots, mass('MS')] : [])] : [];
     let main = [];
     if (style === 'red' && R.bodyAxis === 'L') {
-      // 生命核軸の赤：毎ラウンド L を1個だけ投入して身体を上げ（宝石の段に近いトラックの進行にLを充てる／使用済み枠の緊急発進／適応進化）、残りは利回りのために抱える。P≥大量消費なら赤宝石
+      // 生命核軸の赤：毎ラウンド L を1個だけ投入して身体を上げ（宝石の段に近いトラックの進行にLを充てる／使用済み枠の緊急発進／適応進化）、残りは利回りのために抱える。P≥大量消費なら痕跡
       const invest = [];
       // 抱えるのは1個まで（利回り逓減後の R4 以降は全部投入）。L繁殖（係数）を最優先、P があれば大量消費(身体)
       const keep = (R.yieldByRound && st.round >= 4) ? 0 : 1;
@@ -154,7 +154,7 @@
   // ---------- 貪欲評価型（greedy）：全候補を tryApply → 評価関数の最大を選ぶ。複数ルートを混ぜる「人間らしい」基準線 ----------
   const W = { E: 0.5, G: 0.7, P: 0.3, L: 1.5, gate: 1.0, coefFuture: 1.6, shield: 4, coop: 0.8, organ: 1.0, trait: 0.8, inc: 1.0 };
   function evaluate(st, p, w) {
-    w = w || W; const sc = G.score(st, p); let v = sc.total;
+    w = w || W; const sc = G.score(st, p); let v = sc.total * (2 / (RSo(st).gemPt || 2)); // 2026-10-28：評価の点は gemPt=2 の尺度に正規化（T8 で ×2 を外しても AI の重みづけが変わらないように。以下の「×2」はこの尺度）
     const RN = RSo(st).rounds || G.ROUNDS; const rem = RN - st.round; const k = rem / RN; // rem＝この後に残るラウンド数
     v += k * (p.E * w.E + p.G * w.G + p.P * w.P + p.L * w.L);
     if (RSo(st).lYield) { const R5 = RSo(st); const rate = (R5.yieldByRound ? 1.5 : R5.lYield) + (p.yieldAdd || 0); v += p.L * rem * rate * (p.yieldMul || 1) * (R5.yieldRes === 'P' ? w.P : w.E); } // T5：保有Lは残ラウンド分の利回りを生む（資源別の重み）
@@ -163,7 +163,7 @@
       if (has('NM')) v += rem * 2.5;
       if (has('NR') && (RSo(st).lineageCoefMax || 0) > 0) { const near = st.shared.lineages.filter(l => G.lineageCount(p, l) >= 1).length; v += Math.min(1, Math.max(0, near - 1)) * rem * 1.6; } }
     const tg = RSo(st).traitEndGem; if (tg && !st.ended) v += Math.floor(p.traits.length / tg) * sc.cfC * 2 * (rem === 0 ? 1 : 0.6); // 試作 traitEndGem
-    const le = RSo(st).lEndGem; if (le) v += Math.min(le.max, Math.floor(p.L / le.per)) * sc.cfC * 2 * (rem === 0 ? 1 : 0.6); // T6 S2：終了時の保有L仮想宝石
+    const le = RSo(st).lEndGem; if (le) v += Math.min(le.max, Math.floor(p.L / le.per)) * sc.cfC * 2 * (rem === 0 ? 1 : 0.6); // T6 S2：終了時の保有L祝福
     const cv6 = RSo(st).lv6Convert; const R6 = RSo(st); if ((R6.maxLv || 5) >= 6) { const cnt = { body: R6.lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; const by6 = R6.lv6ConvertBy || {}; G.TRACKS.forEach(t => { const conv = cv6 ? Math.floor(cnt[t] / (by6[t] || cv6)) : 0; if (p.lv[t] >= 6) v += conv * ((R6.lv6RealTracks || []).includes(t) ? sc.cfB : sc.cfC) * 2 * (rem === 0 ? 1 : 0.7); else if (p.lv[t] === 5 && rem > 0) { const c6 = G.stepCost(p, t); if (c6 !== null) { const afford = Math.min(1, (p.E + p.L * (p.lValue || 3)) / c6); v += (1 + conv) * sc.cfC * 2 * 0.35 * afford; } } }); } // T6 L6-A：Lv6 の宝石＋転換の見込み（Lv5 のトラックは E で届く分だけ先読み）
     const inc = G.income(p); v += rem * w.inc * (inc.E * w.E + inc.G * w.G + inc.P * w.P);
     if (RSo(st).gates) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cfB * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
@@ -200,7 +200,7 @@
     if (RSo(st).lCrystal) out.push(A({ type: 'lCrystal' }));
     if (RSo(st).coopCrystal) out.push(A({ type: 'coopCrystal' }));
     if (RSo(st).premium) G.PREMIUM_ORDER.filter(t => !G.trait(p, t)).forEach(t => out.push(A({ type: 'premium', trait: t, useL: 0 })));
-    st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (!c) return; out.push(A({ type: 'organ', organ: o, useL: lFor(c.E, p.E), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' })); });
+    st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (!c) return; out.push(A({ type: 'organ', organ: o, useL: lFor(c.E, p.E), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' })); if (p.altFuel && p.P >= c.E * p.altFuel && (p.E < c.E || p.P >= c.E * p.altFuel + G.sc(st, 20))) out.push(A({ type: 'organ', organ: o, useL: 0, payP: true, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); }); // 第42部 N5 代替燃料：E 不足か P 余剰なら P 払いの候補
     const cheap2 = G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RSo(st).miMaxCost || 4) && !G.trait(p, t)).slice(0, RSo(st).miCount || 2);
     ['MB', 'MI', 'MS', 'MM'].forEach(k => { out.push(A({ type: 'mass', kind: k, traits: cheap2 })); if (used(k) && p.bypassWide && p.L > 0) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassL: true })); if (used(k) && G.coopBypassable(st, k, p) && p.coop >= (RSo(st).bypassCoopCost || 2)) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassCoop: true })); }); // bypassCoopWide：使用済みの大量消費を協調発進で
     const tslots = [{}, { slot: 'TRT2' }]; if (used('TRT') || used('TRT2')) { if (p.coop >= (RSo(st).bypassCoopCost || 2) && st.ext === 'x1') tslots.push({ bypassCoop: true }); if (p.L > 0) tslots.push({ bypassL: true }); }

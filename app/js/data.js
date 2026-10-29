@@ -44,22 +44,22 @@
   //   2026-10-19 ユーザー判断：利回りは2（1では全員が即投入）、身体ゲートは奇数個 1/3/5/7（覚えやすさ優先。7投入は終盤になるが、E進行と別口のL獲得で補う）
   G.RULESETS.t5 = Object.assign({}, G.RULESETS.t4, { name: '仮値セットT5', bodyAxis: 'L', lYield: 2, massDiscLv: 0, body5Once: false, step: [0, 3, 5, 8, 13, 21], gates: Object.assign({}, G.RULESETS.t4.gates, { body: [0, 0, 1, 3, 5, 7] }) });
   // 終盤のE/G出口（試作フラグ・observe --set で比較。既定は無効）：
-  //   maxLv=6（全トラックにLv6＝Eで買う段〔step[5]〕・宝石+1・先着なし・自動進行はLv5まで）／crystal={E:15,G:8}（共用アクション「結晶化」＝EまたはGを払って仮想宝石+1）
+  //   maxLv=6（全トラックにLv6＝Eで買う段〔step[5]〕・痕跡+1・先着なし・自動進行はLv5まで）／crystal={E:15,G:8}（共用アクション「結晶化」＝EまたはGを払って祝福+1）
   //   premium=true（上位形質4種をGで購入）／gemsetShared=true＋gemsetEscalate=3（宝石セットを排他なしにし、購入ごとに+3G）／breedE=[24,40]（繁殖変換をEでも払える）
   // T6（2026-10-20・試作）：T5＋終盤の出口＋身体の得点化。ユーザー方針＝得点を抑えない・資源に見合うリターン・余らせない・手が尽きない
   //   maxLv=6（全トラック Lv6＝E21で宝石+1・先着なし）／gemsetShared（宝石セット共用）＋gemsetEscalate=5（購入ごとに+5G）
-  //   身体の得点化：S1 bodyLv4Gem（Lv4で赤宝石+1）／S3 lCrystal=2（Lv4で解放：L2→仮想宝石+1・排他なし・W）／S2 lEndGem={per:2,max:2}（終了時、保有L2個につき仮想宝石+1・上限2）
+  //   身体の得点化：S1 bodyLv4Gem（Lv4で痕跡+1）／S3 lCrystal=2（Lv4で解放：L2→祝福+1・排他なし・W）／S2 lEndGem={per:2,max:2}（終了時、保有L2個につき祝福+1・上限2）
   //   rounds（ラウンド数。未指定なら G.ROUNDS=7。--set=rounds=8 で比較）
   //   2026-10-20 計測（AI8）を受けて既定に追加：bodyNoE（身体はL投入のみ・Eでは進めない。混合の独走が縮み赤が立つ）・rhLife（律動T1を生命核版に）・mmCost=14（大量消費(代謝)）
   //   2026-10-20 ユーザー判断：bodyNoE は外す（ルールの複雑化・特別扱いを避ける）。個人カードは現状では寄与がないため noCards で無効化（ドラフト省略）し他の調整に専念
-  //   2026-10-20 ユーザー採用：Lv6＝L6-A 転換（lv6Convert：Lv6 に達した色は終了時、その色の収集物3個につき仮想宝石+1。身体＝保有L・知性＝形質・社会＝協調・代謝＝器官）
+  //   2026-10-20 ユーザー採用：Lv6＝L6-A 転換（lv6Convert：Lv6 に達した色は終了時、その色の収集物3個につき祝福+1。身体＝保有L・知性＝形質・社会＝協調・代謝＝器官）
   //   身体の葛藤設計：B4 結晶化を Lv2 から解放（lCrystalLv=2）／B2 Lv4 のゲートは「5投入のうち1回は2個以上を同時投入」（bodyBulkLv4）／B7 身体のE進行コストを1段高く（bodyStep 5/8/13/21・Lv6 は21）
-  //   2026-10-20 計測（AI11）：S2（終了時の保有L仮想宝石）は「抱える」側を後押しし結晶化が使われないため外す。一括投入は2個では制約にならず3個に
+  //   2026-10-20 計測（AI11）：S2（終了時の保有L祝福）は「抱える」側を後押しし結晶化が使われないため外す。一括投入は2個では制約にならず3個に
   G.RULESETS.t6 = Object.assign({}, G.RULESETS.t5, { name: '仮値セットT6', maxLv: 6, gemsetShared: true, gemsetEscalate: 5, bodyLv4Gem: true, lCrystal: 2, lCrystalLv: 2, lEndGem: null, rhLife: true, mmCost: 14, noCards: true,
     lv6Convert: 3, bodyBulkLv4: 3, bodyStep: [0, 5, 8, 13, 21, 21],
     // 2026-10-20 第10部（AI12）：利回りは R1〜3＝2・R4〜7＝1（投入の終盤偏りを平準化・ばらつき半減）、繁殖変換を L3 でも払える（生命核ルートに係数の供給源）
     yieldByRound: [0, 2, 2, 2, 1, 1, 1, 1], breedL: 3,
-    // 2026-10-20 第11部（AI13）：協調が初めて8に達したら係数+1（協調ルートに係数の供給源）、共用アクション「群れの結晶」協調3→仮想宝石+1（協調を点にするか残すかの葛藤）
+    // 2026-10-20 第11部（AI13）：協調が初めて8に達したら係数+1（協調ルートに係数の供給源）、共用アクション「群れの結晶」協調3→祝福+1（協調を点にするか残すかの葛藤）
     coop8Coef: true, coopCrystal: 3,
     // 2026-10-20 第12部（AI14）：身体Lv2（1投入）で L+1（L総量7→8。生命核ルートの L 不足を緩和・専念者の計測でばらつき109→68）
     body2L: true,
@@ -77,9 +77,9 @@
   //   traitCostTweak=true（DV 8/6→6/5・DG 7/5→5/4・MB 7/5→5/4）／cardBoost=1.5（個人カードの獲得量×1.5・切上）／rhLife=true（律動T1＝建造時L+1・1Lの価値+1〔強〕／L+1〔弱〕）／mmCost=14（大量消費(代謝)のコスト）
   // 第10部の試作フラグ（observe --set）：yieldByRound=[0,2,2,2,1,1,1,1]（R別利回り）／lInvPerRound=true（身体ゲートの投入は1R1回だけ加算）／investPrepay=true（投入時に残R数ぶんのE即時）
   //   breedL=3（繁殖変換をLでも）／body5Coef=true（身体Lv5★強＝係数+1）／crystalLv4Rate=1（Lv4以降の結晶化はL1）／massL=2（大量消費(身体)をLでも）
-  // 第11部（協調を点に結ぶ）の試作フラグ：coop8Gem（協調が初めて8で白宝石+1）／bypassCoopFull（協調発進の枠は協調ボーナス上限なし）／coopCrystal=3（共用「群れの結晶」協調3→仮想宝石+1）
-  //   gemsetCoopDisc（宝石セット −協調÷2）／social4Gem（社会Lv4に白宝石+1）／coop8Coef（協調が初めて8で係数+1）／herdCoop=2（群体E/Gの協調+2）／msGem（大量消費(社会)に白宝石+1）／msCost（大量消費(社会)のコスト）
-  // 第12部（生命核ルートの底上げ）の試作フラグ：body2L（身体Lv2で L+1）／body2Gem（身体Lv2で赤宝石+1）／lValueLv2（1L＝E4 を Lv2 から）／crystalE=2（結晶化に E+2）
+  // 第11部（協調を点に結ぶ）の試作フラグ：coop8Gem（協調が初めて8で痕跡+1）／bypassCoopFull（協調発進の枠は協調ボーナス上限なし）／coopCrystal=3（共用「群れの結晶」協調3→祝福+1）
+  //   gemsetCoopDisc（宝石セット −協調÷2）／social4Gem（社会Lv4に痕跡+1）／coop8Coef（協調が初めて8で係数+1）／herdCoop=2（群体E/Gの協調+2）／msGem（大量消費(社会)に痕跡+1）／msCost（大量消費(社会)のコスト）
+  // 第12部（生命核ルートの底上げ）の試作フラグ：body2L（身体Lv2で L+1）／body2Gem（身体Lv2で痕跡+1）／lValueLv2（1L＝E4 を Lv2 から）／crystalE=2（結晶化に E+2）
   //   lv6ConvertBodyInv（身体Lv6の転換を投入回数で）／body3YieldAdd（Lv3★強＝L+1＋利回り+1/L。緊急発進の対象拡大は無し）
   // T7（2026-10-20・第14部）：T6＋器官と形質の役割再編。器官＝トラックの色に対応する3段階の成長（代謝/転写/群心/脈動/促進/連結から4系統）・コスト4E+1G/6E+2G/9E+3G（弱はG0）
   //   形質＝突然変異12種（Gのみ・能力ごとの値段・割引は転写系の器官だけ・下限なし）。収入系・細かい割引の形質は廃止。形質4/7枚目で係数+1。大量消費(知性)＝G9以下の形質1種
@@ -91,45 +91,45 @@
     endMajorityGem: true, endMajorityMinLv: 2,
     regimePt: 0, noRegime: true,
     lInvestByCount: true, nbCrystalInvest: true, // 2026-10-25 ユーザー採用（結晶体質 案2）：強は献上（生命核）で払った L も身体の収集物に // 2026-10-24 ユーザー判断：身体の収集物（生命核の投入）は払った回数でなく「個数」で数える（ゲート 1/3/5/7 は据え置き） // 2026-10-24 ユーザー判断：体制完成（4系統1枚ずつ→収入+1・終了時+15点）は T1 の値が残っていただけで機能していないため廃止
-    // 2026-10-23 ユーザー採用（第32〜33部）：献上＝資源を仮想宝石に換える経路を統一。共用は定額・各品目1ラウンド1回（遺伝子 G6／生命核 L2／協調4。R6 からエネルギー E12／個体数 P24 が開く＝「神の到来」）。
-    //   早取りの献上枠（R6 から・1R1人ずつ）＝エネルギー E8／個体数 P16／宝石 E10+P10→好きな色の実宝石。研究（知性Lv4）＝献上（遺伝子）が1ラウンドに何度でも。数値は基準単位（T8 は3倍）
+    // 2026-10-23 ユーザー採用（第32〜33部）：献上＝資源を祝福に換える経路を統一。共用は定額・各品目1ラウンド1回（遺伝子 G6／生命核 L2／協調4。R6 からエネルギー E12／個体数 P24 が開く＝「神の到来」）。
+    //   早取りの献上枠（R6 から・1R1人ずつ）＝エネルギー E8／個体数 P16／宝石 E10+P10→痕跡。研究（知性Lv4）＝献上（遺伝子）が1ラウンドに何度でも。数値は基準単位（T8 は3倍）
     tribute: { openRound: 6, shared: { E: 12, P: 24 }, flatG: 6, onceEach: true,
-      // 2026-10-24 ユーザー採用（第35部）：献上枠は「点数化」から「強力で多彩な一手」へ。候補5枚（pool）から毎ゲーム pick 枚を抽選して R6 に開く（1R1人）。旧枠 TE/TP/TR（E→仮想宝石・P→仮想宝石・E+P→実宝石）は定義だけ残す（--set で比較用）
-      //   TO 器官の恩寵＝器官1枚を無料（後追い料なし）＋同じ手番にもう1枚を半額／TT 形質の恩寵＝G4（T8 G12）で形質2枚まで無料／TA 錬金＝実宝石の色を2個まで替える／TB 神の加護＝置いたとき資源枠1つを使用済みでも即時に実行（倍）＋このラウンドの残りの手番、資源枠の獲得量が倍（協調ボーナス・コストはそのまま。計測で −18点だったため即時枠を追加）／TJ 跳躍＝トラック進行を2回（同じでも別でも）・合計コスト −8E（T8 −24E。−15E では使用者 −9点）
+      // 2026-10-24 ユーザー採用（第35部）：献上枠は「点数化」から「強力で多彩な一手」へ。候補5枚（pool）から毎ゲーム pick 枚を抽選して R6 に開く（1R1人）。旧枠 TE/TP/TR（E→祝福・P→祝福・E+P→痕跡）は定義だけ残す（--set で比較用）
+      //   TO 器官の恩寵＝器官1枚を無料（後追い料なし）＋同じ手番にもう1枚を半額／TT 形質の恩寵＝G4（T8 G12）で形質2枚まで無料／TA 錬金＝痕跡の色を2個まで替える／TB 神の加護＝置いたとき資源枠1つを使用済みでも即時に実行（倍）＋このラウンドの残りの手番、資源枠の獲得量が倍（協調ボーナス・コストはそのまま。計測で −18点だったため即時枠を追加）／TJ 跳躍＝トラック進行を2回（同じでも別でも）・合計コスト −8E（T8 −24E。−15E では使用者 −9点）
       slots: { TE: { E: 8 }, TP: { P: 16 }, TR: { E: 10, P: 10, real: true }, TO: { kind: 'organ', half: true }, TT: { kind: 'trait', G: 4, n: 2 }, TA: { kind: 'alchemy', n: 2 }, TB: { kind: 'boost', mul: 2, instant: true }, TJ: { kind: 'leap', n: 2, disc: 8 } },
-      pool: ['TO', 'TT', 'TA', 'TB', 'TJ'], pick: 3 }, gemsetEscalate: 0, // 2026-10-23 ユーザー採用（第30部 B1・試行）：終了時、各トラックの単独首位（Lv2 以上）にその色の実宝石+1
+      pool: ['TO', 'TT', 'TB', 'TJ'] /* 2026-10-28 ユーザー採用（第41部 B1）：錬金 TA を除外（色の廃止）。旧 ['TO','TT','TA','TB','TJ'] */, pick: 3 }, gemsetEscalate: 0, // 2026-10-23 ユーザー採用（第30部 B1・試行）：終了時、各トラックの単独首位（Lv2 以上）にその色の痕跡+1
     traitChoice: true, // 2026-10-22 ユーザー採用：形質は「強は1枚だけ・早い者勝ち、弱は何枚でも」＝強が残っていても弱（安い）を選べる。先着が弱を選べば強は次の人に残る // 2026-10-22 脈動は全員が3枚そろえる（完成2.7/戦）ため系統別に+1E lineageCoefMax: 2, rhLife: false, // 2026-10-20 採用①：T3まで育てる価値を出すためなだらかに
-    traitPool: ['NC', 'NL', 'MC', 'DG', 'NB', 'MB', 'NF', 'DV', 'NM', 'NR', 'JI', 'JB'],
+    traitPool: ['NC', 'NL', 'MC', 'DG', 'NB', 'MB', 'NF', 'DV', 'NM', 'NR', 'JI', 'JB', 'NE', 'NS', 'NP'], sporeCap: 3, // 2026-10-28 第42部：NE/NS/NP 追加（15種）・胞子の上限（T8 は 10）
     // 2026-10-22 全面見直し（第25部）：値段は実効値（×0.75 を廃止）。E換算の価値と T8 の実測（取得数・所持者の得点差）から
     //   群れ本能 7/5（×3 の世界では協調の価値が下がる）・長命 10/8（L+2≈E60 で全員が買っていた）・増殖暴走 10/6（効果を半減→各段-15P に変更）・跳躍 11/8・身体覚醒 13/10（弱を全員が買っていた）
     //   使われない形質を値下げ：消費軽減 5/4・遺伝子図書館 5/4・結晶体質 5/3・適応放散 5/4・進化加速 6/5・擬態 7/5・先見 6/5
-    traitCosts: { JI: [11, 8], JB: [13, 10], DV: [6, 5], MB: [10, 6], MC: [5, 4], DG: [5, 4], NC: [7, 5], NB: [5, 3], NM: [7, 5], NL: [10, 8], NF: [6, 5], NR: [5, 4] },
-    traitHalfFloor: false, traitCoef: [4, 7], armTraitMax: 7, miMaxCost: 7, miCount: 1, armNoInstant: true, // 閾値は実効値（旧 9×0.75）。九腕の初期形質は即時効果（!・◆）のものを除く dgDisc: [3, 2], firstBonusStrict: true,
+    traitCosts: { JI: [11, 8], JB: [13, 10], DV: [6, 5], MB: [10, 6], MC: [5, 4], DG: [5, 4], NC: [7, 5], NB: [5, 3], NM: [7, 5], NL: [10, 8], NF: [6, 5], NR: [5, 4], NE: [3, 2], NS: [3, 2], NP: [3, 2] },
+    traitHalfFloor: false, traitCoef: [3, 6] /* 2026-10-28 ユーザー採用（第41部 C4）：コンボ廃止の補填。旧 [4, 7] */, armTraitMax: 7, miMaxCost: 7, miCount: 1, armNoInstant: true, // 閾値は実効値（旧 9×0.75）。九腕の初期形質は即時効果（!・◆）のものを除く dgDisc: [3, 2], firstBonusStrict: true,
     hc1Coop: [1, 1], ncCoop: [2, 1], // 採用③：協調の抑え（群心点 +1・群れ本能 +2/弱+1）
     reserveE: 3, reserveG: 2, p8: 10, // 採用④：手詰まり対策（予備動員 E+3/G+2・P増加 +10）
     // 採用⑤：初期資源は全種族、各資源を強アクション（E5／G3／P10）の0.5〜1.5回分でバランスよく。合計は種族のパッシブ分を差し引いて揃える（群泳はパッシブ無しの代わりに多め）
     speciesMod: { wing: { stock: { E: 5, G: 2, P: 8 } }, arm: { stock: { E: 4, G: 3, P: 6 } }, ant: { stock: { E: 5, G: 2, P: 6 }, coop: 2 } /* 2026-10-22 採用：初期協調2 */, manta: { stock: { E: 7, G: 4, P: 12 }, mantaP: 0, mantaIncE: 0 } }, // 2026-10-23 第34部：群泳 P14→12（T8 P42→36）。献上で P の余りが点になり群泳が 1.6（63%）に突出したため。献上の P の行（P72/P48）は物差しで E の行より高い（E43/E29 相当）ので据え置き
-    // 2026-10-20 ユーザー採用（第15部 R1）：生命核の利回りは全て P（保有L1個につき P+3・逓減なし）／身体報酬は P 版（Lv3★ 1L＝E4/G4・Lv4 赤宝石＋利回り2倍・Lv5★ 1L＝E5/G5）／大量消費 P28／協調8到達は係数でなく白宝石+1
+    // 2026-10-20 ユーザー採用（第15部 R1）：生命核の利回りは全て P（保有L1個につき P+3・逓減なし）／身体報酬は P 版（Lv3★ 1L＝E4/G4・Lv4 痕跡＋利回り2倍・Lv5★ 1L＝E5/G5）／大量消費 P28／協調8到達は係数でなく痕跡+1
     yieldRes: 'P', lYield: 3, yieldByRound: null, bodyRewards: 'P', massCost: 28, coop8Coef: false, coop8Gem: true,
     // 2026-10-20 ユーザー採用（第16部 AI21）：協調ボーナスは＋協調数の半分（切り捨て）＝資源全体を倍にした場合と同じ効き。上限なし（ユーザー判断）。資源倍化は今後の数値調整で実施予定（その時点で＋協調数に戻す）。K3 消費型は保留案
     //   群心核（Hc3）は上限が無くなったので「協調ボーナスの端数を切り上げ（強は＋社会のゲート+1）」に差し替え（hc3RoundUp）
     coopMode: 'half', coopBonusCap: undefined, hc3RoundUp: true,
-    // 2026-10-21 ユーザー採用（第19〜21部）：G を払う先取り枠「模倣」（G4・自分を含む誰かが到達済みの Lv2／Lv3★ の !即時効果を1つ。◆生命核の L+1 は対象外）と「発現」（G10・好きな色の宝石+1・先着なし）。
+    // 2026-10-21 ユーザー採用（第19〜21部）：G を払う先取り枠「模倣」（G4・自分を含む誰かが到達済みの Lv2／Lv3★ の !即時効果を1つ。◆生命核の L+1 は対象外）と「発現」（G10・痕跡+1・先着なし）。
     //   知性の報酬＝学習（Lv3★強：G枠を今すぐ1回 G0・排他無視／弱：G枠の G -1 恒久）・研究（Lv4：宝石セットの値上がり無効）・洞察（Lv5★強：常に強のみ／弱：G+6）。形質の割引は知性から外す
     gSlots: true, mimicCost: 4, expressCost: 12, intelRewards: 'learn',
     // 2026-10-22 ユーザー採用（AI25）：形質×0.75・発現 G12・群れの結晶 協調4（結晶体質の協調側 -1 は無し＝nbCoopDisc）・協調発進 協調3（bypassCoopCost）・社会の自動進行 2/5/8/11
     coopCrystal: 4, nbCoopDisc: false, bypassCoopCost: 3, mbBreedDisc: 15,
-    jumpNoFirst: true, lv6First: true, // 2026-10-28 ユーザー採用（第40部）：跳躍形質で着いた★は後着扱い（K2）／Lv6 は先着＝実宝石+1＋仮想宝石+1・後着＝実宝石+1（案B）
+    jumpNoFirst: true, lv6First: true, // 2026-10-28 ユーザー採用（第40部）：跳躍形質で着いた★は後着扱い（K2）／Lv6 は先着＝痕跡+1＋祝福+1・後着＝痕跡+1（案B）
     gates: Object.assign({}, G.RULESETS.t6.gates, { metab: [0, 0, 2, 4, 7, 10], social: [0, 0, 2, 5, 8, 11] }),
-    // 2026-10-22 ユーザー採用（第23部 AI29）：C2 2本係数＝実宝石×2×繁殖係数（×3＋繁殖の段数・4段・全段 P50）＋仮想宝石×2×収集係数（×3＋形質4/7枚目・系統完成〔上限+4〕）。手当て(a)は不採用
+    // 2026-10-22 ユーザー採用（第23部 AI29）：C2 2本係数＝痕跡×2×繁栄度（×3＋繁殖の段数・4段・全段 P50）＋祝福×2×成熟度（×3＋形質4/7枚目・系統完成〔上限+4〕）。手当て(a)は不採用
     coef2: { breedBase: 3, breedMax: 4, collectBase: 3, collectMax: 4 }, breed: [50, 50, 50, 50] });
   // T7 の追加検討（試作フラグ・observe --set）：
   //   yieldRes='P'＋lYield=N（生命核の利回りを全てPで受け取る・Lごとに P+N）＋yieldByRound=null（逓減なし）
-  //   bodyRewards='P'（Pの利回り前提の身体報酬：Lv2 L+1・結晶化解放／Lv3★ 1L＝E4/G4＋強L+1／Lv4 赤宝石＋利回り×2／Lv5★ 強 1L＝E5/G5＋L+1・弱 L+1）
+  //   bodyRewards='P'（Pの利回り前提の身体報酬：Lv2 L+1・結晶化解放／Lv3★ 1L＝E4/G4＋強L+1／Lv4 痕跡＋利回り×2／Lv5★ 強 1L＝E5/G5＋L+1・弱 L+1）
   //   massCost=N（大量消費のP）／traitCoef=[]・lineageCoefMax=0（係数ゲージの上昇を形質と器官から外す）
   // 第19部 C2（2本係数）の試作フラグ：coef2={ breedBase:3, breedMax:2, collectBase:3, collectMax:4 }
-  //   得点＝実宝石×gemPt×繁殖係数（breedBase＋繁殖の段数）＋仮想宝石×gemPt×収集係数（collectBase＋形質4/7枚目・系統完成・協調8 等の回数、上限 collectMax）
-  //   手当て：massBodyVirtual=true（大量消費(身体)の赤宝石を仮想宝石に）／bodyLv4Gem=false（身体Lv4の赤宝石なし）
+  //   得点＝痕跡×gemPt×繁栄度（breedBase＋繁殖の段数）＋祝福×gemPt×成熟度（collectBase＋形質4/7枚目・系統完成・協調8 等の回数、上限 collectMax）
+  //   手当て：massBodyVirtual=true（大量消費(身体)の痕跡を祝福に）／bodyLv4Gem=false（身体Lv4の痕跡なし）
   // 第16部（協調ボーナスの見直し）の試作フラグ：coopMode='spend'（K3 消費型：資源枠で協調1個を払うとその枠の資源+coopSpendGain・1回の行動で1個まで・自動ボーナスなし）
   //   coopMode='half'（協調ボーナス＝＋協調数の半分・切り捨て＝資源倍化の近似。T7 の既定）
   //   coopMode='tier'（K1 段階制：協調1〜3＝+1・4〜7＝+2・8＝+3）＋coopBonusSlots=['E5','G3','P8']（K2 ボーナスが付く枠を絞る）
@@ -150,16 +150,16 @@
     return R;
   };
   // T8＝T7 の資源3倍版（2026-10-22 ユーザー採用）：協調ボーナスは「＋協調数」（半分・切り捨てを廃止）、群心核は「協調ボーナス+1」（hc3Bonus）
-  G.RULESETS.t8 = G.scaleRuleset(G.RULESETS.t7, 3, { name: '仮値セットT8（T7の資源3倍）', coopMode: undefined, coopMax: 12, gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
+  G.RULESETS.t8 = G.scaleRuleset(G.RULESETS.t7, 3, { name: '仮値セットT8（T7の資源3倍）', coopMode: undefined, coopMax: 12, sporeCap: 10, noCombo: true, gemPt: 1, /* 2026-10-28 ユーザー採用（第41部）：宝石コンボと色を廃止（noCombo）・得点式の ×2 を削除（gemPt 2→1）。T8 の得点＝痕跡×繁栄度＋祝福×成熟度 */ gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     lv6Pay: { body: { L: 5 }, intel: { G: 42 }, social: { coop: 8 }, metab: { E: 90 } }, // 2026-10-28 案B：Lv6 はその色の資源で払う（T8 の絶対値・仮値。E63 相当：L1≈9＋利回り・G1＝1.5E・協調1≈3E） /* 2026-10-28 ユーザー判断：協調の上限 8→12・社会のゲート 2/5/8/11→3/6/9/12（上限8では白だけ途中から E 必須だった）*/ hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 2,
     // 2026-10-22 形質の強／弱の選択制（traitChoice）に合わせて弱の値段を効果比で個別に（T8 単位の絶対値・第28部）：弱が安すぎると「安い収集物」として買い占められ、初期資源の多い種族が突出した
-    traitCosts: { JI: [33, 27], JB: [39, 33], DV: [18, 15], MB: [30, 24], MC: [15, 12], DG: [15, 13], NC: [21, 17], NB: [15, 11], NM: [21, 18], NL: [30, 26], NF: [18, 15], NR: [15, 12] } }); // mg3Inc＝代謝核の収入（T8 の絶対値・2026-10-22 全種+3→+2：物差しの比 1.6→1.33） // 2026-10-22 ユーザー判断：2倍では協調の効きが残るため3倍（微調整の余地も広がる）
-  // 2026-10-24 ユーザー採用：T9＝T7 の資源1倍（数字を直感的に）。協調は上限12・社会の自動進行 3/6/9/12・協調ボーナス＝協調3個につき+1（coopMode 'third'＝T8 の「＋協調数」を 1/3 単位にした等価）・協調9到達で白宝石・群心核＝ボーナス+1。
+    traitCosts: { JI: [33, 27], JB: [39, 33], DV: [18, 15], MB: [30, 24], MC: [15, 12], DG: [15, 13], NC: [21, 17], NB: [15, 11], NM: [21, 18], NL: [30, 26], NF: [18, 15], NR: [15, 12], NE: [9, 6], NS: [9, 6], NP: [9, 6] } }); // mg3Inc＝代謝核の収入（T8 の絶対値・2026-10-22 全種+3→+2：物差しの比 1.6→1.33） // 2026-10-22 ユーザー判断：2倍では協調の効きが残るため3倍（微調整の余地も広がる）
+  // 2026-10-24 ユーザー採用：T9＝T7 の資源1倍（数字を直感的に）。協調は上限12・社会の自動進行 3/6/9/12・協調ボーナス＝協調3個につき+1（coopMode 'third'＝T8 の「＋協調数」を 1/3 単位にした等価）・協調9到達で痕跡・群心核＝ボーナス+1。
   //   形質の値段は T8 の絶対値を 1/3 に丸めた（13→4・17→6・11→4・26→9）。代謝核の収入 +2 は +1（1.5倍相当）。献上（協調）4・協調発進 3 は据え置き
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.48'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.49'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
   G.GATE_LABEL_L = '生命核の投入（代用払い・緊急発進・適応進化）'; G.GATE_SHORT_L = 'L投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
@@ -194,7 +194,7 @@
 
   // T4 の差し替え報酬文（socialRewards='shield'／intel4='traitDisc'）
   G.TRACK_REWARDS_T5_BODY = { 2: '収入の利回り（保有L1個につき+1）を、Lごとに E か G から選べる', 3: '強：今すぐL+1 ＋ 緊急発進の対象に形質購入・宝石セット・大量消費を追加／弱：今すぐL+1', 4: '1L＝E4／G4（代用払いの価値上昇）＋ 利回りで P も選べる', 5: '強：利回りが保有L1個につき2 ＋ 今すぐL+1／弱：今すぐL+1' };
-  G.TRACK_REWARDS_T6_BODY4 = '赤宝石+1 ＋ 1L＝E4／G4 ＋ 利回りで P も選べる ＋ 結晶化（L2→仮想宝石+1・排他なし）を解放';
+  G.TRACK_REWARDS_T6_BODY4 = '痕跡+1 ＋ 1L＝E4／G4 ＋ 利回りで P も選べる ＋ 結晶化（L2→祝福+1・排他なし）を解放';
   G.TRACK_REWARDS_T7_INTEL = { 2: 'G+{3}', 3: '強：Gを払う先取り枠（模倣・発現）を今すぐ1回 G0 で実行（排他無視）／弱：以後それらの G -{1}', 4: '研究：献上（遺伝子）が1ラウンドに何度でも', 5: '強：後着でも常に強効果／弱：G+{6}' };
   G.MIMIC_EFFECTS = [ // 模倣の対象（!即時効果のみ。◆L+1・∞恒久・手収入は対象外）。誰かがそのLv以上に到達していること
     { id: 'intel2', track: 'intel', lv: 2, label: '知性Lv2：G+{3}' }, { id: 'social2', track: 'social', lv: 2, label: '社会Lv2：P+{6}' },
@@ -220,6 +220,10 @@
     DG: { name: '遺伝子図書館', cat: 'D', cost: [7, 5], strong: '毎R形質1枚を-{2}Gで購入可（排他不要）', weak: '同 -{1}G', permWeak: true },
     JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', weak: '知性+1段階＋Lv5★で必ず強効果', permWeak: false, instant: true },
     JB: { name: '身体覚醒', cat: 'J', cost: [9, 7], strong: '身体+2段階（即時）', weak: '身体+1段階＋Lv5★で必ず強効果', permWeak: false, instant: true },
+    // 2026-10-28 ユーザー採用（第42部 N5/N8/N9）：コンボ廃止の補填。序盤に取るほど得な「資源を生む／器官に役立つ」形質
+    NE: { name: '代替燃料', cat: 'N', cost: [3, 2], strong: '器官建造の E を P で払える（E1＝P1）', weak: '同（E1＝P2）', permWeak: true },
+    NS: { name: '共生', cat: 'N', cost: [3, 2] /* 2026-10-29 G6→G9（T8）：九腕 39% の是正・AI52 */, strong: '器官建造時、同じ系統の器官を他者が持っていれば G コストなし', weak: '同 G-{1}', permWeak: true },
+    NP: { name: '胞子', cat: 'N', cost: [3, 2], strong: 'ラウンド終了時、残った E を P に換える（E1→P3・上限 E{sporeCap:3}）', weak: '同 E1→P2', permWeak: true },
   };
   G.TRAIT_ORDER = ['IE', 'IG', 'IP', 'IB', 'DB', 'DI', 'DA', 'MC', 'DV', 'MB', 'IM', 'DG', 'JI', 'JB'];
   // T7（第14部）の新形質＝突然変異。値段は数値セット側（RULESETS.t7.traitCosts）で上書きする
@@ -228,15 +232,15 @@
     NB: { name: '結晶体質', cat: 'N', cost: [10, 8], strong: '献上（生命核）の必要数が1つ少なく、払った生命核を身体の収集物に数える', weak: '献上（生命核）の必要数が1つ少ない', permWeak: true, strongNoCoop: '献上（生命核）の必要数が1つ少ない（強：先着）' }, // T7 nbCoopDisc=false では強も結晶化側のみ // 文言は T7 の nbCoopDisc=false（協調側の割引なし）に合わせた。強弱で効果が同じ点は要検討（2026-10-24）
     NM: { name: '擬態', cat: 'N', cost: [12, 9], strong: '1ラウンド1回、他者が使用済みの資源獲得枠を無償で使える', weak: '同（E{3}を払う）', permWeak: true },
     NL: { name: '長命', cat: 'N', cost: [9, 7], strong: '即時 生命核+2', weak: '即時 生命核+1', permWeak: false, instant: true },
-    NF: { name: '先見', cat: 'N', cost: [11, 8], strong: 'Lv3★／Lv5★を後着でも強の報酬で受け取る（宝石の先着ボーナスは除く）', weak: 'Lv5★のみ', permWeak: true },
-    NR: { name: '適応放散', cat: 'N', cost: [12, 9], strong: '器官の系統完成による係数+1を3系統目まで', weak: '系統完成のたびE+{3}', permWeak: true },
+    NF: { name: '先見', cat: 'N', cost: [11, 8], strong: 'Lv3★／Lv5★を後着でも強の報酬で受け取る（痕跡の先着ボーナスは除く）', weak: 'Lv5★のみ', permWeak: true },
+    NR: { name: '適応放散', cat: 'N', cost: [12, 9], strong: '器官の系統完成による成熟度+1を3系統目まで', weak: '系統完成のたびE+{3}', permWeak: true },
   });
   // 画像の代替（新しいIDは既存の絵を仮に使う）
   G.ART_ALIAS = { NC: 'IG', NB: 'MC', NM: 'DA', NL: 'IP', NF: 'DI', NR: 'DV', Mg1: 'Cv1', Mg2: 'Cv2', Mg3: 'Cv3', Tl1: 'Tr1', Tl2: 'Tr2', Tl3: 'Tr3', Hc1: 'Li1', Hc2: 'Li2', Hc3: 'Li3', Pu1: 'St1', Pu2: 'St2', Pu3: 'St3', Cx1: 'Ca1', Cx2: 'Ca2', Cx3: 'Ca3' };
   // 試作：上位形質（終盤のGの出口。RS.premium のときだけアクション 'premium' で購入可。形質として数える＝青ゲート・4/8枚目にも算入）
   Object.assign(G.TRAITS, {
-    XA: { name: '結晶核', cat: 'X', cost: [12, 10], strong: '即時 仮想宝石+2', weak: '即時 仮想宝石+1', permWeak: false, instant: true, premium: true },
-    XB: { name: '超進化', cat: 'X', cost: [12, 10], strong: '係数+1（上限×7）', weak: '即時 仮想宝石+1', permWeak: false, instant: true, premium: true },
+    XA: { name: '結晶核', cat: 'X', cost: [12, 10], strong: '即時 祝福+2', weak: '即時 祝福+1', permWeak: false, instant: true, premium: true },
+    XB: { name: '超進化', cat: 'X', cost: [12, 10], strong: '係数+1（上限×7）', weak: '即時 祝福+1', permWeak: false, instant: true, premium: true },
     XC: { name: '深層記憶', cat: 'X', cost: [10, 8], strong: '収入時 E+3 G+2（恒久）', weak: '収入時 E+2 G+1（恒久）', permWeak: true, premium: true },
     XD: { name: '適応爆発', cat: 'X', cost: [10, 8], strong: '全トラック進行コスト-3（恒久）', weak: '全トラック進行コスト-2（恒久）', permWeak: true, premium: true },
   });
@@ -305,7 +309,7 @@
     I: { name: '全資源小収集', text: '+1E +1G +2P' },
     J: { name: '資源→P変換', text: 'E-2→P+6 または G-1→P+5' },
     K: { name: '協調連動獲得', text: '+2E ＋ 協調×1E' },
-    L: { name: '宝石連動獲得', text: '+3P ＋ 保有宝石×2P' },
+    L: { name: '痕跡連動獲得', text: '+3P ＋ 保有痕跡×2P' },
     M: { name: '形質連動獲得', text: '+1E ＋ 保有形質×1E（最大+5）' },
     N: { name: '知性連動獲得', text: '+1G ＋ 知性Lv×1G' },
     O: { name: '博打収集', text: '所持Eを全て支払い、1EにつきP+2' },
@@ -313,7 +317,7 @@
     Q: { name: '安定収集', text: '+1E +1G' },
     R: { name: 'P収集弱', text: '+3P ＋ P20ごとに+1P' },
     S: { name: '早期形質支援', text: '知性Lv2以下なら+3G、Lv3以上は+1G' },
-    T: { name: '繁殖連動獲得', text: 'P+6。繁殖係数×4以上ならP+10' },
+    T: { name: '繁殖連動獲得', text: 'P+6。繁栄度×4以上ならP+10' },
   };
   G.CARD_ORDER = 'ABCDEFGHIJKLMNOPQRST'.split('');
 
@@ -342,21 +346,21 @@
     { id: 'TRK',  group: 'trk',  excl: false, name: 'トラック進行', text: '2/3/5/8E（W必須）', worker: true },
     { id: 'BRD',  group: 'trk',  excl: false, name: '繁殖変換',  text: 'P30→×4 / P50→×5（W必須）', worker: true },
     { id: 'ORG',  group: 'org',  excl: false, name: '器官建造',  text: '2E+1G / 3E+1G / 5E+1G（弱はG0）' },
-    { id: 'MB',   group: 'mass', excl: true,  name: '大量消費(身体)', text: 'P20 → 赤宝石+1' },
+    { id: 'MB',   group: 'mass', excl: true,  name: '大量消費(身体)', text: 'P20 → 痕跡+1' },
     { id: 'MI',   group: 'mass', excl: true,  name: '大量消費(知性)', text: 'P20 → G4以下の形質を異なる2種' },
     { id: 'MS',   group: 'mass', excl: true,  name: '大量消費(社会)', text: 'P20 → 協調+2' },
     { id: 'MM',   group: 'mass', excl: true,  name: '大量消費(代謝)', text: 'P20 → E+10 G+10' },
     { id: 'TRT',  group: 'oth',  excl: true,  name: '形質購入／アップグレード', text: 'Gを払い形質を取得・差額+1で上位へ' },
     { id: 'TRT2', group: 'oth',  excl: true,  name: '形質購入（割増）', text: '通常コスト＋ラウンド数ぶんのE', ext: 'x1' }, // 拡張x1のみ
     { id: 'MIM',  group: 'oth',  excl: true,  name: '模倣',     text: 'Gを払い 到達済みの Lv2／Lv3★ の即時(!)効果を1つ', rs: 'gSlots' }, // T7 第21部：G を払う先取り枠
-    { id: 'EXP',  group: 'oth',  excl: true,  name: '発現',     text: 'Gを払い 好きな色の宝石+1（先着なし）', rs: 'gSlots' },
-    { id: 'GEM',  group: 'oth',  excl: true,  name: '献上（遺伝子）', text: 'G(10−形質数・下限5) → 仮想宝石+1' },
-    { id: 'TE',   group: 'trib', excl: true,  name: '献上枠（エネルギー）', text: 'E → 仮想宝石+1', rs: 'tribute' }, // 第33部：R6 から開く早取りの献上枠
-    { id: 'TP',   group: 'trib', excl: true,  name: '献上枠（個体数）', text: 'P → 仮想宝石+1', rs: 'tribute' },
-    { id: 'TR',   group: 'trib', excl: true,  name: '献上枠（宝石）', text: 'E+P → 好きな色の宝石+1', rs: 'tribute' },
+    { id: 'EXP',  group: 'oth',  excl: true,  name: '発現',     text: 'Gを払い 痕跡+1（先着なし）', rs: 'gSlots' },
+    { id: 'GEM',  group: 'oth',  excl: true,  name: '献上（遺伝子）', text: 'G(10−形質数・下限5) → 祝福+1' },
+    { id: 'TE',   group: 'trib', excl: true,  name: '献上枠（エネルギー）', text: 'E → 祝福+1', rs: 'tribute' }, // 第33部：R6 から開く早取りの献上枠
+    { id: 'TP',   group: 'trib', excl: true,  name: '献上枠（個体数）', text: 'P → 祝福+1', rs: 'tribute' },
+    { id: 'TR',   group: 'trib', excl: true,  name: '献上枠（痕跡）', text: 'E+P → 痕跡+1', rs: 'tribute' },
     { id: 'TO',   group: 'trib', excl: true,  name: '器官の恩寵', text: '器官1枚を無料＋もう1枚を半額', rs: 'tribute' }, // 第35部：多彩な献上枠（毎ゲーム pool から pick 枚）
     { id: 'TT',   group: 'trib', excl: true,  name: '形質の恩寵', text: 'G → 形質2枚まで無料', rs: 'tribute' },
-    { id: 'TA',   group: 'trib', excl: true,  name: '錬金', text: '宝石の色を2個まで替える', rs: 'tribute' },
+    { id: 'TA',   group: 'trib', excl: true,  name: '錬金', text: '（廃止・色の廃止により未使用）', rs: 'tribute' },
     { id: 'TB',   group: 'trib', excl: true,  name: '神の加護', text: '資源枠1つを今すぐ（使用済みでも）＋残りの手番は資源枠が倍', rs: 'tribute' },
     { id: 'TJ',   group: 'trib', excl: true,  name: '跳躍', text: 'トラック進行2回・合計 −E', rs: 'tribute' },
     { id: 'SCAN', group: 'cu',   excl: false, name: '環境スキャン', text: 'E5 → 他者の最高Lv×2の資源' },

@@ -32,70 +32,68 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 </style>
 </head>
 <body>
-<h1>game01 早見表 <small>数値はすべてテストプレイ用の仮値</small></h1>
+<h1>game01 早見表 <small id="ver">数値はすべてテストプレイ用の仮値</small></h1>
+
+<div class="score">痕跡 × 繁栄度 ＋ 祝福 × 成熟度<small>痕跡＝宇宙への影響（★・Lv6・大量消費(身体)・発現・最果ての痕跡）／祝福＝神の評価（献上・Lv6 先着・終了時換算）<br>繁栄度＝×3＋繁殖の段数／成熟度＝×3＋形質<span id="tc"></span>枚目・系統完成（どちらも最大×7）<br>同点：痕跡 → 形質＋協調 → 残り資源（E+G+P）</small></div>
 
 <div class="blk"><h2><i>1</i>ラウンドの流れ（<span id="rounds"></span>ラウンド固定）</h2>
-<p>① 収入 <span id="inc"></span>（Lを受け取るたびに残りラウンド−1）<br>
-② 手番順に1人1コマずつ行動 → 全員5コマ使い切ったら終了（パス不可）<br>
-③ 第2ラウンド以降、開始時に<b class="k">実宝石の少ない順</b>に並べ替え</p></div>
+<p>① 収入：生命核 L+1。持っている L 1個につき P+<span id="yield"></span>（身体 Lv4 で2倍）。基礎収入なし<br>
+② 手番順に<span class="tok w"></span>×5 を1個ずつ置く → 全員使い切ったら終了（パス不可・予備動員＝無料で E+<span id="rsvE"></span>／G+<span id="rsvG"></span>）<br>
+③ ラウンド2以降、開始時に<b class="k">痕跡の少ない順</b>に並べ替え</p></div>
 
-<div class="blk"><h2><i>2</i>コマと倍率</h2>
-<p><span class="tok w"></span><span class="tok w"></span><span class="tok w"></span><span class="tok at"></span><span class="tok at"></span> W×3＋AT×2＝倍率×3。AT＝0／W＝1／強W＝2、最大×7。<br>
-<b class="k">Wのみ</b>：<span id="wonly"></span><br>
-倍率+1：繁殖 <span id="breed"></span>（ATが必要・×5まで）／器官の系統完成／形質4枚目・8枚目</p></div>
-
-<div class="blk"><h2><i>3</i>進化トラック（共用・Wが必要）</h2>
+<div class="blk"><h2><i>2</i>進化トラック（4本・Lv1〜6）</h2>
+<p><b class="k">収集物が数に達すると自動で上がる</b>（E で先に上がってもよい：<span id="step"></span>・身体 <span id="bstep"></span>）</p>
 <div class="trk" id="trk"></div>
-<p>身体はEの代わりにP×3、知性はGでも可。<b class="k">Lv3・Lv5</b>で宝石+1、<b class="k">先着＝強い報酬</b>。Lv5の一番乗りは宝石2個。</p></div>
+<p><b class="k">Lv3★・Lv5★</b>で痕跡+1、<b class="k">先着＝強い報酬</b>（Lv5★の一番乗りは痕跡+2）。<b class="k">Lv6</b>＝<span id="lv6"></span>：先着 痕跡+1＋祝福+1／後着 痕跡+1。終了時 Lv6 のトラックの収集物3個につき祝福+1</p></div>
 
-<div class="blk"><h2><i>4</i>早取り盤（各枠1ラウンドに1人）</h2>
+<div class="blk"><h2><i>3</i>早取り盤（各枠1ラウンドに1人）</h2>
 <ul>
-<li><b>資源獲得</b>：<span id="res"></span>　＋協調の数だけ同じ資源</li>
-<li><b>大量消費 P<span id="mass"></span></b>：<span id="massl"></span></li>
-<li><b>形質購入</b>（先着＝強。買い替えは差額＋G1）／<b>宝石セット</b>：G(10−形質数・最低5)→仮想宝石+1</li>
+<li><b>資源</b>：<span id="res"></span>（＋協調数ぶん増える）。使用済みは緊急発進（L1）・協調発進（協調3）で突破</li>
+<li><b>大量消費</b>：<span id="mass"></span></li>
+<li><b>形質購入</b>（強は1枚だけ早い者勝ち・弱は何枚でも）／<b>模倣</b> <span id="mim"></span>／<b>発現</b> <span id="exp"></span></li>
+<li><b>献上枠</b>（R<span id="tribR"></span>〜・4種から3種）：<span id="tribpool"></span></li>
 </ul></div>
 
-<div class="blk"><h2><i>5</i>共用盤（何人でも）</h2>
+<div class="blk"><h2><i>4</i>共用盤（何人でも・何回でも）</h2>
 <ul>
-<li><b>器官</b> <span id="org"></span>（後から＝弱はG0）。系統内は段階順</li>
-<li><b>繁殖</b>（2を参照）／<b>環境スキャン</b> <span id="scan"></span></li>
-<li><b>資源変換</b> <span id="cnv"></span>／<b>予備動員</b> <span id="rsv"></span></li>
-<li><b>適応進化</b> L1でLv1のトラックを+1（Wが必要）</li>
+<li><b>献上 → 祝福+1</b>（各品目各自1R1回）：遺伝子 G<span id="flatG"></span>／生命核 L<span id="lcry"></span>（身体 Lv2 で解放）／協調 <span id="ccry"></span>／R<span id="tribR2"></span>から E<span id="tribE"></span>・P<span id="tribP"></span></li>
+<li><b>繁殖変換</b>：P<span id="breed"></span>（または L<span id="breedL"></span>）→ 繁栄度+1（4段まで・W必須）</li>
+<li><b>器官建造</b>：<span id="ocost"></span>。効果は先着も後続も同じ、後続は +<span id="late"></span>E。同じ系統3枚＝系統完成で成熟度+1</li>
+<li>環境スキャン <span id="scan"></span>／資源変換 <span id="cnv"></span></li>
 </ul></div>
 
 <div class="two">
-<div class="blk"><h2><i>6</i><svg class="ico c-l"><use href="#ico-life"/></svg>生命核 L</h2>
-<ul><li>E3かG3の代わり（お釣りなし）</li><li>適応進化</li><li>緊急発進：使用済みの<b>資源獲得</b>枠を使う</li></ul></div>
-<div class="blk"><h2><i>7</i>器官のそろえ方</h2>
-<ul><li>同じ系統3枚：倍率+1</li><li>4系統1枚ずつ：体制完成＝好きな資源の収入+1・終了時+50</li></ul></div>
+<div class="blk"><h2><i>5</i>資源</h2>
+<p><b>E</b> 進行・器官・献上／<b>G</b> 形質・模倣・発現／<b>P</b> 大量消費・繁殖・群体枠／<b>L</b> 持てば P を生む、払えば E<span id="lval"></span>/G<span id="lval2"></span>（払った個数が身体の収集物）／<b>協調</b> 資源枠の取り分+協調数（上限<span id="coopmax"></span>）</p></div>
+<div class="blk"><h2><i>6</i>終了時</h2>
+<p><b>最果ての痕跡</b>：各トラックの単独首位（Lv2以上）に痕跡+1。<br>Lv6 の換算：収集物3個につき祝福+1。<br>得点＝痕跡×繁栄度＋祝福×成熟度</p></div>
 </div>
 
-<div class="score">（実宝石＋仮想宝石）× 10 × 倍率<br>＋（形質＋協調）× 7 ＋ 体制完成 50
-<small>仮想宝石＝コンボ（2色4種＋3色2種・別々に数える）＋宝石セット<br>同点：実宝石 → 形質＋協調 → 残り資源（E+G+P）</small></div>
-
-<div class="foot">詳しくは kamishirobdg.github.io/game01-mock/guide/</div>
+<div class="blk"><h2><i>7</i>種族（初期資源 E/G/P）</h2><p id="sp"></p></div>
+<div class="foot">数値はアプリと同じ data.js／engine.js（T8）から表示・2026-10-29 改訂</div>
 
 <script src="../app/js/icons.js"></script>
 <script src="../app/js/data.js"></script>
+<script src="../app/js/engine.js"></script>
 <script>
 (function () {
-  const G = window.G1, $ = id => document.getElementById(id), s = id => G.SLOT_BY_ID[id].text;
-  const ico = (id, c) => `<svg class="ico ${c}"><use href="#${id}"/></svg>`;
-  const I = G.BASE_INCOME;
-  $('rounds').textContent = G.ROUNDS;
-  $('inc').innerHTML = `${ico('ico-e', 'c-e')}E+${I.E} ${ico('ico-g', 'c-g')}G+${I.G} ${ico('ico-pop', 'c-p')}P+${I.P} ${ico('ico-life', 'c-l')}L+1`;
-  $('wonly').textContent = G.SLOTS.filter(x => x.worker).map(x => x.name).join('・');
-  $('breed').textContent = `P${G.BREED_COST[0]}→×4／P${G.BREED_COST[1]}→×5`;
-  $('trk').innerHTML = G.STEP_COST.slice(1).map((c, i) => `<span class="${i === 1 || i === 3 ? 's' : ''}">Lv${i + 2}${i === 1 || i === 3 ? '★' : ''} ${c}E</span>`).join('');
-  $('res').textContent = G.RES_SLOTS.map(id => s(id).replace(/ /g, '')).join('／') + '／Pブースト ' + s('PB').replace(/ /g, '');
-  $('mass').textContent = G.MASS_COST;
-  $('massl').textContent = ['MB', 'MI', 'MS', 'MM'].map(id => G.SLOT_BY_ID[id].name.replace('大量消費', '').replace(/[()]/g, '') + ' ' + s(id).replace(/^P20 → /, '')).join('／');
-  $('org').textContent = G.ORGAN_COST.map(([e, g]) => `${e}E+${g}G`).join('／');
-  $('scan').textContent = s('SCAN').replace(/ /g, '');
-  $('cnv').textContent = s('CNV').replace(/ /g, '');
-  $('rsv').textContent = s('RSV');
-  // PDF化用：用紙サイズを内容の高さに合わせる
-  const st = document.createElement('style'); st.textContent = `@page { size: 390px ${document.documentElement.scrollHeight + 2}px; margin: 0; }`; document.head.appendChild(st);
+  const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS.t8;
+  const st = G.newGame({ rules: 't8', ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
+  const set = (id, v) => { $(id).textContent = String(v); };
+  const sl = id => G.slotText(st, id); const T = R.tribute;
+  set('ver', 'v' + G.VERSION + '・' + R.name + '・数値はすべて仮値'); set('tc', (R.traitCoef || [4, 8]).join('・')); set('rounds', G.ROUNDS); set('yield', R.lYield || 9); set('rsvE', R.reserveE); set('rsvG', R.reserveG);
+  const stepArr = R.step.slice(1), bstep = (R.bodyStep || R.step).slice(1); set('step', stepArr.join('/') + 'E'); set('bstep', bstep.join('/') + 'E');
+  $('trk').innerHTML = G.TRACKS.map(t => `<span style="border-color:var(--${G.TRACK_INFO[t].color})"><b>${G.TRACK_INFO[t].name.split('・')[0]}</b><br>${G.GATE_SHORT[t] || ''} ${R.gates[t].slice(2).join('/')}</span>`).join('');
+  set('lv6', G.TRACKS.map(t => G.lv6CostText(st, t)).join('／'));
+  set('res', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${sl(id)}`).join('／'));
+  set('mass', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace('大量消費', '')} ${sl(id)}`).join('／'));
+  set('mim', sl('MIM').replace(/（.*$/, '')); set('exp', sl('EXP'));
+  set('tribR', T.openRound || 6); set('tribR2', T.openRound || 6); set('tribpool', T.pool.map(id => `${G.SLOT_BY_ID[id].name}＝${sl(id)}`).join('／'));
+  set('flatG', G.sc(st, T.flatG)); set('lcry', R.lCrystal); set('ccry', R.coopCrystal); set('tribE', G.sc(st, T.shared.E)); set('tribP', G.sc(st, T.shared.P));
+  set('breed', R.breed[0]); set('breedL', R.breedL || '—');
+  set('ocost', R.organCost.map(([e, g]) => `${e}E+${g}G`).join('/')); set('late', G.sc(st, R.organLateFee || 1));
+  set('scan', sl('SCAN')); set('cnv', sl('CNV')); set('lval', G.sc(st, 3)); set('lval2', G.sc(st, 3)); set('coopmax', R.coopMax || G.COOP_MAX);
+  set('sp', Object.keys(G.SPECIES).sort((a, b) => G.SPECIES[a].order - G.SPECIES[b].order).map(id => { const s = G.speciesInfo(st, id); return `${s.name} E${s.stock.E}/G${s.stock.G}/P${s.stock.P}・${s.passive}`; }).join('／'));
 })();
 </script>
 </body>
