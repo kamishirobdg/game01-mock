@@ -252,6 +252,7 @@
     const o = organ(p, 'Rh2'); if (!o) return c;
     return Math.max(sc(p, 1), c - sc(p, o.strong ? 3 : 1));
   }
+  function altFuelP(p, e) { const r = p.altFuel; if (!r) return null; return Math.ceil((e * r[0]) / r[1]); } // 代替燃料：E e ぶんを P で払うときの必要 P（切り上げ）
   function organCost(st, p, oid) {
     const lin = G.ORGANS[oid].lin; const n = lineageCount(p, lin);
     const tier = G.ORGANS[oid].tier; if (tier !== n + 1) return null; // 階層順に建造
@@ -515,7 +516,7 @@
     if (tid === 'NL') p.L += strong ? 2 : 1;
     if (tid === 'NF') p.foresight = strong ? 'all' : 'lv5';
     if (tid === 'NR') { if (strong) p.lineageCoefAdd = 1; else p.lineageE3 = true; }
-    if (tid === 'NE') p.altFuel = strong ? 1 : 2; // 第42部 N5
+    if (tid === 'NE') p.altFuel = strong ? [1, 1] : [5, 3]; // 第42部 N5（2026-10-30 ユーザー採用：強 E1＝P1／弱 E3＝P5。[P, E] の比）
     if (tid === 'NS') p.symbiosis = strong ? 'free' : 'disc'; // 第42部 N8
     if (tid === 'NP') p.spore = strong ? 3 : 2; // 第42部 N9
     const jmax = RS(p).jumpMaxLv || 99; // 試作 jumpMaxLv：跳躍で上がれる上限（Lv6 は飛び越えない）
@@ -616,9 +617,9 @@
     if (organ(p, a.organ)) throw new Error('建造済みです');
     if (RS(st).organExcl) { const u = st.shared.organUsed[a.organ]; if (u !== undefined && u !== p.id) throw new Error(`このカードは今ラウンド ${P(st, u).name} が建造しました（1ラウンド1人）`); }
     let e = c.E, g = c.G; if (mode === 'free') { e = 0; g = 0; } else if (mode === 'half') { e = ceilHalf(e); g = ceilHalf(g); } if (a.bonus) e = ceilHalf(e);
-    if (a.payP) { if (!p.altFuel) throw new Error('代替燃料がありません'); const need = e * p.altFuel; if (p.P < need) throw new Error(`Pが足りません（E${e}＝P${need}）`); }
+    if (a.payP) { if (!p.altFuel) throw new Error('代替燃料がありません'); const need = altFuelP(p, e); if (p.P < need) throw new Error(`Pが足りません（E${e}＝P${need}）`); }
     if (!a.bonus && !mode) useToken(p, false);
-    if (a.payP) { const need = e * p.altFuel; p.P -= need; log(st, p.id, `${p.name}：代替燃料でE${e}ぶんをP${need}で支払い`); e = 0; } // 第42部 N5 代替燃料（強 E1＝P1／弱 E1＝P2）
+    if (a.payP) { const need = altFuelP(p, e); p.P -= need; log(st, p.id, `${p.name}：代替燃料でE${e}ぶんをP${need}で支払い`); e = 0; } // 第42部 N5 代替燃料（強 E1＝P1／弱 E1＝P2）
     const r = payE(p, e, a.useL); if (g) { if (p.G < g) throw new Error('Gが足りません'); p.G -= g; }
     if (c.first) st.shared.organFirst[a.organ] = p.id;
     { const ca1 = organ(p, 'Ca1'); if (ca1 && !ca1.strong && p.uses.ca1 < 3) p.uses.ca1 += 1; }
@@ -1230,5 +1231,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { altFuelP, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

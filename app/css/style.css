@@ -195,5 +195,8 @@ img.art.portrait { width:56px; height:56px; aspect-ratio:1/1; border-radius:50%;
   .lane .node { font-size:11px; }
   .ocard img.art, .tcard img.art, .cardbtn img.art:not(.portrait) { display:none; } /* 器官・形質のイラストは携帯では非表示（必須でない） */
   .ocard, .tcard { min-height:0; }
+  .modal-box { min-width:0; width:calc(100vw - 24px); max-width:calc(100vw - 24px); padding:12px 14px; box-sizing:border-box; } /* 2026-10-29 携帯でダイアログが左右にはみ出していた（min-width 420px） */
+  .modal-box .frow > span { width:100%; } .modal-box .frow select, .modal-box .frow input { width:100%; min-width:0; max-width:100%; } .modal-box .frow .desc { margin-left:0; }
+  .modal-box .mbtns { flex-wrap:wrap; }
 }
 
