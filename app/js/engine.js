@@ -1176,27 +1176,30 @@
   }
 
   // ---------- 表示文（数値セット連動） ----------
-  function slotText(st, id) {
+  // 2026-10-29：p（見ている人）を渡すと、形質・器官・報酬による割引を反映した「その人の実際のコスト」を表示する（基準値と違うときは「（軽減後）」）
+  function slotText(st, id, p) {
     const R = RS(st); const s = G.SLOT_BY_ID[id]; if (!s) return '';
-    if (id === 'MB') return `P${R.massCost} → 痕跡+1`;
-    if (id === 'MI') return R.miMaxCost ? `P${R.massCost} → G${R.miMaxCost}以下の形質${R.miCount || 2}種` : `P${R.massCost} → G4以下の形質を異なる2種`;
-    if (id === 'MS') return `P${R.msCost || R.massCost} → 協調+${R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)}`;
-    if (id === 'MM') return `P${R.mmCost || R.massCost} → E+${sc(st, 10)} G+${sc(st, 10)}`;
+    const eff = (base, mine) => (p && mine !== null && mine !== undefined && mine !== base) ? `${mine}（軽減後）` : String(base);
+    const mass = (kind) => eff(kind === 'MM' && R.mmCost ? R.mmCost : kind === 'MS' && R.msCost ? R.msCost : R.massCost, p ? massCost(p, kind) : null);
+    if (id === 'MB') return `P${mass('MB')} → 痕跡+1`;
+    if (id === 'MI') return R.miMaxCost ? `P${mass('MI')} → G${R.miMaxCost}以下の形質${R.miCount || 2}種` : `P${mass('MI')} → G4以下の形質を異なる2種`;
+    if (id === 'MS') return `P${mass('MS')} → 協調+${R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)}`;
+    if (id === 'MM') return `P${mass('MM')} → E+${sc(st, 10)} G+${sc(st, 10)}`;
     if (id === 'GEM') return R.tribute && R.tribute.flatG ? `G${sc(st, R.tribute.flatG)} → 祝福+1（共用・1R1回）` : `G(${sc(st, 10)}−形質数×${sc(st, 1)}・下限${sc(st, 5)}${R.gemsetEscalate ? '・購入ごとに+' + R.gemsetEscalate : ''}) → 祝福+1${R.gemsetShared ? '（共用）' : ''}`;
     if (id === 'TE' && R.tribute) return `E${sc(st, R.tribute.slots.TE.E)} → 祝福+1`; if (id === 'TP' && R.tribute) return `P${sc(st, R.tribute.slots.TP.P)} → 祝福+1`; if (id === 'TR' && R.tribute) return `E${sc(st, R.tribute.slots.TR.E)}+P${sc(st, R.tribute.slots.TR.P)} → 痕跡+1`;
     if (id === 'TO' && R.tribute) return '器官1枚を無料（＋もう1枚を半額）'; if (id === 'TT' && R.tribute) return `G${sc(st, (R.tribute.slots.TT || {}).G || 0)} → 形質${(R.tribute.slots.TT || {}).n || 2}枚まで無料`; if (id === 'TA' && R.tribute) return `宝石の色を${(R.tribute.slots.TA || {}).n || 2}個まで替える`; if (id === 'TB' && R.tribute) return `資源枠1つを今すぐ（使用済みでも）＋残りの手番は資源枠が${(R.tribute.slots.TB || {}).mul || 2}倍`; if (id === 'TJ' && R.tribute) return `進行2回・合計 −E${sc(st, (R.tribute.slots.TJ || {}).disc || 0)}`;
-    if (id === 'BRD') return R.coef2 ? `${R.breed.every(c => c === R.breed[0]) ? `P${R.breed[0]}→繁栄度+1（${R.breed.length}段）` : R.breed.map((c, i) => `P${c}→×${(R.coef2.breedBase || 3) + i + 1}`).join(' / ')}${R.breedL ? `（または生命核L${R.breedL}）` : ''}（W必須）` : `P${R.breed[0]}→×4 / P${R.breed[1]}→×5${R.breedL ? `（または生命核L${R.breedL}）` : ''}（W必須）`;
-    if (id === 'TRK') return `${R.step.slice(1).join('/')}E（W必須）`;
+    if (id === 'BRD') return R.coef2 ? `${R.breed.every(c => c === R.breed[0]) ? `P${eff(R.breed[0], p ? breedCost(p) : null)}→繁栄度+1（${R.breed.length}段）` : R.breed.map((c, i) => `P${c}→×${(R.coef2.breedBase || 3) + i + 1}`).join(' / ')}${R.breedL ? `（または生命核L${R.breedL}）` : ''}（W必須）` : `P${R.breed[0]}→×4 / P${R.breed[1]}→×5${R.breedL ? `（または生命核L${R.breedL}）` : ''}（W必須）`;
+    if (id === 'TRK') { const base = `${R.step.slice(1).join('/')}E（W必須）`; if (!p) return base; const mine = G.TRACKS.map(t => { const c = stepCost(p, t); return c === null ? null : { t, c }; }).filter(Boolean); const diff = mine.some(({ t, c }) => c !== ((t === 'body' && R.bodyStep) ? R.bodyStep : R.step)[p.lv[t]]); return diff ? `${base}　あなたの次の段：${mine.map(({ t, c }) => `${G.TRACK_INFO[t].name.split('・')[0]}E${c}`).join('／')}` : base; }
     if (id === 'EG' && R.herd) return `P${R.herdCost || 6} → +${sc(st, 3)}E ＋ 協調+1`;
     if (id === 'GG' && R.herd) return `P${R.herdCost || 6} → +${sc(st, 2)}G ＋ 協調+1`;
     if (id === 'TRT2') return `通常コスト＋E${st.round}（ラウンド数）`;
     if (id === 'RSV') return `無料で E+${R.reserveE || 2} または G+${R.reserveG || 1}`;
-    if (id === 'MIM') return `G${R.mimicCost || 4} → 自分を含む誰かが到達済みの Lv2／Lv3★ の !即時効果を1つ（◆L+1 は対象外）`;
-    if (id === 'EXP') return `G${R.expressCost || 10} → 痕跡+1（先着なし）`;
+    if (id === 'MIM') return `G${eff(R.mimicCost || 4, p ? gSlotCost(p, R.mimicCost || 4) : null)} → 自分を含む誰かが到達済みの Lv2／Lv3★ の !即時効果を1つ（◆L+1 は対象外）`;
+    if (id === 'EXP') return `G${eff(R.expressCost || 10, p ? gSlotCost(p, R.expressCost || 10) : null)} → 痕跡+1（先着なし）`;
     if (id === 'P8' && R.p8) return `+${R.p8}P`;
     if (id === 'TRT' && R.traitShared) return 'Gを払い形質を取得（共用・排他なし）';
     if (id === 'ORG') { const oc = R.organCost || G.ORGAN_COST; return oc.map(([e, g]) => `${e}E+${g}G`).join(' / ') + (R.organSameEffect ? `（後追い +${sc(st, R.organLateFee || 1)}E）` : '（弱はG0' + (R.organEscalate ? `・所持${R.organEscalate}枚ごとに+1E` : '') + '）'); }
-    if (id === 'E5') return `+${sc(st, 5)}E`; if (id === 'G3') return `+${sc(st, 3)}G`; if (id === 'ALL') return `+${sc(st, 2)}E +${sc(st, 1)}G +${sc(st, 4)}P`; if (id === 'PB') return `G${sc(st, 2)} → P+${sc(st, 10)}`;
+    if (id === 'E5') return `+${sc(st, 5)}E`; if (id === 'G3') return `+${sc(st, 3)}G`; if (id === 'ALL') return `+${sc(st, 2)}E +${sc(st, 1)}G +${sc(st, 4)}P`; if (id === 'PB') return `G${eff(sc(st, 2), p ? pbCost(p) : null)} → P+${sc(st, 10)}`;
     if (id === 'SCAN') return `E${sc(st, 5)} → 他者の最高Lv×${sc(st, 2)}の資源`; if (id === 'CNV') return `E${sc(st, 2)}→G${sc(st, 1)} / G${sc(st, 2)}→E${sc(st, 1)} / P${sc(st, 8)}→E${sc(st, 3)} / P${sc(st, 8)}→G${sc(st, 2)}`;
     return txt(st, s.text);
   }

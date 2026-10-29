@@ -44,6 +44,7 @@
   function mine(pid) { if (isBot(pid)) return false; if (!isOnline()) return true; return Net.mySeats().includes(pid); }
   // この端末が操作する人間の席（1手戻すは、この席の直前の手まで戻す）
   function myHumanPids() { return st ? st.players.map(q => q.id).filter(pid => mine(pid)) : []; }
+  const viewP = (p) => { if (!st || mine(p.id)) return p; const hs = myHumanPids(); return hs.length ? st.players[hs[0]] : p; }; // 2026-10-29：盤のコスト表示は「この端末で見ている人」の割引を反映する
   const ACT_JP = { track: 'トラック進行', res: '資源獲得', organ: '器官建造', trait: '形質購入', upgrade: '形質アップグレード', mass: '大量消費', breed: '繁殖変換', gemset: '宝石セット', card: '個人カード', convert: '資源変換', reserve: '予備動員', scan: '環境スキャン', adapt: '適応進化', stAct: '器官アクション', resolve: '選択の解決', freeConv: '無料変換', species: '種族選択', startTrait: '初期形質', draft: 'ドラフト', cheat: 'デバッグ' };
   let seenUndo = null; // 了解済みの巻き戻し通知
   const leftTxt = (q) => G.RULESETS[st.rules || 'v1'].gauge ? `残${q.left.W + q.left.AT}` : `W${q.left.W}/AT${q.left.AT}`; // 係数ゲージ方式ではW/ATの区別なし
@@ -392,7 +393,7 @@
   function slotButton(p, can, s, onclick, extra) {
     const used = (s.id === 'GEM' && G.RULESETS[st.rules || 'v1'].gemsetShared) ? undefined : G.slotUsedBy(st, s.id); // 共用の宝石セットは使用済み表示なし
     const reason = !can ? roMsg : (s.id === 'TRT' || s.id === 'TRT2' || s.id === 'ORG' || s.id === 'TRK') ? null : check(sample(p, s.id));
-    const txt = G.slotText(st, s.id);
+    const txt = G.slotText(st, s.id, viewP(p));
     // 獲得量プレビュー：今この枠を使うと実際にいくつ得られるか（協調ボーナス・群体のP・Pブースト等を含む）
     let gain = null; if (can && !reason && (s.group === 'res' || s.group === 'mass' || s.id === 'GEM')) { const d = G.previewGain(st, sample(p, s.id)); if (d) gain = G.gainText(d); }
     const tip = (G.slotTip(st, s.id) || txt) + (gain ? `\n今実行すると：${gain}` : '');
@@ -427,7 +428,7 @@
     const resBtn = (s, used) => slotButton(p, can, s, () => onSlot(p, s.id), used !== undefined && G.RES_SLOTS.includes(s.id) ? bypassHint() : null);
     if (m4) Object.entries(G.RES_GROUPS).forEach(([gid, grp]) => { const used = st.shared.used[gid]; const gb = h('div', { class: 'merged' + (used !== undefined ? ' used' : '') }, h('h5', null, grp.name)); grp.slots.forEach(id => gb.appendChild(resBtn(G.SLOT_BY_ID[id], used))); g1.appendChild(gb); });
     else G.SLOTS.filter(s => s.group === 'res').forEach(s => g1.appendChild(resBtn(s, st.shared.used[s.id])));
-    const g2 = h('div', { class: 'sgroup' }, h('h4', null, `大量消費（P${G.RULESETS[st.rules || 'v1'].massCost}）`));
+    const g2 = h('div', { class: 'sgroup' }, h('h4', null, (() => { const base = G.RULESETS[st.rules || 'v1'].massCost, mine = G.massCost(viewP(p), 'MI'); return `大量消費（P${mine !== base ? mine + '・軽減後' : base}）`; })()));
     G.SLOTS.filter(s => s.group === 'mass').forEach(s => g2.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     { const T = G.RULESETS[st.rules || 'v1'].tribute; if (T) { const open = st.round >= (T.openRound || 6); const gt = h('div', { class: 'sgroup' + (open ? ' god' : '') }, h('b', { class: 'glabel' }, open ? '神の到来：献上枠（早取り）' : `献上枠（ラウンド${T.openRound || 6}から・神の到来）`)); G.tribSlots(st).map(id => G.SLOT_BY_ID[id]).forEach(s => { if (open) gt.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))); else gt.appendChild(h('button', { class: 'slot locked', disabled: true, title: G.slotTip(st, s.id) }, h('b', null, s.name), h('small', null, G.slotText(st, s.id)))); }); box.appendChild(gt); } }
     const g3 = h('div', { class: 'sgroup' }, h('h4', null, 'その他'));
@@ -441,8 +442,8 @@
     const g = h('div', { class: 'sgroup' });
     G.SLOTS.filter(s => ['trk', 'org', 'cu'].includes(s.group) && s.id !== 'TRK' && !(s.id === 'ADP' && G.RULESETS[st.rules || 'v1'].noAdapt)).forEach(s => g.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     const R6 = G.RULESETS[st.rules || 'v1'];
-    if (R6.lCrystal) { const a = { pid: p.id, type: 'lCrystal' }; const reason = can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot', title: `献上（生命核）：生命核L${R6.lCrystal}を払って祝福+1。身体Lv${R6.lCrystalLv || 4}で解放・共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W。投入回数には数えない`, onclick: () => confirm(`献上（生命核）：L${R6.lCrystal}→祝福+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（生命核）'), h('small', null, `L${R6.lCrystal} → 祝福+1`))); }
-    if (R6.coopCrystal) { const a = { pid: p.id, type: 'coopCrystal' }; const reason = can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot', title: `献上（協調）：協調トークン${R6.coopCrystal}を払って祝福+1。共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W`, onclick: () => confirm(`献上（協調）：協調${R6.coopCrystal}→祝福+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（協調）'), h('small', null, `協調${R6.coopCrystal} → 祝福+1`))); }
+    if (R6.lCrystal) { const a = { pid: p.id, type: 'lCrystal' }; const reason = can ? check(a) : roMsg; const nL = Math.max(1, R6.lCrystal - (viewP(p).crystalDiscL || 0)); const nLt = nL !== R6.lCrystal ? `${nL}（結晶体質）` : String(nL); gTop.appendChild(actBtn({ class: 'slot', title: `献上（生命核）：生命核L${nLt}を払って祝福+1。身体Lv${R6.lCrystalLv || 4}で解放・共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W。投入回数には数えない`, onclick: () => confirm(`献上（生命核）：L${Math.max(1, R6.lCrystal - (p.crystalDiscL || 0))}→祝福+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（生命核）'), h('small', null, `L${nLt} → 祝福+1`))); }
+    if (R6.coopCrystal) { const a = { pid: p.id, type: 'coopCrystal' }; const reason = can ? check(a) : roMsg; const nC = Math.max(1, R6.coopCrystal - (viewP(p).crystalDiscC || 0)); const nCt = nC !== R6.coopCrystal ? `${nC}（結晶体質）` : String(nC); gTop.appendChild(actBtn({ class: 'slot', title: `献上（協調）：協調トークン${nCt}を払って祝福+1。共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W`, onclick: () => confirm(`献上（協調）：協調${Math.max(1, R6.coopCrystal - (p.crystalDiscC || 0))}→祝福+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（協調）'), h('small', null, `協調${nCt} → 祝福+1`))); }
     if (R6.tribute) { const T = R6.tribute; const open = st.round >= (T.openRound || 6); ['E', 'P'].forEach(res => { const a = { pid: p.id, type: 'tribute', res }; const c = G.sc(st, T.shared[res]); const reason = !open ? `ラウンド${T.openRound || 6}から（神の到来）` : can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot' + (open ? ' god' : ' locked'), title: `献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}を払って祝福+1。ラウンド${T.openRound || 6}から・共用・各自1ラウンド1回・W`, onclick: () => open && confirm(`献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}→祝福+1。実行しますか？`) && submit(a) }, reason, h('b', null, `献上（${res === 'E' ? 'エネルギー' : '個体数'}）`), h('small', null, `${res}${c} → 祝福+1`))); }); }
     if (gTop.childNodes.length > 1) box.appendChild(gTop); box.appendChild(g); return box;
   }
@@ -591,7 +592,7 @@
     if (id === 'ORG') return toast('器官の場のカードをクリックしてください');
     if (id === 'TRT' || id === 'TRT2') return toast('形質プールのカードをクリックしてください（購入枠はダイアログで選べます）');
     if (s.group === 'mass') {
-      if (id === 'MI') { const RM = G.RULESETS[st.rules || 'v1']; const r = await ask(`大量消費(知性)：G${RM.miMaxCost || 4}以下の形質${RM.miMaxCost ? (RM.miCount || 1) + '種' : 'を異なる2種'}`, [{ type: 'multi', name: 'traits', label: `形質（${RM.miCount || 2}つまで・Ctrlで複数選択）`, options: G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RM.miMaxCost || 4) && !G.trait(p, t)).map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}` })) }], { note: `コスト P${G.massCost(p, 'MI')}` }); if (!r) return; return submit({ pid: p.id, type: 'mass', kind: 'MI', traits: r.traits.slice(0, 2) }); }
+      if (id === 'MI') { const RM = G.RULESETS[st.rules || 'v1']; const r = await ask(`大量消費(知性)：G${RM.miMaxCost || 4}以下の形質${RM.miMaxCost ? (RM.miCount || 1) + '種' : 'を異なる2種'}`, [{ type: 'multi', name: 'traits', label: `形質（${RM.miCount || 2}つまで。PC は Ctrl キーを押しながらクリック、スマホはタップで選択）`, options: G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RM.miMaxCost || 4) && !G.trait(p, t)).map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}` })) }], { note: `コスト P${G.massCost(p, 'MI')}` }); if (!r) return; return submit({ pid: p.id, type: 'mass', kind: 'MI', traits: r.traits.slice(0, RM.miCount || 2) }); }
       const mc = G.massCost(p, id), floor = G.RULESETS[st.rules || 'v1'].massMin[id === 'MB' ? 'body' : 'other'];
       const usedM = G.slotUsedBy(st, id) !== undefined; const byL = usedM && G.bypassable(st, id, p) && p.L > 0;
       const bcC = G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2; const byC = usedM && !byL && G.coopBypassable(st, id, p) && p.coop >= bcC; // bypassCoopWide：使用済みの大量消費を協調発進で（緊急発進が使えるときはそちらを優先）
