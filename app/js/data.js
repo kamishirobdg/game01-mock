@@ -150,7 +150,7 @@
     return R;
   };
   // T8＝T7 の資源3倍版（2026-10-22 ユーザー採用）：協調ボーナスは「＋協調数」（半分・切り捨てを廃止）、群心核は「協調ボーナス+1」（hc3Bonus）
-  G.RULESETS.t8 = G.scaleRuleset(G.RULESETS.t7, 3, { name: '仮値セットT8（T7の資源3倍）', coopMode: undefined, coopMax: 12, sporeCap: 10, noCombo: true, gemPt: 1, /* 2026-10-28 ユーザー採用（第41部）：宝石コンボと色を廃止（noCombo）・得点式の ×2 を削除（gemPt 2→1）。T8 の得点＝痕跡×繁栄度＋祝福×成熟度 */ gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
+  G.RULESETS.t8 = G.scaleRuleset(G.RULESETS.t7, 3, { name: '仮値セットT8（T7の資源3倍）', coopMode: undefined, coopMax: 12, sporeCap: 10, noCombo: true, gemPt: 1, pbGain: 50, /* 2026-10-31 ユーザー指示（第44部 AI57）：Pブースト G6→P+30 は P増加（P+30＋協調ぶん）と同値で支配されていたため P+50 に（物差し 価値÷コスト 0.75→1.25）。試作 pbCoop（協調ボーナスの対象にする）は不採用 */ /* 2026-10-28 ユーザー採用（第41部）：宝石コンボと色を廃止（noCombo）・得点式の ×2 を削除（gemPt 2→1）。T8 の得点＝痕跡×繁栄度＋祝福×成熟度 */ gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 2, /* 2026-10-29 修正：この3キーは lv6Pay 行末の // コメントに飲み込まれて v3.48〜v3.49 で無効になっていた（群心核のボーナス+3・代謝核 全種+2） */
     lv6Pay: { body: { L: 5 }, intel: { G: 42 } /* 2026-10-29 G36 を計測（AI53）したが G での調整は保留 */, social: { coop: 8 }, metab: { E: 90 } }, // 2026-10-28 案B：Lv6 はその色の資源で払う（T8 の絶対値・仮値。E63 相当：L1≈9＋利回り・G1＝1.5E・協調1≈3E） /* 2026-10-28 ユーザー判断：協調の上限 8→12・社会のゲート 2/5/8/11→3/6/9/12（上限8では白だけ途中から E 必須だった）*/
     // 2026-10-22 形質の強／弱の選択制（traitChoice）に合わせて弱の値段を効果比で個別に（T8 単位の絶対値・第28部）：弱が安すぎると「安い収集物」として買い占められ、初期資源の多い種族が突出した
@@ -160,7 +160,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.51'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.52'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }) });
   G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9'];

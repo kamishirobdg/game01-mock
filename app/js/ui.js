@@ -580,7 +580,7 @@
     const s = G.SLOT_BY_ID[id];
     if (s.group === 'res') {
       const used = G.slotUsedBy(st, id) !== undefined; const fields = [];
-      if (id === 'PB') return confirm(`Pブースト購入：G${G.pbCost(p)}→P+${G.sc(st, 10)}。実行しますか？`) && submit({ pid: p.id, type: 'res', slot: 'PB' });
+      if (id === 'PB') return confirm(`Pブースト購入：G${G.pbCost(p)}→P+${G.pbGain(st)}。実行しますか？`) && submit({ pid: p.id, type: 'res', slot: 'PB' });
       const RCm = G.RULESETS[st.rules || 'v1']; const spendable = RCm.coopMode === 'spend' && p.coop >= 1;
       if (spendable) fields.push({ type: 'check', name: 'coopSpend', label: `協調1個を払って この枠の資源+${RCm.coopSpendGain || 3}`, value: false });
       if (id === 'ALL' && (p.coop > 0 && RCm.coopMode !== 'spend' || spendable)) fields.push(resSel('coopRes', RCm.coopMode === 'spend' ? '協調を払ったときの資源' : `協調ボーナスの資源`));
