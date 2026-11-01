@@ -21,13 +21,87 @@
   }
   const SPECIES_ART = { wing: 'species_wing', arm: 'species_arm', ant: 'species_ant', manta: 'species_manta' };
   const RES_JP = { E: 'E', G: 'G', P: 'P', L: 'L', coop: '協調' };
-  const ICO = { E: 'ico-e', G: 'ico-g', P: 'ico-pop', L: 'ico-life', coop: 'ico-coord', gem: 'ico-gem', W: 'ico-w' };
-  const ic = (k, n) => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('class', 'ic ' + k); const u = document.createElementNS('http://www.w3.org/2000/svg', 'use'); u.setAttribute('href', '#' + (ICO[k] || 'ico-gem')); s.appendChild(u); const t = document.createElementNS('http://www.w3.org/2000/svg', 'title'); t.textContent = ({ E: 'エネルギー', G: '遺伝子', P: '個体数', L: '生命核', coop: '協調', gem: '宝石', W: 'ワーカー' })[k] || k; s.appendChild(t); if (n === undefined) return s; const f = document.createDocumentFragment(); f.appendChild(s); f.appendChild(document.createTextNode(String(n))); return f; };
+  const ICO = { E: 'ico-e', G: 'ico-g', P: 'ico-pop', L: 'ico-life', coop: 'ico-coord', gem: 'ico-gem', W: 'ico-w', bless: 'ico-bless', trait: 'ico-trait', organ: 'ico-organ', breed: 'ico-breed', up: 'ico-up', rslot: 'ico-slot', eye: 'ico-eye', copy: 'ico-copy' };
+  const ICO_JP = { E: 'エネルギー', G: '遺伝子', P: '個体数', L: '生命核', coop: '協調', gem: '痕跡', W: 'ワーカー', bless: '祝福', trait: '形質', organ: '器官', breed: '繁栄度', up: 'トラック進行', rslot: '資源枠', eye: '他者の最高Lv', copy: '模倣' };
+  const ic = (k, n) => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('class', 'ic ' + k); const u = document.createElementNS('http://www.w3.org/2000/svg', 'use'); u.setAttribute('href', '#' + (ICO[k] || 'ico-gem')); s.appendChild(u); const t = document.createElementNS('http://www.w3.org/2000/svg', 'title'); t.textContent = ICO_JP[k] || k; s.appendChild(t); if (n === undefined) return s; const f = document.createDocumentFragment(); f.appendChild(s); f.appendChild(document.createTextNode(String(n))); return f; };
   const icost = (txt) => { // "E5+G1" 等をアイコン化
     const frag = document.createDocumentFragment();
     String(txt).split(/\s*[+＋]\s*/).forEach((part, i) => { const m = part.match(/^([EGPL])(\d+)$/); if (i) frag.appendChild(document.createTextNode('+')); if (m) { frag.appendChild(ic(m[1])); frag.appendChild(document.createTextNode(m[2])); } else frag.appendChild(document.createTextNode(part)); });
     return frag;
   };
+
+  // ---------- アイコン表示（2026-11-01 ユーザー要望：アクションの説明を文字でなくアイコンで。文字表示は残して切り替え） ----------
+  // 「払うもの（赤地）→ 得るもの」の絵で表す。数値は文字表示と同じエンジンの値（見ている人の軽減後）から作る。対応の無い枠は文字表示のまま
+  const VIEW_KEY = 'g01_view';
+  let viewMode = (() => { const q = new URLSearchParams(location.search).get('view'); if (q === 'icon' || q === 'text') return q; try { return localStorage.getItem(VIEW_KEY) === 'icon' ? 'icon' : 'text'; } catch (e) { return 'text'; } })();
+  let legendOpen = true;
+  const iconView = () => viewMode === 'icon';
+  function setView(m) { viewMode = m; try { localStorage.setItem(VIEW_KEY, m); } catch (e) { } render(); }
+  const pc = (k, n, o) => h('span', { class: 'pc pk-' + k + (o && o.cost ? ' cost' : '') + (o && o.cls ? ' ' + o.cls : ''), title: (o && o.title) || ICO_JP[k] }, ic(k), n === undefined || n === null ? null : h('b', null, String(n)));
+  const po = (s) => h('span', { class: 'po' }, s);
+  const pbad = (s, title) => h('span', { class: 'pbad', title: title || null }, s);
+  const pcost = (k, n, base) => pc(k, n, { cost: true, cls: base !== undefined && n !== base ? 'disc' : '', title: base !== undefined && n !== base ? `${ICO_JP[k]}（軽減後・基準 ${base}）` : ICO_JP[k] + 'を払う' });
+  const coopBonus = () => pc('coop', '+', { cls: 'bonus', title: '協調ボーナス：協調トークンの数に応じて、この枠の資源が増える' });
+  function picto(id, p) {
+    const R = G.RULESETS[st.rules || 'v1']; const vp = viewP(p); const sc = (n) => G.sc(st, n); const T = R.tribute || {}; const TS = T.slots || {};
+    const resB = G.RES_SLOTS.includes(id) && R.coopMode !== 'spend' && (!R.coopBonusSlots || R.coopBonusSlots.includes(id)) ? [coopBonus()] : [];
+    const massC = (k) => pcost('P', G.massCost(vp, k), k === 'MM' && R.mmCost ? R.mmCost : k === 'MS' && R.msCost ? R.msCost : R.massCost);
+    const w = (R.gauge ? [] : [pc('W', null, { title: 'ワーカー必須（ATでは置けない）' })]);
+    const bless = () => pc('bless', '+1');
+    switch (id) {
+      case 'E5': return [pc('E', '+' + sc(5)), ...resB];
+      case 'G3': return [pc('G', '+' + sc(3)), ...resB];
+      case 'P8': return [pc('P', '+' + (R.p8 || 8)), ...resB];
+      case 'ALL': return [pc('E', '+' + sc(2)), pc('G', '+' + sc(1)), pc('P', '+' + sc(4)), ...resB];
+      case 'EG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('E', '+' + sc(3)), pc('coop', '+' + (R.herdCoop || 1)), ...resB] : null;
+      case 'GG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('G', '+' + sc(2)), pc('coop', '+' + (R.herdCoop || 1)), ...resB] : null;
+      case 'PB': return [pcost('G', G.pbCost(vp), sc(2)), po('→'), pc('P', '+' + G.pbGain(st)), ...(R.pbCoop ? [coopBonus()] : [])];
+      case 'MB': return [massC('MB'), po('→'), pc('gem', '+1')];
+      case 'MI': return R.miMaxCost ? [massC('MI'), po('→'), pc('trait', '×' + (R.miCount || 2), { title: `コストG${R.miMaxCost}以下の形質を異なる${R.miCount || 2}種` }), pbad('≤' + R.miMaxCost, `コストG${R.miMaxCost}以下`)] : null;
+      case 'MS': return [massC('MS'), po('→'), pc('coop', '+' + (R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)))];
+      case 'MM': return [massC('MM'), po('→'), pc('E', '+' + sc(10)), pc('G', '+' + sc(10))];
+      case 'TRT': return [pcost('G'), po('→'), pc('trait', '+1')];
+      case 'TRT2': return [pcost('G'), pcost('E', st.round), po('→'), pc('trait', '+1')];
+      case 'MIM': { const b = R.mimicCost || 4; return [pcost('G', G.gSlotCost(vp, b), b), po('→'), pc('copy', null, { title: '模倣：自分を含む誰かが到達済みの Lv2／Lv3★ の即時効果を1つ' }), pbad('Lv2/3★')]; }
+      case 'EXP': { const b = R.expressCost || 10; return [pcost('G', G.gSlotCost(vp, b), b), po('→'), pc('gem', '+1')]; }
+      case 'GEM': return T.flatG ? [pcost('G', sc(T.flatG)), po('→'), bless()] : null;
+      case 'TE': return TS.TE ? [pcost('E', sc(TS.TE.E)), po('→'), bless()] : null;
+      case 'TP': return TS.TP ? [pcost('P', sc(TS.TP.P)), po('→'), bless()] : null;
+      case 'TR': return TS.TR ? [pcost('E', sc(TS.TR.E)), pcost('P', sc(TS.TR.P)), po('→'), pc('gem', '+1')] : null;
+      case 'TO': return [pc('organ', '0', { title: '器官1枚を無料（後追い料なし）' }), po('+'), pc('organ', '½', { title: '同じ手番にもう1枚を半額' })];
+      case 'TT': return TS.TT ? [pcost('G', sc(TS.TT.G || 0)), po('→'), pc('trait', '×' + (TS.TT.n || 2), { title: `形質を${TS.TT.n || 2}枚まで無料` })] : null;
+      case 'TB': return TS.TB ? [pc('rslot', '1', { title: '資源枠1つを今すぐ実行（使用済みでも）' }), pbad('使用済みOK'), po('+'), pc('rslot', '×' + (TS.TB.mul || 2), { title: 'このラウンドの残りの手番、資源枠の獲得量が倍' })] : null;
+      case 'TJ': return TS.TJ ? [pc('up', '×' + (TS.TJ.n || 2), { title: `トラック進行を${TS.TJ.n || 2}回（同じでも別でも）` }), pc('E', '−' + sc(TS.TJ.disc || 0), { cls: 'minus', title: `合計コストから E${sc(TS.TJ.disc || 0)} 引く` })] : null;
+      case 'BRD': { if (!R.coef2 || !R.breed.every(c => c === R.breed[0])) return null; const c = G.breedCost(vp); return [...w, pcost('P', c === null ? R.breed[0] : c, R.breed[0]), ...(R.breedL ? [po('/'), pcost('L', R.breedL)] : []), po('→'), pc('breed', '+1', { title: `繁栄度+1（全${R.breed.length}段）` })]; }
+      case 'ORG': { const oc = R.organCost || G.ORGAN_COST; const es = oc.map(x => x[0]), gs = oc.map(x => x[1]); const rg = (a) => Math.min(...a) === Math.max(...a) ? String(a[0]) : `${Math.min(...a)}〜${Math.max(...a)}`; return [pcost('E', rg(es)), pcost('G', rg(gs)), po('→'), pc('organ', '+1'), ...(R.organSameEffect ? [pbad('後追い+E' + sc(R.organLateFee || 1), '先着より後に建てると +E')] : [])]; }
+      case 'SCAN': return [pcost('E', sc(5)), po('→'), pc('eye', 'Lv×' + sc(2), { title: `他プレイヤーの最高Lv×${sc(2)}の、そのトラックの資源` })];
+      case 'ADP': return [...w, pcost('L', 1), po('→'), pc('up', '+1', { title: 'Lv1のトラックを1段' }), pbad('Lv1')];
+      case 'CNV': return [[['E', 2], ['G', 1]], [['G', 2], ['E', 1]], [['P', 8], ['E', 3]], [['P', 8], ['G', 2]]].map(([[a, x], [b, y]]) => h('span', { class: 'pgrp' }, pcost(a, sc(x)), po('→'), pc(b, '+' + sc(y))));
+      case 'RSV': return [pbad('無料'), po('→'), pc('E', '+' + (R.reserveE || 2)), po('/'), pc('G', '+' + (R.reserveG || 1))];
+      case 'LCR': { const n = Math.max(1, R.lCrystal - (vp.crystalDiscL || 0)); return [pcost('L', n, R.lCrystal), po('→'), bless()]; }
+      case 'CCR': { const n = Math.max(1, R.coopCrystal - (vp.crystalDiscC || 0)); return [pcost('coop', n, R.coopCrystal), po('→'), bless()]; }
+      case 'TRIB_E': return [pcost('E', sc(T.shared.E)), po('→'), bless()];
+      case 'TRIB_P': return [pcost('P', sc(T.shared.P)), po('→'), bless()];
+    }
+    return null;
+  }
+  // 今実行したときの増減（previewGain）をアイコンで
+  function gainChips(d) { const out = []; ['E', 'G', 'P', 'L', 'coop'].forEach(k => { if (d[k]) out.push(pc(k, (d[k] > 0 ? '+' : '') + d[k], d[k] < 0 ? { cls: 'neg' } : null)); }); const gs = G.TRACKS.reduce((a, t) => a + (d['gem_' + t] || 0), 0); if (gs) out.push(pc('gem', '+' + gs)); if (d.gemsets) out.push(pc('bless', '+' + d.gemsets)); return out; }
+  // 枠の中身：アイコン表示なら「名前（小）＋絵」、文字表示なら従来どおり。pid＝picto の識別子（slot id 以外の共用盤の枠は擬似 id）
+  function slotBody(p, pid, name, text, d) {
+    const pic = iconView() ? picto(pid, p) : null; const gain = d ? G.gainText(d) : null;
+    if (pic) return [h('span', { class: 'pname' }, name), h('span', { class: 'picto' }, pic), d && gain ? h('span', { class: 'picto pgain', title: '今実行すると：' + gain }, po('⇒'), gainChips(d)) : null];
+    return [h('b', null, name), h('small', null, typeof text === 'string' ? icost(text) : text), gain ? h('small', { class: 'gain' }, `→ ${gain}`) : null];
+  }
+  function viewToggle() {
+    return h('span', { class: 'vtog', title: 'アクション（早取り盤・共用盤）の表示を切り替える' }, h('button', { class: viewMode === 'text' ? 'on' : '', onclick: () => setView('text') }, '文字'), h('button', { class: viewMode === 'icon' ? 'on' : '', onclick: () => setView('icon') }, 'アイコン'));
+  }
+  function iconLegend() {
+    const it = (k, n) => h('span', null, ic(k), n || ICO_JP[k]);
+    return h('details', { class: 'plegend', open: legendOpen, ontoggle: (e) => { legendOpen = e.target.open; } }, h('summary', null, 'アイコンの見方'),
+      ['E', 'G', 'P', 'L', 'coop', 'gem', 'bless', 'trait', 'organ', 'breed', 'up', 'rslot', 'eye', 'copy'].map(k => it(k)),
+      h('span', null, h('span', { class: 'pc cost' }, h('b', null, '赤地')), '＝払う'), h('span', null, coopBonus(), '＝協調ボーナス'), h('span', null, h('span', { class: 'pc cost disc' }, h('b', null, '下線')), '＝軽減後'), h('span', null, po('⇒'), '＝今実行したときの増減'));
+  }
 
   // ---------- ゲームモデル ----------
   let game = null; // { kind:'local'|'online', meta, entries } / { kind:'online', code }
@@ -395,9 +469,11 @@
     const reason = !can ? roMsg : (s.id === 'TRT' || s.id === 'TRT2' || s.id === 'ORG' || s.id === 'TRK') ? null : check(sample(p, s.id));
     const txt = G.slotText(st, s.id, viewP(p));
     // 獲得量プレビュー：今この枠を使うと実際にいくつ得られるか（協調ボーナス・群体のP・Pブースト等を含む）
-    let gain = null; if (can && !reason && (s.group === 'res' || s.group === 'mass' || s.id === 'GEM')) { const d = G.previewGain(st, sample(p, s.id)); if (d) gain = G.gainText(d); }
+    let d = null; if (can && !reason && (s.group === 'res' || s.group === 'mass' || s.id === 'GEM')) { d = G.previewGain(st, sample(p, s.id)); }
+    const gain = d ? G.gainText(d) : null;
     const tip = (G.slotTip(st, s.id) || txt) + (gain ? `\n今実行すると：${gain}` : '');
-    return actBtn({ class: 'slot' + (used !== undefined ? ' used' : ''), title: tip, onclick }, reason, h('b', null, s.name), h('small', null, icost(txt)), gain ? h('small', { class: 'gain' }, `→ ${gain}`) : null, used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
+    const body = slotBody(p, s.id, s.name, txt, d);
+    return actBtn({ class: 'slot' + (iconView() && body[0].className === 'pname' ? ' pic' : '') + (used !== undefined ? ' used' : ''), title: tip, onclick }, reason, ...body, used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
   }
   function sample(p, id) { // 事前判定用の代表アクション
     const pid = p.id;
@@ -422,7 +498,8 @@
   function renderExcl(p, can) {
     const m4 = st.slotSet === 'm4';
     const x1 = st.ext === 'x1';
-    const box = h('div', { class: 'panel excl' }, h('h3', null, '早取り盤', h('small', { class: 'sub' }, (m4 ? '　資源獲得は4枠（E系／G系／P系／全資源）・各枠1ラウンドに1人、枠内のどちらかを選ぶ。使用済み枠は生命核1の「緊急発進」で突破可（Pブーストは不可）' : '　各スロットは1ラウンドに1人だけ。使用済みは生命核1の「緊急発進」で資源獲得スロットのみ突破可') + (G.RULESETS[st.rules || 'v1'].traitShared ? '　【形質共用】形質購入は排他なし（割増枠なし）。使用済みの資源枠は緊急発進（L1）か協調発進（協調トークン）で突破可。群体E/GはPを払って資源＋協調+1' + (G.RULESETS[st.rules || 'v1'].bodyAxis === 'L' ? '　【生命核軸】収入時に保有L1個につきE+1。身体はLを投入した回数で上がる' : '') : x1 ? '　【拡張x1】形質購入は2枠（割増枠＝ラウンド数ぶんのE追加）。使用済みの資源／形質枠は緊急発進（L1）か協調発進（協調トークン）で突破可' : ''))));
+    const box = h('div', { class: 'panel excl' + (iconView() ? ' picmode' : '') }, h('h3', null, '早取り盤', h('small', { class: 'sub' }, (m4 ? '　資源獲得は4枠（E系／G系／P系／全資源）・各枠1ラウンドに1人、枠内のどちらかを選ぶ。使用済み枠は生命核1の「緊急発進」で突破可（Pブーストは不可）' : '　各スロットは1ラウンドに1人だけ。使用済みは生命核1の「緊急発進」で資源獲得スロットのみ突破可') + (G.RULESETS[st.rules || 'v1'].traitShared ? '　【形質共用】形質購入は排他なし（割増枠なし）。使用済みの資源枠は緊急発進（L1）か協調発進（協調トークン）で突破可。群体E/GはPを払って資源＋協調+1' + (G.RULESETS[st.rules || 'v1'].bodyAxis === 'L' ? '　【生命核軸】収入時に保有L1個につきE+1。身体はLを投入した回数で上がる' : '') : x1 ? '　【拡張x1】形質購入は2枠（割増枠＝ラウンド数ぶんのE追加）。使用済みの資源／形質枠は緊急発進（L1）か協調発進（協調トークン）で突破可' : ''))));
+    box.firstChild.appendChild(viewToggle()); if (iconView()) box.appendChild(iconLegend());
     const g1 = h('div', { class: 'sgroup' }, h('h4', null, m4 ? '資源獲得（統合4・試作）' : '資源獲得'));
     const bypassHint = () => { const w = [p.mimic && !(p.round && p.round.mimicUsed) ? (p.mimic === 'free' ? '擬態可（無償）' : `擬態可（E${G.sc(st, 3)}）`) : null, p.L > 0 ? '緊急発進可（L1）' : null, x1 && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) ? `協調発進可（協調${G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2}）` : null].filter(Boolean); /* 2026-10-30：擬態が使えるときは選択前の枠にも表示 */ return w.length ? h('small', { class: 'bypass' }, w.join('・')) : null; };
     const resBtn = (s, used) => slotButton(p, can, s, () => onSlot(p, s.id), used !== undefined && G.RES_SLOTS.includes(s.id) ? bypassHint() : null);
@@ -430,21 +507,21 @@
     else G.SLOTS.filter(s => s.group === 'res').forEach(s => g1.appendChild(resBtn(s, st.shared.used[s.id])));
     const g2 = h('div', { class: 'sgroup' }, h('h4', null, (() => { const base = G.RULESETS[st.rules || 'v1'].massCost, mine = G.massCost(viewP(p), 'MI'); return `大量消費（P${mine !== base ? mine + '・軽減後' : base}）`; })()));
     G.SLOTS.filter(s => s.group === 'mass').forEach(s => g2.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
-    { const T = G.RULESETS[st.rules || 'v1'].tribute; if (T) { const open = st.round >= (T.openRound || 6); const gt = h('div', { class: 'sgroup' + (open ? ' god' : '') }, h('b', { class: 'glabel' }, open ? '神の到来：献上枠（早取り）' : `献上枠（ラウンド${T.openRound || 6}から・神の到来）`)); G.tribSlots(st).map(id => G.SLOT_BY_ID[id]).forEach(s => { if (open) gt.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))); else gt.appendChild(h('button', { class: 'slot locked', disabled: true, title: G.slotTip(st, s.id) }, h('b', null, s.name), h('small', null, G.slotText(st, s.id)))); }); box.appendChild(gt); } }
+    { const T = G.RULESETS[st.rules || 'v1'].tribute; if (T) { const open = st.round >= (T.openRound || 6); const gt = h('div', { class: 'sgroup' + (open ? ' god' : '') }, h('b', { class: 'glabel' }, open ? '神の到来：献上枠（早取り）' : `献上枠（ラウンド${T.openRound || 6}から・神の到来）`)); G.tribSlots(st).map(id => G.SLOT_BY_ID[id]).forEach(s => { if (open) gt.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))); else { const b = slotBody(p, s.id, s.name, G.slotText(st, s.id), null); gt.appendChild(h('button', { class: 'slot locked' + (b[0].className === 'pname' ? ' pic' : ''), disabled: true, title: G.slotTip(st, s.id) }, ...b)); } }); box.appendChild(gt); } }
     const g3 = h('div', { class: 'sgroup' }, h('h4', null, 'その他'));
     G.SLOTS.filter(s => s.group === 'oth' && (!s.ext || s.ext === st.ext) && (!s.rs || G.RULESETS[st.rules || 'v1'][s.rs]) && !(s.id === 'TRT2' && G.RULESETS[st.rules || 'v1'].traitShared) && !(s.id === 'GEM' && G.RULESETS[st.rules || 'v1'].gemsetShared)).forEach(s => g3.appendChild(slotButton(p, can, s, () => onSlot(p, s.id), G.slotUsedBy(st, s.id) !== undefined && G.bypassable(st, s.id) ? bypassHint() : null)));
     box.appendChild(g1); box.appendChild(g2); box.appendChild(g3); return box;
   }
   function renderShared(p, can) {
-    const box = h('div', { class: 'panel shared2' }, h('h3', null, '共用盤', h('small', { class: 'sub' }, '　何人でも・何回でも（トークンがある限り）')));
+    const box = h('div', { class: 'panel shared2' + (iconView() ? ' picmode' : '') }, h('h3', null, '共用盤', h('small', { class: 'sub' }, '　何人でも・何回でも（トークンがある限り）')));
     const gTop = h('div', { class: 'sgroup' }, h('h4', null, '献上（共用・各自各品目1ラウンド1回）')); // 2026-10-28：早取りでない献上は共用盤の先頭にまとめる（ユーザー要望）
     if (G.RULESETS[st.rules || 'v1'].gemsetShared) gTop.appendChild(slotButton(p, can, G.SLOT_BY_ID.GEM, () => onSlot(p, 'GEM')));
     const g = h('div', { class: 'sgroup' });
     G.SLOTS.filter(s => ['trk', 'org', 'cu'].includes(s.group) && s.id !== 'TRK' && !(s.id === 'ADP' && G.RULESETS[st.rules || 'v1'].noAdapt)).forEach(s => g.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     const R6 = G.RULESETS[st.rules || 'v1'];
-    if (R6.lCrystal) { const a = { pid: p.id, type: 'lCrystal' }; const reason = can ? check(a) : roMsg; const nL = Math.max(1, R6.lCrystal - (viewP(p).crystalDiscL || 0)); const nLt = nL !== R6.lCrystal ? `${nL}（結晶体質）` : String(nL); gTop.appendChild(actBtn({ class: 'slot', title: `献上（生命核）：生命核L${nLt}を払って祝福+1。身体Lv${R6.lCrystalLv || 4}で解放・共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W。投入回数には数えない`, onclick: () => confirm(`献上（生命核）：L${Math.max(1, R6.lCrystal - (p.crystalDiscL || 0))}→祝福+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（生命核）'), h('small', null, `L${nLt} → 祝福+1`))); }
-    if (R6.coopCrystal) { const a = { pid: p.id, type: 'coopCrystal' }; const reason = can ? check(a) : roMsg; const nC = Math.max(1, R6.coopCrystal - (viewP(p).crystalDiscC || 0)); const nCt = nC !== R6.coopCrystal ? `${nC}（結晶体質）` : String(nC); gTop.appendChild(actBtn({ class: 'slot', title: `献上（協調）：協調トークン${nCt}を払って祝福+1。共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W`, onclick: () => confirm(`献上（協調）：協調${Math.max(1, R6.coopCrystal - (p.crystalDiscC || 0))}→祝福+1。実行しますか？`) && submit(a) }, reason, h('b', null, '献上（協調）'), h('small', null, `協調${nCt} → 祝福+1`))); }
-    if (R6.tribute) { const T = R6.tribute; const open = st.round >= (T.openRound || 6); ['E', 'P'].forEach(res => { const a = { pid: p.id, type: 'tribute', res }; const c = G.sc(st, T.shared[res]); const reason = !open ? `ラウンド${T.openRound || 6}から（神の到来）` : can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot' + (open ? ' god' : ' locked'), title: `献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}を払って祝福+1。ラウンド${T.openRound || 6}から・共用・各自1ラウンド1回・W`, onclick: () => open && confirm(`献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}→祝福+1。実行しますか？`) && submit(a) }, reason, h('b', null, `献上（${res === 'E' ? 'エネルギー' : '個体数'}）`), h('small', null, `${res}${c} → 祝福+1`))); }); }
+    if (R6.lCrystal) { const a = { pid: p.id, type: 'lCrystal' }; const reason = can ? check(a) : roMsg; const nL = Math.max(1, R6.lCrystal - (viewP(p).crystalDiscL || 0)); const nLt = nL !== R6.lCrystal ? `${nL}（結晶体質）` : String(nL); gTop.appendChild(actBtn({ class: 'slot' + (iconView() ? ' pic' : ''), title: `献上（生命核）：生命核L${nLt}を払って祝福+1。身体Lv${R6.lCrystalLv || 4}で解放・共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W。投入回数には数えない`, onclick: () => confirm(`献上（生命核）：L${Math.max(1, R6.lCrystal - (p.crystalDiscL || 0))}→祝福+1。実行しますか？`) && submit(a) }, reason, ...slotBody(p, 'LCR', '献上（生命核）', `L${nLt} → 祝福+1`, null))); }
+    if (R6.coopCrystal) { const a = { pid: p.id, type: 'coopCrystal' }; const reason = can ? check(a) : roMsg; const nC = Math.max(1, R6.coopCrystal - (viewP(p).crystalDiscC || 0)); const nCt = nC !== R6.coopCrystal ? `${nC}（結晶体質）` : String(nC); gTop.appendChild(actBtn({ class: 'slot' + (iconView() ? ' pic' : ''), title: `献上（協調）：協調トークン${nCt}を払って祝福+1。共用${R6.tribute ? '・各自1ラウンド1回' : ''}・W`, onclick: () => confirm(`献上（協調）：協調${Math.max(1, R6.coopCrystal - (p.crystalDiscC || 0))}→祝福+1。実行しますか？`) && submit(a) }, reason, ...slotBody(p, 'CCR', '献上（協調）', `協調${nCt} → 祝福+1`, null))); }
+    if (R6.tribute) { const T = R6.tribute; const open = st.round >= (T.openRound || 6); ['E', 'P'].forEach(res => { const a = { pid: p.id, type: 'tribute', res }; const c = G.sc(st, T.shared[res]); const reason = !open ? `ラウンド${T.openRound || 6}から（神の到来）` : can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot' + (open ? ' god' : ' locked') + (iconView() ? ' pic' : ''), title: `献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}を払って祝福+1。ラウンド${T.openRound || 6}から・共用・各自1ラウンド1回・W`, onclick: () => open && confirm(`献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}→祝福+1。実行しますか？`) && submit(a) }, reason, ...slotBody(p, 'TRIB_' + res, `献上（${res === 'E' ? 'エネルギー' : '個体数'}）`, `${res}${c} → 祝福+1`, null))); }); }
     if (gTop.childNodes.length > 1) box.appendChild(gTop); box.appendChild(g); return box;
   }
   function renderOrganField(p, can) {

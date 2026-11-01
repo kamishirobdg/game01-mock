@@ -200,3 +200,35 @@ img.art.portrait { width:56px; height:56px; aspect-ratio:1/1; border-radius:50%;
   .modal-box .mbtns { flex-wrap:wrap; }
 }
 
+/* 2026-11-01 アイコン表示（早取り盤の見出しで「文字／アイコン」を切り替え） */
+.vtog { display:inline-flex; margin-left:8px; vertical-align:middle; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+.vtog button { border:0; border-radius:0; padding:1px 8px; font-size:11px; background:#fff; color:var(--mute); }
+.vtog button.on { background:#2f6fdd; color:#fff; }
+.plegend { font-size:11px; color:var(--mute); margin:-2px 0 6px; }
+.plegend summary { cursor:pointer; }
+.plegend > span { display:inline-flex; align-items:center; gap:2px; margin:2px 8px 0 0; white-space:nowrap; }
+.plegend svg.ic { width:15px; height:15px; }
+.slot.pic { min-width:120px; }
+.slot .pname { font-size:10px; font-weight:600; color:var(--mute); line-height:1.2; }
+.picto { display:flex; flex-wrap:wrap; align-items:center; gap:3px 4px; margin-top:3px; }
+.pc { display:inline-flex; align-items:center; gap:1px; font-size:14px; line-height:1.1; white-space:nowrap; border-radius:5px; }
+.pc b { font-weight:700; }
+.pc svg.ic { width:20px; height:20px; margin:0; vertical-align:middle; }
+.pc.cost { background:#fde8e6; padding:1px 4px 1px 2px; }
+.pc.cost.disc b { text-decoration:underline; text-decoration-color:#0a6; text-decoration-thickness:2px; }
+.pc.minus b { color:#0a6; }
+.pc.bonus { border:1px dashed #999; padding:0 3px; font-size:12px; color:#666; }
+.pc.bonus svg.ic { width:14px; height:14px; }
+.po { color:#999; font-weight:700; font-size:13px; }
+.pbad { font-size:10px; background:#eef1f8; color:#3a4560; border-radius:8px; padding:0 5px; white-space:nowrap; }
+.pgrp { display:inline-flex; align-items:center; gap:2px; margin-right:4px; }
+.picto.pgain { margin-top:2px; }
+.picto.pgain .pc { font-size:12px; color:#0a6; }
+.picto.pgain .pc svg.ic { width:15px; height:15px; }
+svg.ic.bless { color:#d4a017; } svg.ic.trait { color:#3b7ddd; } svg.ic.organ { color:#3c9d5d; } svg.ic.breed { color:#c0392b; } svg.ic.up { color:#555; } svg.ic.rslot { color:#8a6d3b; } svg.ic.eye { color:#555; } svg.ic.copy { color:#3b7ddd; }
+.picto.pgain .pc.neg { color:#c0392b; }
+@media (max-width: 600px) { /* アイコン表示の携帯幅：見出しは1行使い、枠は2列に揃える */
+  .picmode .sgroup > h4 { flex-basis:100%; margin:2px 0 0; }
+  .picmode .slot.pic { width:calc(50% - 3px); min-width:0; padding:5px 6px; box-sizing:border-box; }
+  .picmode .pc { font-size:13px; } .picmode .pc svg.ic { width:18px; height:18px; }
+}
