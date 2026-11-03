@@ -317,6 +317,7 @@
       advanceTrack(st, p, t, `${gateLabel(st, t)}${gateCount(p, t)}で自動進行`);
     }
   }
+  function tribVg(p, k) { const t = RS(p).tributeVg; return t && typeof t === 'object' ? (t[k] || 1) : (t || 1); } // 試作 tributeVg：献上1回の祝福数（既定1）
   function breedCost(p) { if (p.breed >= RS(p).breed.length) return null; const mb = trait(p, 'MB'); const c = RS(p).breed[p.breed]; return mb && mb.strong ? (RS(p).mbBreedDisc !== undefined ? Math.max(sc(p, 10), c - sc(p, RS(p).mbBreedDisc)) : Math.ceil(c / 2)) : c; } // mbBreedDisc：増殖暴走の強＝各段 -N（旧は半減） // 段数＝breed 配列の長さ（C2 で上限を伸ばす試作）
   function gemsetPrice(p) { const T = RS(p).tribute; if (T && T.flatG) return sc(p, T.flatG); return sc(p, Math.max(G.GEMSET_FLOOR, G.GEMSET_BASE - p.traits.length - (RS(p).gemsetCoopDisc ? Math.floor(p.coop / 2) : 0))) + (RS(p).gemsetEscalate && !p.gemsetNoEsc ? RS(p).gemsetEscalate * p.gemsets : 0); } // tribute.flatG：献上（遺伝子）は定額 // 試作 gemsetEscalate：購入ごとに+N／gemsetCoopDisc：−協調÷2
   function pbGain(x) { const v = RS(x).pbGain; return v !== undefined ? v : sc(x, 10); } // pbGain：Pブーストの獲得量（数値セットの絶対値。未指定は P10×倍率）
@@ -547,6 +548,8 @@
     // Wなし実行はコマを置かないのでスロットを占有しない（使用済みにしない）。既に使用済みのスロットは不可（緊急発進との併用は可）
     const cl = a.viaBoost ? { bypass: null } : a.shield ? peekSlot(st, p, a.slot, { useL: a.useL }) : claimSlot(st, p, a.slot, { useL: a.useL, useCoop: a.bypassCoop, mimic: a.bypassMimic }); // viaBoost：神の加護の即時枠（コマ不要・占有しない・使用済みでも可）
     if (a.viaBoost) { /* コマ不要 */ } else if (a.shield) p.shields -= 1; else tok = useToken(p, false);
+    const fv = RS(p).finalSlotVg; const finalR = st.round === (RS(p).rounds || G.ROUNDS); // 試作 finalSlotVg（第49部）：最終ラウンドの資源枠で祝福。{mode:'choice'（資源の代わりに祝福）|'add'（資源に加えて祝福）, vg:1}
+    if (a.vg) { if (!(fv && fv.mode === 'choice' && finalR)) throw new Error('最終ラウンドの資源枠でだけ祝福を選べます'); if (a.slot === 'PB') throw new Error('Pブーストは対象外'); if (fv.noBypass && (cl.bypass || a.shield || a.viaBoost)) throw new Error('最終Rの祝福は空いている枠にコマを置いたときだけ'); if (fv.once && p.round.finVgUsed) throw new Error('最終Rの祝福は各自1回'); p.round.finVgUsed = true; p.gemsets += fv.vg || 1; afterAction(st, p, `${G.SLOT_BY_ID[a.slot].name}（最終R：資源の代わりに祝福+${fv.vg || 1}）→ 祝福 ${p.gemsets}${cl.bypass ? '・' + bypassDesc(cl.bypass) : ''}`, !a.shield && !a.viaBoost); return !a.shield && !a.viaBoost; }
     const pt = Math.floor(p.P / sc(p, 10)); const bm = p.round.resBoost || 1; // 第35部 神の加護：このラウンドの残り、資源枠の獲得量が倍（協調ボーナス・コストはそのまま）
     const desc = [];
     const cbBase = RS(p).coopBonusCap !== undefined ? Math.min(p.coop, RS(p).coopBonusCap + (p.coopCapAdd || 0)) : p.coop; // 協調ボーナス（T4は上限+4・T7 群心核で上限+）
@@ -569,6 +572,7 @@
     if (a.slot === 'ALL') { p.E += sc(p, 2) * bm; p.G += sc(p, 1) * bm; p.P += sc(p, 4) * bm; coopTo(a.coopRes || 'E'); desc.unshift(`全資源 +${sc(p, 2) * bm}E+${sc(p, 1) * bm}G+${sc(p, 4) * bm}P`); }
     if (a.slot === 'PB') { const c = pbCost(p); if (p.G < c) throw new Error('Gが足りません'); p.G -= c; p.P += pbGain(p) * bm; if (RS(p).pbCoop) coopTo('P'); desc.unshift(`Pブースト G${c}→P+${pbGain(p) * bm}`); } // 試作 pbCoop：Pブーストも協調ボーナスの対象
     if (bm > 1) desc.push('神の加護：倍');
+    if (fv && fv.mode === 'add' && finalR && !a.viaBoost && !(fv.noBypass && (cl.bypass || a.shield)) && !(fv.once && p.round.finVgUsed)) { p.round.finVgUsed = true; p.gemsets += fv.vg || 1; desc.push(`最終R：祝福+${fv.vg || 1}（祝福 ${p.gemsets}）`); } // 試作 finalSlotVg add
     if (cl.bypass) desc.push(bypassDesc(cl.bypass));
     if (a.shield) desc.push('Wなし実行'); if (a.viaBoost) desc.push('神の加護の即時枠');
     afterAction(st, p, desc.join('・'), !a.shield && !a.viaBoost);
@@ -728,8 +732,9 @@
 
   // 宝石セット： {useL}
   ACTIONS.gemset = (st, p, a) => {
-    const c = gemsetPrice(p); const cl = RS(p).gemsetShared ? { bypass: null } : claimSlot(st, p, 'GEM', { useL: a.bypassL }); tribOnce(st, p, 'G', '遺伝子'); useToken(p, false);
-    const r = payG(p, c, a.useL); p.gemsets += 1;
+    const bk = a.bulk && RS(p).tributeBulk; if (a.bulk && !bk) throw new Error('この数値セットにまとめ献上はありません'); // 試作 tributeBulk（第48部）：{mult, vg}＝コスト×mult で祝福 vg
+    const c = bk ? Math.ceil(gemsetPrice(p) * bk.mult) : gemsetPrice(p); const cl = RS(p).gemsetShared ? { bypass: null } : claimSlot(st, p, 'GEM', { useL: a.bypassL }); tribOnce(st, p, 'G', '遺伝子'); useToken(p, false);
+    const r = payG(p, c, a.useL); p.gemsets += bk ? bk.vg : tribVg(p, 'G'); if (bk) log(st, p.id, `${p.name}：まとめ献上（遺伝子）→ 祝福+${bk.vg}`); // 試作 tributeVg（第47部）：献上1回の祝福数（数値＝全品目／{G,L,coop,E,P}＝品目別）
     afterAction(st, p, `献上（遺伝子G${r.G}${r.L ? '+L' + r.L : ''}${cl.bypass ? '・' + bypassDesc(cl.bypass) : ''}）→ 祝福 ${p.gemsets}`, true);
     return true;
   };
@@ -836,7 +841,7 @@
   ACTIONS.coopCrystal = (st, p, a) => {
     let n = RS(p).coopCrystal; if (!n) throw new Error('この数値セットに群れの結晶はありません'); n = Math.max(1, n - (p.crystalDiscC || 0)); // T7 結晶体質
     if (p.coop < n) throw new Error(`協調トークンが足りません（必要${n}）`);
-    tribOnce(st, p, 'coop', '協調'); useToken(p, false); p.coop -= n; p.gemsets += 1;
+    tribOnce(st, p, 'coop', '協調'); useToken(p, false); p.coop -= n; p.gemsets += tribVg(p, 'coop');
     afterAction(st, p, `献上（協調${n}）→ 祝福 ${p.gemsets}`, true); return true;
   };
   // T6 S3：結晶化（生命核）＝身体Lv4で解放。L N個 → 祝福+1（排他なし・W・投入回数には数えない）
@@ -848,7 +853,7 @@
     if (p.L < n) throw new Error(`生命核が足りません（必要L${n}）`);
     tribOnce(st, p, 'L', '生命核'); useToken(p, false); p.L -= n; if (p.crystalInvest) investL(p, st, n); const ce = RS(p).crystalE || 0; if (ce) p.E += ce;
     if (RS(p).lCrystalReal) { addGem(st, p, 'body', 1, '献上'); afterAction(st, p, `献上（生命核L${n}）→ 痕跡+1${ce ? '・E+' + ce : ''}`, true); return true; } // 試作 lCrystalReal：生命核ルート固有の痕跡
-    p.gemsets += 1;
+    p.gemsets += tribVg(p, 'L');
     afterAction(st, p, `献上（生命核L${n}）→ 祝福 ${p.gemsets}${ce ? '・E+' + ce : ''}`, true); return true;
   };
   // 試作 crystal：共用アクション「結晶化」＝E または G を払って祝福+1（排他なし・W）
@@ -881,11 +886,19 @@
   // 献上（第33部）：共用の換金は各品目1ラウンド1回（献上表に自分のコマ）。研究（gemsetNoEsc）は遺伝子の行だけ回数制限なし
   function tribOnce(st, p, key, label) { const T = RS(p).tribute; if (!T || !T.onceEach) return; if (key === 'G' && p.gemsetNoEsc) return; p.round.trib = p.round.trib || {}; if (p.round.trib[key]) throw new Error(`献上（${label}）はこのラウンドに使用済みです（1ラウンド1回）`); p.round.trib[key] = true; }
   function tribOpen(st, p) { const T = RS(p).tribute; if (!T) throw new Error('この数値セットに献上はありません'); if (st.round < (T.openRound || 6)) throw new Error(`この献上はラウンド${T.openRound || 6}から（神の到来）`); return T; }
+  // 試作 tributeAll（第48部）：全種の資源（E・G・P〔・L〕）をまとめて払い、大きめの祝福。{E,G,P,L?,vg}（E/G/P は規模前の値）・献上と同じ開始R・各自1R1回
+  ACTIONS.tributeAll = (st, p, a) => {
+    const A = RS(p).tributeAll; if (!A) throw new Error('この数値セットに全資源の献上はありません'); const T = tribOpen(st, p);
+    const need = { E: sc(p, A.E || 0), G: sc(p, A.G || 0), P: sc(p, A.P || 0), L: A.L || 0 };
+    ['E', 'G', 'P', 'L'].forEach(r => { if (p[r] < need[r]) throw new Error(`${r}が足りません（必要${r}${need[r]}）`); });
+    tribOnce(st, p, 'all', '全資源'); useToken(p, false); ['E', 'G', 'P', 'L'].forEach(r => { p[r] -= need[r]; }); p.gemsets += A.vg;
+    afterAction(st, p, `献上（全資源 E${need.E}+G${need.G}+P${need.P}${need.L ? '+L' + need.L : ''}）→ 祝福 ${p.gemsets}（+${A.vg}）`, true); return true;
+  };
   // 共用の献上（エネルギー／個体数）： {res:'E'|'P'}
   ACTIONS.tribute = (st, p, a) => {
-    const T = tribOpen(st, p); const res = a.res === 'P' ? 'P' : 'E'; const c = sc(p, T.shared[res]);
+    const T = tribOpen(st, p); if (!T.shared) throw new Error('この数値セットに献上（エネルギー／個体数）はありません（最終ラウンドの祝福枠に一本化）'); const res = a.res === 'P' ? 'P' : 'E'; const bk = a.bulk && RS(p).tributeBulk; if (a.bulk && !bk) throw new Error('この数値セットにまとめ献上はありません'); const c = bk ? Math.ceil(sc(p, T.shared[res]) * bk.mult) : sc(p, T.shared[res]);
     if (p[res] < c) throw new Error(`${res === 'E' ? 'エネルギー' : '個体数'}が足りません（必要${res}${c}）`);
-    tribOnce(st, p, res, res === 'E' ? 'エネルギー' : '個体数'); useToken(p, false); p[res] -= c; p.gemsets += 1;
+    tribOnce(st, p, res, res === 'E' ? 'エネルギー' : '個体数'); useToken(p, false); p[res] -= c; p.gemsets += bk ? bk.vg : tribVg(p, res); if (bk) log(st, p.id, `${p.name}：まとめ献上（${res}）→ 祝福+${bk.vg}`);
     afterAction(st, p, `献上（${res === 'E' ? 'エネルギー' : '個体数'}${c}）→ 祝福 ${p.gemsets}`, true); return true;
   };
   // 早取りの献上枠（第33部 TE/TP/TR＝点数化・第35部 TO/TT/TA/TB/TJ＝多彩な一手）： {slot, track | organ, organ2 | traits[], weak{} | changes[{from,to}] | tracks[]}

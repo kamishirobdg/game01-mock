@@ -152,7 +152,7 @@
   }
 
   // ---------- 貪欲評価型（greedy）：全候補を tryApply → 評価関数の最大を選ぶ。複数ルートを混ぜる「人間らしい」基準線 ----------
-  const W = { E: 0.5, G: 0.7, P: 0.3, L: 1.5, gate: 1.0, coefFuture: 1.6, shield: 4, coop: 0.8, organ: 1.0, trait: 0.8, inc: 1.0 };
+  const W = { E: 0.5, G: 0.7, P: 0.3, L: 1.5, gate: 1.0, coefFuture: 1.6, shield: 4, coop: 0.8, organ: 1.0, trait: 0.8, inc: 1.0, breedFut: 0, breedProg: 0 }; // 2026-11-02 breedFut＝繁栄度1段が「これから得る痕跡」に掛かる見込み／breedProg＝次の繁殖（P150／L3）へ貯める途中の価値。第47部：どちらも種族の計測を光翼に偏らせ（7R 混合で 光翼 58〜67%・万列 1〜11%）得点も上がらないため既定 0（--bw= で試せる）
   function evaluate(st, p, w) {
     w = w || W; const sc = G.score(st, p); let v = sc.total * (2 / (RSo(st).gemPt || 2)); // 2026-10-28：評価の点は gemPt=2 の尺度に正規化（T8 で ×2 を外しても AI の重みづけが変わらないように。以下の「×2」はこの尺度）
     const RN = RSo(st).rounds || G.ROUNDS; const rem = RN - st.round; const k = rem / RN; // rem＝この後に残るラウンド数
@@ -166,8 +166,13 @@
     const le = RSo(st).lEndGem; if (le) v += Math.min(le.max, Math.floor(p.L / le.per)) * sc.cfC * 2 * (rem === 0 ? 1 : 0.6); // T6 S2：終了時の保有L祝福
     const cv6 = RSo(st).lv6Convert; const R6 = RSo(st); if ((R6.maxLv || 5) >= 6) { const cnt = { body: R6.lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; const by6 = R6.lv6ConvertBy || {}; G.TRACKS.forEach(t => { const conv = cv6 ? Math.floor(cnt[t] / (by6[t] || cv6)) : 0; if (p.lv[t] >= 6) v += conv * ((R6.lv6RealTracks || []).includes(t) ? sc.cfB : sc.cfC) * 2 * (rem === 0 ? 1 : 0.7); else if (p.lv[t] === 5 && rem > 0) { const c6 = G.stepCost(p, t); if (c6 !== null) { const afford = Math.min(1, (p.E + p.L * (p.lValue || 3)) / c6); v += (1 + conv) * sc.cfC * 2 * 0.35 * afford; } } }); } // T6 L6-A：Lv6 の宝石＋転換の見込み（Lv5 のトラックは E で届く分だけ先読み）
     const inc = G.income(p); v += rem * w.inc * (inc.E * w.E + inc.G * w.G + inc.P * w.P);
-    if (RSo(st).gates) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cfB * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
+    // 2026-11-02 rem>0：最終ラウンドにはゲートの途中（届かない収集）へ価値を置かない（T8-H1：最終Rの形質・器官・資源枠の空振り）
+    if (RSo(st).gates && rem > 0) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cfB * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
     v += ((sc.cfB - 3) + (sc.cfC - 3)) / 2 * rem * w.coefFuture; // C2 では2本の平均（1本なら cf-3 と同値）
+    // 2026-11-02 繁殖の方策（T8-H1：AI が一度も繁殖しない）：①繁栄度の1段は「これから得る痕跡」にも掛かる（自分の痕跡の歩調 × 残R）②次の段の支払い（P150／L3）へ貯める途中にも価値を置く（貯めずに大量消費(代謝)で P を崩すのを防ぐ）
+    if (rem > 0 && RSo(st).breed) { const pace = Math.max(1, sc.real / Math.max(1, st.round - 1)); const fut = pace * rem; const bc = G.breedCost(p);
+      v += (sc.cfB - (RSo(st).coef2 ? RSo(st).coef2.breedBase : 3)) * fut * 2 * w.breedFut * (RSo(st).gemPt === 1 ? 1 : 0.5);
+      if (bc !== null) { const stepVal = (sc.real + fut) * 2 * (RSo(st).gemPt === 1 ? 1 : 0.5); const progP = Math.min(1, p.P / bc); const progL = RSo(st).breedL ? Math.min(1, p.L / RSo(st).breedL) : 0; v += Math.max(progP, progL) * stepVal * w.breedProg; } }
     if (rem > 0) v += p.shields * w.shield;
     if (p.round.resBoost > 1 && !st.ended) { const freeRes = G.RES_SLOTS.filter(s => G.slotUsedBy(st, s) === undefined).length; v += Math.min(p.left.W + p.left.AT, freeRes) * G.sc(st, 5) * (p.round.resBoost - 1) * w.E * 0.8; } // 第35部 神の加護：残りの手番で資源枠を使う見込み
     const R = RSo(st);
@@ -190,6 +195,7 @@
     const pid = p.id, A = (x) => Object.assign({ pid }, x); const out = [];
     const used = (s) => G.slotUsedBy(st, s) !== undefined;
     const byp = (base, slot) => { if (RSo(st).coopMode === 'spend' && p.coop >= 1 && slot !== 'PB') { const b2 = Object.assign({}, base, { coopSpend: true }); out.push(A(b2)); if (used(slot)) { if (p.L > 0) out.push(A(Object.assign({}, b2, { useL: true }))); } } out.push(A(base)); if (used(slot) && p.mimic && !p.round.mimicUsed) out.push(A(Object.assign({}, base, { bypassMimic: true }))); if (used(slot)) { if (p.coop >= (RSo(st).bypassCoopCost || 2) && st.ext === 'x1') out.push(A(Object.assign({}, base, { bypassCoop: true }))); if (p.L > 0) out.push(A(Object.assign({}, base, { useL: true, bypassL: true }))); } };
+    { const fv = RSo(st).finalSlotVg; if (fv && fv.mode === 'choice' && st.round === (RSo(st).rounds || G.ROUNDS)) G.RES_SLOTS.forEach(s => byp({ type: 'res', slot: s, coopRes: 'E', vg: true }, s)); } // 試作 finalSlotVg：最終Rは資源の代わりに祝福
     G.RES_SLOTS.concat(['PB']).forEach(s => { if (s === 'ALL') ['E', 'G', 'P'].forEach(r => byp({ type: 'res', slot: s, coopRes: r }, s)); else byp({ type: 'res', slot: s, coopRes: 'E' }, s); if (p.shields > 0 && s !== 'PB') ['E', 'G', 'P'].forEach(r => out.push(A({ type: 'res', slot: s, coopRes: r, shield: true }))); });
     const lFor = (cost, have) => Math.max(0, Math.min(p.L, Math.ceil((cost - have) / (p.lValue || G.sc(st, 3)))));
     G.TRACKS.forEach(t => { const c = G.stepCost(p, t); if (c !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c, p.E) })); if (RSo(st).bodyBulkLv4 && p.L >= 2 && c >= 2 * (p.lValue || 3) && !p.lBulk) out.push(A({ type: 'track', track: t, pay: 'E', useL: 2 })); } });
@@ -206,7 +212,9 @@
     const tslots = [{}, { slot: 'TRT2' }]; if (used('TRT') || used('TRT2')) { if (p.coop >= (RSo(st).bypassCoopCost || 2) && st.ext === 'x1') tslots.push({ bypassCoop: true }); if (p.L > 0) tslots.push({ bypassL: true }); }
     G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => { const tc = G.traitCost(st, p, t); const c = tc.G; tslots.forEach(sl => out.push(A(Object.assign({ type: 'trait', trait: t, useL: lFor(c, p.G), res: 'E', track: 'intel' }, sl)))); if (RSo(st).traitChoice && tc.strong) { const cw = G.traitCost(st, p, t, undefined, true).G; out.push(A({ type: 'trait', trait: t, useL: lFor(cw, p.G), res: 'E', track: 'intel', weak: true })); } }); // traitChoice：弱（安い）も候補に
     out.push(A({ type: 'gemset', useL: lFor(G.gemsetPrice(p), p.G) }));
-    { const T = RSo(st).tribute; if (T && st.round >= (T.openRound || 6)) { out.push(A({ type: 'tribute', res: 'E' }), A({ type: 'tribute', res: 'P' })); G.tribSlots(st).forEach(sl => { const def = T.slots[sl]; if (!def) return; // 献上（第33部）・献上枠（第35部：この卓で開いている枠だけ）
+    if (RSo(st).tributeBulk) { const bk = RSo(st).tributeBulk; out.push(A({ type: 'gemset', useL: lFor(Math.ceil(G.gemsetPrice(p) * bk.mult), p.G), bulk: true })); const T2 = RSo(st).tribute; if (T2 && st.round >= (T2.openRound || 6)) out.push(A({ type: 'tribute', res: 'E', bulk: true }), A({ type: 'tribute', res: 'P', bulk: true })); } // 試作 tributeBulk
+    if (RSo(st).tributeAll) out.push(A({ type: 'tributeAll' })); // 試作 tributeAll
+    { const T = RSo(st).tribute; if (T && st.round >= (T.openRound || 6)) { if (T.shared) out.push(A({ type: 'tribute', res: 'E' }), A({ type: 'tribute', res: 'P' })); G.tribSlots(st).forEach(sl => { const def = T.slots[sl]; if (!def) return; // 献上（第33部）・献上枠（第35部：この卓で開いている枠だけ）
       if (!def.kind) { if (def.real) { const miss = G.TRACKS.find(t => p.gems[t] === 0) || 'body'; out.push(A({ type: 'tributeSlot', slot: sl, track: miss })); } else out.push(A({ type: 'tributeSlot', slot: sl })); return; }
       if (def.kind === 'organ') { const bl = st.shared.organField.filter(o => G.organCost(st, p, o)); bl.forEach(o => { out.push(A({ type: 'tributeSlot', slot: sl, organ: o, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); if (def.half) { const lin = G.ORGANS[o].lin, tier = G.ORGANS[o].tier; const nxt = lin + (tier + 1); const second = (st.shared.organField.includes(nxt) ? [nxt] : []).concat(bl.filter(x => x !== o)); second.slice(0, 4).forEach(o2 => out.push(A({ type: 'tributeSlot', slot: sl, organ: o, organ2: o2, useL: 0, li2Res: 'E', li3Res: 'E', regimeRes: 'E' }))); } }); return; }
       if (def.kind === 'trait') { const un = G.traitPool(st).filter(t => !G.trait(p, t)); const top = un.slice().sort((x, y) => G.baseTraitCost(st, y) - G.baseTraitCost(st, x)).slice(0, 5); un.forEach(t => out.push(A({ type: 'tributeSlot', slot: sl, traits: [t], useL: 0, res: 'E', track: 'intel' }))); if ((def.n || 2) >= 2) for (let i = 0; i < top.length; i++) for (let j = i + 1; j < top.length; j++) out.push(A({ type: 'tributeSlot', slot: sl, traits: [top[i], top[j]], useL: 0, res: 'E', track: 'intel' })); return; }
@@ -245,6 +253,16 @@
       else if (v > bv) { bv = v; best = a; ties = 1; } else if (v === bv) ties++;
     }
     if (G.TIES) { G.TIES.n++; G.TIES.sum += ties; if (ties > 1) G.TIES.tied++; }
+    // 2026-11-02 最終ラウンドの2手読み（T8-H1：最終Rに得点にならない資源枠が 1.2 手/人）：1手では得点が増えないとき、「資源を得る手 → 得点になる手」の組み合わせを試し、最良の初手を選ぶ（手番が2つ以上残っているときだけ）
+    const RN = R.rounds || G.ROUNDS;
+    if (st.round === RN && bv <= base + 1e-9 && (p.left.W + p.left.AT) >= 2) {
+      const SETUP = (a) => a.type === 'res' || a.type === 'convert' || a.type === 'gToE' || a.type === 'card' || a.type === 'scan' || (a.type === 'tributeSlot' && a.res);
+      const SCORE = (a) => ['breed', 'tribute', 'tributeAll', 'tributeSlot', 'track', 'mass', 'trait', 'organ', 'gemset', 'lCrystal', 'coopCrystal', 'express', 'premium', 'crystal'].includes(a.type);
+      let b2 = null, b2v = base + 1e-9;
+      for (const a1 of candidates(st, p).filter(SETUP)) { let s1; try { s1 = G.tryApply(st, a1); } catch (e) { continue; }
+        const p1 = s1.players[pid]; for (const a2 of candidates(s1, p1).filter(SCORE)) { let s2; try { s2 = G.tryApply(s1, a2); } catch (e) { continue; } const v = evaluate(s2, s2.players[pid], w); if (v > b2v) { b2v = v; b2 = a1; } } }
+      if (b2) return bestFree || b2;
+    }
     return bestFree || best;
   }
 
@@ -265,5 +283,5 @@
     if (GATE_STYLES.includes(style)) return chooseGate(st, pid, style);
     return chooseClassic(st, pid, style);
   }
-  G.Bot = { choose, evaluate, candidates, STYLES, GATE_STYLES, stylesFor: (st) => (RSo(st).gates ? GATE_STYLES : STYLES) };
+  G.Bot = { choose, evaluate, candidates, STYLES, GATE_STYLES, W, BIAS, stylesFor: (st) => (RSo(st).gates ? GATE_STYLES : STYLES) }; // W/BIAS は test/observe.js の --bw= で一時上書き
 })((typeof window !== 'undefined' ? window : globalThis).G1);

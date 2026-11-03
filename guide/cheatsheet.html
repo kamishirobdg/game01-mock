@@ -56,7 +56,8 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 
 <div class="blk"><h2><i>4</i>共用盤（何人でも・何回でも）</h2>
 <ul>
-<li><b>献上 → 祝福+1</b>（各品目各自1R1回）：遺伝子 G<span id="flatG"></span>／生命核 L<span id="lcry"></span>（身体 Lv2 で解放）／協調 <span id="ccry"></span>／R<span id="tribR2"></span>から E<span id="tribE"></span>・P<span id="tribP"></span></li>
+<li><b>献上 → 祝福+1</b>（各品目各自1R1回）：遺伝子 G<span id="flatG"></span>／生命核 L<span id="lcry"></span>（身体 Lv2 で解放）／協調 <span id="ccry"></span></li>
+<li><b>最終R＝祝福枠</b>：空いている資源枠にコマを置くと資源に加えて祝福+1（緊急発進・協調発進・Wなし実行は対象外）</li>
 <li><b>繁殖変換</b>：P<span id="breed"></span>（または L<span id="breedL"></span>）→ 繁栄度+1（4段まで・W必須）</li>
 <li><b>器官建造</b>：<span id="ocost"></span>。効果は先着も後続も同じ、後続は +<span id="late"></span>E。同じ系統3枚＝系統完成で成熟度+1</li>
 <li>環境スキャン <span id="scan"></span>／資源変換 <span id="cnv"></span></li>
@@ -88,8 +89,8 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
   set('res', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${sl(id)}`).join('／'));
   set('mass', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace('大量消費', '')} ${sl(id)}`).join('／'));
   set('mim', sl('MIM').replace(/（.*$/, '')); set('exp', sl('EXP'));
-  set('tribR', T.openRound || 6); set('tribR2', T.openRound || 6); set('tribpool', T.pool.map(id => `${G.SLOT_BY_ID[id].name}＝${sl(id)}`).join('／'));
-  set('flatG', G.sc(st, T.flatG)); set('lcry', R.lCrystal); set('ccry', R.coopCrystal); set('tribE', G.sc(st, T.shared.E)); set('tribP', G.sc(st, T.shared.P));
+  set('tribR', T.openRound || 6); set('tribpool', T.pool.map(id => `${G.SLOT_BY_ID[id].name}＝${sl(id)}`).join('／'));
+  set('flatG', G.sc(st, T.flatG)); set('lcry', R.lCrystal); set('ccry', R.coopCrystal);
   set('breed', R.breed[0]); set('breedL', R.breedL || '—');
   set('ocost', R.organCost.map(([e, g]) => `${e}E+${g}G`).join('/')); set('late', G.sc(st, R.organLateFee || 1));
   set('scan', sl('SCAN')); set('cnv', sl('CNV')); set('lval', G.sc(st, 3)); set('lval2', G.sc(st, 3)); set('coopmax', R.coopMax || G.COOP_MAX);

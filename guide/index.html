@@ -151,7 +151,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <div class="kv">
   <div><b>4本のトラック</b><span>身体・知性・社会・代謝。収集物（L投入・形質・協調・器官）が一定数になると自動で上がる。E を払って先に上がってもよい。</span></div>
   <div><b>先着＝強</b><span>Lv3★・Lv5★は到達者全員が痕跡+1。最初に着いた人だけ強い報酬（Lv5★は痕跡をもう+1）。</span></div>
-  <div><b>献上</b><span>資源を神に捧げて祝福を得る。ラウンド6から「神の到来」で選択肢が増える。</span></div>
+  <div><b>献上</b><span>資源を神に捧げて祝福を得る。神の到来で献上枠が開き、最終ラウンドは空いている資源枠にコマを置くと祝福+1。</span></div>
 </div>
 <div class="ex"><div class="q">痕跡4・繁栄度×4・祝福2・成熟度×5。得点は？</div>
   <div class="choices"><button data-ex="score" data-v="0">26点</button><button data-ex="score" data-v="1">26点＋おまけ</button><button data-ex="score" data-v="2">36点</button></div><div class="ans" id="ans-score"></div></div>
@@ -244,7 +244,8 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <h2><span class="no">8</span>献上と神の到来</h2>
 <p><strong>献上</strong>（共用盤）＝資源を捧げて<strong>祝福+1</strong>。各品目は各自1ラウンド1回。</p>
 <table class="qt" id="trib"></table>
-<p><strong>ラウンド<span id="k-tribR"></span>の開始＝神の到来</strong>。献上の品目が増え（エネルギー E<span id="k-tribE"></span>・個体数 P<span id="k-tribP"></span>）、早取り盤に<strong>献上枠が3つ</strong>開きます（<span id="k-tribpool"></span>種からゲームごとに3種を抽選・1ラウンド1人）。</p>
+<p><strong>ラウンド<span id="k-tribR"></span>の開始＝神の到来</strong>。早取り盤に<strong>献上枠が3つ</strong>開きます（<span id="k-tribpool"></span>種からゲームごとに3種を抽選・1ラウンド1人）。</p>
+<p><strong>最終ラウンド（ラウンド<span id="k-lastR"></span>）＝祝福枠</strong>。空いている資源獲得の枠にコマを置くと、資源に加えて<strong>祝福+1</strong>（Pブーストも対象。緊急発進・協調発進・Wなし実行・神の加護の即時枠で使った枠には付きません）。</p>
 <div class="clist" id="trib-list"></div>
 </section>
 
@@ -254,7 +255,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <h3>痕跡の出どころ</h3>
 <ul class="pts"><li>トラックの Lv3★・Lv5★（先着は Lv5★でもう+1）・Lv6（全員）</li><li>大量消費(身体)・発現（G<span id="k-exp"></span>）・身体 Lv4・初めて協調8に達したとき</li><li>最果ての痕跡（終了時）</li></ul>
 <h3>祝福の出どころ</h3>
-<ul class="pts"><li>献上（遺伝子 G<span id="k-flatG2"></span>／生命核 L<span id="k-lcry"></span>〔身体 Lv2 で解放〕／協調 <span id="k-ccry"></span>／ラウンド<span id="k-tribR2"></span>から E・P でも）</li><li>Lv6 の先着・終了時の換算（Lv6 のトラックの収集物3個につき+1）</li></ul>
+<ul class="pts"><li>献上（遺伝子 G<span id="k-flatG2"></span>／生命核 L<span id="k-lcry"></span>〔身体 Lv2 で解放〕／協調 <span id="k-ccry"></span>）</li><li>最終ラウンドの祝福枠（空いている資源枠にコマを置くと+1）</li><li>Lv6 の先着・終了時の換算（Lv6 のトラックの収集物3個につき+1）</li></ul>
 <div class="calc" id="calc"></div>
 <h3>勝ち筋の例</h3>
 <div class="routes">
@@ -366,8 +367,8 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   num('k-mass', R.massCost); num('k-mm', R.mmCost);
 
   // ---- 8 献上 ----
-  const T = R.tribute; num('k-tribR', T.openRound || 6); num('k-tribR2', T.openRound || 6); num('k-tribE', G.sc(st, T.shared.E)); num('k-tribP', G.sc(st, T.shared.P)); num('k-tribpool', T.pool.length);
-  $('trib').innerHTML = [['遺伝子', `G${G.sc(st, T.flatG)}（知性 Lv4「研究」で1ラウンドに何度でも）`], ['生命核', `L${R.lCrystal}（身体 Lv2 で解放。結晶体質で1つ少なく）`], ['協調', `協調${R.coopCrystal}`], [`エネルギー（R${T.openRound || 6}〜）`, `E${G.sc(st, T.shared.E)}`], [`個体数（R${T.openRound || 6}〜）`, `P${G.sc(st, T.shared.P)}`]].map(([a, b]) => `<tr><th>献上（${a}）</th><td>${b} → 祝福+1</td></tr>`).join('');
+  const T = R.tribute; num('k-tribR', T.openRound || 6); num('k-lastR', R.rounds || G.ROUNDS); num('k-tribpool', T.pool.length);
+  $('trib').innerHTML = [['遺伝子', `G${G.sc(st, T.flatG)}（知性 Lv4「研究」で1ラウンドに何度でも）`], ['生命核', `L${R.lCrystal}（身体 Lv2 で解放。結晶体質で1つ少なく）`], ['協調', `協調${R.coopCrystal}`]].map(([a, b]) => `<tr><th>献上（${a}）</th><td>${b} → 祝福+1</td></tr>`).join('');
   $('trib-list').innerHTML = T.pool.map(id => `<div class="cd"><b>${G.SLOT_BY_ID[id].name}</b><span class="s">${G.slotTip(st, id)}</span></div>`).join('');
 
   // ---- 9 得点 ----
@@ -391,7 +392,8 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
     ['資源獲得（早取り）', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
     ['大量消費（早取り）', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace('大量消費', '')} ${G.slotText(st, id)}`).join('／')],
     ['G の枠（早取り）', ['MIM', 'EXP'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
-    ['献上（共用）', `遺伝子 G${G.sc(st, T.flatG)}／生命核 L${R.lCrystal}／協調${R.coopCrystal}／R${T.openRound || 6}から E${G.sc(st, T.shared.E)}・P${G.sc(st, T.shared.P)} → 祝福+1（各自各品目1R1回）`],
+    ['献上（共用）', `遺伝子 G${G.sc(st, T.flatG)}／生命核 L${R.lCrystal}／協調${R.coopCrystal} → 祝福+1（各自各品目1R1回）`],
+    ['祝福枠（最終R）', '空いている資源枠にコマを置くと資源に加えて祝福+1（緊急発進・協調発進・Wなし実行は対象外）'],
     ['共用盤', ['BRD', 'ORG', 'SCAN', 'CNV', 'RSV'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
     ['繁栄度・成熟度', `×3〜×7。繁栄度＝繁殖 P${R.breed[0]}（または L${R.breedL}）で+1／成熟度＝形質${(R.traitCoef || [4, 8]).join('・')}枚目・系統完成で+1`],
     ['終了と得点', `${G.ROUNDS}ラウンド固定。痕跡×繁栄度＋祝福×成熟度。最果ての痕跡＝各トラック単独首位（Lv2以上）に痕跡+1`],
@@ -402,7 +404,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
     ['繁栄度', '×3〜×7。繁殖変換で上がる'], ['成熟度', '×3〜×7。形質3・6枚目と系統完成で上がる'], ['早取り盤', '各枠1ラウンドに1人だけ'], ['共用盤', '何人でも・何回でも'],
     ['先着＝強', '最初に到達・取得した人が強い効果、後の人は弱い効果'], ['収集物', 'トラックを自動で上げる材料（L投入・形質・協調・器官）'],
     ['緊急発進', '生命核1個で使用済みの資源枠を使う'], ['協調発進', '協調3個で使用済みの資源枠を使う'], ['Wなし実行権', '社会トラックで得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）'],
-    ['献上', '資源を捧げて祝福+1。各品目各自1ラウンド1回'], ['神の到来', `ラウンド${T.openRound || 6}の開始。献上の品目が増え、献上枠が3つ開く`], ['最果ての痕跡', '終了時、各トラックの単独首位（Lv2以上）に痕跡+1'],
+    ['献上', '資源を捧げて祝福+1。各品目各自1ラウンド1回'], ['神の到来', `ラウンド${T.openRound || 6}の開始。献上枠が3つ開く`], ['祝福枠', '最終ラウンド、空いている資源枠にコマを置くと資源に加えて祝福+1'], ['最果ての痕跡', '終了時、各トラックの単独首位（Lv2以上）に痕跡+1'],
     ['系統完成', '同じ系統の器官3枚。成熟度+1'], ['模倣／発現', 'G を払う早取り枠。到達済みの即時効果を買う／痕跡を買う'],
   ];
   $('gl').innerHTML = GL.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('');
