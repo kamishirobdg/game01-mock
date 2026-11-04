@@ -283,11 +283,17 @@
   }
   function massCost(p, kind) {
     const R = RS(p); let c = R.massCost;
-    const mc = trait(p, 'MC'); if (mc && mc.strong) c -= R.mcDisc; c -= p.next.mass;
-    if (kind === 'MB') { c -= p.massDisc; const mb = trait(p, 'MB'); if (mb) c -= R.mbDisc; return Math.max(R.massMin.body, c); }
-    if (kind === 'MM' && R.mmCost) return Math.max(R.massMin.other, Math.min(c, R.mmCost)); // 試作 mmCost
-    if (kind === 'MS' && R.msCost) return Math.max(R.massMin.other, Math.min(c, R.msCost)); // 試作 msCost
-    return Math.max(R.massMin.other, c);
+    const mc = trait(p, 'MC');
+    // 2026-11-04 試作 mcMode='freeOnce'（ユーザー案）：強＝次の大量消費1回を無料（コスト0）・弱＝常時 −mcDiscWeak（無指定なら mcDisc）。既定（未指定）は従来＝強 恒久 −mcDisc・弱 1回 −mcDisc（p.next.mass）
+    const freeOnce = R.mcMode === 'freeOnce'; const mcFree = !!(mc && freeOnce && mc.strong && p.mcFree);
+    const disc = freeOnce ? (mc && !mc.strong ? (R.mcDiscWeak !== undefined ? R.mcDiscWeak : R.mcDisc) : 0) : (mc && mc.strong ? R.mcDisc : 0);
+    const sub = disc + p.next.mass; const after = !!R.mcAfterCap; // 2026-11-04 試作 mcAfterCap：軽減を代謝/社会の固定コスト（mmCost/msCost）の後に引く＝代謝にも効く（既定は固定コストが先＝代謝は実質対象外）
+    if (!after) c -= sub;
+    if (kind === 'MB') { c -= p.massDisc; const mb = trait(p, 'MB'); if (mb) c -= R.mbDisc; if (after) c -= sub; return mcFree ? 0 : Math.max(R.massMin.body, c); }
+    if (kind === 'MM' && R.mmCost) c = Math.min(c, R.mmCost); // 試作 mmCost
+    if (kind === 'MS' && R.msCost) c = Math.min(c, R.msCost); // 試作 msCost
+    if (after) c -= sub;
+    return mcFree ? 0 : Math.max(R.massMin.other, c);
   }
   // T3：トラックの次のLvに必要な収集物（gates）。無ければ null
   function gateCount(p, track) {
@@ -510,8 +516,9 @@
     // 即時効果
     if (!strong) {
       if (tid === 'IE') p.E += sc(p, 6); if (tid === 'IG') p.G += sc(p, 3); if (tid === 'IP') p.P += sc(p, 9); if (tid === 'IB') { p.E += sc(p, 3); p.G += sc(p, 3); }
-      if (tid === 'DB') p.next.body += 2; if (tid === 'DI') p.next.intel += 2; if (tid === 'MC') p.next.mass += RS(p).mcDisc; if (tid === 'DA') p.next.any += 1;
+      if (tid === 'DB') p.next.body += 2; if (tid === 'DI') p.next.intel += 2; if (tid === 'MC' && RS(p).mcMode !== 'freeOnce') p.next.mass += RS(p).mcDisc; if (tid === 'DA') p.next.any += 1;
     }
+    if (tid === 'MC' && strong && RS(p).mcMode === 'freeOnce') p.mcFree = (p.mcFree || 0) + 1; // 試作 mcMode='freeOnce'：強＝次の大量消費1回を無料
     if (tid === 'NC') gainRes(p, 'coop', (RS(p).ncCoop || [3, 2])[strong ? 0 : 1]);
     if (tid === 'NB') { p.crystalDiscL = 1; p.crystalDiscC = (strong && RS(p).nbCoopDisc !== false) ? 1 : 0; if (strong && RS(p).nbCrystalInvest) p.crystalInvest = true; } // nbCrystalInvest：強は献上（生命核）で払った L も身体の収集物に数える（2026-10-25 案2） // nbCoopDisc=false：群れの結晶側の割引なし
     if (tid === 'NM') p.mimic = strong ? 'free' : 'E3';
@@ -661,7 +668,7 @@
     let byp = null;
     const lm = (!a.free && a.kind === 'MB' && a.pay === 'L' && RS(p).massL) ? RS(p).massL : null; // 試作 massL：大量消費(身体)を生命核でも
     if (lm !== null) { if (p.L < lm) throw new Error(`生命核が足りません（必要L${lm}）`); byp = claimSlot(st, p, a.kind, { bodyMass: true, useL: a.bypassL, useCoop: a.bypassCoop }).bypass; useToken(p, false); p.L -= lm; investL(p, st, lm); if (RS(p).bodyBulkLv4 && lm >= RS(p).bodyBulkLv4) p.lBulk = true; }
-    else if (!a.free) { if (p.P < c) throw new Error(`個体数が足りません（必要P${c}・所持P${p.P}）`); byp = claimSlot(st, p, a.kind, { bodyMass: a.kind === 'MB', useL: a.bypassL, useCoop: a.bypassCoop }).bypass; useToken(p, false); p.P -= c; p.next.mass = 0; }
+    else if (!a.free) { if (p.P < c) throw new Error(`個体数が足りません（必要P${c}・所持P${p.P}）`); byp = claimSlot(st, p, a.kind, { bodyMass: a.kind === 'MB', useL: a.bypassL, useCoop: a.bypassCoop }).bypass; useToken(p, false); p.P -= c; p.next.mass = 0; if (p.mcFree && RS(p).mcMode === 'freeOnce' && c === 0) p.mcFree -= 1; }
     const desc = `${G.SLOT_BY_ID[a.kind].name}（${a.free ? '無料・報酬' : lm !== null ? 'L' + lm : 'P' + c}）${byp ? '・' + bypassDesc(byp) : ''}`;
     afterAction(st, p, desc, !a.free);
     if (a.kind === 'MB') { if (RS(p).massBodyVirtual) { p.gemsets += 1; log(st, p.id, `${p.name}：大量消費(身体)→ 祝福 ${p.gemsets}`); } else addGem(st, p, 'body', 1, '大量消費'); } // massBodyVirtual：C2 の手当て(a)

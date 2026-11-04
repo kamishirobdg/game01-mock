@@ -186,6 +186,9 @@
       const li1 = G.organ(p, 'Li1'); if (li1) v += rem * 0.6 * (li1.strong ? 2 : 1) * k1 * w.E; const li2 = G.organ(p, 'Li2'); if (li2) v += rem * 0.6 * (li2.strong ? 3 : 2) * k1 * w.E;
       const dv = G.trait(p, 'DV'); if (dv) v += rem * 0.9 * (dv.strong ? 2 : 1) * k1 * w.E; const dg = G.trait(p, 'DG'); if (dg) v += rem * 0.5 * (R.dgDisc ? R.dgDisc[dg.strong ? 0 : 1] : 2 * k1) * w.G;
       const mb = G.trait(p, 'MB'); if (mb && mb.strong && R.mbBreedDisc) v += Math.min(rem, (R.breed.length - p.breed)) * 0.5 * R.mbBreedDisc * k1 * w.P;
+      // 2026-11-04 消費軽減（MC）の見込み：これまで評価に無く（形質1枚ぶんの重みだけ）、G15 の MC は G9 の形質に常に負けて 0.02 枚/戦しか買われなかった。大量消費 0.5回/R × 軽減 を残Rぶん。1回限り（弱／freeOnce の強）は 1回ぶん
+      const mcT = G.trait(p, 'MC'); if (mcT) { const fo = R.mcMode === 'freeOnce'; const perm = fo ? (!mcT.strong ? (R.mcDiscWeak !== undefined ? R.mcDiscWeak : R.mcDisc) : 0) : (mcT.strong ? R.mcDisc : 0); v += rem * 0.5 * perm * w.P;
+        const once = fo ? (mcT.strong && p.mcFree ? (R.mmCost ? (R.massCost + R.mmCost) / 2 : R.massCost) : 0) : p.next.mass; v += Math.min(1, rem * 0.5) * once * w.P; }
     }
     // 得点に変換できる資源の潜在価値：P は大量消費(身体)（1宝石＝係数×2点）、G は宝石セット（1R1人）に化ける。残ラウンドがあるときだけ
     if (rem > 0) { const gemValR = (RSo(st).massBodyVirtual ? sc.cfC : sc.cfB) * 2, gemValV = sc.cfC * 2; v += Math.min(2, Math.floor(p.P / Math.max(1, G.massCost(p, 'MB')))) * gemValR * 0.5; if (p.G >= G.gemsetPrice(p)) v += gemValV * 0.3; }

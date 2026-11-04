@@ -155,6 +155,7 @@
     lv6Pay: { body: { L: 5 }, intel: { G: 42 } /* 2026-10-29 G36 を計測（AI53）したが G での調整は保留 */, social: { coop: 8 }, metab: { E: 90 } }, // 2026-10-28 案B：Lv6 はその色の資源で払う（T8 の絶対値・仮値。E63 相当：L1≈9＋利回り・G1＝1.5E・協調1≈3E） /* 2026-10-28 ユーザー判断：協調の上限 8→12・社会のゲート 2/5/8/11→3/6/9/12（上限8では白だけ途中から E 必須だった）*/
     // 2026-10-22 形質の強／弱の選択制（traitChoice）に合わせて弱の値段を効果比で個別に（T8 単位の絶対値・第28部）：弱が安すぎると「安い収集物」として買い占められ、初期資源の多い種族が突出した
     tribute: Object.assign({}, G.RULESETS.t7.tribute, { shared: null }), // 2026-11-03 ユーザー決定（第49部・AI63・v3.55）：献上（エネルギー／個体数）を廃止し、最終ラウンドの祝福枠に一本化（7R・5R とも）
+    mcMode: 'freeOnce', mcDiscWeak: 18, mcAfterCap: true, // 2026-11-04 ユーザー決定（第51部 C18・v3.59）：消費軽減＝強「次の大量消費1回を無料（コスト0）」・弱「大量消費 −18P（恒久）」。軽減は代謝/社会の固定コスト（mmCost/msCost）の後に引く＝代謝にも効く（旧「代謝は対象外」の例外を解消）。旧＝強 恒久 −18・弱 1回 −18（T7 以前はそのまま）
     finalSlotVg: { mode: 'add', vg: 1, noBypass: true }, // v3.55 祝福枠：最終ラウンド、空いている資源枠にコマを置くと資源に加えて祝福+1（Pブーストも対象。緊急発進・協調発進・Wなし実行・神の加護の即時枠は対象外）
     traitCosts: { JI: [33, 27], JB: [39, 33], DV: [18, 15], MB: [30, 24], MC: [15, 12], DG: [15, 13], NC: [21, 17], NB: [15, 11], NM: [21, 18], NL: [30, 26], NF: [18, 15], NR: [15, 12], NE: [9, 6], NS: [9, 6], NP: [9, 6] } }); // mg3Inc＝代謝核の収入（T8 の絶対値・2026-10-22 全種+3→+2：物差しの比 1.6→1.33） // 2026-10-22 ユーザー判断：2倍では協調の効きが残るため3倍（微調整の余地も広がる）
   // 2026-10-24 ユーザー採用：T9＝T7 の資源1倍（数字を直感的に）。協調は上限12・社会の自動進行 3/6/9/12・協調ボーナス＝協調3個につき+1（coopMode 'third'＝T8 の「＋協調数」を 1/3 単位にした等価）・協調9到達で痕跡・群心核＝ボーナス+1。
@@ -162,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.57'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.59'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -218,7 +219,7 @@
     IP: { name: 'P収入強化', cat: 'I', cost: [2, 1], strong: 'P+3/R（恒久）', weak: '即時P+9', permWeak: false },
     DB: { name: '身体加速', cat: 'D', cost: [3, 2], strong: '身体進行コスト-2（恒久）', weak: '次の身体進行1回だけ-2', permWeak: false },
     DI: { name: '知性加速', cat: 'D', cost: [3, 2], strong: '知性進行コスト-2（恒久）', weak: '次の知性進行1回だけ-2', permWeak: false },
-    MC: { name: '消費軽減', cat: 'M', cost: [3, 2], strong: '大量消費コスト-{mcDisc:6}P（恒久）', weak: '次の大量消費1回だけ-{mcDisc:6}P', permWeak: false },
+    MC: { name: '消費軽減', cat: 'M', cost: [3, 2], strong: '次の大量消費1回を無料（コスト0）', weak: '大量消費コスト-{mcDiscWeak:6}P（恒久）', permWeak: true, legacyStrong: '大量消費コスト-{mcDisc:6}P（恒久）', legacyWeak: '次の大量消費1回だけ-{mcDisc:6}P' }, // 2026-11-04 v3.59（第51部 C18）：mcMode='freeOnce' が既定。mcMode の無い数値セット（T7 以前）は legacy の文を ui が表示
     IB: { name: '複合収入', cat: 'I', cost: [4, 3], strong: 'E+1/RかつG+1/R（恒久）', weak: '即時E+3かつG+3', permWeak: false },
     DA: { name: '適応効率', cat: 'D', cost: [2, 1], strong: '選んだ1トラックの進行コスト-1（恒久）', weak: '次の進行1回だけ-1', permWeak: false },
     DV: { name: '進化加速', cat: 'D', cost: [8, 6], strong: '全トラック進行コスト-{2}（恒久）', weak: '全トラック-{1}（恒久）', permWeak: true },

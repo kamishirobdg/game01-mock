@@ -150,8 +150,10 @@
     botTimer = setTimeout(() => {
       let e = null;
       if (st.phase === 'setup') {
-        if (st.setupStep === 'species') { const taken = st.players.map(q => q.species); const id = Object.keys(G.SPECIES).find(k => !taken.includes(k)); e = { type: 'species', pid, species: id }; }
-        else if (st.setupStep === 'armTrait') e = { type: 'startTrait', pid, trait: G.armTraitOptions(st)[0] };
+        // 2026-11-04 ユーザー要望：AI の初期選択（種族・九腕の開始形質）を固定（空いている先頭）でなくランダムに。シードと席から決める（同じシードなら同じ選択）
+        const pickR = (arr, salt) => { let x = ((st.seed || 0) * 9301 + pid * 49297 + salt * 233) % 233280; x = (x * 9301 + 49297) % 233280; return arr[Math.floor(x / 233280 * arr.length)]; };
+        if (st.setupStep === 'species') { const taken = st.players.map(q => q.species); const free = Object.keys(G.SPECIES).filter(k => !taken.includes(k)); e = { type: 'species', pid, species: pickR(free, 1) }; }
+        else if (st.setupStep === 'armTrait') e = { type: 'startTrait', pid, trait: pickR(G.armTraitOptions(st), 2) };
         else if (st.setupStep === 'draft') { const need = G.handSize(st); e = { type: 'draft', pid, cards: st.shared.cardPool.slice(0, need) }; }
       } else e = G.Bot.choose(st, pid);
       if (!e) { toast('ボットが手詰まり', true); return; }
@@ -352,6 +354,13 @@
     const hres = h('span', { class: 'hres' });
     myHumanPids().forEach(pid => { const q = st.players[pid]; const inc = G.income(q); const row = h('span', { class: 'hresp' }, h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1));
       ['E', 'G', 'P', 'L', 'coop'].forEach(k => row.appendChild(h('span', { class: 'hrb r' + k, title: k === 'coop' ? '協調トークン' : RES_JP[k] + (k !== 'L' ? '　次の収入 +' + inc[k] : '　毎ラウンド+1') }, ic(k), h('b', null, String(q[k])), (k === 'L' || k === 'coop') ? null : h('small', null, `+${inc[k]}`))));
+      // 2026-11-04 ユーザー要望：収集物（器官・形質・協調・L投入）の数と、次のゲート（Lv）までの不足数をヘッダに常時表示
+      { const R = G.RULESETS[st.rules || 'v1']; const bodyL = R.bodyAxis === 'L';
+        const items = [['metab', 'organ', q.organs.length, '器官'], ['intel', 'trait', q.traits.length, '形質'], ['social', null, null, '協調'], ['body', bodyL ? 'L' : 'P', bodyL ? (q.lInvested || 0) : (R.pInvKinds === 'bodyOnly' ? (q.pInvBody || 0) : (q.pInv || 0)), bodyL ? 'L投入' : 'P投入']];
+        items.forEach(([track, icon, n, label]) => { const gr = R.gates ? G.gateReq(q, track) : null; const gap = gr ? Math.max(0, gr.need - gr.have) : null; const nextLv = q.lv[track] + 1;
+          const tip = `${label}（${G.TRACK_INFO[track].name}の収集物）` + (gr ? `　次の Lv${nextLv} まで あと${gap}（必要${gr.need}・数えた分${gr.have}）` : `　Lv5 まで到達済み（ゲートなし）`);
+          if (track === 'social') { const el = row.querySelector('.hrb.rcoop'); if (el && gr) el.appendChild(h('small', { class: 'gap', title: tip }, `あと${gap}`)); return; }
+          row.appendChild(h('span', { class: 'hrb rcol', title: tip }, icon ? ic(icon) : null, icon === 'L' || icon === 'P' ? h('small', null, '投入') : null, h('b', null, String(n)), gr ? h('small', { class: 'gap' }, `あと${gap}`) : h('small', null, '到達'))); }); }
       { const n6 = G.lv6Preview(st, q); if (q.lv && G.TRACKS.some(t => q.lv[t] >= 6)) row.appendChild(h('span', { class: 'hrb rconv', title: '終了時換算の見込み：Lv6 に達したトラックの収集物3個につき祝福+1（身体＝払ったL・知性＝形質・社会＝協調・代謝＝器官）' }, h('small', null, '終了時'), h('b', null, '祝福+' + n6))); } // 案B：Lv6 の終了時換算を見える化
       hres.appendChild(row); });
     if (hres.childNodes.length) hd.appendChild(hres);
@@ -435,7 +444,12 @@
   const otxt = (o, strong) => { const R = G.RULESETS[st.rules || 'v1']; const s = strong ? (R.hc3Bonus && o.strongB ? o.strongB : o.strong) : (R.hc3Bonus && o.weakB ? o.weakB : o.weak); return rtxt(s); };
   function rtxt(s) {
     if (!s) return s; const R = G.RULESETS[st.rules || 'v1']; s = G.txt(st, s);
-    return String(s).replace(/大量消費-5/g, '大量消費-' + R.massDiscLv).replace(/排他無視\+-5/g, '排他無視+-' + R.massDiscLv).replace(/-6P/g, '-' + R.mcDisc + 'P').replace(/-8P/g, '-' + R.mbDisc + 'P');
+    s = String(s).replace(/大量消費-5/g, '大量消費-' + R.massDiscLv).replace(/排他無視\+-5/g, '排他無視+-' + R.massDiscLv).replace(/-6P/g, '-' + R.mcDisc + 'P').replace(/-8P/g, '-' + R.mbDisc + 'P');
+    // 2026-11-04 ユーザー指摘：消費軽減（MC）は大量消費(代謝)には効かない（数値セットに mmCost があると代謝のコストは固定値＝軽減後の値より低い）。説明文に明記する
+    // 2026-11-04 v3.59：消費軽減（MC）の既定文は freeOnce（強＝1回無料・弱＝恒久）。mcMode の無い数値セット（T7 以前）は旧文（強 恒久 −mcDisc・弱 1回 −mcDisc）に戻す
+    if (R.mcMode !== 'freeOnce') { s = s.replace(/^大量消費コスト-\d+P（恒久）$/, `次の大量消費1回だけ-${R.mcDisc}P`).replace(/^次の大量消費1回を無料（コスト0）$/, `大量消費コスト-${R.mcDisc}P（恒久）`); } // 弱→強の順（強の変換結果を弱の正規表現が拾わないように）
+    if (R.mmCost && !R.mcAfterCap && /^(大量消費コスト|次の大量消費1回だけ)-/.test(s)) s += '（代謝は対象外）'; // 固定コストが先の数値セットでは代謝に効かない
+    return s;
   }
   function renderTracks(p, can) {
     const box = h('div', { class: 'panel tracksp' }, h('h3', null, '進化トラック', h('small', { class: 'sub' }, G.RULESETS[st.rules || 'v1'].gates ? '　収集物（器官・形質・協調・P投入）が矢印の数に達すると自動で上がる。Eでの進行（点線をクリック）も自由。★＝痕跡・先着は強い報酬' : '　次の段（点線）をクリックで進行（W必須・排他なし）。★＝痕跡・先着は強い報酬')));

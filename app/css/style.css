@@ -15,7 +15,8 @@ body { margin:0; font: 14px/1.45 system-ui, "Segoe UI", "Yu Gothic UI", sans-ser
 #hdr .hmenu { min-width:34px; padding:2px 8px; font-size:16px; line-height:1.2; }
 #hdr .order { flex-basis:100%; }
 #hdr .hres { display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center; }
-#hdr .hres .hresp { display:inline-flex; align-items:center; gap:4px; }
+#hdr .hres .hresp { display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px; } /* 2026-11-04 収集物の数を足して長くなったので携帯幅では折り返す */
+#hdr .hres .hrb { white-space:nowrap; } #hdr .hres .hrb .gap { color:#b35f0e; } [data-theme="dark"] #hdr .hres .hrb .gap { color:#f0a060; }
 #hdr .hres .mk { width:16px; height:16px; line-height:16px; font-size:10px; }
 #hdr .hres .hrb { display:inline-flex; align-items:baseline; gap:2px; padding:1px 6px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:12px; }
 #hdr .hres .hrb b { font-size:16px; }
