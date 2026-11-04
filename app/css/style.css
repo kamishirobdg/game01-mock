@@ -232,3 +232,43 @@ svg.ic.bless { color:#d4a017; } svg.ic.trait { color:#3b7ddd; } svg.ic.organ { c
   .picmode .slot.pic { width:calc(50% - 3px); min-width:0; padding:5px 6px; box-sizing:border-box; }
   .picmode .pc { font-size:13px; } .picmode .pc svg.ic { width:18px; height:18px; }
 }
+
+/* ---- 2026-11-04 黒（ダーク）テーマ：html[data-theme="dark"]（ヘッダ・セットアップの「白／黒」で切り替え・?theme=dark） ---- */
+:root[data-theme="dark"] { --bg:#15181f; --panel:#1e222b; --line:#3a404d; --ink:#e6e8ee; --mute:#9aa3b2; --p1:#d0d4dc; --hl:#4a3d10; color-scheme:dark; }
+[data-theme="dark"] .chart text { fill:var(--ink); }
+[data-theme="dark"] #hdr { background:#1b1f27; }
+[data-theme="dark"] #hdr .pill, [data-theme="dark"] #hdr .order .chip, [data-theme="dark"] .tag, [data-theme="dark"] .log .l.round, [data-theme="dark"] .bigbtn .sptype { background:#2a303c; }
+[data-theme="dark"] #hdr .order .chip.now { outline-color:#c9a300; }
+[data-theme="dark"] #hdr .rulelink, [data-theme="dark"] .ocard em, [data-theme="dark"] .tcard em, [data-theme="dark"] .score b, [data-theme="dark"] .ocard .hd .cost, [data-theme="dark"] .tcard .hd .cost, [data-theme="dark"] .lane .node-rew .rs { color:#8fb4ff; }
+[data-theme="dark"] #hdr .hres .hrb, [data-theme="dark"] button, [data-theme="dark"] .vtog button, [data-theme="dark"] .tokc, [data-theme="dark"] .gauge .gs, [data-theme="dark"] .lane, [data-theme="dark"] .chart, [data-theme="dark"] .setup, [data-theme="dark"] .modal-box, [data-theme="dark"] .owners .mk.empty, [data-theme="dark"] .ic.gem { background:var(--panel); }
+[data-theme="dark"] button { color:var(--ink); } [data-theme="dark"] button:hover { background:#2a303c; }
+[data-theme="dark"] button.primary, [data-theme="dark"] .vtog button.on, [data-theme="dark"] .tabs button.on { background:#3b7ddd; color:#fff; border-color:#3b7ddd; }
+[data-theme="dark"] table.tracks th, [data-theme="dark"] .slot.used, [data-theme="dark"] .merged.used { background:#262b35; }
+[data-theme="dark"] table.tracks td .first, [data-theme="dark"] .first, [data-theme="dark"] .conn .gate, [data-theme="dark"] .log .l.gem { color:#e0b84a; }
+[data-theme="dark"] .slot em, [data-theme="dark"] .status.no, [data-theme="dark"] .warn { color:#ff8a8a; } [data-theme="dark"] .status.ok, [data-theme="dark"] .slot .bypass { color:#6cd38a; } [data-theme="dark"] .status.lock { color:#999; }
+[data-theme="dark"] .modal-box .frow .desc, [data-theme="dark"] .lane .node-rew { color:#c7cede; } [data-theme="dark"] .lane .node-rew .rw, [data-theme="dark"] .lane .conn { color:#8a929f; }
+[data-theme="dark"] .ocard.mine, [data-theme="dark"] .tcard.mine, [data-theme="dark"] .owned .lin.done { background:#1f3a28; border-color:#3c9d5d; }
+[data-theme="dark"] .ocard.locked, [data-theme="dark"] .tcard.locked { background:repeating-linear-gradient(45deg,#262b35,#262b35 6px,#1e222b 6px,#1e222b 12px); }
+[data-theme="dark"] .owners .mk.empty { border-color:#666; } [data-theme="dark"] .mk.p1 { color:#111; }
+[data-theme="dark"] .player.p0 h3 { color:#e4b400; } [data-theme="dark"] .player.p1 h3 { color:#d0d4dc; } [data-theme="dark"] .player.p2 h3 { color:#c08ad8; } [data-theme="dark"] .player.p3 h3 { color:#f0a060; }
+[data-theme="dark"] .player.p0 { background:#2a2614; } [data-theme="dark"] .player.p1 { background:#23262c; } [data-theme="dark"] .player.p2 { background:#2a2130; } [data-theme="dark"] .player.p3 { background:#2e2419; }
+[data-theme="dark"] .rE { background:#3a3114; } [data-theme="dark"] .rG { background:#163630; } [data-theme="dark"] .rP { background:#3a1f1d; } [data-theme="dark"] .rL { background:#172d3b; }
+[data-theme="dark"] .tag.strong, [data-theme="dark"] .cardbtn.sel { background:#28406e; }
+[data-theme="dark"] .log .l { border-bottom-color:#333; } [data-theme="dark"] .log .l.act { color:var(--ink); }
+[data-theme="dark"] #modal { background:rgba(0,0,0,.6); }
+[data-theme="dark"] .toast { background:#3a404d; border:1px solid #666; } [data-theme="dark"] .toast.err { background:#b32d2e; border-color:#d9534f; }
+[data-theme="dark"] .ic.coop { background:#3a404d; border-color:#777; color:var(--ink); } [data-theme="dark"] .ic.gem { border-color:#aaa; }
+[data-theme="dark"] .panel.excl { background:#2a211c; border-color:#6a4a3a; } [data-theme="dark"] .panel.excl h3 { color:#f0a080; }
+[data-theme="dark"] .panel.shared2 { background:#1c2a21; border-color:#3a5a44; } [data-theme="dark"] .panel.shared2 h3 { color:#7fd49a; }
+[data-theme="dark"] table.tracks td.next, [data-theme="dark"] .lane .node.next { background:#1f2a40; outline-color:#8fb4ff; } [data-theme="dark"] table.tracks td.next.na, [data-theme="dark"] .lane .node.next.na { background:#23262c; outline-color:#666; }
+[data-theme="dark"] .banner { border-color:#c9a300; } [data-theme="dark"] .banner.warn { background:#3a1f1d; border-color:#d9534f; color:#ffb3b3; }
+[data-theme="dark"] .gauge .gs { border-color:#666; color:#999; } [data-theme="dark"] .gauge .gs.on { color:var(--ink); }
+[data-theme="dark"] svg.ic.E { color:#f5c518; } [data-theme="dark"] svg.ic.G { color:#4fc1a6; } [data-theme="dark"] svg.ic.P { color:#ff7b7b; } [data-theme="dark"] svg.ic.L { color:#5bb8e8; } [data-theme="dark"] svg.ic.coop, [data-theme="dark"] svg.ic.gem, [data-theme="dark"] svg.ic.up, [data-theme="dark"] svg.ic.eye { color:#bbb; } [data-theme="dark"] svg.ic.W { color:#ddd; }
+[data-theme="dark"] .hd .sw { background:#666; } [data-theme="dark"] .hd .sw.weak { background:#777; }
+[data-theme="dark"] .lane .node { background:#242933; } [data-theme="dark"] .lane .node.star { background:#332c18; }
+[data-theme="dark"] .tokc.AT { color:#999; } [data-theme="dark"] .tokc.S { background:#4a3a14; border-color:#e0a000; }
+[data-theme="dark"] .coopc { color:#888; } [data-theme="dark"] .coopc.on { background:#d0d4dc; color:#111; border-color:#d0d4dc; }
+[data-theme="dark"] .slot .gain, [data-theme="dark"] .pc.minus b, [data-theme="dark"] .picto.pgain .pc { color:#5fd39a; } [data-theme="dark"] .pc.cost.disc b { text-decoration-color:#5fd39a; }
+[data-theme="dark"] .sgroup.god { background:linear-gradient(90deg,#3a2f14,#4a3a18); border-color:#8a7030; } [data-theme="dark"] .sgroup .glabel { color:#e0c070; } [data-theme="dark"] .slot.god { border-color:#8a7030; background:#2e2614; }
+[data-theme="dark"] .pc.cost { background:#4a2320; } [data-theme="dark"] .pc.bonus { border-color:#777; color:#bbb; } [data-theme="dark"] .po { color:#888; } [data-theme="dark"] .pbad { background:#2a303c; color:#c7cede; }
+[data-theme="dark"] .lane-lbl { box-shadow:2px 0 4px rgba(0,0,0,.4); }

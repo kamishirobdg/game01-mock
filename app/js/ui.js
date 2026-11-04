@@ -35,6 +35,14 @@
   const VIEW_KEY = 'g01_view';
   let viewMode = (() => { const q = new URLSearchParams(location.search).get('view'); if (q === 'icon' || q === 'text') return q; try { return localStorage.getItem(VIEW_KEY) === 'icon' ? 'icon' : 'text'; } catch (e) { return 'text'; } })();
   let legendOpen = true;
+  // 2026-11-04 ユーザー要望：テストプレイ時に画面の配色を白（ライト）／黒（ダーク）で選べるように。ヘッダ右端とセットアップ画面で切り替え・端末に記憶・URL の ?theme=light|dark でも指定可（index.html で CSS 読み込み前に data-theme を付けてちらつきを防ぐ）
+  const THEME_KEY = 'g01_theme';
+  let themeMode = (() => { const q = new URLSearchParams(location.search).get('theme'); if (q === 'dark' || q === 'light') return q; try { return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'; } catch (e) { return 'light'; } })();
+  const darkTheme = () => themeMode === 'dark';
+  function applyTheme() { document.documentElement.setAttribute('data-theme', themeMode); }
+  function setTheme(m) { themeMode = m; try { localStorage.setItem(THEME_KEY, m); } catch (e) { } applyTheme(); render(); }
+  function themeToggle() { return h('span', { class: 'vtog ttog', title: '画面の配色（白／黒）を切り替える（この端末に記憶）' }, h('button', { class: themeMode === 'light' ? 'on' : '', onclick: () => setTheme('light') }, '白'), h('button', { class: themeMode === 'dark' ? 'on' : '', onclick: () => setTheme('dark') }, '黒')); }
+  applyTheme();
   const iconView = () => viewMode === 'icon';
   function setView(m) { viewMode = m; try { localStorage.setItem(VIEW_KEY, m); } catch (e) { } render(); }
   const pc = (k, n, o) => h('span', { class: 'pc pk-' + k + (o && o.cost ? ' cost' : '') + (o && o.cls ? ' ' + o.cls : ''), title: (o && o.title) || ICO_JP[k] }, ic(k), n === undefined || n === null ? null : h('b', null, String(n)));
@@ -215,6 +223,7 @@
   function renderEntry() {
     const box = h('div', { class: 'setup' }, h('h2', null, 'game01 デジタルモック'));
     box.appendChild(h('p', { class: 'note' }, '1台で遊ぶ（パス＆プレイ・1人で複数人を回す検証も可）か、各自の端末から同じ卓に参加する（オンライン）かを選びます。'));
+    box.appendChild(h('p', { class: 'note' }, '画面の配色：', themeToggle(), '　白（ライト）／黒（ダーク）。この端末に記憶され、ゲーム中もヘッダ右端で切り替えられます。'));
     box.appendChild(metaForm('ローカル（この端末だけ・パス＆プレイ）', '開始', async (meta) => { game = { kind: 'local', meta, entries: [] }; rebuildState(); autosave(); render(); }));
     const on = h('div', { class: 'sec' }, h('h3', null, 'オンライン（各自の端末から参加）'));
     if (!Net.init()) on.appendChild(h('p', { class: 'warn' }, Net.error + '。手順は README を参照。'));
@@ -331,11 +340,11 @@
   function renderHeader() {
     const hd = $('#hdr'); hd.innerHTML = '';
     hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール')); // 2026-10-28：「game01 モック」の表記は不要（1行に収める）
-    if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (st && st.phase === 'end') hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: exportJson }, '保存(JSON)'), h('button', { onclick: exportCsv }, 'ログCSV'))); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); return; }
+    if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (st && st.phase === 'end') hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: exportJson }, '保存(JSON)'), h('button', { onclick: exportCsv }, 'ログCSV'))); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); hd.appendChild(h('span', { class: 'hmenuwrap' }, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), themeToggle())); return; }
     hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`));
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
     // 版の小文字＋ボタン群の開閉「≡」は1行目の右端（2026-10-28 ユーザー要望：1行を占有させない）
-    hd.appendChild(h('span', { class: 'hmenuwrap' }, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
+    hd.appendChild(h('span', { class: 'hmenuwrap' }, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), themeToggle(), h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
     const to = h('span', { class: 'order' }, '手番順：');
     st.turnOrder.forEach((pid, i) => { const q = st.players[pid]; to.appendChild(h('span', { class: 'chip' + (i === st.cur ? ' now' : '') + (q.left.W + q.left.AT === 0 ? ' done' : '') }, h('span', { class: 'mk p' + q.id }, q.id + 1), `${q.name} ${leftTxt(q)}`)); });
     hd.appendChild(to);
@@ -392,8 +401,8 @@
     const s = document.createElementNS(svgNS, 'svg'); s.setAttribute('class', 'chart'); s.setAttribute('viewBox', `0 0 ${W} ${H}`);
     const max = Math.max(50, ...hist.flatMap(hh => hh.rows.map(r => r.score))); const n = hist.length;
     const x = i => L + (W - L - 10) * (n > 1 ? i / (n - 1) : 0), y = v => H - B - (H - B - 10) * v / max;
-    const colors = ['#e4b400', '#333', '#8e44ad', '#e67e22'];
-    [0, 0.5, 1].forEach(f => { const ln = document.createElementNS(svgNS, 'line'); ln.setAttribute('x1', L); ln.setAttribute('x2', W - 10); ln.setAttribute('y1', y(max * f)); ln.setAttribute('y2', y(max * f)); ln.setAttribute('stroke', '#eee'); s.appendChild(ln); const tx = document.createElementNS(svgNS, 'text'); tx.setAttribute('x', 2); tx.setAttribute('y', y(max * f) + 4); tx.setAttribute('font-size', '10'); tx.textContent = Math.round(max * f); s.appendChild(tx); });
+    const colors = ['#e4b400', darkTheme() ? '#d0d4dc' : '#333', '#8e44ad', '#e67e22']; const gridLine = darkTheme() ? '#444' : '#eee';
+    [0, 0.5, 1].forEach(f => { const ln = document.createElementNS(svgNS, 'line'); ln.setAttribute('x1', L); ln.setAttribute('x2', W - 10); ln.setAttribute('y1', y(max * f)); ln.setAttribute('y2', y(max * f)); ln.setAttribute('stroke', gridLine); s.appendChild(ln); const tx = document.createElementNS(svgNS, 'text'); tx.setAttribute('x', 2); tx.setAttribute('y', y(max * f) + 4); tx.setAttribute('font-size', '10'); tx.textContent = Math.round(max * f); s.appendChild(tx); });
     st.players.forEach((p, pi) => { const pl = document.createElementNS(svgNS, 'polyline'); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke', colors[pi]); pl.setAttribute('stroke-width', '2'); pl.setAttribute('points', hist.map((hh, i) => `${x(i)},${y(hh.rows[pi].score)}`).join(' ')); s.appendChild(pl); const tx = document.createElementNS(svgNS, 'text'); tx.setAttribute('x', x(n - 1) - 30); tx.setAttribute('y', y(hist[n - 1].rows[pi].score) - 4); tx.setAttribute('font-size', '10'); tx.setAttribute('fill', colors[pi]); tx.textContent = p.name; s.appendChild(tx); });
     hist.forEach((hh, i) => { const tx = document.createElementNS(svgNS, 'text'); tx.setAttribute('x', x(i) - 6); tx.setAttribute('y', H - 8); tx.setAttribute('font-size', '10'); tx.textContent = hh.label || 'R' + hh.round; s.appendChild(tx); });
     return s;
