@@ -162,11 +162,11 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.55'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.56'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
-    speciesMod: Object.assign({}, G.RULESETS.t8.speciesMod, { wing: Object.assign({}, G.RULESETS.t8.speciesMod.wing, { stock: { E: 12, G: 6, P: 18 } }), arm: Object.assign({}, G.RULESETS.t8.speciesMod.arm, { stock: { E: 12, G: 9, P: 18 } }) }) }); // 2026-11-01 ユーザー決定（第45部 S12）：5R では光翼 E15 G6 P24→E12 G6 P18・九腕 E9 G6 P18→E12 G9 P18（種族 48/3/10/39%→28/18/32/22%）。// 2026-11-01 ユーザー決定（第45部）：5R では身体 Lv6 を L5→L3（L の入手は 5R で平均8.3・専念で9〜10。ゲート7＋L5＝12 は上限11を超えていた）。7R（t8）は L5 のまま
+    speciesMod: Object.assign({}, G.RULESETS.t8.speciesMod, { wing: Object.assign({}, G.RULESETS.t8.speciesMod.wing, { stock: { E: 12, G: 6, P: 18 } }), arm: Object.assign({}, G.RULESETS.t8.speciesMod.arm, { stock: { E: 9, G: 9, P: 18 } }), ant: Object.assign({}, G.RULESETS.t8.speciesMod.ant, { stock: { E: 15, G: 6, P: 24 } }) }) }); // 2026-11-04 ユーザー決定（第50部 E1・5R の試遊用）：v3.55 の祝福枠で九腕 41%・万列 11〜17% になったため、九腕 E12 G9 P18→E9 G9 P18・万列 E15 G6 P18→E15 G6 P24（t8s のみ。4人 3シード 16〜32%）。 // 2026-11-01 ユーザー決定（第45部 S12）：5R では光翼 E15 G6 P24→E12 G6 P18・九腕 E9 G6 P18→E12 G9 P18（種族 48/3/10/39%→28/18/32/22%）。// 2026-11-01 ユーザー決定（第45部）：5R では身体 Lv6 を L5→L3（L の入手は 5R で平均8.3・専念で9〜10。ゲート7＋L5＝12 は上限11を超えていた）。7R（t8）は L5 のまま
   G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
   G.GATE_LABEL_L = '生命核の投入（代用払い・緊急発進・適応進化）'; G.GATE_SHORT_L = 'L投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
