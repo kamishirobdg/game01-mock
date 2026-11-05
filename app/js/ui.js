@@ -33,7 +33,7 @@
   // ---------- アイコン表示（2026-11-01 ユーザー要望：アクションの説明を文字でなくアイコンで。文字表示は残して切り替え） ----------
   // 「払うもの（赤地）→ 得るもの」の絵で表す。数値は文字表示と同じエンジンの値（見ている人の軽減後）から作る。対応の無い枠は文字表示のまま
   // 2026-11-05 画面の AI の読みの深さ：?depth=2（&beam=3）でビーム探索（R 内・自分の手だけ）。既定は 1 手読み＋ラウンド単位の計画（第53部：2 手で +10 点・1 手あたり約 0.3〜0.6 秒）
-  { const q = new URLSearchParams(location.search); const d = parseInt(q.get('depth') || '', 10); if (G.Bot && d >= 1 && d <= 5) G.Bot.BEAM.depth = d; const k = parseInt(q.get('beam') || '', 10); if (G.Bot && k >= 1 && k <= 8) G.Bot.BEAM.k = k; }
+  { const q = new URLSearchParams(location.search); const d = parseInt(q.get('depth') || '', 10); if (G.Bot && d >= 1 && d <= 5) { G.Bot.BEAM.depth = d; G.Bot.BEAM.fromUrl = true; } const k = parseInt(q.get('beam') || '', 10); if (G.Bot && k >= 1 && k <= 8) G.Bot.BEAM.k = k; }
   const VIEW_KEY = 'g01_view';
   let viewMode = (() => { const q = new URLSearchParams(location.search).get('view'); if (q === 'icon' || q === 'text') return q; try { return localStorage.getItem(VIEW_KEY) === 'icon' ? 'icon' : 'text'; } catch (e) { return 'text'; } })();
   let legendOpen = true;
@@ -129,7 +129,7 @@
   // この端末が操作する人間の席（1手戻すは、この席の直前の手まで戻す）
   function myHumanPids() { return st ? st.players.map(q => q.id).filter(pid => mine(pid)) : []; }
   const viewP = (p) => { if (!st || mine(p.id)) return p; const hs = myHumanPids(); return hs.length ? st.players[hs[0]] : p; }; // 2026-10-29：盤のコスト表示は「この端末で見ている人」の割引を反映する
-  const ACT_JP = { track: 'トラック進行', res: '資源獲得', organ: '器官建造', trait: '形質購入', upgrade: '形質アップグレード', mass: '大量消費', breed: '繁殖変換', gemset: '宝石セット', card: '個人カード', convert: '資源変換', reserve: '予備動員', scan: '環境スキャン', adapt: '適応進化', stAct: '器官アクション', resolve: '選択の解決', freeConv: '無料変換', species: '種族選択', startTrait: '初期形質', draft: 'ドラフト', cheat: 'デバッグ' };
+  const ACT_JP = { lToRes: '生命核→資源', track: 'トラック進行', res: '資源獲得', organ: '器官建造', trait: '形質購入', upgrade: '形質アップグレード', mass: '大量消費', breed: '繁殖変換', gemset: '宝石セット', card: '個人カード', convert: '資源変換', reserve: '予備動員', scan: '環境スキャン', adapt: '適応進化', stAct: '器官アクション', resolve: '選択の解決', freeConv: '無料変換', species: '種族選択', startTrait: '初期形質', draft: 'ドラフト', cheat: 'デバッグ' };
   let seenUndo = null; // 了解済みの巻き戻し通知
   const leftTxt = (q) => G.RULESETS[st.rules || 'v1'].gauge ? `残${q.left.W + q.left.AT}` : `W${q.left.W}/AT${q.left.AT}`; // 係数ゲージ方式ではW/ATの区別なし
   // 他の参加者のアンドゥに自分の手が巻き込まれたときの通知（オンラインのみ。ローカルは同じ端末なので不要）
@@ -150,6 +150,7 @@
     if (pid === null || !isBot(pid)) return;
     if (isOnline() && (!Net.meta || Net.meta.host !== Net.uid)) return; // オンラインではホスト端末がボットを動かす
     botTimer = setTimeout(() => {
+      { const m = isOnline() ? Net.meta : (game && game.meta); if (G.Bot && !G.Bot.BEAM.fromUrl) G.Bot.BEAM.depth = (m && m.aiDepth >= 1 && m.aiDepth <= 5) ? m.aiDepth : 1; } // v3.64：セットアップの「AI の読み」（meta.aiDepth）。URL の ?depth= があればそちら
       let e = null;
       if (st.phase === 'setup') {
         // 2026-11-04 ユーザー要望：AI の初期選択（種族・九腕の開始形質）を固定（空いている先頭）でなくランダムに。シードと席から決める（同じシードなら同じ選択）
@@ -246,14 +247,15 @@
     const form = h('form', { class: 'sec' }, h('h3', null, title));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '人数'), h('select', { name: 'n' }, h('option', { value: 3 }, '3人'), h('option', { value: 4, selected: true }, '4人'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'セットアップ'), h('select', { name: 'mode' }, h('option', { value: 'beginner' }, '初心者（器官の場を固定）'), h('option', { value: 'expert' }, '熟練者（器官の場を抽選）'))));
-    form.appendChild(h('label', { class: 'frow' }, h('span', null, 'ルール数値'), h('select', { name: 'rules' }, h('option', { value: 'v1' }, '現行（進行2/3/5/8E・E収入3・宝石×10）'), h('option', { value: 't1' }, '仮値セットT1（進行3/5/8/13E・E収入2・宝石＝係数×2・形質協調3点・器官2点・体制15点・試作）'), h('option', { value: 't2' }, '仮値セットT2（基礎収入なし・進行3/5/8/13E・得点＝宝石×係数×2＋形質×宝石色数＋器官×協調＋体制15・係数ゲージ・形質買い替えなし・器官1R1人・代替払いなし・大量消費12/繁殖20,35・拡張x1込み・試作）'), h('option', { value: 't3' }, '仮値セットT3（T2＋トラックは収集物で自動進行〔Eでの進行も自由〕：緑＝器官3/6/9/12・青＝形質2/4/6/8・白＝協調2/4/6/8・赤＝P投入1/2/3/4。器官の場は8系統24枚・1R1人なし。得点＝宝石×係数×2＋体制15・試作）'), h('option', { value: 't4' }, '仮値セットT4（T3の土台を維持しP系コストを現行に戻す・社会トラック報酬から協調を外す・群体E/G＝P6で資源＋協調+1・大量消費(社会)+2・協調ボーナス上限+4・赤ゲート＝繁殖＋大量消費(身体)のみ・身体Lv5★の排他無視は1R1回・器官6系統18枚で各カード1R1人・知性Lv4＝形質-1・ゲート 緑3/6/9/12 青2/4/6/9 白2/4/6/8 赤1/2/3/4・試作）'), h('option', { value: 't5' }, '仮値セットT5（T4＋身体＝生命核軸：収入時に保有L1個につきE+1〔全員〕・身体はLを投入した回数1/2/3/4で上がり報酬はLの質〔利回りの資源選択・L+1・緊急発進の対象拡大・1L=E4/G4・利回り2倍〕・身体の大量消費軽減と排他無視は廃止・試作）'), h('option', { value: 't6' }, '仮値セットT6（T5＋全トラックLv6〔E21で宝石+1・終了時にその色の収集物3個につき祝福+1〕・宝石セット共用〔購入ごとに+5G〕・身体＝Lv2でL+1と結晶化〔L2→祝福〕解放／Lv4で痕跡／Lv4は5投入のうち1回が3個同時／E進行5/8/13/21・利回りR1〜3＝2・R4〜7＝1・繁殖変換はL3でも・協調8到達で係数+1・群れの結晶〔協調3→祝福〕・律動T1生命核版・大量消費(代謝)14・個人カードなし・試作）'), h('option', { value: 't7' }, '仮値セットT7（T6＋器官と形質の役割再編：器官＝代謝/転写/群心/脈動/促進/連結の6系統から4系統・3段階で育つ・4E+1G/6E+2G/9E+3G、形質＝突然変異12種〔群れ本能・長命・結晶体質・擬態・先見・適応放散ほか〕・Gのみ・能力ごとの値段・割引は転写系だけ・4/7枚目で係数+1・試作）'), h('option', { value: 't8' }, '仮値セットT8（T7の資源3倍：初期資源・枠の獲得量・コスト・利回り・大量消費・繁殖P150 等が3倍。協調ボーナス＝＋協調数・群心核＝ボーナス+1・2026-10-22）'), h('option', { value: 't10', selected: true }, '仮値セットT10（T8＋共用盤改訂・弱形質・E進行・知性/代謝Lv4・2026-11-05）'), h('option', { value: 't10s' }, '仮値セットT10・5ラウンド'), h('option', { value: 't8s' }, '仮値セットT8・5ラウンド（T8 と同じ数値で通常4＋神の到来1。試行・2026-10-30）'), h('option', { value: 't9' }, '仮値セットT9（資源1倍：協調は上限12・社会の自動進行 3/6/9/12・ボーナス＝協調3個につき+1・協調9で痕跡・2026-10-24）'))));
+    form.appendChild(h('label', { class: 'frow' }, h('span', null, 'ルール数値'), h('select', { name: 'rules' }, h('option', { value: 'v1' }, '現行（進行2/3/5/8E・E収入3・宝石×10）'), h('option', { value: 't1' }, '仮値セットT1（進行3/5/8/13E・E収入2・宝石＝係数×2・形質協調3点・器官2点・体制15点・試作）'), h('option', { value: 't2' }, '仮値セットT2（基礎収入なし・進行3/5/8/13E・得点＝宝石×係数×2＋形質×宝石色数＋器官×協調＋体制15・係数ゲージ・形質買い替えなし・器官1R1人・代替払いなし・大量消費12/繁殖20,35・拡張x1込み・試作）'), h('option', { value: 't3' }, '仮値セットT3（T2＋トラックは収集物で自動進行〔Eでの進行も自由〕：緑＝器官3/6/9/12・青＝形質2/4/6/8・白＝協調2/4/6/8・赤＝P投入1/2/3/4。器官の場は8系統24枚・1R1人なし。得点＝宝石×係数×2＋体制15・試作）'), h('option', { value: 't4' }, '仮値セットT4（T3の土台を維持しP系コストを現行に戻す・社会トラック報酬から協調を外す・群体E/G＝P6で資源＋協調+1・大量消費(社会)+2・協調ボーナス上限+4・赤ゲート＝繁殖＋大量消費(身体)のみ・身体Lv5★の排他無視は1R1回・器官6系統18枚で各カード1R1人・知性Lv4＝形質-1・ゲート 緑3/6/9/12 青2/4/6/9 白2/4/6/8 赤1/2/3/4・試作）'), h('option', { value: 't5' }, '仮値セットT5（T4＋身体＝生命核軸：収入時に保有L1個につきE+1〔全員〕・身体はLを投入した回数1/2/3/4で上がり報酬はLの質〔利回りの資源選択・L+1・緊急発進の対象拡大・1L=E4/G4・利回り2倍〕・身体の大量消費軽減と排他無視は廃止・試作）'), h('option', { value: 't6' }, '仮値セットT6（T5＋全トラックLv6〔E21で宝石+1・終了時にその色の収集物3個につき祝福+1〕・宝石セット共用〔購入ごとに+5G〕・身体＝Lv2でL+1と結晶化〔L2→祝福〕解放／Lv4で痕跡／Lv4は5投入のうち1回が3個同時／E進行5/8/13/21・利回りR1〜3＝2・R4〜7＝1・繁殖変換はL3でも・協調8到達で係数+1・群れの結晶〔協調3→祝福〕・律動T1生命核版・大量消費(代謝)14・個人カードなし・試作）'), h('option', { value: 't7' }, '仮値セットT7（T6＋器官と形質の役割再編：器官＝代謝/転写/群心/脈動/促進/連結の6系統から4系統・3段階で育つ・4E+1G/6E+2G/9E+3G、形質＝突然変異12種〔群れ本能・長命・結晶体質・擬態・先見・適応放散ほか〕・Gのみ・能力ごとの値段・割引は転写系だけ・4/7枚目で係数+1・試作）'), h('option', { value: 't8' }, '仮値セットT8（T7の資源3倍：初期資源・枠の獲得量・コスト・利回り・大量消費・繁殖P150 等が3倍。協調ボーナス＝＋協調数・群心核＝ボーナス+1・2026-10-22）'), h('option', { value: 't10', selected: true }, '仮値セットT10（T8＋共用盤改訂・弱形質・E進行・知性/代謝Lv4・2026-11-05）'), h('option', { value: 't10s' }, '仮値セットT10・5ラウンド'), h('option', { value: 't11' }, '仮値セットT11（試作：T10 の資源1/3・協調2個ごとに+1・2026-11-05）'), h('option', { value: 't11s' }, '仮値セットT11・5ラウンド（試作）'), h('option', { value: 't8s' }, '仮値セットT8・5ラウンド（T8 と同じ数値で通常4＋神の到来1。試行・2026-10-30）'), h('option', { value: 't9' }, '仮値セットT9（資源1倍：協調は上限12・社会の自動進行 3/6/9/12・ボーナス＝協調3個につき+1・協調9で痕跡・2026-10-24）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '拡張ルール'), h('select', { name: 'ext' }, h('option', { value: 'none' }, 'なし'), h('option', { value: 'x1' }, 'x1：形質購入2枠（割増＝ラウンド数のE）＋緊急発進の対象に形質＋協調発進（協調トークンで使用済み枠）＋大量消費(社会)協調+3・試作'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '資源スロット'), h('select', { name: 'slots' }, h('option', { value: 'v7' }, '現行（7スロット・各1人）'), h('option', { value: 'm4' }, '統合4（E系／G系／P系／全資源・各1人・試作）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'アンドゥ'), h('select', { name: 'undoMode' }, h('option', { value: 'free' }, '自由（誰でも即時）'), h('option', { value: 'approve' }, '承認（他の参加者全員のOK）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'シード'), h('input', { type: 'number', name: 'seed', value: Math.floor(Math.random() * 100000) })));
+    form.appendChild(h('label', { class: 'frow' }, h('span', null, 'AI の読み'), h('select', { name: 'aiDepth' }, h('option', { value: '1' }, '標準（1手読み＋ラウンドの計画・速い）'), h('option', { value: '2' }, '強い（2手のビーム探索・+10点程度・AI の手番が数秒かかる）')))); // 2026-11-05 v3.64：第53部の 2 手読みを画面で選べるように（URL の ?depth= があればそちらを優先）
     for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1) }), h('small', null, h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
     form.appendChild(h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, okLabel)));
-    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); rememberForm(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || 'v1', ext: fd.get('ext') || 'none', undoMode: fd.get('undoMode'), players, bots }); });
+    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); rememberForm(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || 'v1', ext: fd.get('ext') || 'none', undoMode: fd.get('undoMode'), players, bots, aiDepth: +(fd.get('aiDepth') || 1) }); });
     restoreForm(form);
     return form;
   }
@@ -435,7 +437,7 @@
     if (R.intelRewards === 'learn' && t === 'intel' && REW_SHORT_T7_INTEL[l]) return REW_SHORT_T7_INTEL[l];
     if (R.intelRewards === 'trait' && t === 'intel' && REW_SHORT_T10_INTEL[l]) return REW_SHORT_T10_INTEL[l]; if (R.metab4 === 'organNoG' && t === 'metab' && l === 4) return '器官のG・後追い料なし'; // T10
     if (R.socialRewards === 'shield' && t === 'social') return REW_SHORT_T4.social[l] || REW_SHORT[t][l]; if (R.intel4 === 'traitDisc' && t === 'intel' && l === 4) return REW_SHORT_T4.intel[4]; return REW_SHORT[t][l]; }
-  const REW_SHORT_T10_INTEL = { 2: 'G+3', 3: ['次の形質 弱なら無料', '次の形質 -9G'], 4: '形質3枚ごと祝福+1', 5: ['常に強効果', 'G+18'] }; // T10（第58〜59部）
+  const REW_SHORT_T10_INTEL = { 2: 'G+{3}', 3: ['次の形質 弱なら無料', '次の形質 -{3}G'], 4: '形質3枚ごと祝福+1', 5: ['常に強効果', 'G+{6}'] }; // T10（第58〜59部）// 2026-11-05：{n} で規模に合わせる（旧 'G+3' は T10 で G+9 なのに G+3 と表示・-9G／G+18 は T11〔×1〕で合わない）
   const REW_SHORT = {
     body:   { 2: 'P+8', 3: ['大量消費×1無料', 'P+15'], 4: '大量消費-5', 5: ['大量消費 排他無視+-5', '大量消費-5'] },
     intel:  { 2: 'G+3', 3: ['形質1枚 G-3', 'G+1/R'], 4: '追加行動×1 E半額', 5: ['形質-2・常に強', 'G+6'] },
@@ -648,6 +650,7 @@
     const free = h('div', { class: 'free' }, h('b', null, '無料：'));
     if (p.freeConv || (G.organ(p, 'Fl3') && G.organ(p, 'Fl3').strong)) free.appendChild(h('button', { disabled: !can, onclick: () => onFreeConv(p) }, 'E↔G 1:1変換'));
     if (p.shields > 0) free.appendChild(h('button', { disabled: !can, onclick: () => onSlot(p, null, true) }, 'Wなし実行（資源獲得スロット／個人カード・手番消費なし）'));
+    if (p.L > 0) free.appendChild(h('button', { disabled: !can, title: '生命核を E か G に換える（手番消費なし・いつでも）。払った個数は身体の収集物に数える', onclick: () => onLToRes(p) }, `生命核→資源（L1＝E/G${p.lValue || G.sc(st, 3)}）`)); // 2026-11-05 ユーザー要望：生命核の使用に制限を持たせない＝アクションの前でも資源に換えられる
     if (free.childNodes.length > 1) box.appendChild(free);
     return box;
   }
@@ -674,7 +677,7 @@
     // 2026-11-05 ユーザー指摘：Lv6（その色の資源で払う）のダイアログが E63（＋生命核）などの通常の支払いを出していた。Lv6 は支払いが固定なので、その内容だけを示す（G の支払いは生命核で代用できる＝engine の payG）
     const d6 = p.lv[t] === 5 ? G.lv6PayDef(st, t) : null;
     const fields = d6
-      ? [{ type: 'select', name: 'pay', label: '支払い', options: [{ value: 'E', label: `${G.lv6CostText(st, t)}（Lv6＝その色の資源で払う）` }] }].concat(d6.G ? [{ type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p) }] : [])
+      ? [{ type: 'select', name: 'pay', label: '支払い', options: [{ value: 'E', label: `${G.lv6CostText(st, t)}（Lv6＝その色の資源で払う）` }] }].concat(d6.G ? [{ type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }] : d6.E ? [{ type: 'select', name: 'useL', label: '生命核をEの代わりに', options: lOpts(p, 'E') }] : []) // 2026-11-05 ユーザー指摘：代謝 Lv6（E90）で生命核の欄が出ず、知性 Lv6 の欄が「=E15」表示だった（engine は E・G とも代用可）
       : [{ type: 'select', name: 'pay', label: '支払い', options: [{ value: 'E', label: `E${c}（＋生命核）` }].concat(t === 'body' ? [{ value: 'P', label: `P${c * 3}（身体の代替払い）` }] : t === 'intel' ? [{ value: 'G', label: `G${c}（知性の代替払い）` }] : []).concat((G.RULESETS[st.rules || 'v1'].doubleStep && G.stepCostDouble(p, t) !== null) ? [{ value: 'E2', label: `E${G.stepCostDouble(p, t)}で二段進行（Lv${p.lv[t] + 2}へ・手番1つ）` }] : []) }, { type: 'select', name: 'useL', label: '生命核をEの代わりに', options: lOpts(p) }]; // T10 二段進行
     const r = await ask(`${G.TRACK_INFO[t].name} Lv${p.lv[t]}→${p.lv[t] + 1}`, fields, { note: `Lv${p.lv[t] + 1}の報酬：${rtxt(G.trackRewardText(st, t, p.lv[t] + 1))}` }); if (!r) return;
     if (r.pay === 'E2') return submit({ pid: p.id, type: 'track', track: t, pay: 'E', useL: +(r.useL || 0), steps: 2 }); // T10 二段進行
@@ -796,6 +799,7 @@
     const r = await ask(`${o.id} ${G.ORGANS[o.id].name}`, fields, { note: otxt(G.ORGANS[o.id], strong) + '（端数は切り捨て）' }); if (!r) return;
     submit({ pid: p.id, type: 'stAct', organ: o.id, pe: r.pe | 0, pg: r.pg | 0 });
   }
+  async function onLToRes(p) { const lv = p.lValue || G.sc(st, 3); const r = await ask('生命核→資源（手番消費なし）', [{ type: 'select', name: 'res', label: '換える先', options: [{ value: 'E', label: `エネルギー（L1＝E${lv}）` }, { value: 'G', label: `遺伝子（L1＝G${lv}）` }] }, { type: 'number', name: 'n', label: '個数', value: 1, min: 1, max: p.L }], { note: `所持 L${p.L}。払った個数は身体トラックの収集物（投入）に数えます。` }); if (!r) return; submit({ pid: p.id, type: 'lToRes', res: r.res, n: r.n }); }
   async function onFreeConv(p) { const r = await ask('無料E↔G変換', [{ type: 'select', name: 'dir', label: '方向', options: [{ value: 'EG', label: 'E→G' }, { value: 'GE', label: 'G→E' }] }, { type: 'number', name: 'n', label: '個数', value: 1, min: 1, max: 99 }]); if (!r) return; submit({ pid: p.id, type: 'freeConv', dir: r.dir, n: r.n }); }
 
   let pendingBusy = false;

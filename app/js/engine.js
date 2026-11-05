@@ -51,7 +51,7 @@
         round: { firstDone: false, dgUsed: false, flUsed: false, bonus: false, rh3Used: false },
         uses: { li1: 0, tr1: 0, rh1: 0, rh3: 0, ca1: 0, ca2: 0, restore: 0, amplify: 0 }, // 弱版の回数カウント／T10 復元・増幅（1人1回）
         scanDisc: 0, cv2Granted: 0, wild: null, st3Used: false,
-        lInvested: 0, lValue: 3, yieldPick: null, yieldMul: 1, bypassWide: false, // T5：生命核軸（投入回数・1Lの価値・利回りの資源選択・利回り倍率・緊急発進の対象拡大）
+        lInvested: 0, lValue: 3 * (G.RULESETS[rules].scale || 1), yieldPick: null, /* 2026-11-05 v3.64 修正：1L の代用価値は基準単位 3 を数値セットの倍率で（T8／T10＝E9／G9・T11＝3）。T8 以降ずっと 3 のままで、文書（guide・value_scale＝1L＝E9）と食い違い、身体 Lv3★ で 3→12 に跳んでいた */ yieldMul: 1, bypassWide: false, // T5：生命核軸（投入回数・1Lの価値・利回りの資源選択・利回り倍率・緊急発進の対象拡大）
         pending: [], // 即時に解決すべき選択（free mass 等）
       });
     });
@@ -1048,6 +1048,11 @@
     const n = Math.max(1, a.n | 0); if (p.G < r[0] * n) throw new Error('Gが足りません');
     p.G -= r[0] * n; p.E += r[1] * n; log(st, p.id, `${p.name}：G→E変換 G${r[0] * n}→E${r[1] * n}`); return false;
   };
+  ACTIONS.lToRes = (st, p, a) => { // 2026-11-05 v3.64 ユーザー要望：生命核はいつでも資源に換えられる（手番消費なし・アクションの前でも可）。1L＝E／G lValue（身体 Lv3★ で 12・Lv5★ 強で 15）。払った個数は身体の収集物に数える（代用払いと同じ）
+    const n = Math.max(1, a.n | 0); if (n > p.L) throw new Error(`生命核が足りません（指定L${n}・所持L${p.L}）`); const res = a.res === 'G' ? 'G' : 'E'; const lv = p.lValue || sc(p, 3);
+    p.L -= n; p[res] += n * lv; investL(p, st, n); if (RS(p).bodyBulkLv4 && n >= RS(p).bodyBulkLv4) p.lBulk = true;
+    log(st, p.id, `${p.name}：生命核→資源 L${n}→${res}${n * lv}（手番消費なし）`); return false;
+  };
   ACTIONS.freeConv = (st, p, a) => { // 代謝Lv4 / 万象炉強
     const fl3 = organ(p, 'Fl3');
     if (!p.freeConv && !(fl3 && fl3.strong)) throw new Error('無料変換の権利がありません');
@@ -1091,7 +1096,7 @@
     if (st.ended) throw new Error('ゲームは終了しています');
     const pid = action.pid; assertTurn(st, pid); const p = P(st, pid);
     const pd = p.pending[0]; let viaBonus = false;
-    if (pd && action.type !== 'resolve' && action.type !== 'freeConv' && action.type !== 'gToE' && action.type !== 'cheat') {
+    if (pd && action.type !== 'resolve' && action.type !== 'freeConv' && action.type !== 'gToE' && action.type !== 'lToRes' && action.type !== 'cheat') {
       if (pd.type === 'bonusAction' && BONUS_OK[action.type]) { action = Object.assign({}, action, { bonus: true }); viaBonus = true; }
       else throw new Error(pd.type === 'bonusAction' ? '追加アクション（排他なしアクション・個人カード）を今すぐ実行するか見送ってください' : '先に保留中の選択（収入時の振替・遺伝子図書館・報酬）を解決してください');
     }

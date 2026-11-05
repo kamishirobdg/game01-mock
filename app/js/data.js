@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.63'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.64'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -178,7 +178,14 @@
     speciesMod: Object.assign({}, G.RULESETS.t8.speciesMod, { ant: { stock: { E: 15, G: 3, P: 12 }, coop: 2 } }) }); // 2026-11-05 ユーザー指示（第61部）：万列の協調2＝群体2回分（約E34）＋恒久ボーナスに見合うよう初期資源を E15 G6 P18→E15 G3 P12（T10 で 40〜48%→29〜31%・2シード）
   G.RULESETS.t10s = Object.assign({}, G.RULESETS.t10, { name: '仮値セットT10・5ラウンド（4＋神の到来1）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t10.tribute, { openRound: 5 }), lv6Pay: G.RULESETS.t8s.lv6Pay,
     speciesMod: Object.assign({}, G.RULESETS.t8s.speciesMod, { ant: { stock: { E: 15, G: 3, P: 18 }, coop: 2 } }) }); // 5R：t8s の E1（万列 E15 G6 P24）から同じ幅（G−3・P−6）を引く＝E15 G3 P18（第61部・5R の種族は揺れが大きく要再計測）
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s'];
+  // 2026-11-05 ユーザー指示（第63部・バランス調査・試作）：T11＝T10 の資源量をすべて 1/3（T7 の単位に戻す）＋協調ボーナス＝協調 2 個ごとに +1（coopMode 'half'・切り捨て）。
+  //   scaleRuleset が倍率を掛けるのは基準単位のキーだけなので、T8／T10 で絶対値（×3 の単位）で書いたキーはここで 1/3 に丸めて上書きする：復元 E9→3・増幅 E24→8・消費軽減 弱 −18→−6・増殖暴走 弱 繁殖 −15→−5／大量消費(身体) −12→−4・進化加速 [6,4]→[2,1]・Lv6 G42→14／E90→30・Pブースト P+50→+17・胞子の上限 10→3・代謝核 +2→+1（T9 と同じ）。形質の値段・種族の初期資源・大量消費・繁殖・利回り・進行・器官は scaleRuleset が 1/3 に丸める（T9 と同じ丸め）
+  G.RULESETS.t11 = G.scaleRuleset(G.RULESETS.t10, 1 / 3, { name: '仮値セットT11（試作：T10 の資源1/3・協調2個ごとに+1）', coopMode: 'half', coopRoundUp: false,
+    restore: { E: 3 }, amplify: { E: 8 }, mcDiscWeak: 6, mbBreedDiscWeak: 5, mbDiscWeak: 4, dvDisc: [2, 1], dvDiscW: 1, dgDiscW: 1, sporeCap: 3, mg3Inc: 1, pbGain: 17,
+    lv6Pay: { body: { L: 5 }, intel: { G: 14 }, social: { coop: 8 }, metab: { E: 30 } } });
+  G.RULESETS.t11s = Object.assign({}, G.RULESETS.t11, { name: '仮値セットT11・5ラウンド（試作）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t11.tribute, { openRound: 5 }), lv6Pay: Object.assign({}, G.RULESETS.t11.lv6Pay, { body: { L: 3 } }),
+    speciesMod: G.scaleRuleset({ speciesMod: G.RULESETS.t10s.speciesMod }, 1 / 3).speciesMod });
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
   G.GATE_LABEL_L = '生命核の投入（代用払い・緊急発進・適応進化）'; G.GATE_SHORT_L = 'L投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: 'P投入' };

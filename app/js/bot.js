@@ -152,7 +152,7 @@
   }
 
   // ---------- 貪欲評価型（greedy）：全候補を tryApply → 評価関数の最大を選ぶ。複数ルートを混ぜる「人間らしい」基準線 ----------
-  const W = { E: 0.5, G: 0.7, P: 0.3, L: 1.5, gate: 1.0, coefFuture: 1.6, shield: 4, coop: 0.8, organ: 1.0, trait: 0.8, inc: 1.0, breedFut: 0, breedProg: 0, plan: 1, deny: 1.5 }; // 2026-11-04 plan＝ラウンド単位の計画（1＝有効・--bw=plan=0 で旧 greedy）／deny＝終盤の妨害（首位が使える早取り枠を先に取る）の重み // 2026-11-02 breedFut＝繁栄度1段が「これから得る痕跡」に掛かる見込み／breedProg＝次の繁殖（P150／L3）へ貯める途中の価値。第47部：どちらも種族の計測を光翼に偏らせ（7R 混合で 光翼 58〜67%・万列 1〜11%）得点も上がらないため既定 0（--bw= で試せる）
+  const W = { E: 0.5, G: 0.7, P: 0.3, L: 1.5, gate: 1.0, coefFuture: 1.6, shield: 4, coop: 0.8, organ: 1.0, trait: 0.8, inc: 1.0, breedFut: 0, breedProg: 0, plan: 1, deny: 1.5, uncrowded: 1.4, denyFinal: 0.5 }; // 2026-11-05 uncrowded＝序盤、他者が選んでいない主トラックのゲート重み（第53部の「未選択の戦略」を重みに反映）／denyFinal＝最終R、首位がまだ使える空き資源枠（祝福枠）を先に取る妨害の重み（deny に掛かる） // 2026-11-04 plan＝ラウンド単位の計画（1＝有効・--bw=plan=0 で旧 greedy）／deny＝終盤の妨害（首位が使える早取り枠を先に取る）の重み // 2026-11-02 breedFut＝繁栄度1段が「これから得る痕跡」に掛かる見込み／breedProg＝次の繁殖（P150／L3）へ貯める途中の価値。第47部：どちらも種族の計測を光翼に偏らせ（7R 混合で 光翼 58〜67%・万列 1〜11%）得点も上がらないため既定 0（--bw= で試せる）
   function evaluate(st, p, w) {
     w = w || W; const sc = G.score(st, p); let v = sc.total * (2 / (RSo(st).gemPt || 2)); // 2026-10-28：評価の点は gemPt=2 の尺度に正規化（T8 で ×2 を外しても AI の重みづけが変わらないように。以下の「×2」はこの尺度）
     const RN = RSo(st).rounds || G.ROUNDS; const rem = RN - st.round; const k = rem / RN; // rem＝この後に残るラウンド数
@@ -303,7 +303,7 @@
       goals.push('gate:' + primary); Object.assign(w, FOCUS_W[primary]);
       const incV = (i) => i.E + 1.5 * i.G + 0.6 * i.P; const mine = incV(G.income(p)); const avg = st.players.reduce((a, q) => a + incV(G.income(q)), 0) / st.players.length;
       if (mine <= avg) { goals.push('income'); w.inc = 1.6; w.organ = Math.max(w.organ || 1, 1.4); }
-      if (crowd[primary] === 0) goals.push('uncrowded');
+      if (crowd[primary] === 0) { goals.push('uncrowded'); w[primary + 'Gate'] = (w[primary + 'Gate'] || 1) * (W.uncrowded || 1); } // 2026-11-05：他者が選んでいない主トラックは先着（★の強報酬・Lv6 の祝福）を取りやすいので、ゲートの重みを上げる
     } else if (phase === 'mid') {
       goals.push('prepare'); Object.assign(w, FOCUS_W[primary]); w.coefFuture = 2.0; w.breedProg = 0.6;
       goals.push('diverse:' + secondary); w[secondary + 'Gate'] = 1.6;
@@ -320,6 +320,7 @@
     if (a.type === 'trait' && !a.weak) { const tc = G.traitCost(st, lead, a.trait); return tc && tc.strong && lead.G >= tc.G ? 1 : 0; }
     if (a.type === 'tributeSlot') return 1;
     if (a.type === 'gemset') return lead.G >= G.gemsetPrice(lead) ? 0.5 : 0;
+    { const RN = RSo(st).rounds || G.ROUNDS; const fv = RSo(st).finalSlotVg; if (fv && st.round === RN && a.type === 'res' && !a.bypassL && !a.bypassCoop && !a.shield && (lead.left.W + lead.left.AT) > 0 && G.slotUsedBy(st, a.slot) === undefined) return (W.denyFinal || 0); } // 2026-11-05：最終Rの祝福枠（空いている資源枠＝祝福+1）を首位より先に埋める
     return 0;
   }
   // ---------- ビーム探索（R 内・自分の手だけ深読み・相手は 1 手読み＋計画で代打ち）----------
