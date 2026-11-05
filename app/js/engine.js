@@ -49,7 +49,7 @@
         next: { body: 0, intel: 0, any: 0, mass: 0 }, // 次の1回限りの軽減
         flags: { strong: {} }, // strong[track+lv]=true 先着で強を得たか
         round: { firstDone: false, dgUsed: false, flUsed: false, bonus: false, rh3Used: false },
-        uses: { li1: 0, tr1: 0, rh1: 0, rh3: 0, ca1: 0, ca2: 0 }, // 弱版の回数カウント
+        uses: { li1: 0, tr1: 0, rh1: 0, rh3: 0, ca1: 0, ca2: 0, restore: 0, amplify: 0 }, // 弱版の回数カウント／T10 復元・増幅（1人1回）
         scanDisc: 0, cv2Granted: 0, wild: null, st3Used: false,
         lInvested: 0, lValue: 3, yieldPick: null, yieldMul: 1, bypassWide: false, // T5：生命核軸（投入回数・1Lの価値・利回りの資源選択・利回り倍率・緊急発進の対象拡大）
         pending: [], // 即時に解決すべき選択（free mass 等）
@@ -192,7 +192,7 @@
     if (p.lv.intel >= 3 && !p.flags.strong['intel3']) add('知性Lv3弱', 0, sc(p, 1), 0);
     if (p.lv.metab >= 5) { const k = sc(p, p.flags.strong['metab5'] ? 2 : 1); add('代謝Lv5', k, k, k); }
     const cv3 = organ(p, 'Cv3'); if (cv3) { const n = p.organs.length; const k = sc(p, cv3.strong ? (n >= 9 ? 2 : n >= 6 ? 1 : 0) : (n >= 7 ? 1 : 0)); add('極相体', k, k, k); }
-    { const m1 = organ(p, 'Mg1'), m2 = organ(p, 'Mg2'), m3 = organ(p, 'Mg3'); if (m1) add('代謝膜', sc(p, m1.strong ? 2 : 1), 0, 0); if (m2) add('代謝腺', sc(p, m2.strong ? 1 : 0), sc(p, 1), 0); if (m3) { const k3 = RS(p).mg3Inc !== undefined ? RS(p).mg3Inc : sc(p, 1); add('代謝核', k3, k3, RS(p).mg3NoP ? 0 : k3); } } // T7 代謝系（mg3NoP＝試作：代謝核の収入から P を外す）
+    { const m1 = organ(p, 'Mg1'), m2 = organ(p, 'Mg2'), m3 = organ(p, 'Mg3'); if (m1) add('代謝膜', sc(p, m1.strong ? 2 : 1) * (m1.amp ? 2 : 1), 0, 0); if (m2) add('代謝腺', sc(p, m2.strong ? 1 : 0) * (m2.amp ? 2 : 1), sc(p, 1) * (m2.amp ? 2 : 1), 0); if (m3) { const k3 = (RS(p).mg3Inc !== undefined ? RS(p).mg3Inc : sc(p, 1)) * (m3.amp ? 2 : 1); add('代謝核', k3, k3, RS(p).mg3NoP ? 0 : k3); } } // T7 代謝系（mg3NoP＝試作：代謝核の収入から P を外す）
     if (RS(p).lYield) { const rate = RS(p).yieldByRound ? (RS(p).yieldByRound[Math.min(RS(p).yieldByRound.length - 1, (p._round || 0) + 1)] || 0) : RS(p).lYield; const n = p.L * (rate + (p.yieldAdd || 0)) * (p.yieldMul || 1); if (n > 0) { if (RS(p).yieldRes === 'P') add('生命核利回り', 0, 0, n); else { inc.lyield = n; if (p.yieldPick) inc.parts.push(`生命核利回り ${n}（資源を選択）`); else add('生命核利回り', n, 0, 0); } } } // T5（yieldByRound＝次ラウンド番号で引く）／T7試作 yieldRes='P'
     p.traits.forEach(t => {
       if (t.id === 'IE' && t.strong) add('IE', sc(p, 2), 0, 0);
@@ -209,8 +209,9 @@
   function coefB(p) { const c2 = RS(p).coef2; return c2 ? (c2.breedBase || 3) + Math.min(c2.breedMax || 2, p.breedUps || 0) : coef(p); }
   function coefC(p) { const c2 = RS(p).coef2; return c2 ? (c2.collectBase || 3) + Math.min(c2.collectMax || 4, p.collectUps || 0) : coef(p); }
   function organ(p, id) { return p.organs.find(o => o.id === id); }
-  function linMax(p, lin, strongV, weakV) { let m = 0; p.organs.forEach(o => { const d = G.ORGANS[o.id]; if (d && d.lin === lin) m = Math.max(m, (o.strong ? strongV : weakV)[d.tier - 1]); }); return m; } // 系統内の最大段の値（T7）
+  function linMax(p, lin, strongV, weakV) { let m = 0; p.organs.forEach(o => { const d = G.ORGANS[o.id]; if (d && d.lin === lin) m = Math.max(m, (o.strong ? strongV : weakV)[d.tier - 1] * (o.amp ? 2 : 1)); }); return m; } // o.amp＝T10 増幅（効果2倍） // 系統内の最大段の値（T7）
   function trait(p, id) { return p.traits.find(t => t.id === id); }
+  function traitText(st, tid, strong) { const t = G.TRAITS[tid]; if (!t) return ''; if (strong) return t.strong; return (RS(st).weakTraits2 && t.weak2) ? t.weak2 : t.weak; } // T10：弱の新効果文（weak2）
   function lineageCount(p, lin) { return p.organs.filter(o => G.ORGANS[o.id].lin === lin).length; }
 
   // ---------- コスト計算 ----------
@@ -226,7 +227,8 @@
     if (d.E) { const e = Math.max(0, d.E - (discE || 0)); const r = payE(p, e, useL); parts.push(`E${r.E}${r.L ? '+L' + r.L : ''}`); }
     return parts.join('+');
   }
-  function lv6Preview(st, p) { const cv = RS(st).lv6Convert; if (!cv) return 0; const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; let n = 0; G.TRACKS.forEach(t => { if (p.lv[t] >= 6 && !(RS(st).lv6RealTracks || []).includes(t)) n += Math.floor(cnt[t] / (by[t] || cv)); }); return n; } // 終了時換算の見込み（画面用）
+  function lv6Preview(st, p) { const cv = RS(st).lv6Convert; if (!cv) return 0; const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: Math.max(0, p.traits.length - 3 * (p.intel4VgN || 0)), social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; let n = 0; G.TRACKS.forEach(t => { if (p.lv[t] >= 6 && !(RS(st).lv6RealTracks || []).includes(t)) n += Math.floor(cnt[t] / (by[t] || cv)); }); return n; } // 終了時換算の見込み（画面用）
+  function stepCostDouble(p, track) { const lv0 = p.lv[track]; if (lv0 >= 4) return null; const c1 = stepCost(p, track); if (c1 === null) return null; p.lv[track] = lv0 + 1; const c2 = stepCost(p, track); p.lv[track] = lv0; return c2 === null ? null : c1 + c2 + (RS(p).doubleStepFee || 0); } // doubleStepFee＝二段進行の追加コスト（試作・既定 0） // T10 二段進行の合計 E
   function stepCost(p, track, forBonus) {
     const lv = p.lv[track]; if (lv >= (RS(p).maxLv || 5)) return null;
     if (lv === 4 && RS(p).lv5G) { const g = gateReq(p, track); if (g && g.have >= g.need) return 0; } // 試作 lv5G：ゲート充足ならEは不要（Gのみ）
@@ -235,7 +237,7 @@
     if (lv === 5 && lv6PayDef(p, track)) return lv6PayE(p, track); // 案B：Lv6 は色別コスト。ここでは E 換算の目安を返す（支払いは lv6PayNow）
     if (track === 'body') { if (trait(p, 'DB') && trait(p, 'DB').strong) d += sc(p, 2); d += p.next.body; }
     if (track === 'intel') { if (trait(p, 'DI') && trait(p, 'DI').strong) d += sc(p, 2); d += p.next.intel; }
-    const dv = trait(p, 'DV'); if (dv) d += sc(p, dv.strong ? 2 : 1);
+    const dv = trait(p, 'DV'); if (dv) d += RS(p).dvDisc ? RS(p).dvDisc[dv.strong ? 0 : 1] : sc(p, dv.strong ? 2 : 1); // T10 dvDisc＝[強, 弱] の絶対値
     const xd = trait(p, 'XD'); if (xd) d += sc(p, xd.strong ? 3 : 2); // 試作 上位形質・適応爆発
     const da = trait(p, 'DA'); if (da && da.strong && da.track === track) d += sc(p, 1);
     d += p.next.any;
@@ -258,7 +260,7 @@
     const tier = G.ORGANS[oid].tier; if (tier !== n + 1) return null; // 階層順に建造
     const first = st.shared.organFirst[oid] === undefined || st.shared.organFirst[oid] === p.id;
     const strong = RS(p).organSameEffect ? true : first; // 試作 organSameEffect：後続も同じ効果（先着の差は値段だけ）
-    let [e, g] = ((RS(p).organCostBy || {})[lin] || RS(p).organCost || G.ORGAN_COST)[n]; if (!first) { if (RS(p).organSameEffect) e += sc(p, RS(p).organLateFee || 1); else g = 0; } // organCostBy：系統別のコスト表／organLateFee：後追い料（基準単位）
+    let [e, g] = ((RS(p).organCostBy || {})[lin] || RS(p).organCost || G.ORGAN_COST)[n]; if (!first) { if (RS(p).organSameEffect) { if (!p.organNoG) e += sc(p, RS(p).organLateFee || 1); } else g = 0; } if (p.organNoG) g = 0; // T10 代謝 Lv4：G なし＋後追い料なし // organCostBy：系統別のコスト表／organLateFee：後追い料（基準単位）
     if (RS(p).organEscalate) e += Math.floor(p.organs.length / RS(p).organEscalate); // T4：所持器官数が増えるほど建造コスト+1E（N枚ごと）
     const ca1 = organ(p, 'Ca1'); if (ca1 && (ca1.strong || p.uses.ca1 < 3)) e -= sc(p, 1);
     const ca3 = organ(p, 'Ca3'); if (ca3) e -= sc(p, ca3.strong ? 2 : 1);
@@ -278,6 +280,8 @@
     const tr3 = organ(p, 'Tr3'); if (tr3) c -= sc(p, tr3.strong ? 3 : 2);
     c -= sc(p, linMax(p, 'Tl', [2, 3, 4], [1, 2, 3])); // T7 転写系：系統内の最大値
     if (viaReward) c -= viaReward;
+    if (p.nextTraitDisc) c -= p.nextTraitDisc; // T10 知性 Lv3★ 弱：次の形質 -9G
+    if (p.nextTraitFree) { const bs = (tw || t.cost); return { G: strong ? Math.max(0, bs[0] - bs[1]) : 0, strong }; } // T10 知性 Lv3★ 強：次の形質は弱なら無料・強は差額
     const floor = RS(p).traitHalfFloor ? Math.max(1, ceilHalf(Math.ceil(t.cost[strong ? 0 : 1] * (RS(p).traitCostMul || 1)))) : sc(p, 1); // 試作 traitHalfFloor：元コストの半分（切上）を下回らない
     return { G: Math.max(floor, c), strong };
   }
@@ -289,7 +293,7 @@
     const disc = freeOnce ? (mc && !mc.strong ? (R.mcDiscWeak !== undefined ? R.mcDiscWeak : R.mcDisc) : 0) : (mc && mc.strong ? R.mcDisc : 0);
     const sub = disc + p.next.mass; const after = !!R.mcAfterCap; // 2026-11-04 試作 mcAfterCap：軽減を代謝/社会の固定コスト（mmCost/msCost）の後に引く＝代謝にも効く（既定は固定コストが先＝代謝は実質対象外）
     if (!after) c -= sub;
-    if (kind === 'MB') { c -= p.massDisc; const mb = trait(p, 'MB'); if (mb) c -= R.mbDisc; if (after) c -= sub; return mcFree ? 0 : Math.max(R.massMin.body, c); }
+    if (kind === 'MB') { c -= p.massDisc; const mb = trait(p, 'MB'); if (mb) c -= (mb.strong || R.mbDiscWeak === undefined) ? R.mbDisc : R.mbDiscWeak; if (after) c -= sub; return mcFree ? 0 : Math.max(R.massMin.body, c); }
     if (kind === 'MM' && R.mmCost) c = Math.min(c, R.mmCost); // 試作 mmCost
     if (kind === 'MS' && R.msCost) c = Math.min(c, R.msCost); // 試作 msCost
     if (after) c -= sub;
@@ -324,7 +328,7 @@
     }
   }
   function tribVg(p, k) { const t = RS(p).tributeVg; return t && typeof t === 'object' ? (t[k] || 1) : (t || 1); } // 試作 tributeVg：献上1回の祝福数（既定1）
-  function breedCost(p) { if (p.breed >= RS(p).breed.length) return null; const mb = trait(p, 'MB'); const c = RS(p).breed[p.breed]; return mb && mb.strong ? (RS(p).mbBreedDisc !== undefined ? Math.max(sc(p, 10), c - sc(p, RS(p).mbBreedDisc)) : Math.ceil(c / 2)) : c; } // mbBreedDisc：増殖暴走の強＝各段 -N（旧は半減） // 段数＝breed 配列の長さ（C2 で上限を伸ばす試作）
+  function breedCost(p) { if (p.breed >= RS(p).breed.length) return null; const mb = trait(p, 'MB'); const c = RS(p).breed[p.breed]; if (mb && !mb.strong && RS(p).mbBreedDiscWeak !== undefined) return Math.max(sc(p, 10), c - RS(p).mbBreedDiscWeak); return mb && mb.strong ? (RS(p).mbBreedDisc !== undefined ? Math.max(sc(p, 10), c - sc(p, RS(p).mbBreedDisc)) : Math.ceil(c / 2)) : c; } // mbBreedDisc：増殖暴走の強＝各段 -N（旧は半減） // 段数＝breed 配列の長さ（C2 で上限を伸ばす試作）
   function gemsetPrice(p) { const T = RS(p).tribute; if (T && T.flatG) return sc(p, T.flatG); return sc(p, Math.max(G.GEMSET_FLOOR, G.GEMSET_BASE - p.traits.length - (RS(p).gemsetCoopDisc ? Math.floor(p.coop / 2) : 0))) + (RS(p).gemsetEscalate && !p.gemsetNoEsc ? RS(p).gemsetEscalate * p.gemsets : 0); } // tribute.flatG：献上（遺伝子）は定額 // 試作 gemsetEscalate：購入ごとに+N／gemsetCoopDisc：−協調÷2
   function pbGain(x) { const v = RS(x).pbGain; return v !== undefined ? v : sc(x, 10); } // pbGain：Pブーストの獲得量（数値セットの絶対値。未指定は P10×倍率）
   function pbCost(p) { const tr3 = organ(p, 'Tr3'); return Math.max(sc(p, 1), sc(p, 2) - (tr3 ? sc(p, tr3.strong ? 3 : 2) : 0)); }
@@ -367,7 +371,7 @@
     if (!p.round.firstDone) { const o = organ(p, 'Rh3'); if (o && (o.strong || p.uses.rh3 < 3)) { if (!o.strong) p.uses.rh3 += 1; return { bypass: 'Rh3' }; } }
     // 突破できるスロット：資源獲得（現行）＋形質購入2枠（拡張x1）。手段＝緊急発進（L1）／協調発進（協調2個・拡張x1）
     const byp = bypassable(st, slotId, p);
-    if (opt.mimic && G.RES_SLOTS.includes(slotId) && p.mimic) { if (p.round.mimicUsed) throw new Error('擬態は1ラウンド1回です'); if (p.mimic === 'E3') { const me = sc(p, 3); if (p.E < me) throw new Error(`擬態（弱）にはE${me}が必要です`); p.E -= me; } p.round.mimicUsed = true; return { bypass: 'mimic' }; } // T7 擬態
+    if (opt.mimic && G.RES_SLOTS.includes(slotId) && p.mimic) { if (p.round.mimicUsed) throw new Error('擬態は1ラウンド1回です'); if (p.mimic !== 'free') { const me = sc(p, parseInt(String(p.mimic).slice(1), 10) || 3); if (p.E < me) throw new Error(`擬態（弱）にはE${me}が必要です`); p.E -= me; } p.round.mimicUsed = true; return { bypass: 'mimic' }; } // T7 擬態
     if (opt.useL && byp) { if (p.L <= 0) throw new Error('生命核がありません'); p.L -= 1; investL(p, null); return { bypass: 'L' }; }
     const bypC = byp || coopBypassable(st, slotId, p); // 試作 bypassCoopWide：協調発進は大量消費・発現の枠も突破できる（緊急発進の対象は変えない）
     if (opt.useCoop && bypC && st.ext === 'x1') { const bc = RS(p).bypassCoopCost || 2; if (p.coop < bc) throw new Error(`協調トークンが${bc}個ありません`); p.coop -= bc; return { bypass: 'coop' }; }
@@ -376,7 +380,7 @@
   }
   // 試作 bypassCoopWide（2026-10-26・第39部）：協調発進の突破対象に大量消費4枠と発現を加える（拡張x1）。緊急発進（L）の対象は bypassable のまま
   function coopBypassable(st, slotId, p) { if (!(RS(p).bypassCoopWide && st.ext === 'x1')) return false; const s = G.SLOT_BY_ID[slotId]; return !!s && (s.group === 'mass' || slotId === 'EXP'); }
-  function bypassable(st, slotId, p) { if (G.RES_SLOTS.includes(slotId) || (st.ext === 'x1' && G.TRAIT_SLOTS.includes(slotId))) return true; if (p && p.bypassWide) { const s = G.SLOT_BY_ID[slotId]; return !!s && (s.group === 'mass' || slotId === 'GEM' || G.TRAIT_SLOTS.includes(slotId)); } return false; } // T5 身体Lv3★強：緊急発進の対象に大量消費・宝石セット・形質購入
+  function bypassable(st, slotId, p) { if (G.RES_SLOTS.includes(slotId) || slotId === 'PB' || (st.ext === 'x1' && G.TRAIT_SLOTS.includes(slotId))) return true; /* 2026-11-05 ユーザー指示：Pブースト購入も緊急発進（L1）・協調発進の対象に（Wなし実行・祝福枠の扱いは従来どおり） */ if (p && p.bypassWide) { const s = G.SLOT_BY_ID[slotId]; return !!s && (s.group === 'mass' || slotId === 'GEM' || G.TRAIT_SLOTS.includes(slotId)); } return false; } // T5 身体Lv3★強：緊急発進の対象に大量消費・宝石セット・形質購入
   const bypassDesc = (b) => b === 'L' ? '緊急発進（L-1）' : b === 'coop' ? '協調発進' : b === 'mimic' ? '擬態' : `排他突破（${b}）`;
   // コマを置かない実行（Wなし実行）用：使用可否だけ判定し、使用済みにはしない
   function peekSlot(st, p, slotId, opt) {
@@ -439,9 +443,10 @@
       const key = track + lv;
       const viaJump = RS(p).jumpNoFirst && (why === '知的跳躍' || why === '身体覚醒'); // 試作 jumpNoFirst（第40部 K2）：跳躍形質で着いた★は先着を取らず後着扱い（宝石は得る・先着ボーナスと強効果なし・先着は次に自力で着いた人のもの）
       let isFirst = false; if (!viaJump && st.shared.firsts[key] === undefined) { st.shared.firsts[key] = p.id; strong = true; isFirst = true; }
-      // JI/JB 弱：Lv5★で必ず強効果（jumpNoFirst では跳躍で着いた段には適用しない）
-      if (lv === 5 && !strong && !viaJump) { const t = trait(p, track === 'intel' ? 'JI' : 'JB'); if (t && !t.strong) strong = true; }
-      if (!strong && p.foresight && (p.foresight === 'all' || lv === 5)) strong = true; // T7 先見
+      if (RS(p).paidStrong && /進行|跳躍|覚醒/.test(why)) strong = true; // T10（第59部）：自分で払って上げた段（E 進行・跳躍形質・献上枠の跳躍）は★なら後着でも強の報酬（痕跡の先着ボーナスは先着のみ＝firstBonusStrict）
+      // JI/JB 弱：Lv5★で必ず強効果（jumpNoFirst では跳躍で着いた段には適用しない。T10 paidStrong では不要）
+      if (lv === 5 && !strong && !viaJump && !RS(p).paidStrong) { const t = trait(p, track === 'intel' ? 'JI' : 'JB'); if (t && !t.strong) strong = true; }
+      if (!strong && p.foresight && (p.foresight === 'all' || lv === 5 || p.foresight === 'once')) { strong = true; if (p.foresight === 'once') p.foresight = null; } // T7 先見（T10 の弱＝どちらか1回）
       p.flags.strong[key] = strong;
       if (track === 'body' && RS(p).bodyCoef) { addUpgrade(st, p, `身体適応 Lv${lv}★（係数軸）`); if (lv === 5 && strong) { p.P += sc(p, 10); log(st, p.id, `${p.name}：先着ボーナス P+${sc(p, 10)}`); } } // 試作 bodyCoef：身体は宝石でなく係数の軸
       else { const bonus = RS(p).firstBonusStrict ? isFirst : strong; addGem(st, p, track, 1, `${G.TRACK_INFO[track].name} Lv${lv}★${bonus ? '・先着' : strong ? '・強' : ''}`); if (lv === 5 && bonus) addGem(st, p, track, 1, '先着ボーナス'); }
@@ -475,6 +480,10 @@
         if (lv === 3) { if (strong) p.pending.push({ type: 'learn' }); else if (!temp) p.gSlotDisc = (p.gSlotDisc || 0) + sc(p, 1); }
         if (lv === 4) { if (!temp) p.gemsetNoEsc = true; }
         if (lv === 5) { if (strong) p.alwaysStrong = true; else p.G += sc(p, 6); }
+      } else if (RS(p).intelRewards === 'trait') { // T10（第58〜59部）：Lv3★ 強＝次の形質1枚を弱なら無料（強は差額）／弱＝次の形質 -9G、Lv4＝形質3枚ごとに祝福+1（即時・Lv6 換算と重ねない）、Lv5★＝T7 と同じ
+        if (lv === 3) { if (strong) p.nextTraitFree = true; else if (!temp) p.nextTraitDisc = (p.nextTraitDisc || 0) + sc(p, 3); }
+        if (lv === 4 && !temp) { p.intel4Vg = true; const k = Math.floor(p.traits.length / 3) - (p.intel4VgN || 0); if (k > 0) { p.gemsets += k; p.intel4VgN = (p.intel4VgN || 0) + k; log(st, p.id, `${p.name}：祝福+${k}（知性 Lv4：形質${p.traits.length}枚）→ 祝福 ${p.gemsets}`); } }
+        if (lv === 5) { if (strong) p.alwaysStrong = true; else p.G += sc(p, 6); }
       } else {
       if (lv === 4) { if (RS(p).intel4 === 'traitDisc') { if (!temp) p.traitDisc += sc(p, 1); } else p.pending.push({ type: 'bonusAction' }); }
       if (lv === 5) { if (strong) { p.traitDisc = sc(p, 2); p.alwaysStrong = true; } else p.G += sc(p, 6); }
@@ -495,7 +504,7 @@
     }
     if (track === 'metab') {
       if (lv === 3) { if (strong) { if (temp) { p.E += sc(p, 1); p.G += sc(p, 1); } else p.inc.E += 0; /* 強の恒久E+1 G+1は income() で参照 */ } else p.E += sc(p, 8); }
-      if (lv === 4) p.freeConv = true;
+      if (lv === 4) { if (RS(p).metab4 === 'organNoG') p.organNoG = true; else p.freeConv = true; } // T10：無料変換を撤去 → 器官の G なし＋後追い料なし
       if (lv === 5 && temp) { const k = strong ? 2 : 1; p.E += k; p.G += k; p.P += k; }
     }
   }
@@ -519,11 +528,11 @@
       if (tid === 'DB') p.next.body += 2; if (tid === 'DI') p.next.intel += 2; if (tid === 'MC' && RS(p).mcMode !== 'freeOnce') p.next.mass += RS(p).mcDisc; if (tid === 'DA') p.next.any += 1;
     }
     if (tid === 'MC' && strong && RS(p).mcMode === 'freeOnce') p.mcFree = (p.mcFree || 0) + 1; // 試作 mcMode='freeOnce'：強＝次の大量消費1回を無料
-    if (tid === 'NC') gainRes(p, 'coop', (RS(p).ncCoop || [3, 2])[strong ? 0 : 1]);
+    if (tid === 'NC') { gainRes(p, 'coop', (RS(p).ncCoop || [3, 2])[strong ? 0 : 1]); if (!strong && RS(p).weakTraits2) p.P += sc(p, 3); } // T10 弱：協調+1＋P+9
     if (tid === 'NB') { p.crystalDiscL = 1; p.crystalDiscC = (strong && RS(p).nbCoopDisc !== false) ? 1 : 0; if (strong && RS(p).nbCrystalInvest) p.crystalInvest = true; } // nbCrystalInvest：強は献上（生命核）で払った L も身体の収集物に数える（2026-10-25 案2） // nbCoopDisc=false：群れの結晶側の割引なし
-    if (tid === 'NM') p.mimic = strong ? 'free' : 'E3';
-    if (tid === 'NL') p.L += strong ? 2 : 1;
-    if (tid === 'NF') p.foresight = strong ? 'all' : 'lv5';
+    if (tid === 'NM') p.mimic = strong ? 'free' : (RS(p).weakTraits2 ? 'E2' : 'E3'); // T10 弱：E6
+    if (tid === 'NL') { p.L += strong ? 2 : 1; if (!strong && RS(p).weakTraits2) p.E += sc(p, 3); } // T10 弱：L+1＋E+9
+    if (tid === 'NF') p.foresight = strong ? 'all' : (RS(p).weakTraits2 ? 'once' : 'lv5'); // T10 弱：どちらか1回
     if (tid === 'NR') { if (strong) p.lineageCoefAdd = 1; else p.lineageE3 = true; }
     if (tid === 'NE') p.altFuel = strong ? [1, 1] : [5, 3]; // 第42部 N5（2026-10-30 ユーザー採用：強 E1＝P1／弱 E3＝P5。[P, E] の比）
     if (tid === 'NS') p.symbiosis = strong ? 'free' : 'disc'; // 第42部 N8
@@ -532,6 +541,7 @@
     if (tid === 'JI') { if (p.lv.intel < jmax) advanceTrack(st, p, 'intel', '知的跳躍'); if (strong && p.lv.intel < jmax) advanceTrack(st, p, 'intel', '知的跳躍'); }
     if (tid === 'JB') { if (p.lv.body < jmax) advanceTrack(st, p, 'body', '身体覚醒'); if (strong && p.lv.body < jmax) advanceTrack(st, p, 'body', '身体覚醒'); }
     const n = p.traits.length; if ((RS(p).traitCoef || [4, 8]).includes(n)) addUpgrade(st, p, `形質${n}枚目`);
+    if (p.intel4Vg && n % 3 === 0) { p.gemsets += 1; p.intel4VgN = (p.intel4VgN || 0) + 1; log(st, p.id, `${p.name}：祝福+1（知性 Lv4：形質${n}枚目）→ 祝福 ${p.gemsets}`); } // T10 知性 Lv4
   }
   function removeTrait(st, p, tid) {
     const i = p.traits.findIndex(t => t.id === tid); if (i < 0) throw new Error('その形質を持っていません');
@@ -589,6 +599,13 @@
   // トラック進行： {track, pay:'E'|'P'|'G', useL, bonus}
   ACTIONS.track = (st, p, a) => {
     const c = stepCost(p, a.track, a.bonus); if (c === null) throw new Error('Lv5です');
+    if (a.steps === 2) { // T10（第58部 §4-1）二段進行：E 進行は 2 段まとめて払える（手番 1 つ・Lv6 には入らない・E 払いのみ）
+      if (!RS(p).doubleStep) throw new Error('この数値セットに二段進行はありません'); if (a.bonus) throw new Error('追加アクションでは二段進行できません');
+      const lv0 = p.lv[a.track]; if (lv0 >= 4) throw new Error('二段進行は Lv5 までです'); if (a.pay && a.pay !== 'E') throw new Error('二段進行は E 払いのみです');
+      const c2 = stepCostDouble(p, a.track); if (c2 === null) throw new Error('二段進行できません');
+      useToken(p, true); const r = payE(p, c2, a.useL); consumeNext(p, a.track);
+      afterAction(st, p, `${G.TRACK_INFO[a.track].name}を二段進行（E${r.E}${r.L ? '+L' + r.L : ''}）`, true);
+      advanceTrack(st, p, a.track, '進行'); advanceTrack(st, p, a.track, '進行'); return true; }
     if (a.track === 'body' && RS(p).bodyNoE && p.lv.body < 5) throw new Error('この数値セットでは身体は生命核の投入でのみ上がります（Lv6はEで可）'); // 試作 bodyNoE
     const g5 = (p.lv[a.track] === 4 && RS(p).lv5G) ? RS(p).lv5G : (p.lv[a.track] === 5 && RS(p).lv6G) ? RS(p).lv6G : 0; if (g5 && p.G < g5) throw new Error(`Lv${p.lv[a.track] + 1}に入るには遺伝子G${g5}が必要です`); // 試作 lv5G／lv6G（Lv6はE＋Gの両方）
     if (!a.bonus) useToken(p, true);
@@ -704,6 +721,7 @@
     else { how = claimTraitSlot(st, p, a); useToken(p, false); }
     const c = traitCost(st, p, a.trait, disc, a.weak);
     const r = payG(p, c.G, a.useL);
+    if (p.nextTraitFree) p.nextTraitFree = false; else if (p.nextTraitDisc) p.nextTraitDisc = 0; // T10 知性 Lv3★ の「次の形質」を消費
     const tr1 = organ(p, 'Tr1'); if (tr1 && !tr1.strong && p.uses.tr1 < 3) p.uses.tr1 += 1;
     afterAction(st, p, `形質購入 ${a.trait}（G${r.G}${r.L ? '+L' + r.L : ''}${a.viaDG ? '・遺伝子図書館' : a.viaReward ? '・報酬' : ''}${how}）`, tok);
     giveTrait(st, p, a.trait, false, '購入', { res: a.res, track: a.track, weak: !!a.weak });
@@ -780,6 +798,7 @@
 
   // 資源変換： {kind:'EG'|'GE'|'PE'|'PG', n, bonus}
   ACTIONS.convert = (st, p, a) => {
+    if (RS(p).noConvert) throw new Error('この数値セットに資源変換はありません');
     const n = Math.max(1, a.n | 0);
     const tbl0 = { EG: ['E', 2, 'G', 1], GE: ['G', 2, 'E', 1], PE: ['P', 8, 'E', 3], PG: ['P', 8, 'G', 2] }[a.kind]; const tbl = tbl0 && [tbl0[0], sc(p, tbl0[1]), tbl0[2], sc(p, tbl0[3])];
     if (!tbl) throw new Error('変換種別が不正');
@@ -793,7 +812,34 @@
   };
 
   // 予備動員： {res:'E'|'G', bonus}
+  // T10（第59部）：パス（置ける場所が無いときの逃げ道・何も得ない）／復元／増幅
+  ACTIONS.pass = (st, p, a) => { if (!RS(p).noReserve) throw new Error('この数値セットにパスはありません（予備動員を使ってください）'); useToken(p, false); afterAction(st, p, 'パス', true); return true; };
+  ACTIONS.restore = (st, p, a) => {
+    const RT = RS(p).restore; if (!RT) throw new Error('この数値セットに復元はありません');
+    if (p.uses.restore >= 1) throw new Error('復元は1人1回です');
+    const tid = a.trait; if (!traitPool(st).includes(tid)) throw new Error('この数値セットの形質プールにありません');
+    if (trait(p, tid)) throw new Error('同じ形質は1枚まで');
+    if (st.shared.traitFirst[tid] === undefined || st.shared.traitFirst[tid] === p.id) throw new Error('復元できるのは他の人が強で取った形質だけです');
+    const t = G.TRAITS[tid]; const tw = (RS(p).traitCosts || {})[tid] || t.cost; const weakNow = traitCost(st, p, tid, 0, true).G; const cG = weakNow + Math.max(0, tw[0] - tw[1]); // 弱の現在値＋強と弱の差額＝割引込みの強の値段
+    const cE = RT.E || 0; if (p.E < cE) throw new Error(`エネルギーが足りません（必要E${cE}）`);
+    useToken(p, false); const r = payG(p, cG, a.useL); p.E -= cE; p.uses.restore += 1;
+    afterAction(st, p, `復元 ${tid}（G${r.G}${r.L ? '+L' + r.L : ''}+E${cE}）`, true);
+    giveTrait(st, p, tid, true, '復元', { res: a.res, track: a.track });
+    return true;
+  };
+  ACTIONS.amplify = (st, p, a) => {
+    const AM = RS(p).amplify; if (!AM) throw new Error('この数値セットに増幅はありません');
+    if (p.uses.amplify >= 1) throw new Error('増幅は1人1回です');
+    const o = p.organs.find(x => x.id === a.organ); if (!o) throw new Error('その器官を持っていません');
+    if (!['Mg', 'Tl', 'Cx'].includes(G.ORGANS[o.id].lin)) throw new Error('増幅できるのは代謝・転写・促進の器官です（収入・割引系）');
+    if (o.amp) throw new Error('その器官は増幅済みです');
+    const cE = AM.E || 0; if (p.E < cE) throw new Error(`エネルギーが足りません（必要E${cE}）`);
+    useToken(p, false); p.E -= cE; o.amp = true; p.uses.amplify += 1;
+    afterAction(st, p, `増幅 ${o.id} ${G.ORGANS[o.id].name}（E${cE}）→ 効果2倍`, true);
+    return true;
+  };
   ACTIONS.reserve = (st, p, a) => {
+    if (RS(p).noReserve) throw new Error('この数値セットに予備動員はありません（パスを使ってください）');
     if (!a.bonus) useToken(p, false);
     const rE = RS(p).reserveE || 2, rG = RS(p).reserveG || 1; if (a.res === 'G') p.G += rG; else p.E += rE;
     afterAction(st, p, `予備動員（${a.res === 'G' ? 'G+' + rG : 'E+' + rE}）`, !a.bonus);
@@ -1113,7 +1159,7 @@
     let n = p.gemsets;
     const tg = RS(st).traitEndGem; if (tg && st.ended) n += Math.floor(p.traits.length / tg); // 試作 traitEndGem：終了時、形質N枚につき祝福+1（知性Lvを問わない）
     const le = RS(st).lEndGem; if (le && st.ended) n += Math.min(le.max, Math.floor(p.L / le.per)); // T6 S2：終了時、保有L per個につき祝福+1（上限）
-    const cv = RS(st).lv6Convert; if (cv && st.ended) { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; G.TRACKS.forEach(t => { if (p.lv[t] >= 6 && !(RS(st).lv6RealTracks || []).includes(t)) n += Math.floor(cnt[t] / (by[t] || cv)); }); } // lv6RealTracks の色は endGame で痕跡に／T6 L6-A：Lv6 の色は収集物 cv 個につき祝福+1（lv6ConvertBy で色別に変更可）
+    const cv = RS(st).lv6Convert; if (cv && st.ended) { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: Math.max(0, p.traits.length - 3 * (p.intel4VgN || 0)), social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; G.TRACKS.forEach(t => { if (p.lv[t] >= 6 && !(RS(st).lv6RealTracks || []).includes(t)) n += Math.floor(cnt[t] / (by[t] || cv)); }); } // lv6RealTracks の色は endGame で痕跡に／T6 L6-A：Lv6 の色は収集物 cv 個につき祝福+1（lv6ConvertBy で色別に変更可）
     const re2 = organ(p, 'Re2'); let wildLeft = re2 ? (re2.strong ? 99 : 1) : 0;
     if (RS(st).noCombo) return n; // 試作 noCombo（第41部）：宝石コンボを廃止（色の組合せは祝福を生まない）
     st.shared.combos.two.forEach(i => {
@@ -1136,7 +1182,7 @@
   function endGame(st) {
     st.ended = true; st.phase = 'end';
     if (RS(st).endMajorityGem) G.TRACKS.forEach(t => { const mx = Math.max(...st.players.map(p => p.lv[t])); const tops = st.players.filter(p => p.lv[t] === mx); if (tops.length === 1 && mx >= (RS(st).endMajorityMinLv || 2)) addGem(st, tops[0], t, 1, `${G.TRACK_INFO[t].name}の首位（最果ての痕跡）`); }); // 試作 endMajorityGem（第30部 B1）：各色の単独首位に痕跡+1
-    { const cv = RS(st).lv6Convert, rt = RS(st).lv6RealTracks || []; if (cv && rt.length) st.players.forEach(p => { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; rt.forEach(t => { if (p.lv[t] >= 6) { const k = Math.floor(cnt[t] / (by[t] || cv)); if (k > 0) addGem(st, p, t, k, `${G.TRACK_INFO[t].name} Lv6 換算`); } }); }); } // 試作 lv6RealTracks
+    { const cv = RS(st).lv6Convert, rt = RS(st).lv6RealTracks || []; if (cv && rt.length) st.players.forEach(p => { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: Math.max(0, p.traits.length - 3 * (p.intel4VgN || 0)), social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; rt.forEach(t => { if (p.lv[t] >= 6) { const k = Math.floor(cnt[t] / (by[t] || cv)); if (k > 0) addGem(st, p, t, k, `${G.TRACK_INFO[t].name} Lv6 換算`); } }); }); } // 試作 lv6RealTracks
     st.hist = st.hist || []; st.hist.push({ round: st.round + 1, label: '終了', rows: st.players.map(p => summaryRow(st, p)) });
     const rows = st.players.map(p => Object.assign({ pid: p.id, name: p.name }, score(st, p)));
     rows.sort((a, b) => b.total - a.total || b.tie[0] - a.tie[0] || b.tie[1] - a.tie[1] || b.tie[2] - a.tie[2]);
@@ -1169,13 +1215,13 @@
       E5: `固定E強：E+${sc(st, 5)}。${cb}。${byp}`, G3: `固定G強：G+${sc(st, 3)}。${cb}。${byp}`, P8: `P増加：P+${R.p8 || 8}。${cb}。${byp}`,
       EG: R.herd ? `群体E：P${R.herdCost || 6}を払って E+${sc(st, 3)}＋協調+${R.herdCoop || 1}。${cb}。${byp}` : `群体E：E+${sc(st, 2)}＋P${sc(st, 10)}ごとに+${sc(st, 1)}E。${cb}。${byp}`,
       GG: R.herd ? `群体G：P${R.herdCost || 6}を払って G+${sc(st, 2)}＋協調+${R.herdCoop || 1}。${cb}。${byp}` : `群体G：G+${sc(st, 1)}＋P${sc(st, 10)}ごとに+${sc(st, 1)}G。${cb}。${byp}`,
-      ALL: `全資源獲得：E+${sc(st, 2)} G+${sc(st, 1)} P+${sc(st, 4)}。${cb}（資源を選ぶ）。${byp}`, PB: `Pブースト購入：G${sc(st, 2)}→P+${pbGain(st)}（全翻訳で割引）${R.pbCoop ? '。' + cb : ''}。緊急発進の対象外`,
+      ALL: `全資源獲得：E+${sc(st, 2)} G+${sc(st, 1)} P+${sc(st, 4)}。${cb}（資源を選ぶ）。${byp}`, PB: `Pブースト購入：G${sc(st, 2)}→P+${pbGain(st)}（全翻訳で割引）${R.pbCoop ? '。' + cb : ''}。${byp}（Wなし実行は対象外）`, // 2026-11-05 Pブーストも緊急発進・協調発進の対象に
       MB: `大量消費(身体)：P${R.massCost}（下限${R.massMin.body}）→痕跡+1。${R.bodyAxis === 'L' ? '誰でもP→痕跡の出口' : '身体Lv4/5で軽減'}${bypM}`,
       MI: `大量消費(知性)：P${R.massCost}→G${R.miMaxCost || 4}以下の形質${R.miMaxCost ? (R.miCount || 1) + '種' : 'を異なる2種'}（無料）${bypM}`, MS: `大量消費(社会)：P${R.msCost || R.massCost}→協調+${R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)}${bypM}`, MM: `大量消費(代謝)：P${R.mmCost || R.massCost}→E+${sc(st, 10)} G+${sc(st, 10)}${bypM}`,
       MIM: `模倣：G${R.mimicCost || 4}を払い、自分を含む誰かが到達済みの Lv2／Lv3★ の !即時効果（G+${sc(st, 3)}／P+${sc(st, 6)}／P+${sc(st, 10)}／E+${sc(st, 8)}／Wなし実行権+1）を1つ受け取る。◆生命核の L+1 と ∞恒久・手収入は対象外。1ラウンド1人`,
       EXP: `発現：G${R.expressCost || 10}を払い、痕跡+1（先着なし・トラックは進まない）。1ラウンド1人${bypM}`,
       TRT: R.traitShared ? '形質購入：共用（排他なし）。形質プールのカードをクリック。先着＝強・後続＝弱。' + (R.traitHalfFloor ? 'コストの下限＝元コストの半分（切上）' : '') : '形質購入：形質プールのカードをクリック（1ラウンド1人）',
-      TRT2: `形質購入（割増枠）：通常コスト＋E${st.round}`, GEM: R.tribute && R.tribute.flatG ? `献上（遺伝子）：G${sc(st, R.tribute.flatG)}→祝福+1。共用・各自1ラウンド1回（研究で何度でも）` : `宝石セット：G(${sc(st, 10)}−形質数×${sc(st, 1)}・下限${sc(st, 5)}${R.gemsetEscalate ? '・購入ごとに+' + R.gemsetEscalate : ''})→祝福+1（自分専用）${R.gemsetShared ? '。共用（排他なし）' : '。1ラウンド1人'}`,
+      TRT2: `形質購入（割増枠）：通常コスト＋E${st.round}`, GEM: R.tribute && R.tribute.flatG ? `献上（遺伝子）：G${sc(st, R.tribute.flatG)}→祝福+1。共用・各自1ラウンド1回${R.intelRewards === 'learn' ? '（研究で何度でも）' : ''}` : `宝石セット：G(${sc(st, 10)}−形質数×${sc(st, 1)}・下限${sc(st, 5)}${R.gemsetEscalate ? '・購入ごとに+' + R.gemsetEscalate : ''})→祝福+1（自分専用）${R.gemsetShared ? '。共用（排他なし）' : '。1ラウンド1人'}`,
       TE: R.tribute ? `献上枠（エネルギー）：E${sc(st, R.tribute.slots.TE.E)}→祝福+1。ラウンド${R.tribute.openRound || 6}から・1ラウンド1人` : '', TP: R.tribute ? `献上枠（個体数）：P${sc(st, R.tribute.slots.TP.P)}→祝福+1。ラウンド${R.tribute.openRound || 6}から・1ラウンド1人` : '', TR: R.tribute ? `献上枠（宝石）：E${sc(st, R.tribute.slots.TR.E)}+P${sc(st, R.tribute.slots.TR.P)}→痕跡+1（先着なし）。ラウンド${R.tribute.openRound || 6}から・1ラウンド1人` : '',
       TO: R.tribute ? `器官の恩寵：器官の場から器官1枚を無料で建造（後追い料なし・建造時効果あり・系統内は階層順）。同じ手番にもう1枚を半額で建造してよい。ラウンド${R.tribute.openRound || 6}から・1ラウンド1人` : '', TT: R.tribute ? `形質の恩寵：G${sc(st, (R.tribute.slots.TT || {}).G || 0)}を払い、形質プールから形質を${(R.tribute.slots.TT || {}).n || 2}枚まで無料で取得（強が残っていれば強）。ラウンド${R.tribute.openRound || 6}から・1ラウンド1人` : '', TA: R.tribute ? `錬金：手持ちの宝石の色を${(R.tribute.slots.TA || {}).n || 2}個まで替える（コンボ・審判は替えた後の色で数える）。ラウンド${R.tribute.openRound || 6}から・1ラウンド1人` : '', TB: R.tribute ? `神の加護：置いたとき資源枠1つを今すぐ実行（使用済みでも可・占有しない・獲得量${(R.tribute.slots.TB || {}).mul || 2}倍）。さらにコマを置いたこのラウンドの残りの手番、自分の資源枠（早取り盤の資源獲得）の獲得量が${(R.tribute.slots.TB || {}).mul || 2}倍（協調ボーナスとコストはそのまま）。先に置くほど強い。ラウンド${R.tribute.openRound || 6}から・1ラウンド1人` : '', TJ: R.tribute ? `跳躍：トラック進行を${(R.tribute.slots.TJ || {}).n || 2}回（同じトラックでも別でも）、合計コストから E${sc(st, (R.tribute.slots.TJ || {}).disc || 0)}引く。W必須・報酬は通常どおり。ラウンド${R.tribute.openRound || 6}から・1ラウンド1人` : '',
       BRD: R.coef2 ? `繁殖変換：${R.breed.map((c, i) => `P${c}→×${(R.coef2.breedBase || 3) + i + 1}`).join('／')}（繁栄度＝痕跡に掛ける）${R.breedL ? `。生命核L${R.breedL}でも払える（身体の投入回数に数える）` : ''}` : `繁殖変換：P${R.breed[0]}→×4／P${R.breed[1]}→×5${R.breedL ? `。生命核L${R.breedL}でも払える（身体の投入回数に数える）` : ''}。係数の上限×7`,
@@ -1207,6 +1253,9 @@
     if (id === 'MI') return R.miMaxCost ? `P${mass('MI')} → G${R.miMaxCost}以下の形質${R.miCount || 2}種` : `P${mass('MI')} → G4以下の形質を異なる2種`;
     if (id === 'MS') return `P${mass('MS')} → 協調+${R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)}`;
     if (id === 'MM') return `P${mass('MM')} → E+${sc(st, 10)} G+${sc(st, 10)}`;
+    if (id === 'RST') return `強の値段＋E${(R.restore || {}).E || 0} → 取られた強の形質を強の効果で（1人1回）`;
+    if (id === 'AMP') return `E${(R.amplify || {}).E || 0} → 器官1つ（代謝・転写・促進）の効果を以後2倍（1人1回）`;
+    if (id === 'PASS') return '何も得ない（置ける場所が無いときに）';
     if (id === 'GEM') return R.tribute && R.tribute.flatG ? `G${sc(st, R.tribute.flatG)} → 祝福+1（共用・1R1回）` : `G(${sc(st, 10)}−形質数×${sc(st, 1)}・下限${sc(st, 5)}${R.gemsetEscalate ? '・購入ごとに+' + R.gemsetEscalate : ''}) → 祝福+1${R.gemsetShared ? '（共用）' : ''}`;
     if (id === 'TE' && R.tribute) return `E${sc(st, R.tribute.slots.TE.E)} → 祝福+1`; if (id === 'TP' && R.tribute) return `P${sc(st, R.tribute.slots.TP.P)} → 祝福+1`; if (id === 'TR' && R.tribute) return `E${sc(st, R.tribute.slots.TR.E)}+P${sc(st, R.tribute.slots.TR.P)} → 痕跡+1`;
     if (id === 'TO' && R.tribute) return '器官1枚を無料（＋もう1枚を半額）'; if (id === 'TT' && R.tribute) return `G${sc(st, (R.tribute.slots.TT || {}).G || 0)} → 形質${(R.tribute.slots.TT || {}).n || 2}枚まで無料`; if (id === 'TA' && R.tribute) return `宝石の色を${(R.tribute.slots.TA || {}).n || 2}個まで替える`; if (id === 'TB' && R.tribute) return `資源枠1つを今すぐ（使用済みでも）＋残りの手番は資源枠が${(R.tribute.slots.TB || {}).mul || 2}倍`; if (id === 'TJ' && R.tribute) return `進行2回・合計 −E${sc(st, (R.tribute.slots.TJ || {}).disc || 0)}`;
@@ -1227,7 +1276,7 @@
   }
   function trackRewardText(st, track, lv) {
     const R = RS(st);
-    if (lv === 6) return `${R.lv6First ? `先着：痕跡+1＋祝福+1／後着：痕跡+1` : `痕跡+1（先着なし）`}${R.lv6Convert ? `＋終了時、${G.GATE_SHORT_L && track === 'body' && R.bodyAxis === 'L' ? '払ったL' : G.GATE_SHORT[track]}${R.lv6Convert}個につき祝福+1` : ''}${lv6PayDef(st, track) ? `。コスト＝${lv6CostText(st, track)}（その色の資源で払う）` : ''}`;
+    if (lv === 6) return `${R.lv6First ? `先着：痕跡+1＋祝福+1／後着：痕跡+1` : `痕跡+1（先着なし）`}${R.lv6Convert ? `。${R.lv6First ? 'どちらも' : ''}終了時、${G.GATE_SHORT_L && track === 'body' && R.bodyAxis === 'L' ? '払ったL' : G.GATE_SHORT[track]}${R.lv6Convert}個につき祝福+1` : ''}${lv6PayDef(st, track) ? `。コスト＝${lv6CostText(st, track)}（その色の資源で払う）` : ''}`;
     if (R.bodyAxis === 'L' && track === 'body' && R.bodyRewards === 'P') { const m = { 2: ['今すぐL+1', R.lCrystal && (R.lCrystalLv || 4) === 2 ? `献上（生命核）（L${R.lCrystal}→祝福+1）を解放` : null].filter(Boolean).join('＋'), 3: `1L＝E${sc(st, 4)}／G${sc(st, 4)}（代用払いの価値上昇）＋強は今すぐL+1`, 4: (R.bodyLv4Gem ? '痕跡+1＋' : '') + '生命核の利回り（P）が2倍', 5: `強：1L＝E${sc(st, 5)}／G${sc(st, 5)}＋今すぐL+1／弱：今すぐL+1` }; if (m[lv]) return txt(st, m[lv]); }
     if (R.bodyAxis === 'L' && track === 'body') { // T5/T6：生命核軸の身体（フラグで文を組み立てる）
       const t2 = ['利回りの資源をLごとにE/Gから選べる']; if (R.body2L) t2.push('今すぐL+1'); if (R.body2Gem) t2.push('痕跡+1'); if (R.lCrystal && (R.lCrystalLv || 4) === 2) t2.push(`結晶化（L${R.lCrystal}→祝福+1・排他なし）を解放`);
@@ -1239,6 +1288,8 @@
     if (R.socialRewards === 'shield' && track === 'social' && G.TRACK_REWARDS_T4.social[lv]) s = G.TRACK_REWARDS_T4.social[lv];
     if (R.intel4 === 'traitDisc' && track === 'intel' && lv === 4) s = G.TRACK_REWARDS_T4.intel[4];
     if (R.intelRewards === 'learn' && track === 'intel' && G.TRACK_REWARDS_T7_INTEL[lv]) s = G.TRACK_REWARDS_T7_INTEL[lv];
+    if (R.intelRewards === 'trait' && track === 'intel' && G.TRACK_REWARDS_T10_INTEL[lv]) s = G.TRACK_REWARDS_T10_INTEL[lv]; // T10
+    if (R.metab4 === 'organNoG' && track === 'metab' && lv === 4) s = G.TRACK_REWARDS_T10_METAB4; // T10
     if (R.bodyAxis === 'L' && track === 'body' && G.TRACK_REWARDS_T5_BODY[lv]) s = G.TRACK_REWARDS_T5_BODY[lv];
     if (R.bodyAxis === 'L' && track === 'body' && lv === 4 && R.bodyLv4Gem && R.lCrystal) s = G.TRACK_REWARDS_T6_BODY4;
     return txt(st, s);
@@ -1252,5 +1303,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { altFuelP, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { altFuelP, traitText, stepCostDouble, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

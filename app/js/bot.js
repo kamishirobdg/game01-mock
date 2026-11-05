@@ -152,7 +152,7 @@
   }
 
   // ---------- 貪欲評価型（greedy）：全候補を tryApply → 評価関数の最大を選ぶ。複数ルートを混ぜる「人間らしい」基準線 ----------
-  const W = { E: 0.5, G: 0.7, P: 0.3, L: 1.5, gate: 1.0, coefFuture: 1.6, shield: 4, coop: 0.8, organ: 1.0, trait: 0.8, inc: 1.0, breedFut: 0, breedProg: 0 }; // 2026-11-02 breedFut＝繁栄度1段が「これから得る痕跡」に掛かる見込み／breedProg＝次の繁殖（P150／L3）へ貯める途中の価値。第47部：どちらも種族の計測を光翼に偏らせ（7R 混合で 光翼 58〜67%・万列 1〜11%）得点も上がらないため既定 0（--bw= で試せる）
+  const W = { E: 0.5, G: 0.7, P: 0.3, L: 1.5, gate: 1.0, coefFuture: 1.6, shield: 4, coop: 0.8, organ: 1.0, trait: 0.8, inc: 1.0, breedFut: 0, breedProg: 0, plan: 1, deny: 1.5 }; // 2026-11-04 plan＝ラウンド単位の計画（1＝有効・--bw=plan=0 で旧 greedy）／deny＝終盤の妨害（首位が使える早取り枠を先に取る）の重み // 2026-11-02 breedFut＝繁栄度1段が「これから得る痕跡」に掛かる見込み／breedProg＝次の繁殖（P150／L3）へ貯める途中の価値。第47部：どちらも種族の計測を光翼に偏らせ（7R 混合で 光翼 58〜67%・万列 1〜11%）得点も上がらないため既定 0（--bw= で試せる）
   function evaluate(st, p, w) {
     w = w || W; const sc = G.score(st, p); let v = sc.total * (2 / (RSo(st).gemPt || 2)); // 2026-10-28：評価の点は gemPt=2 の尺度に正規化（T8 で ×2 を外しても AI の重みづけが変わらないように。以下の「×2」はこの尺度）
     const RN = RSo(st).rounds || G.ROUNDS; const rem = RN - st.round; const k = rem / RN; // rem＝この後に残るラウンド数
@@ -180,7 +180,7 @@
     else { let cb = R.coopBonusCap !== undefined ? Math.min(p.coop, R.coopBonusCap + (p.coopCapAdd || 0)) : p.coop; if (R.coopMode === 'tier') cb = p.coop >= 8 ? 3 : p.coop >= 4 ? 2 : p.coop >= 1 ? 1 : 0; if (R.coopMode === 'half') cb = p.coopRoundUp ? Math.ceil(cb / 2) : Math.floor(cb / 2); if (R.coopMode === 'third') cb = R.coopThirdRound ? Math.floor((cb + 1) / 3) : Math.floor(cb / 3); if (p.coopBonusAdd && p.coop > 0) cb += p.coopBonusAdd; if (R.coopBonusSlots) cb *= 0.5; v += rem * cb * w.coop; }
     v += k * (p.organs.length * w.organ + p.traits.length * w.trait);
     if (rem > 0) { // 将来の割引・資源を生む器官/形質の見込み（1ラウンドあたりの期待使用回数 × 割引・資源）
-      const k1 = R.scale || 1; const lm = (lin, sv, wv) => { let m = 0; p.organs.forEach(o => { const d = G.ORGANS[o.id]; if (d && d.lin === lin) m = Math.max(m, (o.strong ? sv : wv)[d.tier - 1]); }); return m * k1; };
+      const k1 = R.scale || 1; const lm = (lin, sv, wv) => { let m = 0; p.organs.forEach(o => { const d = G.ORGANS[o.id]; if (d && d.lin === lin) m = Math.max(m, (o.strong ? sv : wv)[d.tier - 1] * (o.amp ? 2 : 1)); }); return m * k1; }; // o.amp＝T10 増幅
       v += rem * 0.6 * lm('Tl', [2, 3, 4], [1, 2, 3]) * w.G; // 転写：形質 0.6枚/R
       v += rem * 0.9 * lm('Cx', [1, 2, 3], [1, 1, 2]) * w.E; // 促進：進行 0.9回/R
       const li1 = G.organ(p, 'Li1'); if (li1) v += rem * 0.6 * (li1.strong ? 2 : 1) * k1 * w.E; const li2 = G.organ(p, 'Li2'); if (li2) v += rem * 0.6 * (li2.strong ? 3 : 2) * k1 * w.E;
@@ -228,8 +228,12 @@
     if (RSo(st).gSlots) { const mc = G.gSlotCost(p, RSo(st).mimicCost || 4), ec = G.gSlotCost(p, RSo(st).expressCost || 10); G.mimicOptions(st, p).forEach(e => out.push(A({ type: 'mimic', effect: e.id, useL: lFor(mc, p.G) }))); G.TRACKS.forEach(t => { out.push(A({ type: 'express', track: t, useL: lFor(ec, p.G) })); if (used('EXP') && G.coopBypassable(st, 'EXP', p) && p.coop >= (RSo(st).bypassCoopCost || 2)) out.push(A({ type: 'express', track: t, useL: lFor(ec, p.G), bypassCoop: true })); }); } if (used('GEM') && p.bypassWide && p.L > 0) out.push(A({ type: 'gemset', useL: 0, bypassL: true }));
     G.scanCandidates(st, p).slice(0, 2).forEach(tg => out.push(A({ type: 'scan', target: tg, useL: 0 })));
     if (!RSo(st).noAdapt) G.TRACKS.filter(t => p.lv[t] === 1).forEach(t => out.push(A({ type: 'adapt', track: t })));
-    ['EG', 'GE', 'PE', 'PG'].forEach(k => [1, 2].forEach(n => out.push(A({ type: 'convert', kind: k, n }))));
-    out.push(A({ type: 'reserve', res: 'E' }), A({ type: 'reserve', res: 'G' }));
+    if (!RSo(st).noConvert) ['EG', 'GE', 'PE', 'PG'].forEach(k => [1, 2].forEach(n => out.push(A({ type: 'convert', kind: k, n }))));
+    if (!RSo(st).noReserve) out.push(A({ type: 'reserve', res: 'E' }), A({ type: 'reserve', res: 'G' })); else out.push(A({ type: 'pass' }));
+    // T10（第59部）：復元（他者が強で取った形質を強で）・増幅（器官1つを2倍）・二段進行
+    if (RSo(st).restore && !(p.uses && p.uses.restore)) G.traitPool(st).filter(t => st.shared.traitFirst[t] !== undefined && st.shared.traitFirst[t] !== p.id && !G.trait(p, t)).forEach(t => out.push(A({ type: 'restore', trait: t, useL: 0, res: 'E', track: 'intel' })));
+    if (RSo(st).amplify && !(p.uses && p.uses.amplify)) p.organs.filter(o => ['Mg', 'Tl', 'Cx'].includes(G.ORGANS[o.id].lin) && !o.amp).forEach(o => out.push(A({ type: 'amplify', organ: o.id })));
+    if (RSo(st).doubleStep) G.TRACKS.forEach(t => { const c2 = G.stepCostDouble(p, t); if (c2 !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0, steps: 2 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c2, p.E), steps: 2 })); } });
     if (RSo(st).gToE) [1, 2, 4].forEach(n => out.push(A({ type: 'gToE', n })));
     p.cards.forEach(c => { out.push(A({ type: 'card', card: c, choice: 'E' })); if (c === 'J') out.push(A({ type: 'card', card: c, choice: 'G' })); if (p.shields > 0) out.push(A({ type: 'card', card: c, choice: 'E', shield: true })); });
     ['St1', 'St2', 'St3'].forEach(o => { if (G.organ(p, o)) out.push(A({ type: 'stAct', organ: o, pe: 14, pg: 12 })); });
@@ -237,7 +241,9 @@
   }
   function chooseGreedy(st, pid, w) {
     const p = st.players[pid]; const R = RSo(st);
-    w = Object.assign({}, w || W); { const k = R.scale || 1; if (k !== 1) ['E', 'G', 'P'].forEach(r => { w[r] = w[r] / k; }); } // 資源の規模に合わせて1個あたりの価値を下げる
+    // 2026-11-04 ラウンド単位の計画（ユーザー採用・第53部）：方策の重み指定（色寄せ）が無い greedy は、局面から「今 R の狙い」を決めて評価の重みに反映する。手番ごとに読み直す（相手の先取りに追従）
+    const plan = (!w && W.plan) ? planFor(st, p) : null; if (plan) G.Bot.lastPlan = plan;
+    w = Object.assign({}, w || W, plan ? plan.w : {}); { const k = R.scale || 1; if (k !== 1) ['E', 'G', 'P'].forEach(r => { w[r] = w[r] / k; }); } // 資源の規模に合わせて1個あたりの価値を下げる
     if (R.gToE) w.G = Math.max(w.G, w.E * R.gToE[1] / R.gToE[0]); // G→E変換があるならGはE換算以上の価値
     const isFree = (a) => a.shield || a.type === 'gToE' || a.type === 'freeConv';
     const base = evaluate(st, p, w);
@@ -251,7 +257,8 @@
         }
         continue;
       }
-      const v = evaluate(s2, s2.players[pid], w);
+      let v = evaluate(s2, s2.players[pid], w); if (a.type === 'pass') v -= 1; // パスは最後の手段
+      if (plan && plan.denyPid !== undefined) v += denyBonus(st, a, st.players[plan.denyPid]) * (W.deny || 0); // 終盤：首位が使える早取り枠を先に取る
       if (isFree(a)) { if (v > bfv) { bfv = v; bestFree = a; } } // 手番を消費しない手は「今の状態より良くなる」なら先に実行
       else if (v > bv) { bv = v; best = a; ties = 1; } else if (v === bv) ties++;
     }
@@ -276,15 +283,84 @@
     blueG: Object.assign({}, W, { trait: 3.0, organ: 0.3, coop: 0.3, L: 1.0, intelGate: 3.0 }),
     whiteG: Object.assign({}, W, { coop: 3.0, organ: 0.3, trait: 0.3, L: 1.0, socialGate: 3.0 }),
   };
+  // ---------- ラウンド単位の計画（2026-11-04 ユーザー採用）----------
+  // 局面（残R・自分のゲートの進み・種族・他者の主戦略・収入・首位との差）から「今 R の狙い」を決め、評価の重みの上書きで表す。
+  //   序盤：ゲート達成（主トラック＝ゲートの進みが大きく・種族に合い・他者が選んでいないもの）／収入の最大化（収入が卓の平均以下なら）／他者が選んでいない戦略を優先
+  //   中盤：次Rの得点化の準備（繁栄度・成熟度の先・繁殖への貯金・Lv6 の支払い）／競合に備えて2本目のトラックも進める
+  //   終盤：最大限の得点化（資源の重みを下げて得点へ）／首位と競っているときは妨害（首位が使える早取り枠を先に取る）
+  const FOCUS_W = { metab: { organ: 1.8, metabGate: 2.5 }, intel: { trait: 1.5, intelGate: 2.5 }, social: { coop: 1.5, socialGate: 2.5 }, body: { L: 2.2, bodyGate: 2.5 } };
+  const AFFINITY = { wing: 'body', arm: 'intel', ant: 'social', manta: 'metab' };
+  function focusOf(q) { let best = null, bv = -1; G.TRACKS.forEach(t => { const g = G.gateReq(q, t); const v = (g ? g.have / Math.max(1, g.need) : 1) + q.lv[t] * 0.1; if (v > bv) { bv = v; best = t; } }); return best; }
+  function phaseOf(st) { const RN = RSo(st).rounds || G.ROUNDS; const rem = RN - st.round; return rem / RN > 0.5 ? 'early' : rem >= 2 ? 'mid' : 'late'; } // 7R：R1〜3／R4〜5／R6〜7、5R：R1〜2／R3／R4〜5
+  function planFor(st, p) {
+    const phase = phaseOf(st); const crowd = {}; G.TRACKS.forEach(t => { crowd[t] = 0; });
+    st.players.filter(q => q.id !== p.id && q.species).forEach(q => { crowd[focusOf(q)] += 1; });
+    const aff = AFFINITY[p.species]; const sc = {};
+    G.TRACKS.forEach(t => { const g = G.gateReq(p, t); const prog = g ? g.have / Math.max(1, g.need) : 1; sc[t] = prog + (p.lv[t] >= 5 ? -1 : 0) + (aff === t ? 0.25 : 0) - 0.3 * crowd[t] + p.lv[t] * 0.05; });
+    const order = G.TRACKS.slice().sort((a, b) => sc[b] - sc[a]); const primary = order[0], secondary = order[1];
+    const w = {}; const goals = []; const out = { phase, primary, secondary, goals, w };
+    if (phase === 'early') {
+      goals.push('gate:' + primary); Object.assign(w, FOCUS_W[primary]);
+      const incV = (i) => i.E + 1.5 * i.G + 0.6 * i.P; const mine = incV(G.income(p)); const avg = st.players.reduce((a, q) => a + incV(G.income(q)), 0) / st.players.length;
+      if (mine <= avg) { goals.push('income'); w.inc = 1.6; w.organ = Math.max(w.organ || 1, 1.4); }
+      if (crowd[primary] === 0) goals.push('uncrowded');
+    } else if (phase === 'mid') {
+      goals.push('prepare'); Object.assign(w, FOCUS_W[primary]); w.coefFuture = 2.0; w.breedProg = 0.6;
+      goals.push('diverse:' + secondary); w[secondary + 'Gate'] = 1.6;
+    } else {
+      goals.push('cash'); w.E = 0.3; w.G = 0.45; w.P = 0.2;
+      const others = st.players.filter(q => q.id !== p.id); if (others.length) { const lead = others.slice().sort((a, b) => G.score(st, b).total - G.score(st, a).total)[0]; const my = G.score(st, p).total; if (G.score(st, lead).total >= my - 10) { goals.push('deny'); out.denyPid = lead.id; } }
+    }
+    return out;
+  }
+  // 妨害ボーナス：首位（lead）が今すぐ使える早取り枠（大量消費・強の形質・献上枠）を自分が取る手に +1
+  function denyBonus(st, a, lead) {
+    if (!lead) return 0;
+    if (a.type === 'mass') return lead.P >= G.massCost(lead, a.kind) ? 1 : 0;
+    if (a.type === 'trait' && !a.weak) { const tc = G.traitCost(st, lead, a.trait); return tc && tc.strong && lead.G >= tc.G ? 1 : 0; }
+    if (a.type === 'tributeSlot') return 1;
+    if (a.type === 'gemset') return lead.G >= G.gemsetPrice(lead) ? 0.5 : 0;
+    return 0;
+  }
+  // ---------- ビーム探索（R 内・自分の手だけ深読み・相手は 1 手読み＋計画で代打ち）----------
+  // BEAM.depth＝自分の手数（1＝従来の 1 手読み）、BEAM.k＝各段で残す候補数。観測用 `--depth=3 --beam=3`。画面の AI は depth 1 のまま
+  const BEAM = { depth: 1, k: 3 }; let inSearch = false;
+  function settle(s, pid) { let g = 0; while (!s.ended && G.cur(s).id === pid && s.players[pid].pending[0] && g++ < 8) { const a = pending(s, s.players[pid]); if (!a) break; try { s = G.tryApply(s, a); } catch (e) { break; } } return s; }
+  function simOthers(s, pid) { const r0 = s.round; let g = 0; while (!s.ended && s.round === r0 && G.cur(s).id !== pid && g++ < 60) { const q = G.cur(s).id; const a = choose(s, q, 'greedy'); if (!a) break; try { s = G.tryApply(s, a); } catch (e) { break; } } return s; }
+  function chooseBeam(st, pid) {
+    const p0 = st.players[pid]; const R = RSo(st);
+    const plan = W.plan ? planFor(st, p0) : null; if (plan) G.Bot.lastPlan = plan;
+    const w = Object.assign({}, W, plan ? plan.w : {}); { const k = R.scale || 1; if (k !== 1) ['E', 'G', 'P'].forEach(r => { w[r] = w[r] / k; }); }
+    const K = BEAM.k, depth = BEAM.depth; inSearch = true;
+    try {
+      let frontier = [];
+      for (const a of candidates(st, p0)) { let s2; try { s2 = G.tryApply(st, a); } catch (e) { continue; } s2 = settle(s2, pid); frontier.push({ first: a, st: s2, v: evaluate(s2, s2.players[pid], w) + (plan && plan.denyPid !== undefined ? denyBonus(st, a, st.players[plan.denyPid]) * (W.deny || 0) : 0), done: false }); }
+      if (!frontier.length) return null;
+      frontier.sort((x, y) => y.v - x.v); frontier = frontier.slice(0, K);
+      for (let d = 2; d <= depth; d++) {
+        const next = [];
+        for (const node of frontier) {
+          if (node.done) { next.push(node); continue; }
+          const s1 = simOthers(node.st, pid);
+          if (s1.ended || s1.round !== st.round || G.cur(s1).id !== pid) { next.push({ first: node.first, st: s1, v: evaluate(s1, s1.players[pid], w), done: true }); continue; }
+          const p1 = s1.players[pid]; let any = false;
+          for (const a of candidates(s1, p1)) { let s2; try { s2 = G.tryApply(s1, a); } catch (e) { continue; } any = true; s2 = settle(s2, pid); next.push({ first: node.first, st: s2, v: evaluate(s2, s2.players[pid], w), done: false }); }
+          if (!any) next.push({ first: node.first, st: s1, v: evaluate(s1, s1.players[pid], w), done: true });
+        }
+        next.sort((x, y) => y.v - x.v); frontier = next.slice(0, K);
+      }
+      return frontier[0].first;
+    } finally { inSearch = false; }
+  }
   function choose(st, pid, style) {
     const p = st.players[pid];
     const pd = pending(st, p); if (pd) return pd;
     const gate = !!RSo(st).gates;
     style = style || (gate ? ['greedy', 'greenG', 'blueG', 'redG'][pid % 4] : STYLES[pid % 4]); // 画面のAI席：ゲート型では混合greedy＋色寄せ（純ルート台本は弱すぎるため）
-    if (style === 'greedy') return chooseGreedy(st, pid);
+    if (style === 'greedy') return (BEAM.depth > 1 && !inSearch) ? chooseBeam(st, pid) : chooseGreedy(st, pid);
     if (BIAS[style]) return chooseGreedy(st, pid, BIAS[style]);
     if (GATE_STYLES.includes(style)) return chooseGate(st, pid, style);
     return chooseClassic(st, pid, style);
   }
-  G.Bot = { choose, evaluate, candidates, STYLES, GATE_STYLES, W, BIAS, stylesFor: (st) => (RSo(st).gates ? GATE_STYLES : STYLES) }; // W/BIAS は test/observe.js の --bw= で一時上書き
+  G.Bot = { choose, evaluate, candidates, STYLES, GATE_STYLES, W, BIAS, BEAM, planFor, lastPlan: null, stylesFor: (st) => (RSo(st).gates ? GATE_STYLES : STYLES) }; // W/BIAS は test/observe.js の --bw= で一時上書き
 })((typeof window !== 'undefined' ? window : globalThis).G1);

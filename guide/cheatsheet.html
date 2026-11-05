@@ -34,23 +34,23 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 <body>
 <h1>game01 早見表 <small id="ver">数値はすべてテストプレイ用の仮値</small></h1>
 
-<div class="score">痕跡 × 繁栄度 ＋ 祝福 × 成熟度<small>痕跡＝宇宙への影響（★・Lv6・大量消費(身体)・発現・最果ての痕跡）／祝福＝神の評価（献上・Lv6 先着・終了時換算）<br>繁栄度＝×3＋繁殖の段数／成熟度＝×3＋形質<span id="tc"></span>枚目・系統完成（どちらも最大×7）<br>同点：痕跡 → 形質＋協調 → 残り資源（E+G+P）</small></div>
+<div class="score">痕跡 × 繁栄度 ＋ 祝福 × 成熟度<small>痕跡＝宇宙への影響（★・Lv6・大量消費(身体)・最果ての痕跡）／祝福＝神の評価（献上・Lv6 先着・知性 Lv4・終了時換算）<br>繁栄度＝×3＋繁殖の段数／成熟度＝×3＋形質<span id="tc"></span>枚目・系統完成（どちらも最大×7）<br>同点：痕跡 → 形質＋協調 → 残り資源（E+G+P）</small></div>
 
 <div class="blk"><h2><i>1</i>ラウンドの流れ（<span id="rounds"></span>ラウンド固定）</h2>
 <p>① 収入：生命核 L+1。持っている L 1個につき P+<span id="yield"></span>（身体 Lv4 で2倍）。基礎収入なし<br>
-② 手番順に<span class="tok w"></span>×5 を1個ずつ置く → 全員使い切ったら終了（パス不可・予備動員＝無料で E+<span id="rsvE"></span>／G+<span id="rsvG"></span>）<br>
+② 手番順に<span class="tok w"></span>×5 を1個ずつ置く → 全員使い切ったら終了（置ける場所が無いときだけパス＝何も得ない）<br>
 ③ ラウンド2以降、開始時に<b class="k">痕跡の少ない順</b>に並べ替え</p></div>
 
 <div class="blk"><h2><i>2</i>進化トラック（4本・Lv1〜6）</h2>
-<p><b class="k">収集物が数に達すると自動で上がる</b>（E で先に上がってもよい：<span id="step"></span>・身体 <span id="bstep"></span>）</p>
+<p><b class="k">収集物が数に達すると自動で上がる</b>（E で先に上がってもよい：<span id="step"></span>・身体 <span id="bstep"></span>。<b>二段進行</b>＝2段分を合算して手番1つ・Lv5 まで）</p>
 <div class="trk" id="trk"></div>
-<p><b class="k">Lv3★・Lv5★</b>で痕跡+1、<b class="k">先着＝強い報酬</b>（Lv5★の一番乗りは痕跡+2）。<b class="k">Lv6</b>＝<span id="lv6"></span>：先着 痕跡+1＋祝福+1／後着 痕跡+1。終了時 Lv6 のトラックの収集物3個につき祝福+1</p></div>
+<p><b class="k">Lv3★・Lv5★</b>で痕跡+1、<b class="k">先着＝強い報酬</b>（Lv5★の一番乗りは痕跡+2）。<b class="k">E を払って自力で上がった段は後着でも強</b>（知的跳躍・身体覚醒も）。知性 Lv4＝形質3枚ごとに祝福+1／代謝 Lv4＝器官の G なし・後追い料なし。<b class="k">Lv6</b>＝<span id="lv6"></span>：先着 痕跡+1＋祝福+1／後着 痕跡+1。終了時 Lv6 のトラックの収集物3個につき祝福+1</p></div>
 
 <div class="blk"><h2><i>3</i>早取り盤（各枠1ラウンドに1人）</h2>
 <ul>
 <li><b>資源</b>：<span id="res"></span>（＋協調数ぶん増える）。使用済みは緊急発進（L1）・協調発進（協調3）で突破</li>
 <li><b>大量消費</b>：<span id="mass"></span></li>
-<li><b>形質購入</b>（強は1枚だけ早い者勝ち・弱は何枚でも）／<b>模倣</b> <span id="mim"></span>／<b>発現</b> <span id="exp"></span></li>
+<li><b>形質購入</b>（強は1枚だけ早い者勝ち・弱は何枚でも・弱にも固有の効果）</li>
 <li><b>献上枠</b>（R<span id="tribR"></span>〜・4種から3種）：<span id="tribpool"></span></li>
 </ul></div>
 
@@ -60,40 +60,41 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 <li><b>最終R＝祝福枠</b>：空いている資源枠にコマを置くと資源に加えて祝福+1（緊急発進・協調発進・Wなし実行は対象外）</li>
 <li><b>繁殖変換</b>：P<span id="breed"></span>（または L<span id="breedL"></span>）→ 繁栄度+1（4段まで・W必須）</li>
 <li><b>器官建造</b>：<span id="ocost"></span>。効果は先着も後続も同じ、後続は +<span id="late"></span>E。同じ系統3枚＝系統完成で成熟度+1</li>
-<li>環境スキャン <span id="scan"></span>／資源変換 <span id="cnv"></span></li>
+<li><b>復元</b> <span id="rst"></span>／<b>増幅</b> <span id="amp"></span></li>
+<li>環境スキャン <span id="scan"></span>／<b>パス</b>（置ける場所が無いとき・何も得ない）。資源どうしの変換はなし</li>
 </ul></div>
 
 <div class="two">
 <div class="blk"><h2><i>5</i>資源</h2>
-<p><b>E</b> 進行・器官・献上／<b>G</b> 形質・模倣・発現／<b>P</b> 大量消費・繁殖・群体枠／<b>L</b> 持てば P を生む、払えば E<span id="lval"></span>/G<span id="lval2"></span>（払った個数が身体の収集物）／<b>協調</b> 資源枠の取り分+協調数（上限<span id="coopmax"></span>）</p></div>
+<p><b>E</b> 進行・器官・復元・増幅・献上／<b>G</b> 形質・復元／<b>P</b> 大量消費・繁殖・群体枠／<b>L</b> 持てば P を生む、払えば E<span id="lval"></span>/G<span id="lval2"></span>（払った個数が身体の収集物）／<b>協調</b> 資源枠の取り分+協調数（上限<span id="coopmax"></span>）</p></div>
 <div class="blk"><h2><i>6</i>終了時</h2>
 <p><b>最果ての痕跡</b>：各トラックの単独首位（Lv2以上）に痕跡+1。<br>Lv6 の換算：収集物3個につき祝福+1。<br>得点＝痕跡×繁栄度＋祝福×成熟度</p></div>
 </div>
 
 <div class="blk"><h2><i>7</i>種族（初期資源 E/G/P）</h2><p id="sp"></p></div>
-<div class="foot">数値はアプリと同じ data.js／engine.js（T8）から表示・2026-10-29 改訂</div>
+<div class="foot">数値はアプリと同じ data.js／engine.js（T10）から表示・2026-11-05 改訂</div>
 
 <script src="../app/js/icons.js"></script>
 <script src="../app/js/data.js"></script>
 <script src="../app/js/engine.js"></script>
 <script>
 (function () {
-  const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS.t8;
-  const st = G.newGame({ rules: 't8', ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
+  const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS.t10; // 2026-11-05 既定 t8→t10
+  const st = G.newGame({ rules: 't10', ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
   const set = (id, v) => { $(id).textContent = String(v); };
   const sl = id => G.slotText(st, id); const T = R.tribute;
-  set('ver', 'v' + G.VERSION + '・' + R.name + '・数値はすべて仮値'); set('tc', (R.traitCoef || [4, 8]).join('・')); set('rounds', G.ROUNDS); set('yield', R.lYield || 9); set('rsvE', R.reserveE); set('rsvG', R.reserveG);
+  set('ver', 'v' + G.VERSION + '・' + R.name + '・数値はすべて仮値'); set('tc', (R.traitCoef || [4, 8]).join('・')); set('rounds', G.ROUNDS); set('yield', R.lYield || 9);
   const stepArr = R.step.slice(1), bstep = (R.bodyStep || R.step).slice(1); set('step', stepArr.join('/') + 'E'); set('bstep', bstep.join('/') + 'E');
   $('trk').innerHTML = G.TRACKS.map(t => `<span style="border-color:var(--${G.TRACK_INFO[t].color})"><b>${G.TRACK_INFO[t].name.split('・')[0]}</b><br>${G.GATE_SHORT[t] || ''} ${R.gates[t].slice(2).join('/')}</span>`).join('');
   set('lv6', G.TRACKS.map(t => G.lv6CostText(st, t)).join('／'));
   set('res', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${sl(id)}`).join('／'));
   set('mass', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace('大量消費', '')} ${sl(id)}`).join('／'));
-  set('mim', sl('MIM').replace(/（.*$/, '')); set('exp', sl('EXP'));
+  set('rst', sl('RST')); set('amp', sl('AMP'));
   set('tribR', T.openRound || 6); set('tribpool', T.pool.map(id => `${G.SLOT_BY_ID[id].name}＝${sl(id)}`).join('／'));
   set('flatG', G.sc(st, T.flatG)); set('lcry', R.lCrystal); set('ccry', R.coopCrystal);
   set('breed', R.breed[0]); set('breedL', R.breedL || '—');
   set('ocost', R.organCost.map(([e, g]) => `${e}E+${g}G`).join('/')); set('late', G.sc(st, R.organLateFee || 1));
-  set('scan', sl('SCAN')); set('cnv', sl('CNV')); set('lval', G.sc(st, 3)); set('lval2', G.sc(st, 3)); set('coopmax', R.coopMax || G.COOP_MAX);
+  set('scan', sl('SCAN')); set('lval', G.sc(st, 3)); set('lval2', G.sc(st, 3)); set('coopmax', R.coopMax || G.COOP_MAX);
   set('sp', Object.keys(G.SPECIES).sort((a, b) => G.SPECIES[a].order - G.SPECIES[b].order).map(id => { const s = G.speciesInfo(st, id); return `${s.name} E${s.stock.E}/G${s.stock.G}/P${s.stock.P}・${s.passive}`; }).join('／'));
 })();
 </script>
