@@ -658,7 +658,7 @@
     // 建造前の連結効果（既存の器官が反応）
     const li1 = organ(p, 'Li1'); if (li1) p.E += sc(p, li1.strong ? 2 : 1); // 2026-10-22 弱も恒久（E+1）
     const li2 = organ(p, 'Li2'); if (li2) gainRes(p, a.li2Res || 'E', sc(p, li2.strong ? 3 : 2));
-    p.organs.push({ id: a.organ, strong: c.strong }); if (RS(st).organExcl) st.shared.organUsed[a.organ] = p.id;
+    { const amp = p.ampReserve === a.organ; p.organs.push(amp ? { id: a.organ, strong: c.strong, amp: true } : { id: a.organ, strong: c.strong }); if (amp) { p.ampReserve = null; log(st, p.id, `${p.name}：${a.organ} は増幅の予約により効果2倍`); } } if (RS(st).organExcl) st.shared.organUsed[a.organ] = p.id; // v3.65 増幅の予約
     { const gb = (t) => { p.gateBonus = p.gateBonus || {}; p.gateBonus[t] = (p.gateBonus[t] || 0) + 1; }; const o = a.organ, sg = c.strong; // T7 器官の建造時効果
       if (o === 'Hc1') gainRes(p, 'coop', (RS(p).hc1Coop || [2, 1])[sg ? 0 : 1]); if (o === 'Hc2') p.herdCoopAdd = sg ? 2 : 1; if (o === 'Hc3') { if (RS(p).hc3Bonus) p.coopBonusAdd = (p.coopBonusAdd || 0) + sc(p, RS(p).hc3Bonus); else if (RS(p).hc3RoundUp) p.coopRoundUp = true; else p.coopCapAdd = sg ? 2 : 1; if (sg) gb('social'); }
       if (o === 'Pu1') p.L += 1; if (o === 'Pu2') p.yieldAdd = (p.yieldAdd || 0) + sc(p, 1); if (o === 'Pu3') { p.lValue = Math.max(p.lValue || sc(p, 3), sc(p, 4)); if (sg) gb('body'); }
@@ -816,6 +816,12 @@
 
   // 予備動員： {res:'E'|'G', bonus}
   // T10（第59部）：パス（置ける場所が無いときの逃げ道・何も得ない）／復元／増幅
+  ACTIONS.gather = (st, p, a) => { // 2026-11-05 v3.65 採集：E／G／P／協調 のどれか 1 つを少し得る（パスの置き換え・手番 1 つ）
+    const GT = RS(p).gather; if (!GT) throw new Error('この数値セットに採集はありません');
+    const res = ['E', 'G', 'P', 'coop'].includes(a.res) ? a.res : 'E'; const n = GT[res] || 0; if (n <= 0) throw new Error('その資源は採集できません');
+    const cp = res === 'coop' ? (GT.coopCostP || 0) : 0; if (cp && p.P < cp) throw new Error(`個体数が足りません（協調の採集は P${cp}）`); // coopCostP＝協調を選ぶときに払う P（無料だと AI が 14 回/戦 使う＝第65部）
+    useToken(p, false); if (cp) p.P -= cp; gainRes(p, res, n); afterAction(st, p, `採集 ${res === 'coop' ? '協調' : res}+${n}${cp ? `（P${cp}）` : ''}`, true); return true;
+  };
   ACTIONS.pass = (st, p, a) => { if (!RS(p).noReserve) throw new Error('この数値セットにパスはありません（予備動員を使ってください）'); useToken(p, false); afterAction(st, p, 'パス', true); return true; };
   ACTIONS.restore = (st, p, a) => {
     const RT = RS(p).restore; if (!RT) throw new Error('この数値セットに復元はありません');
@@ -833,12 +839,13 @@
   ACTIONS.amplify = (st, p, a) => {
     const AM = RS(p).amplify; if (!AM) throw new Error('この数値セットに増幅はありません');
     if (p.uses.amplify >= 1) throw new Error('増幅は1人1回です');
-    const o = p.organs.find(x => x.id === a.organ); if (!o) throw new Error('その器官を持っていません');
-    if (!['Mg', 'Tl', 'Cx'].includes(G.ORGANS[o.id].lin)) throw new Error('増幅できるのは代謝・転写・促進の器官です（収入・割引系）');
-    if (o.amp) throw new Error('その器官は増幅済みです');
+    const o = p.organs.find(x => x.id === a.organ);
+    if (!['Mg', 'Tl', 'Cx'].includes((G.ORGANS[a.organ] || {}).lin)) throw new Error('増幅できるのは代謝・転写・促進の器官です（収入・割引系）');
     const cE = AM.E || 0; if (p.E < cE) throw new Error(`エネルギーが足りません（必要E${cE}）`);
-    useToken(p, false); p.E -= cE; o.amp = true; p.uses.amplify += 1;
-    afterAction(st, p, `増幅 ${o.id} ${G.ORGANS[o.id].name}（E${cE}）→ 効果2倍`, true);
+    if (o) { if (o.amp) throw new Error('その器官は増幅済みです'); useToken(p, false); p.E -= cE; o.amp = true; p.uses.amplify += 1; afterAction(st, p, `増幅 ${o.id} ${G.ORGANS[o.id].name}（E${cE}）→ 効果2倍`, true); }
+    else { // 2026-11-05 v3.65 ユーザー要望：まだ建てていない（今から建造できる）器官も対象に＝予約して、建造したときから 2 倍
+      if (!st.shared.organField.includes(a.organ) || !organCost(st, p, a.organ)) throw new Error('その器官はいま建造できません（場にあり、系統の順番が来ているものだけ）');
+      useToken(p, false); p.E -= cE; p.ampReserve = a.organ; p.uses.amplify += 1; afterAction(st, p, `増幅 ${a.organ} ${G.ORGANS[a.organ].name}（E${cE}・未建造）→ 建造したときから効果2倍`, true); }
     return true;
   };
   ACTIONS.reserve = (st, p, a) => {
@@ -940,7 +947,7 @@
     afterAction(st, p, `発現（${a.free ? '学習・G0' : paid}）→ 痕跡+1`, !a.free); return !a.free;
   };
   // 献上（第33部）：共用の換金は各品目1ラウンド1回（献上表に自分のコマ）。研究（gemsetNoEsc）は遺伝子の行だけ回数制限なし
-  function tribOnce(st, p, key, label) { const T = RS(p).tribute; if (!T || !T.onceEach) return; if (key === 'G' && p.gemsetNoEsc) return; p.round.trib = p.round.trib || {}; if (p.round.trib[key]) throw new Error(`献上（${label}）はこのラウンドに使用済みです（1ラウンド1回）`); p.round.trib[key] = true; }
+  function tribOnce(st, p, key, label) { const T = RS(p).tribute; if (!T || !T.onceEach || RS(p).tributeNoLimit) return; /* 試作 tributeNoLimit（2026-11-05 ユーザー質問「献上は 1R1回に限定する必要があるか」の計測用・既定 無効） */ if (key === 'G' && p.gemsetNoEsc) return; p.round.trib = p.round.trib || {}; if (p.round.trib[key]) throw new Error(`献上（${label}）はこのラウンドに使用済みです（1ラウンド1回）`); p.round.trib[key] = true; }
   function tribOpen(st, p) { const T = RS(p).tribute; if (!T) throw new Error('この数値セットに献上はありません'); if (st.round < (T.openRound || 6)) throw new Error(`この献上はラウンド${T.openRound || 6}から（神の到来）`); return T; }
   // 試作 tributeAll（第48部）：全種の資源（E・G・P〔・L〕）をまとめて払い、大きめの祝福。{E,G,P,L?,vg}（E/G/P は規模前の値）・献上と同じ開始R・各自1R1回
   ACTIONS.tributeAll = (st, p, a) => {
@@ -1266,6 +1273,7 @@
     if (id === 'RST') return `強の値段＋E${(R.restore || {}).E || 0} → 取られた強の形質を強の効果で（1人1回）`;
     if (id === 'AMP') return `E${(R.amplify || {}).E || 0} → 器官1つ（代謝・転写・促進）の効果を以後2倍（1人1回）`;
     if (id === 'PASS') return '何も得ない（置ける場所が無いときに）';
+    if (id === 'GTH') { const g = R.gather || {}; return `E${g.E}／G${g.G}／P${g.P} のどれか1つ、または P${g.coopCostP || 0}→協調+${g.coop}（弱い資源・置ける場所が無いときに）`; }
     if (id === 'GEM') return R.tribute && R.tribute.flatG ? `G${sc(st, R.tribute.flatG)} → 祝福+1（共用・1R1回）` : `G(${sc(st, 10)}−形質数×${sc(st, 1)}・下限${sc(st, 5)}${R.gemsetEscalate ? '・購入ごとに+' + R.gemsetEscalate : ''}) → 祝福+1${R.gemsetShared ? '（共用）' : ''}`;
     if (id === 'TE' && R.tribute) return `E${sc(st, R.tribute.slots.TE.E)} → 祝福+1`; if (id === 'TP' && R.tribute) return `P${sc(st, R.tribute.slots.TP.P)} → 祝福+1`; if (id === 'TR' && R.tribute) return `E${sc(st, R.tribute.slots.TR.E)}+P${sc(st, R.tribute.slots.TR.P)} → 痕跡+1`;
     if (id === 'TO' && R.tribute) return '器官1枚を無料（＋もう1枚を半額）'; if (id === 'TT' && R.tribute) return `G${sc(st, (R.tribute.slots.TT || {}).G || 0)} → 形質${(R.tribute.slots.TT || {}).n || 2}枚まで無料`; if (id === 'TA' && R.tribute) return `宝石の色を${(R.tribute.slots.TA || {}).n || 2}個まで替える`; if (id === 'TB' && R.tribute) return `資源枠1つを今すぐ（使用済みでも）＋残りの手番は資源枠が${(R.tribute.slots.TB || {}).mul || 2}倍`; if (id === 'TJ' && R.tribute) return `進行2回・合計 −E${sc(st, (R.tribute.slots.TJ || {}).disc || 0)}`;

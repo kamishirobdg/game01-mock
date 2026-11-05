@@ -163,14 +163,14 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.64'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.65'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
     speciesMod: Object.assign({}, G.RULESETS.t8.speciesMod, { wing: Object.assign({}, G.RULESETS.t8.speciesMod.wing, { stock: { E: 12, G: 6, P: 18 } }), arm: Object.assign({}, G.RULESETS.t8.speciesMod.arm, { stock: { E: 9, G: 9, P: 18 } }), ant: Object.assign({}, G.RULESETS.t8.speciesMod.ant, { stock: { E: 15, G: 6, P: 24 } }) }) }); // 2026-11-04 ユーザー決定（第50部 E1・5R の試遊用）：v3.55 の祝福枠で九腕 41%・万列 11〜17% になったため、九腕 E12 G9 P18→E9 G9 P18・万列 E15 G6 P18→E15 G6 P24（t8s のみ。4人 3シード 16〜32%）。 // 2026-11-01 ユーザー決定（第45部 S12）：5R では光翼 E15 G6 P24→E12 G6 P18・九腕 E9 G6 P18→E12 G9 P18（種族 48/3/10/39%→28/18/32/22%）。// 2026-11-01 ユーザー決定（第45部）：5R では身体 Lv6 を L5→L3（L の入手は 5R で平均8.3・専念で9〜10。ゲート7＋L5＝12 は上限11を超えていた）。7R（t8）は L5 のまま
   // 2026-11-05 T10（第55〜59部・ユーザー決定）＝T8（v3.59 で凍結）＋共用盤の改訂（資源変換・予備動員・模倣・発現を撤去／復元・増幅を追加／パス）・弱形質の効果（第57部）・知性 Lv3★／Lv4 の作り直し・代謝 Lv4＝器官の G なし・E 進行＝二段進行＋自分で払って上げた★は強の報酬・跳躍形質の弱は +1 段（★なら強）・弱の値段 JI 21／JB 27
   G.RULESETS.t10 = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT10（T8＋共用盤改訂・弱形質・E進行・知性/代謝Lv4）',
-    gSlots: false, noConvert: true, noReserve: true, restore: { E: 9 }, amplify: { E: 24 },
+    gSlots: false, noConvert: true, noReserve: true, restore: { E: 9 }, amplify: { E: 24 }, gather: { E: 6, G: 3, P: 9, coop: 1, coopCostP: 18 }, // 2026-11-05 v3.65 採集（第65部：協調は無料だと AI が 14 回/戦＝資源枠より強い。P18〔群体枠と同じ払い・資源なし〕で 3.8 回。E/G/P は 0.1 回＝パス並み）（パスの置き換え・ユーザー指示「パスの代わりになる程度に弱い」）：固定E強 E15・固定G強 G9・P増加 P30 の 4 割弱＝物差し E6≈6・G3≈4.5・P9≈5.4・協調1≈3＋ゲート
     weakTraits2: true, ncCoopW: 1, dgDisc: [6, 4], dgDiscW: 4, dvDisc: [6, 4], dvDiscW: 4, mbBreedDiscWeak: 15, mbDiscWeak: 12,
     intelRewards: 'trait', metab4: 'organNoG', paidStrong: true, firstBonusStrict: true, doubleStep: true,
     yieldAfterL: true, // 2026-11-05 ユーザー決定（第62部 案 A）：収入は L+1 を受け取ってから利回り（受け取った L も数える）。全員 +P9/R。種族の崩れ（群泳 42〜51%・万列 6〜8%）は他の調整と一緒に見直す
@@ -181,7 +181,7 @@
   // 2026-11-05 ユーザー指示（第63部・バランス調査・試作）：T11＝T10 の資源量をすべて 1/3（T7 の単位に戻す）＋協調ボーナス＝協調 2 個ごとに +1（coopMode 'half'・切り捨て）。
   //   scaleRuleset が倍率を掛けるのは基準単位のキーだけなので、T8／T10 で絶対値（×3 の単位）で書いたキーはここで 1/3 に丸めて上書きする：復元 E9→3・増幅 E24→8・消費軽減 弱 −18→−6・増殖暴走 弱 繁殖 −15→−5／大量消費(身体) −12→−4・進化加速 [6,4]→[2,1]・Lv6 G42→14／E90→30・Pブースト P+50→+17・胞子の上限 10→3・代謝核 +2→+1（T9 と同じ）。形質の値段・種族の初期資源・大量消費・繁殖・利回り・進行・器官は scaleRuleset が 1/3 に丸める（T9 と同じ丸め）
   G.RULESETS.t11 = G.scaleRuleset(G.RULESETS.t10, 1 / 3, { name: '仮値セットT11（試作：T10 の資源1/3・協調2個ごとに+1）', coopMode: 'half', coopRoundUp: false,
-    restore: { E: 3 }, amplify: { E: 8 }, mcDiscWeak: 6, mbBreedDiscWeak: 5, mbDiscWeak: 4, dvDisc: [2, 1], dvDiscW: 1, dgDiscW: 1, sporeCap: 3, mg3Inc: 1, pbGain: 17,
+    restore: { E: 3 }, amplify: { E: 8 }, gather: { E: 2, G: 1, P: 3, coop: 1, coopCostP: 6 }, mcDiscWeak: 6, mbBreedDiscWeak: 5, mbDiscWeak: 4, dvDisc: [2, 1], dvDiscW: 1, dgDiscW: 1, sporeCap: 3, mg3Inc: 1, pbGain: 17,
     lv6Pay: { body: { L: 5 }, intel: { G: 14 }, social: { coop: 8 }, metab: { E: 30 } } });
   G.RULESETS.t11s = Object.assign({}, G.RULESETS.t11, { name: '仮値セットT11・5ラウンド（試作）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t11.tribute, { openRound: 5 }), lv6Pay: Object.assign({}, G.RULESETS.t11.lv6Pay, { body: { L: 3 } }),
     speciesMod: G.scaleRuleset({ speciesMod: G.RULESETS.t10s.speciesMod }, 1 / 3).speciesMod });
@@ -245,23 +245,23 @@
     DV: { name: '進化加速', cat: 'D', cost: [8, 6], strong: '全トラック進行コスト-{2}（恒久）', weak: '全トラック-{1}（恒久）', weak2: '全トラック進行コスト-{dvDiscW:4}（恒久）', permWeak: true },
     MB: { name: '増殖暴走', cat: 'M', cost: [7, 5], strong: '繁殖変換 -{15}P（各段）＋大量消費(身体)-{mbDisc:8}P', weak: '大量消費(身体)-{mbDisc:8}Pのみ', weak2: '繁殖変換 -{mbBreedDiscWeak:15}P（各段）＋大量消費(身体)-{mbDiscWeak:12}P', permWeak: true }, // 2026-10-22 半減→各段-15P（4段で半減だと P300 の価値になるため）
     IM: { name: '代謝亢進', cat: 'I', cost: [8, 6], strong: '好きな1種の収入+3（取得時固定）', weak: '好きな1種の収入+2（取得時固定）', permWeak: true },
-    DG: { name: '遺伝子図書館', cat: 'D', cost: [7, 5], strong: '毎R形質1枚を-{2}Gで購入可（排他不要）', weak: '同 -{1}G', weak2: '同 -{dgDiscW:4}G', permWeak: true },
+    DG: { name: '遺伝子図書館', cat: 'D', cost: [7, 5], strong: '毎R形質1枚を-{2}Gで購入可（排他不要）', weak: '毎R形質1枚を-{1}Gで購入可（排他不要）', weak2: '毎R形質1枚を-{dgDiscW:4}Gで購入可（排他不要）', permWeak: true }, // 2026-11-05 弱の文を単体で読める形に（ユーザー指摘）
     JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', weak: '知性+1段階＋Lv5★で必ず強効果', weak2: '知性+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
     JB: { name: '身体覚醒', cat: 'J', cost: [9, 7], strong: '身体+2段階（即時）', weak: '身体+1段階＋Lv5★で必ず強効果', weak2: '身体+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
     // 2026-10-28 ユーザー採用（第42部 N5/N8/N9）：コンボ廃止の補填。序盤に取るほど得な「資源を生む／器官に役立つ」形質
-    NE: { name: '代替燃料', cat: 'N', cost: [3, 2], strong: '器官建造の E を P で払える（E1＝P1）', weak: '同（E3＝P5・切り上げ）', permWeak: true }, // 2026-10-30 弱 E1＝P2 → E3＝P5（強弱の差を縮める・ユーザー採用）
-    NS: { name: '共生', cat: 'N', cost: [3, 2] /* 2026-10-29 G6→G9（T8）：九腕 39% の是正・AI52 */, strong: '器官建造時、同じ系統の器官を他者が持っていれば G コストなし', weak: '同 G-{1}', permWeak: true },
-    NP: { name: '胞子', cat: 'N', cost: [3, 2], strong: 'ラウンド終了時、残った E を P に換える（E1→P3・上限 E{sporeCap:3}）', weak: '同 E1→P2', permWeak: true },
+    NE: { name: '代替燃料', cat: 'N', cost: [3, 2], strong: '器官建造の E を P で払える（E1＝P1）', weak: '器官建造の E を P で払える（E3＝P5・切り上げ）', permWeak: true }, // 2026-10-30 弱 E1＝P2 → E3＝P5（強弱の差を縮める・ユーザー採用）
+    NS: { name: '共生', cat: 'N', cost: [3, 2] /* 2026-10-29 G6→G9（T8）：九腕 39% の是正・AI52 */, strong: '器官建造時、同じ系統の器官を他者が持っていれば G コストなし', weak: '器官建造時、同じ系統の器官を他者が持っていれば G-{1}', permWeak: true },
+    NP: { name: '胞子', cat: 'N', cost: [3, 2], strong: 'ラウンド終了時、残った E を P に換える（E1→P3・上限 E{sporeCap:3}）', weak: 'ラウンド終了時、残った E を P に換える（E1→P2・上限 E{sporeCap:3}）', permWeak: true },
   };
   G.TRAIT_ORDER = ['IE', 'IG', 'IP', 'IB', 'DB', 'DI', 'DA', 'MC', 'DV', 'MB', 'IM', 'DG', 'JI', 'JB'];
   // T7（第14部）の新形質＝突然変異。値段は数値セット側（RULESETS.t7.traitCosts）で上書きする
   Object.assign(G.TRAITS, {
     NC: { name: '群れ本能', cat: 'N', cost: [8, 6], strong: '即時 協調+2', weak: '即時 協調+1', weak2: '即時 協調+1＋P+{3}', permWeak: false, instant: true }, // 文言は T7 の ncCoop [2,1] に合わせた（2026-10-24）
     NB: { name: '結晶体質', cat: 'N', cost: [10, 8], strong: '献上（生命核）の必要数が1つ少なく、払った生命核を身体の収集物に数える', weak: '献上（生命核）の必要数が1つ少ない', permWeak: true, strongNoCoop: '献上（生命核）の必要数が1つ少ない（強：先着）' }, // T7 nbCoopDisc=false では強も結晶化側のみ // 文言は T7 の nbCoopDisc=false（協調側の割引なし）に合わせた。強弱で効果が同じ点は要検討（2026-10-24）
-    NM: { name: '擬態', cat: 'N', cost: [12, 9], strong: '1ラウンド1回、他者が使用済みの資源獲得枠を無償で使える', weak: '同（E{3}を払う）', weak2: '同（E{2}を払う）', permWeak: true },
+    NM: { name: '擬態', cat: 'N', cost: [12, 9], strong: '1ラウンド1回、他者が使用済みの資源獲得枠を無償で使える', weak: '1ラウンド1回、他者が使用済みの資源獲得枠を E{3} を払って使える', weak2: '1ラウンド1回、他者が使用済みの資源獲得枠を E{2} を払って使える', permWeak: true },
     NL: { name: '長命', cat: 'N', cost: [9, 7], strong: '即時 生命核+2', weak: '即時 生命核+1', weak2: '即時 生命核+1＋E+{3}', permWeak: false, instant: true },
     NF: { name: '先見', cat: 'N', cost: [11, 8], strong: 'Lv3★／Lv5★を後着でも強の報酬で受け取る（痕跡の先着ボーナスは除く）', weak: 'Lv5★のみ', weak2: 'Lv3★／Lv5★のどちらか1回、後着でも強の報酬', permWeak: true },
-    NR: { name: '適応放散', cat: 'N', cost: [12, 9], strong: '器官の系統完成による成熟度+1を3系統目まで', weak: '系統完成のたびE+{3}', permWeak: true },
+    NR: { name: '適応放散', cat: 'N', cost: [12, 9], strong: '器官の系統完成（同じ系統3枚）の成熟度+1を、通常の2系統目までに加えて3系統目でも得る', weak: '系統完成のたびE+{3}', permWeak: true }, // 2026-11-05 文言を具体的に（ユーザー「意味がぴんとこない」）
   });
   // 画像の代替（新しいIDは既存の絵を仮に使う）
   G.ART_ALIAS = { NC: 'IG', NB: 'MC', NM: 'DA', NL: 'IP', NF: 'DI', NR: 'DV', Mg1: 'Cv1', Mg2: 'Cv2', Mg3: 'Cv3', Tl1: 'Tr1', Tl2: 'Tr2', Tl3: 'Tr3', Hc1: 'Li1', Hc2: 'Li2', Hc3: 'Li3', Pu1: 'St1', Pu2: 'St2', Pu3: 'St3', Cx1: 'Ca1', Cx2: 'Ca2', Cx3: 'Ca3' };
@@ -397,7 +397,8 @@
     { id: 'RSV',  group: 'cu',   excl: false, name: '予備動員',  text: '無料で E+2 または G+1' },
     { id: 'RST',  group: 'cu',   excl: false, name: '復元',     text: '取られた強の形質を強の効果で取る（強の値段＋E9・1人1回）', rs: 'restore' }, // 2026-11-05 T10（第59部）
     { id: 'AMP',  group: 'cu',   excl: false, name: '増幅',     text: 'E24 → 器官1つ（代謝・転写・促進）の効果を以後2倍（1人1回）', rs: 'amplify' },
-    { id: 'PASS', group: 'cu',   excl: false, name: 'パス',     text: '置ける場所が無いときに（何も得ない）', rs: 'noReserve' },
+    { id: 'GTH',  group: 'cu',   excl: false, name: '採集',     text: 'E／G／P／協調+1 のどれか1つを少しだけ（置ける場所が無いときの逃げ道）', rs: 'gather' }, // 2026-11-05 ユーザー指示：パスの代わりに「1アクションで E・G・P・協調のどれかを少し得る」弱い共用アクション（値は数値セット gather）
+    { id: 'PASS', group: 'cu',   excl: false, name: 'パス',     text: '置ける場所が無いときに（何も得ない）', rs: 'passSlot' }, // v3.65：採集に置き換え（旧セーブの再生用に ACTIONS.pass は残す）
   ];
   G.SLOT_BY_ID = {}; G.SLOTS.forEach(s => { G.SLOT_BY_ID[s.id] = s; });
   G.RES_SLOTS = ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL']; // 緊急発進・Wなし実行・協調ボーナスの対象

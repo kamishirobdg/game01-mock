@@ -169,7 +169,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <ol class="pts">
   <li><strong>収入</strong>：まず生命核 L+1。次に、持っている L 1個につき <strong>P+<span id="k-yield"></span></strong>（いま受け取った L も数える。身体 Lv4 で2倍）。器官や形質の収入もここで入る。</li>
   <li><strong>手番順</strong>：ラウンド2からは「<strong>痕跡の少ない人が先</strong>」（同数なら前のラウンドの順）。先行している人ほど後手に回る。</li>
-  <li><strong>行動</strong>：手番順に<strong>ワーカー1個ずつ</strong>置く。全員が5個使い切るまで繰り返す（置ける場所が無いときだけ<strong>パス</strong>＝ワーカーを置いて何も得ない）。</li>
+  <li><strong>行動</strong>：手番順に<strong>ワーカー1個ずつ</strong>置く。全員が5個使い切るまで繰り返す（置ける場所が無いときは<strong>採集</strong>＝E・G・P・協調のどれかを少しだけ得る）。</li>
   <li><strong>終了判定</strong>：<span id="k-rounds2"></span>ラウンド目が終わったら得点計算。</li>
 </ol>
 <div class="tip">早取り盤の枠は「1ラウンドに1人だけ」。使用済みの資源枠は <strong>緊急発進</strong>（生命核1個を払う）か <strong>協調発進</strong>（協調3個を払う）で突破できます。生命核を払うたびに、払った個数が身体トラックの収集物になります。</div>
@@ -226,7 +226,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <ul class="pts">
   <li>場には<strong>4系統×3段階</strong>（初心者セットアップは <span id="k-beglin"></span> の固定。熟練者は6系統から4系統を抽選）。系統内は階層順に建てる。</li>
   <li>コスト <span id="k-ocost"></span>。<strong>効果は先着も後続も同じ。後続は後追い料 +<span id="k-late"></span>E</strong>（器官＝早い者が安い、形質＝早い者が強い）。代謝 Lv4 からは G なし・後追い料なし。</li>
-  <li>共用盤の<strong>増幅</strong>（E<span id="k-amp"></span>・1人1回）で、持っている代謝・転写・促進の器官1つの効果を以後2倍にできる。</li>
+  <li>共用盤の<strong>増幅</strong>（E<span id="k-amp"></span>・1人1回）で、代謝・転写・促進の器官1つの効果を以後2倍にできる（持っている器官のほか、今から建てられる器官を選べば建てたときから2倍）。</li>
   <li>同じ系統3枚＝<strong>系統完成</strong>で成熟度+1。3段目は、そのトラックの収集物の数え方を1つ有利にする（ゲート+1）。</li>
 </ul>
 <div class="tabs" id="og-tabs"></div><div class="tabbody" id="og-body"></div>
@@ -239,7 +239,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <table class="qt" id="fast"></table>
 <h3>共用盤</h3>
 <table class="qt" id="shared"></table>
-<div class="tip"><strong>大量消費</strong>は個体数 P<span id="k-mass"></span> を払う早取り枠（身体＝痕跡+1、知性＝形質、社会＝協調+3、代謝＝P<span id="k-mm"></span> で E+30 G+30）。共用盤の<strong>復元</strong>（取られた強の形質を強の値段＋E で）・<strong>増幅</strong>（器官1つの効果を2倍）は各自ゲーム中1回。<strong>パス</strong>は置ける場所が無いときの逃げ道で、何も得ません。</div>
+<div class="tip"><strong>大量消費</strong>は個体数 P<span id="k-mass"></span> を払う早取り枠（身体＝痕跡+1、知性＝形質、社会＝協調+3、代謝＝P<span id="k-mm"></span> で E+30 G+30）。共用盤の<strong>復元</strong>（取られた強の形質を強の値段＋E で）・<strong>増幅</strong>（器官1つの効果を2倍）は各自ゲーム中1回。<strong>採集</strong>（E<span id="k-gthE"></span>／G<span id="k-gthG"></span>／P<span id="k-gthP"></span> のどれか1つ、または P<span id="k-gthCP"></span> を払って協調+<span id="k-gthC"></span>）は置ける場所が無いときの逃げ道で、資源枠よりずっと少ない量です。</div>
 </section>
 
 <section id="c8">
@@ -320,7 +320,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   const HS = [
     ['進化トラック', '4本×Lv1〜6。矢印の下の数字が「自動で上がる収集物の数」と E コスト。点線の枠をクリックで E を払って進む。★の段で痕跡。', [0.9, 7, 56, 28.9]],
     ['早取り盤', '各枠1ラウンドに1人。資源獲得・大量消費・形質購入。神の到来で献上枠が開く。', [0.9, 36.6, 56, 28.7]],
-    ['共用盤', '何人でも何回でも。献上・繁殖変換・器官建造・環境スキャン・復元・増幅・パス（画像は旧版・資源変換と予備動員は廃止）。', [0.9, 66, 56, 16.4]],
+    ['共用盤', '何人でも何回でも。献上・繁殖変換・器官建造・環境スキャン・復元・増幅・採集（画像は旧版・資源変換と予備動員は廃止）。', [0.9, 66, 56, 16.4]],
     ['器官の場／形質プール', 'タブで切替。器官は4系統×3段、形質は強1枚＋弱。カードをクリックで建造／購入。', [0.9, 85.1, 56, 14.9]],
     ['手番の人の個人ボード', '資源と次の収入、ワーカー、繁栄度・成熟度のゲージ、協調、痕跡・祝福、現在の点、持っている器官・形質。', [57.7, 7, 41.5, 21.5]],
     ['他プレイヤー', '各自の点・資源・Lv・痕跡・祝福・形質・器官・協調・残りワーカー。', [57.7, 29.4, 41.5, 9.6]],
@@ -336,7 +336,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 
   // ---- 2・3 ----
   num('k-yield', R.lYield || 9); num('k-lval', G.sc(st, 3)); num('k-lval2', G.sc(st, 3)); num('k-coopmax', R.coopMax || G.COOP_MAX);
-  num('k-scan', G.slotText(st, 'SCAN')); num('k-rst', (R.restore || {}).E || 0); num('k-amp', (R.amplify || {}).E || 0);
+  num('k-scan', G.slotText(st, 'SCAN')); num('k-rst', (R.restore || {}).E || 0); num('k-amp', (R.amplify || {}).E || 0); { const g = R.gather || {}; num('k-gthE', g.E); num('k-gthG', g.G); num('k-gthP', g.P); num('k-gthC', g.coop); num('k-gthCP', g.coopCostP || 0); }
 
   // ---- 4 トラック ----
   const stepArr = R.step.slice(1), bstep = (R.bodyStep || R.step).slice(1);
@@ -365,7 +365,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   // ---- 7 盤 ----
   const row = id => { const s = G.SLOT_BY_ID[id]; return `<tr><th>${s.name}</th><td>${G.slotText(st, id)}</td></tr>`; };
   const FAST = ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB', 'MB', 'MI', 'MS', 'MM', 'TRT'].concat(R.gSlots ? ['MIM', 'EXP'] : []); // T10：模倣・発現なし
-  const SHARED = ['GEM', 'BRD', 'ORG', 'SCAN'].concat(R.noConvert ? [] : ['CNV'], R.noReserve ? ['PASS'] : ['RSV'], R.restore ? ['RST'] : [], R.amplify ? ['AMP'] : []); // T10：資源変換・予備動員なし／復元・増幅・パス
+  const SHARED = ['GEM', 'BRD', 'ORG', 'SCAN'].concat(R.noConvert ? [] : ['CNV'], R.gather ? ['GTH'] : R.noReserve ? ['PASS'] : ['RSV'], R.restore ? ['RST'] : [], R.amplify ? ['AMP'] : []); // T10：資源変換・予備動員なし／復元・増幅・採集（v3.65 パスの置き換え）
   $('fast').innerHTML = FAST.map(row).join('');
   $('shared').innerHTML = SHARED.map(row).join('') + `<tr><th>献上（生命核）</th><td>L${R.lCrystal} → 祝福+1（身体 Lv2 で解放・各自1R1回）</td></tr><tr><th>献上（協調）</th><td>協調${R.coopCrystal} → 祝福+1（各自1R1回）</td></tr>`;
   num('k-mass', R.massCost); num('k-mm', R.mmCost);
@@ -390,7 +390,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   // ---- 付録 ----
   const QT = [
     ['収入（毎ラウンド）', `L+1 を受け取ってから、持っている L 1個につき P+${R.lYield || 9}（受け取った L も数える。身体 Lv4 で2倍）。基礎収入なし`],
-    ['手番', 'ワーカー5個を1個ずつ。ラウンド2から痕跡の少ない順。置ける場所が無いときはパス（何も得ない）'],
+    ['手番', 'ワーカー5個を1個ずつ。ラウンド2から痕跡の少ない順。置ける場所が無いときは採集（資源を少しだけ）'],
     ['トラック進行（E）', `${stepArr.map(c => c + 'E').join('／')}（身体 ${bstep.map(c => c + 'E').join('／')}）。二段進行＝2段分を合算して手番1つ（Lv5 まで）。自動進行：` + G.TRACKS.map(t => `${G.GATE_SHORT[t] || G.TRACK_INFO[t].jp} ${R.gates[t].slice(2).join('/')}`).join('・')],
     ['Lv3★・Lv5★・Lv6', '到達で痕跡+1。先着は強い報酬（Lv5★の一番乗りは痕跡+2）。E を払って自力で上がった段は後着でも強い報酬。Lv6＝' + G.TRACKS.map(t => G.lv6CostText(st, t)).join('／') + '。先着は祝福+1も'],
     ['資源獲得（早取り）', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
@@ -409,7 +409,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
     ['先着＝強', '最初に到達・取得した人が強い効果、後の人は弱い効果（トラックは E を払って自力で上がった段なら後着でも強）'], ['二段進行', 'E を払う進行で、2段分の E を合算して一度に2段上がる（Lv5 まで・手番1つ）'], ['収集物', 'トラックを自動で上げる材料（L投入・形質・協調・器官）'],
     ['緊急発進', '生命核1個で使用済みの資源枠を使う'], ['協調発進', '協調3個で使用済みの資源枠を使う'], ['Wなし実行権', '社会トラックで得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）'],
     ['献上', '資源を捧げて祝福+1。各品目各自1ラウンド1回'], ['神の到来', `ラウンド${T.openRound || 6}の開始。献上枠が3つ開く`], ['祝福枠', '最終ラウンド、空いている資源枠にコマを置くと資源に加えて祝福+1'], ['最果ての痕跡', '終了時、各トラックの単独首位（Lv2以上）に痕跡+1'],
-    ['系統完成', '同じ系統の器官3枚。成熟度+1'], ['復元', '共用盤。誰かに強を取られた形質を、強の値段＋E で強い効果のまま取る（1人1回）'], ['増幅', '共用盤。E を払い、持っている代謝・転写・促進の器官1つの効果を以後2倍（1人1回）'], ['パス', '置ける場所が無いときにワーカーを置いて何も得ない'],
+    ['系統完成', '同じ系統の器官3枚。成熟度+1'], ['復元', '共用盤。誰かに強を取られた形質を、強の値段＋E で強い効果のまま取る（1人1回）'], ['増幅', '共用盤。E を払い、持っている代謝・転写・促進の器官1つの効果を以後2倍（1人1回）'], ['採集', '共用盤。E・G・P のどれか1つを少しだけ得る（協調は P を払って+1）。置ける場所が無いときの逃げ道'],
   ];
   $('gl').innerHTML = GL.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('');
 })();

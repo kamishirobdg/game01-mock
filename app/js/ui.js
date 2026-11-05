@@ -129,7 +129,7 @@
   // この端末が操作する人間の席（1手戻すは、この席の直前の手まで戻す）
   function myHumanPids() { return st ? st.players.map(q => q.id).filter(pid => mine(pid)) : []; }
   const viewP = (p) => { if (!st || mine(p.id)) return p; const hs = myHumanPids(); return hs.length ? st.players[hs[0]] : p; }; // 2026-10-29：盤のコスト表示は「この端末で見ている人」の割引を反映する
-  const ACT_JP = { lToRes: '生命核→資源', track: 'トラック進行', res: '資源獲得', organ: '器官建造', trait: '形質購入', upgrade: '形質アップグレード', mass: '大量消費', breed: '繁殖変換', gemset: '宝石セット', card: '個人カード', convert: '資源変換', reserve: '予備動員', scan: '環境スキャン', adapt: '適応進化', stAct: '器官アクション', resolve: '選択の解決', freeConv: '無料変換', species: '種族選択', startTrait: '初期形質', draft: 'ドラフト', cheat: 'デバッグ' };
+  const ACT_JP = { lToRes: '生命核→資源', gather: '採集', track: 'トラック進行', res: '資源獲得', organ: '器官建造', trait: '形質購入', upgrade: '形質アップグレード', mass: '大量消費', breed: '繁殖変換', gemset: '宝石セット', card: '個人カード', convert: '資源変換', reserve: '予備動員', scan: '環境スキャン', adapt: '適応進化', stAct: '器官アクション', resolve: '選択の解決', freeConv: '無料変換', species: '種族選択', startTrait: '初期形質', draft: 'ドラフト', cheat: 'デバッグ' };
   let seenUndo = null; // 了解済みの巻き戻し通知
   const leftTxt = (q) => G.RULESETS[st.rules || 'v1'].gauge ? `残${q.left.W + q.left.AT}` : `W${q.left.W}/AT${q.left.AT}`; // 係数ゲージ方式ではW/ATの区別なし
   // 他の参加者のアンドゥに自分の手が巻き込まれたときの通知（オンラインのみ。ローカルは同じ端末なので不要）
@@ -525,6 +525,7 @@
     if (id === 'RST') { const c = restoreCands(p); return { pid, type: 'restore', trait: c[0] || 'NC', useL: 0, res: 'E', track: 'intel' }; } // T10
     if (id === 'AMP') { const c = amplifyCands(p); return { pid, type: 'amplify', organ: c[0] || 'Mg1' }; }
     if (id === 'PASS') return { pid, type: 'pass' };
+    if (id === 'GTH') return { pid, type: 'gather', res: 'E' };
     return { pid, type: 'reserve', res: 'E' };
   }
   function renderExcl(p, can) {
@@ -546,7 +547,7 @@
     box.appendChild(g1); box.appendChild(g2); box.appendChild(g3); return box;
   }
   const restoreCands = (p) => G.traitPool(st).filter(t => st.shared.traitFirst[t] !== undefined && st.shared.traitFirst[t] !== p.id && !G.trait(p, t)); // T10 復元の候補
-  const amplifyCands = (p) => p.organs.filter(o => ['Mg', 'Tl', 'Cx'].includes(G.ORGANS[o.id].lin) && !o.amp).map(o => o.id); // T10 増幅の候補
+  const amplifyCands = (p) => p.organs.filter(o => ['Mg', 'Tl', 'Cx'].includes(G.ORGANS[o.id].lin) && !o.amp).map(o => o.id).concat(p.ampReserve ? [] : st.shared.organField.filter(id => ['Mg', 'Tl', 'Cx'].includes(G.ORGANS[id].lin) && !p.organs.some(o => o.id === id) && G.organCost(st, p, id))); // T10 増幅の候補（v3.65：今から建造できる器官も＝予約）
   function renderShared(p, can) {
     const box = h('div', { class: 'panel shared2' + (iconView() ? ' picmode' : '') }, h('h3', null, '共用盤', h('small', { class: 'sub' }, '　何人でも・何回でも（トークンがある限り）')));
     const gTop = h('div', { class: 'sgroup' }, h('h4', null, '献上（共用・各自各品目1ラウンド1回）')); // 2026-10-28：早取りでない献上は共用盤の先頭にまとめる（ユーザー要望）
@@ -615,7 +616,7 @@
     if (c2) { tok.appendChild(h('span', { class: 'gauge', title: '繁栄度：繁殖変換で+1（痕跡に掛ける）' }, '繁殖', ...Array.from({ length: (c2.breedMax || 2) + 1 }, (_, i) => i).map(i => h('span', { class: 'gs' + (i <= (p.breedUps || 0) ? ' on' : '') }, '×' + ((c2.breedBase || 3) + i))))); tok.appendChild(h('span', { class: 'gauge', title: '成熟度：形質4/7枚目・系統完成で+1（祝福に掛ける）' }, '収集', ...[0, 1, 2, 3, 4].map(i => h('span', { class: 'gs' + (i <= (p.collectUps || 0) ? ' on' : '') }, '×' + ((c2.collectBase || 3) + i))))); }
     else if (gauge) tok.appendChild(h('span', { class: 'gauge', title: '係数ゲージ：繁殖変換・系統完成・形質4/8枚目で+1（上限×7）' }, ...[3, 4, 5, 6, 7].map(v => h('span', { class: 'gs' + (v <= G.coef(p) ? ' on' : '') }, '×' + v))));
     else tok.appendChild(h('span', { class: 'hl' }, `係数 ×${G.coef(p)}`));
-    tok.appendChild(h('span', null, gauge ? `残 ${p.left.W + p.left.AT}` : `残 W${p.left.W}／AT${p.left.AT}`));
+    tok.appendChild(h('span', { title: 'このラウンドに置けるワーカーの残り' }, gauge ? `ワーカー残 ${p.left.W + p.left.AT}` : `ワーカー残 W${p.left.W}／AT${p.left.AT}`)); // 2026-11-05 ユーザー指摘：係数ゲージの横の「残 2」が何の残りか分からない→ワーカーの残数と明記
     if (p.shields) tok.appendChild(h('span', { class: 'hl' }, `Wなし実行権 ${p.shields}`));
     box.appendChild(tok);
     // ③ 協調トラック 0-8
@@ -634,7 +635,7 @@
       ? ` ＝ 宝石${sc.core}（${sc.real}+${sc.vg}個×${sc.gemPt}×${sc.cf}）＋形質${sc.dev}（${p.traits.length}×色${Math.max(1, sc.colors)}）＋器官${sc.org}（${p.organs.length}×協調${Math.min(4, p.coop)}）＋体制${sc.reg}`
       : sc.coef2 ? ` ＝ ${sc.core}（痕跡${sc.real}×${sc.gemPt !== 1 ? sc.gemPt + '×' : ''}${sc.cfB}＋祝福${sc.vg}×${sc.gemPt !== 1 ? sc.gemPt + '×' : ''}${sc.cfC}）${sc.dev ? '＋発展度' + sc.dev : ''}${sc.reg ? '＋体制' + sc.reg : ''}` : ` ＝ 宝石${sc.core}（${sc.real}+${sc.vg}個×${sc.gemPt}×${sc.cf}）＋発展度${sc.dev}${sc.organPt ? '＋器官' + sc.org : ''}＋体制${sc.reg}`;
     box.appendChild(h('div', { class: 'score', title: scTitle }, h('b', null, `現在 ${sc.total} 点`), h('small', null, scText)));
-    const flags = h('div', { class: 'stat' }, p.regime ? h('span', { class: 'hl' }, '体制完成') : null, p.alwaysStrong ? h('span', { class: 'hl' }, '形質常に強') : null, p.freeConv ? h('span', { class: 'hl' }, '無料E↔G変換') : null, p.wild ? h('span', { class: 'hl' }, `ワイルド色 ${G.TRACK_INFO[p.wild].jp}`) : null);
+    const flags = h('div', { class: 'stat' }, p.regime ? h('span', { class: 'hl' }, '体制完成') : null, p.alwaysStrong ? h('span', { class: 'hl' }, '形質常に強') : null, p.ampReserve ? h('span', { class: 'hl', title: '増幅の予約：この器官を建造したときから効果2倍' }, `増幅予約 ${p.ampReserve}`) : null, p.freeConv ? h('span', { class: 'hl' }, '無料E↔G変換') : null, p.wild ? h('span', { class: 'hl' }, `ワイルド色 ${G.TRACK_INFO[p.wild].jp}`) : null);
     if (flags.childNodes.length) box.appendChild(flags);
     if (p.pending.length) box.appendChild(h('div', { class: 'banner small' }, pendingText(p.pending[0]), ' ', p.pending[0].type === 'bonusAction' && can ? h('button', { onclick: () => submit({ pid: p.id, type: 'resolve', skip: true }) }, '見送る') : null));
     // ⑤ 器官（系統ごと）・形質
@@ -727,7 +728,7 @@
     if (id === 'TR') { const r = await ask('献上枠（宝石）：痕跡+1', [{ type: 'select', name: 'track', label: '色', options: G.TRACKS.map(t => ({ value: t, label: `${G.TRACK_INFO[t].jp}（${G.TRACK_INFO[t].name}）` })) }], { note: G.slotText(st, id) }); if (!r) return; return submit({ pid: p.id, type: 'tributeSlot', slot: id, track: r.track }); }
     if (id === 'MIM') { const o = G.mimicOptions(st, p); if (!o.length) return toast('模倣できる !効果にまだ誰も到達していません（身体Lv2 の ◆L+1 は対象外）', true); const c = G.gSlotCost(p, G.RULESETS[st.rules || 'v1'].mimicCost || 4); const r = await ask(`模倣（G${c}）`, [{ type: 'select', name: 'effect', label: '到達済みの即時効果', options: o.map(e => ({ value: e.id, label: rtxt(e.label) })) }, { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }]); if (!r) return; return submit({ pid: p.id, type: 'mimic', effect: r.effect, useL: +r.useL }); }
     if (id === 'EXP') { const c = G.gSlotCost(p, G.RULESETS[st.rules || 'v1'].expressCost || 10); const bcE = G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2; const byCE = G.slotUsedBy(st, id) !== undefined && G.coopBypassable(st, id, p) && p.coop >= bcE; const r = await ask(`発現（G${c}）：痕跡+1${byCE ? `／使用済みのため協調発進（協調トークン-${bcE}）で実行` : ''}`, (G.RULESETS[st.rules || 'v1'].noCombo ? [] : [{ type: 'select', name: 'track', label: '色', options: G.TRACKS.map(t => ({ value: t, label: `${G.TRACK_INFO[t].jp}（${G.TRACK_INFO[t].name}）` })) }]).concat([{ type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }])); if (!r) return; return submit({ pid: p.id, type: 'express', track: r.track || 'body', useL: +r.useL, bypassCoop: byCE }); } /* 2026-10-29 色の廃止：色の選択なし */
-    if (id === 'SCAN') { const cands = G.scanCandidates(st, p); if (!cands.length) return toast('参照できる他プレイヤーがいません（全員Lv1）', true); const r = await ask('環境スキャン（E5）', [{ type: 'select', name: 'tgt', label: '参照先', options: cands.map((c, i) => ({ value: i, label: `${st.players[c.pid].name} の ${G.TRACK_INFO[c.track].name} Lv${c.lv} → ${RES_JP[G.TRACK_INFO[c.track].res]}+${c.lv * 2}` })) }, { type: 'select', name: 'useL', label: '生命核をEの代わりに', options: lOpts(p) }]); if (!r) return; return submit({ pid: p.id, type: 'scan', target: cands[+r.tgt], useL: +r.useL }); }
+    if (id === 'SCAN') { const cands = G.scanCandidates(st, p); if (!cands.length) return toast('参照できる他プレイヤーがいません（全員Lv1）', true); const scanE = Math.max(G.sc(st, 1), G.sc(st, 5) - (p.scanDisc || 0)); const scanN = (c) => (G.TRACK_INFO[c.track].res === 'coop' && G.RULESETS[st.rules || 'v1'].scanCoop !== undefined) ? G.RULESETS[st.rules || 'v1'].scanCoop : c.lv * G.sc(st, 2); const r = await ask(`環境スキャン（E${scanE}）`, [{ type: 'select', name: 'tgt', label: '参照先', options: cands.map((c, i) => ({ value: i, label: `${st.players[c.pid].name} の ${G.TRACK_INFO[c.track].name} Lv${c.lv} → ${RES_JP[G.TRACK_INFO[c.track].res]}+${scanN(c)}` })) }, { type: 'select', name: 'useL', label: '生命核をEの代わりに', options: lOpts(p) }]); if (!r) return; return submit({ pid: p.id, type: 'scan', target: cands[+r.tgt], useL: +r.useL }); } // 2026-11-05 ユーザー指摘：E5・Lv×2 と基準単位のままだった（実際は E15・Lv×6）
     if (id === 'ADP') { const lows = G.TRACKS.filter(t => p.lv[t] === 1); if (!lows.length) return toast('Lv1のトラックがありません', true); const r = await ask('適応進化（生命核1・W必須）', [{ type: 'select', name: 'track', label: 'Lv1のトラック', options: lows.map(t => ({ value: t, label: G.TRACK_INFO[t].name })) }]); if (!r) return; return submit({ pid: p.id, type: 'adapt', track: r.track }); }
     if (id === 'CNV') { const r = await ask('資源変換（1アクション1種類）', [{ type: 'select', name: 'kind', label: '変換', options: [{ value: 'EG', label: `E${G.sc(st, 2)}→G${G.sc(st, 1)}` }, { value: 'GE', label: `G${G.sc(st, 2)}→E${G.sc(st, 1)}` }, { value: 'PE', label: `P${G.sc(st, 8)}→E${G.sc(st, 3)}` }, { value: 'PG', label: `P${G.sc(st, 8)}→G${G.sc(st, 2)}` }] }, { type: 'number', name: 'n', label: '回数', value: 1, min: 1, max: 20 }]); if (!r) return; return submit({ pid: p.id, type: 'convert', kind: r.kind, n: r.n }); }
     if (id === 'RST') { const c = restoreCands(p); if (!c.length) return toast('復元できる形質がありません（他の人が強で取った形質で、自分が持っていないもの）', true); const RT = G.RULESETS[st.rules || 'v1'];
@@ -735,9 +736,10 @@
       const r = await ask('復元：取られた強の形質を強の効果で取る（1人1回）', [{ type: 'select', name: 'trait', label: '形質', options: opts }, { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }], { note: G.slotTip(st, id) }); if (!r) return;
       return submit({ pid: p.id, type: 'restore', trait: r.trait, useL: +(r.useL || 0), res: 'E', track: 'intel' }); }
     if (id === 'AMP') { const c = amplifyCands(p); if (!c.length) return toast('増幅できる器官がありません（代謝・転写・促進の器官で未増幅のもの）', true); const AM = G.RULESETS[st.rules || 'v1'].amplify;
-      const r = await ask(`増幅（E${AM.E}・1人1回）：器官1つの効果を以後2倍`, [{ type: 'select', name: 'organ', label: '器官', options: c.map(o => ({ value: o, label: `${o} ${G.ORGANS[o].name}：${rtxt(G.ORGANS[o].strong)}` })) }], { note: G.slotTip(st, id) }); if (!r) return;
+      const r = await ask(`増幅（E${AM.E}・1人1回）：器官1つの効果を以後2倍`, [{ type: 'select', name: 'organ', label: '器官', options: c.map(o => ({ value: o, label: `${o} ${G.ORGANS[o].name}：${rtxt(G.ORGANS[o].strong)}${p.organs.some(x => x.id === o) ? '' : '（未建造・建造したときから2倍）'}` })) }], { note: G.slotTip(st, id) + '。まだ建てていない器官を選ぶと予約になり、建造したときから2倍になります。' }); if (!r) return;
       return submit({ pid: p.id, type: 'amplify', organ: r.organ }); }
     if (id === 'PASS') { if (!confirm('パスします（何も得ず、トークンを1個使います）。置ける場所が無いときだけ使ってください。')) return; return submit({ pid: p.id, type: 'pass' }); }
+    if (id === 'GTH') { const g = G.RULESETS[st.rules || 'v1'].gather || {}; const r = await ask('採集（弱い資源・手番1つ）', [{ type: 'select', name: 'res', label: '得るもの', options: [{ value: 'E', label: `エネルギー +${g.E}` }, { value: 'G', label: `遺伝子 +${g.G}` }, { value: 'P', label: `個体数 +${g.P}` }, { value: 'coop', label: `協調トークン +${g.coop}（P${g.coopCostP || 0} を払う）`, disabled: p.P < (g.coopCostP || 0) }] }], { note: '他に置ける場所が無いときの逃げ道です。資源枠より少ない量しか得られません（協調は群体枠と同じ P を払い、資源は付きません）。' }); if (!r) return; return submit({ pid: p.id, type: 'gather', res: r.res }); }
     if (id === 'RSV') { const RV = G.RULESETS[st.rules || 'v1']; const r = await ask('予備動員（無料）', [{ type: 'select', name: 'res', label: '獲得', options: [{ value: 'E', label: `E+${RV.reserveE || 2}` }, { value: 'G', label: `G+${RV.reserveG || 1}` }] }]); if (!r) return; return submit({ pid: p.id, type: 'reserve', res: r.res }); }
   }
   async function onOrgan(p, id) {

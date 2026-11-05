@@ -229,7 +229,7 @@
     G.scanCandidates(st, p).slice(0, 2).forEach(tg => out.push(A({ type: 'scan', target: tg, useL: 0 })));
     if (!RSo(st).noAdapt) G.TRACKS.filter(t => p.lv[t] === 1).forEach(t => out.push(A({ type: 'adapt', track: t })));
     if (!RSo(st).noConvert) ['EG', 'GE', 'PE', 'PG'].forEach(k => [1, 2].forEach(n => out.push(A({ type: 'convert', kind: k, n }))));
-    if (!RSo(st).noReserve) out.push(A({ type: 'reserve', res: 'E' }), A({ type: 'reserve', res: 'G' })); else out.push(A({ type: 'pass' }));
+    if (!RSo(st).noReserve) out.push(A({ type: 'reserve', res: 'E' }), A({ type: 'reserve', res: 'G' })); else if (RSo(st).gather) ['E', 'G', 'P', 'coop'].forEach(r => out.push(A({ type: 'gather', res: r }))); else out.push(A({ type: 'pass' })); // v3.65 採集（パスの置き換え）
     // T10（第59部）：復元（他者が強で取った形質を強で）・増幅（器官1つを2倍）・二段進行
     if (RSo(st).restore && !(p.uses && p.uses.restore)) G.traitPool(st).filter(t => st.shared.traitFirst[t] !== undefined && st.shared.traitFirst[t] !== p.id && !G.trait(p, t)).forEach(t => out.push(A({ type: 'restore', trait: t, useL: 0, res: 'E', track: 'intel' })));
     if (RSo(st).amplify && !(p.uses && p.uses.amplify)) p.organs.filter(o => ['Mg', 'Tl', 'Cx'].includes(G.ORGANS[o.id].lin) && !o.amp).forEach(o => out.push(A({ type: 'amplify', organ: o.id })));

@@ -38,7 +38,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 
 <div class="blk"><h2><i>1</i>ラウンドの流れ（<span id="rounds"></span>ラウンド固定）</h2>
 <p>① 収入：生命核 L+1 を受け取ってから、持っている L 1個につき P+<span id="yield"></span>（受け取った L も数える・身体 Lv4 で2倍）。基礎収入なし<br>
-② 手番順に<span class="tok w"></span>×5 を1個ずつ置く → 全員使い切ったら終了（置ける場所が無いときだけパス＝何も得ない）<br>
+② 手番順に<span class="tok w"></span>×5 を1個ずつ置く → 全員使い切ったら終了（置ける場所が無いときは採集＝資源を少しだけ）<br>
 ③ ラウンド2以降、開始時に<b class="k">痕跡の少ない順</b>に並べ替え</p></div>
 
 <div class="blk"><h2><i>2</i>進化トラック（4本・Lv1〜6）</h2>
@@ -61,7 +61,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 <li><b>繁殖変換</b>：P<span id="breed"></span>（または L<span id="breedL"></span>）→ 繁栄度+1（4段まで・W必須）</li>
 <li><b>器官建造</b>：<span id="ocost"></span>。効果は先着も後続も同じ、後続は +<span id="late"></span>E。同じ系統3枚＝系統完成で成熟度+1</li>
 <li><b>復元</b> <span id="rst"></span>／<b>増幅</b> <span id="amp"></span></li>
-<li>環境スキャン <span id="scan"></span>／<b>パス</b>（置ける場所が無いとき・何も得ない）。資源どうしの変換はなし</li>
+<li>環境スキャン <span id="scan"></span>／<b>採集</b> <span id="gth"></span>。資源どうしの変換はなし</li>
 </ul></div>
 
 <div class="two">
@@ -89,7 +89,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
   set('lv6', G.TRACKS.map(t => G.lv6CostText(st, t)).join('／'));
   set('res', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${sl(id)}`).join('／'));
   set('mass', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace('大量消費', '')} ${sl(id)}`).join('／'));
-  set('rst', sl('RST')); set('amp', sl('AMP'));
+  set('rst', sl('RST')); set('amp', sl('AMP')); set('gth', sl('GTH').replace(/（.*$/, ''));
   set('tribR', T.openRound || 6); set('tribpool', T.pool.map(id => `${G.SLOT_BY_ID[id].name}＝${sl(id)}`).join('／'));
   set('flatG', G.sc(st, T.flatG)); set('lcry', R.lCrystal); set('ccry', R.coopCrystal);
   set('breed', R.breed[0]); set('breedL', R.breedL || '—');
