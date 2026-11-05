@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.65'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.68'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -173,6 +173,7 @@
     gSlots: false, noConvert: true, noReserve: true, restore: { E: 9 }, amplify: { E: 24 }, gather: { E: 6, G: 3, P: 9, coop: 1, coopCostP: 18 }, // 2026-11-05 v3.65 採集（第65部：協調は無料だと AI が 14 回/戦＝資源枠より強い。P18〔群体枠と同じ払い・資源なし〕で 3.8 回。E/G/P は 0.1 回＝パス並み）（パスの置き換え・ユーザー指示「パスの代わりになる程度に弱い」）：固定E強 E15・固定G強 G9・P増加 P30 の 4 割弱＝物差し E6≈6・G3≈4.5・P9≈5.4・協調1≈3＋ゲート
     weakTraits2: true, ncCoopW: 1, dgDisc: [6, 4], dgDiscW: 4, dvDisc: [6, 4], dvDiscW: 4, mbBreedDiscWeak: 15, mbDiscWeak: 12,
     intelRewards: 'trait', metab4: 'organNoG', paidStrong: true, firstBonusStrict: true, doubleStep: true,
+    tributeOnceGame: true, tributeVg: 2, // 2026-11-05 ユーザー決定（第67部 案 B・v3.67）：献上（共用）＝祭壇 3 マス（遺伝子・生命核・協調）。各祭壇は 1 ゲームに 1 回・祝福+2（旧＝各品目 1R1回・祝福+1）。AI 計測＝得点不変（156→158）・Lv6 1.9→1.6・万列 11→24%
     yieldAfterL: true, // 2026-11-05 ユーザー決定（第62部 案 A）：収入は L+1 を受け取ってから利回り（受け取った L も数える）。全員 +P9/R。種族の崩れ（群泳 42〜51%・万列 6〜8%）は他の調整と一緒に見直す
     traitCosts: Object.assign({}, G.RULESETS.t8.traitCosts, { JI: [33, 21], JB: [39, 27] }),
     speciesMod: Object.assign({}, G.RULESETS.t8.speciesMod, { ant: { stock: { E: 15, G: 3, P: 12 }, coop: 2 } }) }); // 2026-11-05 ユーザー指示（第61部）：万列の協調2＝群体2回分（約E34）＋恒久ボーナスに見合うよう初期資源を E15 G6 P18→E15 G3 P12（T10 で 40〜48%→29〜31%・2シード）

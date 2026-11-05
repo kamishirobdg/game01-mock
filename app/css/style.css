@@ -273,3 +273,15 @@ svg.ic.bless { color:#d4a017; } svg.ic.trait { color:#3b7ddd; } svg.ic.organ { c
 [data-theme="dark"] .sgroup.god { background:linear-gradient(90deg,#3a2f14,#4a3a18); border-color:#8a7030; } [data-theme="dark"] .sgroup .glabel { color:#e0c070; } [data-theme="dark"] .slot.god { border-color:#8a7030; background:#2e2614; }
 [data-theme="dark"] .pc.cost { background:#4a2320; } [data-theme="dark"] .pc.bonus { border-color:#777; color:#bbb; } [data-theme="dark"] .po { color:#888; } [data-theme="dark"] .pbad { background:#2a303c; color:#c7cede; }
 [data-theme="dark"] .lane-lbl { box-shadow:2px 0 4px rgba(0,0,0,.4); }
+/* v3.68 個人ボードの祭壇 3 マス（遺伝子・生命核・協調）：献上＝自分のワーカーを祭壇に置く（1 マス 1 個＝1 ゲームに 1 回） */
+.pbrow.altars { align-items:stretch; }
+.pbrow.altars > b { width:auto; min-width:84px; display:flex; align-items:center; gap:4px; } .pbrow.altars > b .desc { font-weight:400; color:var(--mute); font-size:11px; }
+.slot.altar { width:auto; min-width:0; flex:1 1 120px; border:2px solid #c9a24a; border-radius:8px; background:linear-gradient(180deg,#fffaf0,#f7ecd2); }
+.slot.altar.pic { min-width:0; }
+.slot.altar .aw { display:inline-flex; align-items:center; gap:3px; margin-top:4px; padding:1px 6px 1px 2px; border-radius:12px; font-size:11px; color:#7a5a1e; background:rgba(255,255,255,.6); }
+.slot.altar .aw .mk.empty { background:transparent; border:1.5px dashed #c9a24a; width:20px; height:20px; line-height:17px; }
+.slot.altar .aw.empty { color:#9a8a60; }
+.slot.altar.used { background:#efe6d2; border-style:solid; }
+button.slot.altar.used.na { opacity:.8; }
+.slot.altar.used .aw { font-weight:700; color:#5a3e0e; background:#fff; }
+[data-theme="dark"] .slot.altar { background:linear-gradient(180deg,#3a2f14,#2e2612); border-color:#8a7030; } [data-theme="dark"] .slot.altar .aw { color:#e0c070; background:rgba(0,0,0,.25); } [data-theme="dark"] .slot.altar .aw.empty { color:#a89860; } [data-theme="dark"] .slot.altar .aw .mk.empty { border-color:#8a7030; } [data-theme="dark"] .slot.altar.used { background:#2a2418; } [data-theme="dark"] .slot.altar.used .aw { color:#f0d890; background:#1a1710; }
