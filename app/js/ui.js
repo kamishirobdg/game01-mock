@@ -206,7 +206,7 @@
   const lOpts = (p, res) => Array.from({ length: p.L + 1 }, (_, i) => ({ value: i, label: i === 0 ? '使わない' : `L${i}（=${res || 'E'}${i * (p.lValue || G.sc(st, 3))}）` }));
   const resSel = (name, label, value) => ({ type: 'select', name, label, value: value || 'E', options: [{ value: 'E', label: 'E' }, { value: 'G', label: 'G' }, { value: 'P', label: 'P' }] });
   // 選択中の形質の効果（先着なら強・後続なら弱）を項目の下に表示する
-  const traitDesc = (p, name) => (v) => { const t = v[name]; if (!t || !G.TRAITS[t]) return ''; const c = G.traitCost(st, p, t); return `${c.strong ? '強' : '弱'}：${rtxt(c.strong ? G.TRAITS[t].strong : G.TRAITS[t].weak)}`; };
+  const traitDesc = (p, name) => (v) => { const t = v[name]; if (!t || !G.TRAITS[t]) return ''; const c = G.traitCost(st, p, t); return `${c.strong ? '強' : '弱'}：${rtxt(G.traitText(st, t, c.strong))}`; }; // 2026-11-05 v3.63：弱は数値セットの文言（T10 weak2）を G.traitText で
   const traitSel = (p, name, label, filter) => ({ type: 'select', name, label, options: G.traitPool(st).filter(t => !G.trait(p, t) && (!filter || filter(t))).map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}（G${G.traitCost(st, p, t).G}）` })), desc: traitDesc(p, name) });
   // sel＝形質を選ぶ項目名。指定時はその項目で IM／DA を選んだときだけ表示する
   const imSel = (sel) => Object.assign(resSel('res', '代謝亢進(IM)の資源'), sel ? { when: v => v[sel] === 'IM' } : {});
@@ -638,7 +638,7 @@
     // ⑤ 器官（系統ごと）・形質
     const byLin = {}; p.organs.forEach(o => { (byLin[G.ORGANS[o.id].lin] = byLin[G.ORGANS[o.id].lin] || []).push(o); });
     box.appendChild(h('div', { class: 'owned' }, h('b', null, `器官 ${p.organs.length}枚：`), ...Object.entries(byLin).map(([lin, os]) => h('span', { class: 'lin' + (os.length >= 3 ? ' done' : '') }, `${G.LINEAGES[lin]} `, ...os.map(o => h('span', { class: 'tag' + (o.strong ? ' strong' : ''), title: `${G.ORGANS[o.id].name}：${otxt(G.ORGANS[o.id], o.strong)}` }, `${o.id}${o.strong ? '強' : '弱'}`))))));
-    box.appendChild(h('div', { class: 'owned' }, h('b', null, `形質 ${p.traits.length}枚：`), ...p.traits.map(t => h('span', { class: 'tag' + (t.strong ? ' strong' : ''), title: `${G.TRAITS[t.id].name}：${rtxt(t.strong ? G.TRAITS[t.id].strong : G.TRAITS[t.id].weak)}` }, `${t.id}${t.strong ? '強' : '弱'}${t.res ? '(' + t.res + ')' : ''}${t.track ? '(' + G.TRACK_INFO[t.track].jp + ')' : ''}`))));
+    box.appendChild(h('div', { class: 'owned' }, h('b', null, `形質 ${p.traits.length}枚：`), ...p.traits.map(t => h('span', { class: 'tag' + (t.strong ? ' strong' : ''), title: `${G.TRAITS[t.id].name}：${rtxt(G.traitText(st, t.id, t.strong))}` }, `${t.id}${t.strong ? '強' : '弱'}${t.res ? '(' + t.res + ')' : ''}${t.track ? '(' + G.TRACK_INFO[t.track].jp + ')' : ''}`))));
     // ⑥ 個人カード置き場（カードなしの数値セットでは出さない）
     const cards = h('div', { class: 'cards' }, h('b', null, '個人カード（排他なし）：'));
     if (G.handSize(st) > 0) p.cards.forEach(c => { const reason = can ? check({ pid: p.id, type: 'card', card: c, choice: 'E' }) : '他プレイヤーの手番'; cards.appendChild(actBtn({ class: 'cardbtn', title: G.CARDS[c].text, onclick: () => onCard(p, c) }, reason, h('div', { class: 'hd' }, h('span', null, c), h('span', { class: 'sw' }, '個人')), art(c, 'small'), h('b', null, G.CARDS[c].name), h('small', null, G.CARDS[c].text))); });
@@ -781,7 +781,7 @@
       return submit(Object.assign({ pid: p.id, type: 'upgrade', from, to: r.to, useL: +r.useL, res: r.res, track: r.track }, slotArgs(r)));
     }
     const c = G.traitCost(st, p, id); const cw = G.traitCost(st, p, id, undefined, true); const choice = G.RULESETS[st.rules || 'v1'].traitChoice && c.strong;
-    const r = await ask(`形質購入 ${id} ${G.TRAITS[id].name}`, [...(choice ? [{ type: 'select', name: 'ver', label: '版', options: [{ value: 'S', label: `強（G${c.G}）：${rtxt(G.TRAITS[id].strong)}` }, { value: 'W', label: `弱（G${cw.G}）：${rtxt(G.TRAITS[id].weak)}` }] }] : []), ...traitSlotFields(p), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, ...(id === 'IM' ? [imSel()] : []), ...(id === 'DA' ? [daSel()] : [])], { note: `コスト G${c.G}（${c.strong ? '強' : '弱'}）：${rtxt(c.strong ? G.TRAITS[id].strong : G.TRAITS[id].weak)}` }); if (!r) return;
+    const r = await ask(`形質購入 ${id} ${G.TRAITS[id].name}`, [...(choice ? [{ type: 'select', name: 'ver', label: '版', options: [{ value: 'S', label: `強（G${c.G}）：${rtxt(G.traitText(st, id, true))}` }, { value: 'W', label: `弱（G${cw.G}）：${rtxt(G.traitText(st, id, false))}` }] }] : []), ...traitSlotFields(p), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, ...(id === 'IM' ? [imSel()] : []), ...(id === 'DA' ? [daSel()] : [])], { note: `コスト G${c.G}（${c.strong ? '強' : '弱'}）：${rtxt(G.traitText(st, id, c.strong))}` }); if (!r) return; // 2026-11-05 v3.63：購入ダイアログの弱の文言も G.traitText（T10 の新効果が旧文のままだった）
     submit(Object.assign({ pid: p.id, type: 'trait', trait: id, useL: +r.useL, res: r.res, track: r.track, weak: choice && r.ver === 'W' }, slotArgs(r)));
   }
   async function onCard(p, c) {

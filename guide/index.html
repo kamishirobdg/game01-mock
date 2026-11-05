@@ -167,7 +167,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <section id="c2">
 <h2><span class="no">2</span>1ラウンドの流れ</h2>
 <ol class="pts">
-  <li><strong>収入</strong>：生命核 L+1。持っている L 1個につき <strong>P+<span id="k-yield"></span></strong>（身体 Lv4 で2倍）。器官や形質の収入もここで入る。</li>
+  <li><strong>収入</strong>：まず生命核 L+1。次に、持っている L 1個につき <strong>P+<span id="k-yield"></span></strong>（いま受け取った L も数える。身体 Lv4 で2倍）。器官や形質の収入もここで入る。</li>
   <li><strong>手番順</strong>：ラウンド2からは「<strong>痕跡の少ない人が先</strong>」（同数なら前のラウンドの順）。先行している人ほど後手に回る。</li>
   <li><strong>行動</strong>：手番順に<strong>ワーカー1個ずつ</strong>置く。全員が5個使い切るまで繰り返す（置ける場所が無いときだけ<strong>パス</strong>＝ワーカーを置いて何も得ない）。</li>
   <li><strong>終了判定</strong>：<span id="k-rounds2"></span>ラウンド目が終わったら得点計算。</li>
@@ -389,7 +389,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 
   // ---- 付録 ----
   const QT = [
-    ['収入（毎ラウンド）', `L+1。持っている L 1個につき P+${R.lYield || 9}（身体 Lv4 で2倍）。基礎収入なし`],
+    ['収入（毎ラウンド）', `L+1 を受け取ってから、持っている L 1個につき P+${R.lYield || 9}（受け取った L も数える。身体 Lv4 で2倍）。基礎収入なし`],
     ['手番', 'ワーカー5個を1個ずつ。ラウンド2から痕跡の少ない順。置ける場所が無いときはパス（何も得ない）'],
     ['トラック進行（E）', `${stepArr.map(c => c + 'E').join('／')}（身体 ${bstep.map(c => c + 'E').join('／')}）。二段進行＝2段分を合算して手番1つ（Lv5 まで）。自動進行：` + G.TRACKS.map(t => `${G.GATE_SHORT[t] || G.TRACK_INFO[t].jp} ${R.gates[t].slice(2).join('/')}`).join('・')],
     ['Lv3★・Lv5★・Lv6', '到達で痕跡+1。先着は強い報酬（Lv5★の一番乗りは痕跡+2）。E を払って自力で上がった段は後着でも強い報酬。Lv6＝' + G.TRACKS.map(t => G.lv6CostText(st, t)).join('／') + '。先着は祝福+1も'],

@@ -161,8 +161,10 @@
     st.players.forEach(p => {
       if (p.spore) { const cap = RS(p).sporeCap || sc(p, 3); const use = Math.min(p.E, cap); if (use > 0) { p.E -= use; p.P += use * p.spore; log(st, p.id, `${p.name}：胞子 E${use}→P${use * p.spore}（前ラウンドの残り）`); } } // 第42部 N9 胞子（強 E1→P3／弱 E1→P2・上限 sporeCap）
       // 収入
-      p._round = st.round; const inc = income(p); // 利回りは受け取る前の保有Lで計算（p._round＝これから始まるラウンド番号。yieldByRound 用）
-      p.lRemain -= 1; p.L += 1;
+      p._round = st.round; // p._round＝これから始まるラウンド番号（yieldByRound 用）
+      if (RS(p).yieldAfterL) { p.lRemain -= 1; p.L += 1; } // 試作 yieldAfterL（2026-11-05 ユーザー提案）：L を先に受け取ってから利回り（受け取った L も利回りに数える）
+      const inc = income(p, { atIncome: true }); // 既定＝利回りは受け取る前の保有 L で計算（T5 以来）
+      if (!RS(p).yieldAfterL) { p.lRemain -= 1; p.L += 1; }
       p.E += inc.E; p.G += inc.G; p.P += inc.P;
       if (inc.lyield && p.yieldPick) p.pending.push({ type: 'lYield', n: inc.lyield, opts: p.yieldPick });
       // トークン
@@ -172,6 +174,7 @@
       const cv1 = organ(p, 'Cv1'); if (cv1) { const n = Math.floor(p.organs.length / (cv1.strong ? 2 : 3)); if (n > 0) p.pending.push({ type: 'cvIncome', n }); }
       const flMax = flSwapMax(p); if (flMax) p.pending.push({ type: 'flSwap', max: flMax });
       if (trait(p, 'DG')) p.pending.push({ type: 'dgBuy', disc: RS(p).dgDisc ? RS(p).dgDisc[trait(p, 'DG').strong ? 0 : 1] : sc(p, (trait(p, 'DG').strong ? 2 : 1) + (RS(p).traitGateBoost ? 1 : 0)) });
+      p.pending.forEach(x => { x.pre = true; }); // 2026-11-05 v3.63：収入時の保留（利回り選択・収斂膜・転流・遺伝子図書館）は「手番前」の解決＝解決しても手番は進めない（apply）。従来は resolve のたびに advanceTurn され、最初の手番が飛ばされていた（ユーザー指摘）
     });
     log(st, null, `=== ラウンド ${st.round} 開始（手番順：${st.turnOrder.map(i => P(st, i).name).join('→')}）===`, 'round');
     st.hist = st.hist || []; st.hist.push({ round: st.round, rows: st.players.map(p => summaryRow(st, p)) });
@@ -182,8 +185,8 @@
     let max = 0; if (f1) max = Math.max(max, f1.strong ? 3 : 2); if (f2) max = Math.max(max, f2.strong ? 5 : 4); if (f3 && !f3.strong) max = 99;
     return max;
   }
-  function income(p) {
-    const inc = { E: 0, G: 0, P: 0, parts: [] };
+  function income(p, o) { // o.atIncome＝収入処理の本番（yieldAfterL では L 受け取り済み）。それ以外＝画面・AI の「次の収入」の見込み
+    const inc = { E: 0, G: 0, P: 0, parts: [] }; const Ln = p.L + (RS(p).yieldAfterL && !(o && o.atIncome) ? 1 : 0); // 利回りに数える L
     const add = (label, e, g, pp) => { if (!e && !g && !pp) return; inc.E += e; inc.G += g; inc.P += pp; inc.parts.push(`${label}${e ? ' E+' + e : ''}${g ? ' G+' + g : ''}${pp ? ' P+' + pp : ''}`); };
     add('基礎', RS(p).incE, RS(p).incG, RS(p).incP);
     add('恒久(種族/体制)', p.inc.E, p.inc.G, p.inc.P);
@@ -193,7 +196,7 @@
     if (p.lv.metab >= 5) { const k = sc(p, p.flags.strong['metab5'] ? 2 : 1); add('代謝Lv5', k, k, k); }
     const cv3 = organ(p, 'Cv3'); if (cv3) { const n = p.organs.length; const k = sc(p, cv3.strong ? (n >= 9 ? 2 : n >= 6 ? 1 : 0) : (n >= 7 ? 1 : 0)); add('極相体', k, k, k); }
     { const m1 = organ(p, 'Mg1'), m2 = organ(p, 'Mg2'), m3 = organ(p, 'Mg3'); if (m1) add('代謝膜', sc(p, m1.strong ? 2 : 1) * (m1.amp ? 2 : 1), 0, 0); if (m2) add('代謝腺', sc(p, m2.strong ? 1 : 0) * (m2.amp ? 2 : 1), sc(p, 1) * (m2.amp ? 2 : 1), 0); if (m3) { const k3 = (RS(p).mg3Inc !== undefined ? RS(p).mg3Inc : sc(p, 1)) * (m3.amp ? 2 : 1); add('代謝核', k3, k3, RS(p).mg3NoP ? 0 : k3); } } // T7 代謝系（mg3NoP＝試作：代謝核の収入から P を外す）
-    if (RS(p).lYield) { const rate = RS(p).yieldByRound ? (RS(p).yieldByRound[Math.min(RS(p).yieldByRound.length - 1, (p._round || 0) + 1)] || 0) : RS(p).lYield; const n = p.L * (rate + (p.yieldAdd || 0)) * (p.yieldMul || 1); if (n > 0) { if (RS(p).yieldRes === 'P') add('生命核利回り', 0, 0, n); else { inc.lyield = n; if (p.yieldPick) inc.parts.push(`生命核利回り ${n}（資源を選択）`); else add('生命核利回り', n, 0, 0); } } } // T5（yieldByRound＝次ラウンド番号で引く）／T7試作 yieldRes='P'
+    if (RS(p).lYield) { const rate = RS(p).yieldByRound ? (RS(p).yieldByRound[Math.min(RS(p).yieldByRound.length - 1, (p._round || 0) + 1)] || 0) : RS(p).lYield; const n = Ln * (rate + (p.yieldAdd || 0)) * (p.yieldMul || 1); if (n > 0) { if (RS(p).yieldRes === 'P') add('生命核利回り', 0, 0, n); else { inc.lyield = n; if (p.yieldPick) inc.parts.push(`生命核利回り ${n}（資源を選択）`); else add('生命核利回り', n, 0, 0); } } } // T5（yieldByRound＝次ラウンド番号で引く）／T7試作 yieldRes='P'
     p.traits.forEach(t => {
       if (t.id === 'IE' && t.strong) add('IE', sc(p, 2), 0, 0);
       if (t.id === 'IG' && t.strong) add('IG', 0, sc(p, 1), 0);
@@ -723,7 +726,7 @@
     const r = payG(p, c.G, a.useL);
     if (p.nextTraitFree) p.nextTraitFree = false; else if (p.nextTraitDisc) p.nextTraitDisc = 0; // T10 知性 Lv3★ の「次の形質」を消費
     const tr1 = organ(p, 'Tr1'); if (tr1 && !tr1.strong && p.uses.tr1 < 3) p.uses.tr1 += 1;
-    afterAction(st, p, `形質購入 ${a.trait}（G${r.G}${r.L ? '+L' + r.L : ''}${a.viaDG ? '・遺伝子図書館' : a.viaReward ? '・報酬' : ''}${how}）`, tok);
+    const fd = p.round.firstDone; afterAction(st, p, `形質購入 ${a.trait}（G${r.G}${r.L ? '+L' + r.L : ''}${a.viaDG ? '・遺伝子図書館' : a.viaReward ? '・報酬' : ''}${how}）`, tok); if (a.viaDG) p.round.firstDone = fd; // v3.63：遺伝子図書館の手番前購入は脈動系（Rh2／Rh3）の「初手」に数えない
     giveTrait(st, p, a.trait, false, '購入', { res: a.res, track: a.track, weak: !!a.weak });
     return tok;
   };
@@ -1098,11 +1101,13 @@
     const snap = clone(st);
     st.log = lg; st.history = hist; st.roundStart = rs;
     try {
+      const wasPre = action.type === 'resolve' && !!(pd && pd.pre); // 手番前の保留（収入時）の解決か
       const consumed = ACTIONS[action.type](st, p, action);
+      if (wasPre) p.pending.forEach(x => { if (x.pre === undefined) x.pre = true; }); // 手番前の解決から派生した保留（例：遺伝子図書館の購入で知性 Lv3★ に到達→報酬の形質）も手番前
       if (p._coop8Due) { p._coop8Due = false; if (RS(p).coop8Gem) addGem(st, p, 'social', 1, `協調${RS(p).coopGemAt || 8}到達`); if (RS(p).coop8Coef) addUpgrade(st, p, '協調8到達'); }
       syncGates(st, p);
       if (viaBonus) { const i = p.pending.findIndex(x => x.type === 'bonusAction'); if (i >= 0) p.pending.splice(i, 1); }
-      if (consumed !== false || action.type === 'resolve' || viaBonus) advanceTurn(st); // 追加アクション（知性Lv4↗）を実行したら手番は次へ（本体のアクションで既にトークンを消費している）
+      if ((consumed !== false || action.type === 'resolve' || viaBonus) && !wasPre) advanceTurn(st); // 追加アクション（知性Lv4↗）を実行したら手番は次へ（本体のアクションで既にトークンを消費している）。手番前の保留の解決後はそのまま本人の手番（v3.63）
       else if (!p.pending.length && p.left.W + p.left.AT === 0) advanceTurn(st);
       return st;
     } catch (e) { Object.assign(st, snap, { log: lg, history: hist, roundStart: rs }); lg.length = logLen; throw e; }
