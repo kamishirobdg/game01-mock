@@ -285,3 +285,7 @@ svg.ic.bless { color:#d4a017; } svg.ic.trait { color:#3b7ddd; } svg.ic.organ { c
 button.slot.altar.used.na { opacity:.8; }
 .slot.altar.used .aw { font-weight:700; color:#5a3e0e; background:#fff; }
 [data-theme="dark"] .slot.altar { background:linear-gradient(180deg,#3a2f14,#2e2612); border-color:#8a7030; } [data-theme="dark"] .slot.altar .aw { color:#e0c070; background:rgba(0,0,0,.25); } [data-theme="dark"] .slot.altar .aw.empty { color:#a89860; } [data-theme="dark"] .slot.altar .aw .mk.empty { border-color:#8a7030; } [data-theme="dark"] .slot.altar.used { background:#2a2418; } [data-theme="dark"] .slot.altar.used .aw { color:#f0d890; background:#1a1710; }
+/* v3.69 押せない枠の理由（自分の手番のみ・スマホ向け） */
+.slot .why { display:block; font-size:10px; line-height:1.25; color:#b00; margin-top:2px; white-space:normal; }
+button.slot.na { opacity:.6; }
+[data-theme="dark"] .slot .why { color:#ff8a8a; }

@@ -209,7 +209,7 @@
     if (RSo(st).lCrystal) out.push(A({ type: 'lCrystal' }));
     if (RSo(st).coopCrystal) out.push(A({ type: 'coopCrystal' }));
     if (RSo(st).premium) G.PREMIUM_ORDER.filter(t => !G.trait(p, t)).forEach(t => out.push(A({ type: 'premium', trait: t, useL: 0 })));
-    st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (!c) return; out.push(A({ type: 'organ', organ: o, useL: lFor(c.E, p.E), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' })); { const AM = RSo(st).amplify; if (AM && !(p.uses && p.uses.amplify) && ['Mg', 'Tl', 'Cx'].includes(G.ORGANS[o].lin) && p.E >= c.E + (AM.E || 0)) out.push(A({ type: 'organ', organ: o, useL: 0, amp: true, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); } if (p.altFuel && p.P >= G.altFuelP(p, c.E) && (p.E < c.E || p.P >= G.altFuelP(p, c.E) + G.sc(st, 20))) out.push(A({ type: 'organ', organ: o, useL: 0, payP: true, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); }); // 第42部 N5 代替燃料：E 不足か P 余剰なら P 払いの候補
+    st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (!c) return; out.push(A({ type: 'organ', organ: o, useL: lFor(c.E, p.E), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' })); { const AM = RSo(st).amplify; if (AM && !(p.uses && p.uses.amplify) && G.ampOk(st, o, false) && p.E >= c.E + (AM.E || 0)) out.push(A({ type: 'organ', organ: o, useL: 0, amp: true, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); } if (p.altFuel && p.P >= G.altFuelP(p, c.E) && (p.E < c.E || p.P >= G.altFuelP(p, c.E) + G.sc(st, 20))) out.push(A({ type: 'organ', organ: o, useL: 0, payP: true, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); }); // 第42部 N5 代替燃料：E 不足か P 余剰なら P 払いの候補
     const cheap2 = G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RSo(st).miMaxCost || 4) && !G.trait(p, t)).slice(0, RSo(st).miCount || 2);
     ['MB', 'MI', 'MS', 'MM'].forEach(k => { out.push(A({ type: 'mass', kind: k, traits: cheap2 })); if (used(k) && p.bypassWide && p.L > 0) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassL: true })); if (used(k) && G.coopBypassable(st, k, p) && p.coop >= (RSo(st).bypassCoopCost || 2)) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassCoop: true })); }); // bypassCoopWide：使用済みの大量消費を協調発進で
     const tslots = [{}, { slot: 'TRT2' }]; if (used('TRT') || used('TRT2')) { if (p.coop >= (RSo(st).bypassCoopCost || 2) && st.ext === 'x1') tslots.push({ bypassCoop: true }); if (p.L > 0) tslots.push({ bypassL: true }); }
@@ -217,7 +217,7 @@
     out.push(A({ type: 'gemset', useL: lFor(G.gemsetPrice(p), p.G) }));
     if (RSo(st).tributeBulk) { const bk = RSo(st).tributeBulk; out.push(A({ type: 'gemset', useL: lFor(Math.ceil(G.gemsetPrice(p) * bk.mult), p.G), bulk: true })); const T2 = RSo(st).tribute; if (T2 && st.round >= (T2.openRound || 6)) out.push(A({ type: 'tribute', res: 'E', bulk: true }), A({ type: 'tribute', res: 'P', bulk: true })); } // 試作 tributeBulk
     if (RSo(st).tributeAll) out.push(A({ type: 'tributeAll' })); // 試作 tributeAll
-    { const T = RSo(st).tribute; if (T && st.round >= (T.openRound || 6)) { if (T.shared) out.push(A({ type: 'tribute', res: 'E' }), A({ type: 'tribute', res: 'P' })); G.tribSlots(st).forEach(sl => { const def = T.slots[sl]; if (!def) return; // 献上（第33部）・献上枠（第35部：この卓で開いている枠だけ）
+    { const T = RSo(st).tribute; if (T && st.round >= (T.openRound || 6)) { if (T.shared) out.push(A({ type: 'tribute', res: 'E' }), A({ type: 'tribute', res: 'P' })); G.tribSlots(st).forEach(sl => { const def = T.slots[sl]; if (!def) return; // 献上（第33部）・恩寵枠（第35部：この卓で開いている枠だけ）
       if (!def.kind) { if (def.real) { const miss = G.TRACKS.find(t => p.gems[t] === 0) || 'body'; out.push(A({ type: 'tributeSlot', slot: sl, track: miss })); } else out.push(A({ type: 'tributeSlot', slot: sl })); return; }
       if (def.kind === 'organ') { const bl = st.shared.organField.filter(o => G.organCost(st, p, o)); bl.forEach(o => { out.push(A({ type: 'tributeSlot', slot: sl, organ: o, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); if (def.half) { const lin = G.ORGANS[o].lin, tier = G.ORGANS[o].tier; const nxt = lin + (tier + 1); const second = (st.shared.organField.includes(nxt) ? [nxt] : []).concat(bl.filter(x => x !== o)); second.slice(0, 4).forEach(o2 => out.push(A({ type: 'tributeSlot', slot: sl, organ: o, organ2: o2, useL: 0, li2Res: 'E', li3Res: 'E', regimeRes: 'E' }))); } }); return; }
       if (def.kind === 'trait') { const un = G.traitPool(st).filter(t => !G.trait(p, t)); const top = un.slice().sort((x, y) => G.baseTraitCost(st, y) - G.baseTraitCost(st, x)).slice(0, 5); un.forEach(t => out.push(A({ type: 'tributeSlot', slot: sl, traits: [t], useL: 0, res: 'E', track: 'intel' }))); if ((def.n || 2) >= 2) for (let i = 0; i < top.length; i++) for (let j = i + 1; j < top.length; j++) out.push(A({ type: 'tributeSlot', slot: sl, traits: [top[i], top[j]], useL: 0, res: 'E', track: 'intel' })); return; }
@@ -232,7 +232,7 @@
     if (!RSo(st).noReserve) out.push(A({ type: 'reserve', res: 'E' }), A({ type: 'reserve', res: 'G' })); else if (RSo(st).gather) ['E', 'G', 'P', 'coop'].forEach(r => out.push(A({ type: 'gather', res: r }))); else out.push(A({ type: 'pass' })); // v3.65 採集（パスの置き換え）
     // T10（第59部）：復元（他者が強で取った形質を強で）・増幅（器官1つを2倍）・二段進行
     if (RSo(st).restore && !(p.uses && p.uses.restore)) G.traitPool(st).filter(t => st.shared.traitFirst[t] !== undefined && st.shared.traitFirst[t] !== p.id && !G.trait(p, t)).forEach(t => out.push(A({ type: 'restore', trait: t, useL: 0, res: 'E', track: 'intel' })));
-    if (RSo(st).amplify && !(p.uses && p.uses.amplify)) p.organs.filter(o => ['Mg', 'Tl', 'Cx'].includes(G.ORGANS[o.id].lin) && !o.amp).forEach(o => out.push(A({ type: 'amplify', organ: o.id })));
+    if (RSo(st).amplify && !(p.uses && p.uses.amplify)) p.organs.filter(o => G.ampOk(st, o.id, true) && !o.amp).forEach(o => out.push(A({ type: 'amplify', organ: o.id })));
     if (RSo(st).doubleStep) G.TRACKS.forEach(t => { const c2 = G.stepCostDouble(p, t); if (c2 !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0, steps: 2 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c2, p.E), steps: 2 })); } });
     if (RSo(st).gToE) [1, 2, 4].forEach(n => out.push(A({ type: 'gToE', n })));
     p.cards.forEach(c => { out.push(A({ type: 'card', card: c, choice: 'E' })); if (c === 'J') out.push(A({ type: 'card', card: c, choice: 'G' })); if (p.shields > 0) out.push(A({ type: 'card', card: c, choice: 'E', shield: true })); });
@@ -313,7 +313,7 @@
     }
     return out;
   }
-  // 妨害ボーナス：首位（lead）が今すぐ使える早取り枠（大量消費・強の形質・献上枠）を自分が取る手に +1
+  // 妨害ボーナス：首位（lead）が今すぐ使える早取り枠（大量消費・強の形質・恩寵枠）を自分が取る手に +1
   function denyBonus(st, a, lead) {
     if (!lead) return 0;
     if (a.type === 'mass') return lead.P >= G.massCost(lead, a.kind) ? 1 : 0;
