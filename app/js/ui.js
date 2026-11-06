@@ -248,6 +248,7 @@
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '人数'), h('select', { name: 'n' }, h('option', { value: 3 }, '3人'), h('option', { value: 4, selected: true }, '4人'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'セットアップ'), h('select', { name: 'mode' }, h('option', { value: 'beginner' }, '初心者（器官の場を固定）'), h('option', { value: 'expert' }, '熟練者（器官の場を抽選）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'ルール数値'), h('select', { name: 'rules' }, h('option', { value: 'v1' }, '現行（進行2/3/5/8E・E収入3・宝石×10）'), h('option', { value: 't1' }, '仮値セットT1（進行3/5/8/13E・E収入2・宝石＝係数×2・形質協調3点・器官2点・体制15点・試作）'), h('option', { value: 't2' }, '仮値セットT2（基礎収入なし・進行3/5/8/13E・得点＝宝石×係数×2＋形質×宝石色数＋器官×協調＋体制15・係数ゲージ・形質買い替えなし・器官1R1人・代替払いなし・大量消費12/繁殖20,35・拡張x1込み・試作）'), h('option', { value: 't3' }, '仮値セットT3（T2＋トラックは収集物で自動進行〔Eでの進行も自由〕：緑＝器官3/6/9/12・青＝形質2/4/6/8・白＝協調2/4/6/8・赤＝P投入1/2/3/4。器官の場は8系統24枚・1R1人なし。得点＝宝石×係数×2＋体制15・試作）'), h('option', { value: 't4' }, '仮値セットT4（T3の土台を維持しP系コストを現行に戻す・社会トラック報酬から協調を外す・群体E/G＝P6で資源＋協調+1・大量消費(社会)+2・協調ボーナス上限+4・赤ゲート＝繁殖＋大量消費(身体)のみ・身体Lv5★の排他無視は1R1回・器官6系統18枚で各カード1R1人・知性Lv4＝形質-1・ゲート 緑3/6/9/12 青2/4/6/9 白2/4/6/8 赤1/2/3/4・試作）'), h('option', { value: 't5' }, '仮値セットT5（T4＋身体＝生命核軸：収入時に保有L1個につきE+1〔全員〕・身体はLを投入した回数1/2/3/4で上がり報酬はLの質〔利回りの資源選択・L+1・緊急発進の対象拡大・1L=E4/G4・利回り2倍〕・身体の大量消費軽減と排他無視は廃止・試作）'), h('option', { value: 't6' }, '仮値セットT6（T5＋全トラックLv6〔E21で宝石+1・終了時にその色の収集物3個につき祝福+1〕・宝石セット共用〔購入ごとに+5G〕・身体＝Lv2でL+1と結晶化〔L2→祝福〕解放／Lv4で痕跡／Lv4は5投入のうち1回が3個同時／E進行5/8/13/21・利回りR1〜3＝2・R4〜7＝1・繁殖変換はL3でも・協調8到達で係数+1・群れの結晶〔協調3→祝福〕・律動T1生命核版・大量消費(代謝)14・個人カードなし・試作）'), h('option', { value: 't7' }, '仮値セットT7（T6＋器官と形質の役割再編：器官＝代謝/転写/群心/脈動/促進/連結の6系統から4系統・3段階で育つ・4E+1G/6E+2G/9E+3G、形質＝突然変異12種〔群れ本能・長命・結晶体質・擬態・先見・適応放散ほか〕・Gのみ・能力ごとの値段・割引は転写系だけ・4/7枚目で係数+1・試作）'), h('option', { value: 't8' }, '仮値セットT8（T7の資源3倍：初期資源・枠の獲得量・コスト・利回り・大量消費・繁殖P150 等が3倍。協調ボーナス＝＋協調数・群心核＝ボーナス+1・2026-10-22）'), h('option', { value: 't10', selected: true }, '仮値セットT10（T8＋共用盤改訂・弱形質・E進行・知性/代謝Lv4・2026-11-05）'), h('option', { value: 't10s' }, '仮値セットT10・5ラウンド'), h('option', { value: 't11' }, '仮値セットT11（試作：T10 の資源1/3・協調2個ごとに+1・2026-11-05）'), h('option', { value: 't11s' }, '仮値セットT11・5ラウンド（試作）'), h('option', { value: 't8s' }, '仮値セットT8・5ラウンド（T8 と同じ数値で通常4＋神の到来1。試行・2026-10-30）'), h('option', { value: 't9' }, '仮値セットT9（資源1倍：協調は上限12・社会の自動進行 3/6/9/12・ボーナス＝協調3個につき+1・協調9で痕跡・2026-10-24）'))));
+    { const rs = form.elements.rules; if (rs && G.RULES_VISIBLE) { G.RULES_VISIBLE.forEach(k => { if (![...rs.options].some(o => o.value === k)) rs.appendChild(h('option', { value: k }, G.RULESETS[k].name)); }); [...rs.options].forEach(o => { if (!G.RULES_VISIBLE.includes(o.value)) o.remove(); }); } } // 2026-11-07 ユーザー指示：T12 の追加と同時に過去の数値セットは画面の選択肢から隠す（?rules= と計測スクリプトからは使える）
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '拡張ルール'), h('select', { name: 'ext' }, h('option', { value: 'none' }, 'なし'), h('option', { value: 'x1' }, 'x1：形質購入2枠（割増＝ラウンド数のE）＋緊急発進の対象に形質＋協調発進（協調トークンで使用済み枠）＋大量消費(社会)協調+3・試作'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, '資源スロット'), h('select', { name: 'slots' }, h('option', { value: 'v7' }, '現行（7スロット・各1人）'), h('option', { value: 'm4' }, '統合4（E系／G系／P系／全資源・各1人・試作）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'アンドゥ'), h('select', { name: 'undoMode' }, h('option', { value: 'free' }, '自由（誰でも即時）'), h('option', { value: 'approve' }, '承認（他の参加者全員のOK）'))));
@@ -264,8 +265,9 @@
   function rememberForm(form) { try { const keep = {}; Array.from(form.elements).forEach(el => { if (el.name && el.name !== 'seed') keep[el.name] = el.type === 'checkbox' ? el.checked : el.value; }); localStorage.setItem(META_KEY, JSON.stringify(keep)); } catch (e) { } }
   function restoreForm(form) {
     let saved = null; try { saved = JSON.parse(localStorage.getItem(META_KEY) || 'null'); } catch (e) { }
-    if (!saved) { if (form.elements.rules) form.elements.rules.value = 't10'; if (form.elements.mode) form.elements.mode.value = 'expert'; return; } // 初回の既定＝T10・熟練者（2026-11-05 ユーザー指示：T8→T10。保存済みの端末は保存値を優先）
+    if (!saved) { if (form.elements.rules) form.elements.rules.value = 't12'; if (form.elements.mode) form.elements.mode.value = 'expert'; return; } // 初回の既定＝T10・熟練者（2026-11-05 ユーザー指示：T8→T10。保存済みの端末は保存値を優先）
     Array.from(form.elements).forEach(el => { if (!el.name || !(el.name in saved)) return; if (el.type === 'checkbox') el.checked = !!saved[el.name]; else el.value = saved[el.name]; });
+    if (form.elements.rules && !form.elements.rules.value && G.RULES_VISIBLE) form.elements.rules.value = G.RULES_VISIBLE[0]; // 保存値が隠したセット（T10 など）なら T12 に
   }
   function bindNet() { Net.onChange = () => { rebuildState(); render(); }; rebuildState(); render(); }
 
@@ -423,7 +425,7 @@
 
   // 事前判定：実行できるか（できなければ理由）
   function check(action) { try { G.tryApply(st, action); return null; } catch (e) { return e.message; } }
-  function actBtn(attrs, reason, ...kids) { const b = h('button', attrs, ...kids); if (reason) { b.classList.add('na'); b.title = (b.title ? b.title + '\n' : '') + '× ' + reason; if (attrs.class && /\bslot\b/.test(attrs.class) && reason !== roMsg && !/の手番$/.test(reason)) b.appendChild(h('small', { class: 'why' }, '× ' + reason)); } return b; } // 2026-11-06 ユーザー指摘（T10-H3）：スマホではツールチップが見えず「暗いだけで理由が分からない」→自分の手番に押せない枠は理由を枠内に出す
+  function actBtn(attrs, reason, ...kids) { const b = h('button', attrs, ...kids); if (reason) { b.classList.add('na'); b.title = (b.title ? b.title + '\n' : '') + '× ' + reason; if (reason !== roMsg && !/の手番$/.test(reason)) b.addEventListener('click', () => toast('× ' + reason, true), true); } return b; } // 2026-11-06 ユーザー指摘（T10-H3）：スマホではツールチップが見えず「暗いだけで理由が分からない」→ v3.69 で枠内に常時表示 → 2026-11-07 ユーザー指摘「選択したときに見えればよい。常時は邪魔」：押したときにトーストで出す（押した後の処理〔緊急発進のダイアログ等〕はそのまま続く）
 
   // T4：社会トラック報酬から協調を外す（P／Wなし実行権）・知性Lv4＝形質-1
   const REW_SHORT_T4 = { social: { 2: 'P+{6}', 3: ['Wなし実行権+1', 'P+{10}'], 4: 'Wなし実行権+1', 5: ['権+2', '権+1'] }, intel: { 4: '形質-{1}（恒久）' } };
@@ -846,7 +848,12 @@
         if (!r) return; return submit({ pid: p.id, type: 'resolve', kind: r.kind, traits: r.traits });
       }
       if (pd.type === 'rewardTrait') {
-        const r = await ask('知性Lv3★先着：今すぐ形質1枚をG-3で購入できます', [traitSel(p, 'trait', '形質', null), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel('trait'), daSel('trait')], { skipLabel: '見送る', noCancel: true });
+        if (viewP(p).nextTraitFree) { // T10：弱なら無料・強は差額。2026-11-07 ユーザー指摘：弱が選択肢に無く（強の差額だけ）、表題も旧文「G-3」だった
+          const opts = []; G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => { const s = G.traitCost(st, p, t), w = G.traitCost(st, p, t, undefined, true); if (s.strong) opts.push({ value: t + ':S', label: `${t} ${G.TRAITS[t].name} 強（G${s.G}）` }); opts.push({ value: t + ':W', label: `${t} ${G.TRAITS[t].name} 弱（G${w.G}）` }); });
+          const r = await ask('知性Lv3★先着：今すぐ形質1枚（弱なら無料・強は差額）', [{ type: 'select', name: 'pick', label: '形質', options: opts, desc: (v) => { if (!v.pick) return ''; const [t, ver] = v.pick.split(':'); return `${ver === 'S' ? '強' : '弱'}：${rtxt(G.traitText(st, t, ver === 'S'))}`; } }, { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }], { skipLabel: '見送る', noCancel: true, note: '見送った場合は、次に買う形質1枚に同じ値引きが付きます。' });
+          if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); const [t, ver] = r.pick.split(':'); return submit({ pid: p.id, type: 'resolve', trait: t, weak: ver === 'W', useL: +r.useL, res: 'E', track: 'body' });
+        }
+        const r = await ask(`知性Lv3★先着：今すぐ形質1枚をG-${pd.disc}で購入できます`, [traitSel(p, 'trait', '形質', null), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel('trait'), daSel('trait')], { skipLabel: '見送る', noCancel: true });
         if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit({ pid: p.id, type: 'resolve', trait: r.trait, useL: +r.useL, res: r.res, track: r.track });
       }
       if (pd.type === 'cvIncome') { const r = await ask(`収斂膜：好きな資源+${pd.n}`, [resSel('res', '資源')], { noCancel: true }); if (!r) return; return submit({ pid: p.id, type: 'resolve', res: r.res }); }
@@ -873,7 +880,7 @@
   // ?demo=seed[&n=3] で自動セットアップ（ローカル・確認用）
   function demoGame(seed, n) {
     const q = new URLSearchParams(location.search); const bots = (q.get('bots') || '').split(',').filter(Boolean).map(Number);
-    const meta = { seed, mode: q.get('mode') || 'expert', slots: q.get('slots') || 'v7', rules: q.get('rules') || 't10', ext: q.get('ext') || 'x1', undoMode: 'free', players: Array.from({ length: n }, (_, i) => ({ name: 'P' + (i + 1), passive: true })), bots };
+    const meta = { seed, mode: q.get('mode') || 'expert', slots: q.get('slots') || 'v7', rules: q.get('rules') || 't12', ext: q.get('ext') || 'x1', undoMode: 'free', players: Array.from({ length: n }, (_, i) => ({ name: 'P' + (i + 1), passive: true })), bots };
     const sps = ['wing', 'arm', 'ant', 'manta']; const entries = [];
     for (let i = 0; i < n; i++) { entries.push({ type: 'species', pid: i, species: sps[i] }); if (sps[i] === 'arm') entries.push({ type: 'startTrait', pid: i, trait: 'IG' }); }
     const hands = { 3: [['A', 'Q'], ['B', 'N'], ['H', 'T']], 4: [['A', 'Q', 'D'], ['B', 'N', 'S'], ['H', 'T', 'R'], ['C', 'K', 'I']] }[n];

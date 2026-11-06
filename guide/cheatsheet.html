@@ -48,7 +48,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 
 <div class="blk"><h2><i>3</i>早取り盤（各枠1ラウンドに1人）</h2>
 <ul>
-<li><b>資源</b>：<span id="res"></span>（＋協調数ぶん増える）。使用済みは緊急発進（L1）・協調発進（協調3）で突破</li>
+<li><b>資源</b>：<span id="res"></span>（＋協調数ぶん増える）。使用済みは緊急発進（L1）・協調発進（協調3）で突破＝<b>獲得量2倍</b></li>
 <li><b>大量消費</b>：<span id="mass"></span></li>
 <li><b>形質購入</b>（強は1枚だけ早い者勝ち・弱は何枚でも・弱にも固有の効果）</li>
 <li><b>恩寵枠</b>（R<span id="tribR"></span>〜・4種から3種）：<span id="tribpool"></span></li>
@@ -72,18 +72,18 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 </div>
 
 <div class="blk"><h2><i>7</i>種族（初期資源 E/G/P）</h2><p id="sp"></p></div>
-<div class="foot">数値はアプリと同じ data.js／engine.js（T10）から表示・2026-11-05 改訂</div>
+<div class="foot">数値はアプリと同じ data.js／engine.js（T12・5ラウンド）から表示・2026-11-07 改訂</div>
 
 <script src="../app/js/icons.js"></script>
 <script src="../app/js/data.js"></script>
 <script src="../app/js/engine.js"></script>
 <script>
 (function () {
-  const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS.t10; // 2026-11-05 既定 t8→t10
-  const st = G.newGame({ rules: 't10', ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
+  const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS.t12; // 2026-11-05 既定 t8→t10／2026-11-07 t12
+  const st = G.newGame({ rules: 't12', ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
   const set = (id, v) => { $(id).textContent = String(v); };
   const sl = id => G.slotText(st, id); const T = R.tribute;
-  set('ver', 'v' + G.VERSION + '・' + R.name + '・数値はすべて仮値'); set('tc', (R.traitCoef || [4, 8]).join('・')); set('rounds', G.ROUNDS); set('yield', R.lYield || 9);
+  set('ver', 'v' + G.VERSION + '・' + R.name + '・数値はすべて仮値'); set('tc', (R.traitCoef || [4, 8]).join('・')); set('rounds', R.rounds || G.ROUNDS); set('yield', R.lYield || 9);
   const stepArr = R.step.slice(1), bstep = (R.bodyStep || R.step).slice(1); set('step', stepArr.join('/') + 'E'); set('bstep', bstep.join('/') + 'E');
   $('trk').innerHTML = G.TRACKS.map(t => `<span style="border-color:var(--${G.TRACK_INFO[t].color})"><b>${G.TRACK_INFO[t].name.split('・')[0]}</b><br>${G.GATE_SHORT[t] || ''} ${R.gates[t].slice(2).join('/')}</span>`).join('');
   set('lv6', G.TRACKS.map(t => G.lv6CostText(st, t)).join('／'));

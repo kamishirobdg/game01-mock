@@ -172,7 +172,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   <li><strong>行動</strong>：手番順に<strong>ワーカー1個ずつ</strong>置く。全員が5個使い切るまで繰り返す（置ける場所が無いときは<strong>採集</strong>＝E・G・P・協調のどれかを少しだけ得る）。</li>
   <li><strong>終了判定</strong>：<span id="k-rounds2"></span>ラウンド目が終わったら得点計算。</li>
 </ol>
-<div class="tip">早取り盤の枠は「1ラウンドに1人だけ」。使用済みの資源枠は <strong>緊急発進</strong>（生命核1個を払う）か <strong>協調発進</strong>（協調3個を払う）で突破できます。生命核を払うたびに、払った個数が身体トラックの収集物になります。</div>
+<div class="tip">早取り盤の枠は「1ラウンドに1人だけ」。使用済みの資源枠は <strong>緊急発進</strong>（生命核1個を払う）か <strong>協調発進</strong>（協調3個を払う）で突破できます。<strong>発進で使った資源枠は獲得量が2倍</strong>（協調ボーナスは通常どおり・Pブーストは対象外）。生命核を払うたびに、払った個数が身体トラックの収集物になります。</div>
 <div class="ex"><div class="q">ラウンド3の開始時、痕跡が P1＝2個、P2＝0個、P3＝1個。新しい手番順は？</div>
   <div class="choices"><button data-ex="order" data-v="0">P1→P3→P2</button><button data-ex="order" data-v="1">P2→P3→P1</button><button data-ex="order" data-v="2">前のラウンドと同じ</button></div><div class="ans" id="ans-order"></div></div>
 </section>
@@ -283,7 +283,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <p>スマホ用の1枚版：<a href="img/cheatsheet.png">画像</a>／<a href="img/cheatsheet.pdf">PDF</a>／<a href="cheatsheet.html">ページ</a></p>
 </section>
 </main>
-<footer>ルールの正本は design.md。数値はアプリと同じ data.js／engine.js（数値セット T10）から読み込んでいます。2026-11-05 改訂（T10＝共用盤の改訂・弱形質・二段進行・知性／代謝 Lv4）。</footer>
+<footer>ルールの正本は design.md。数値はアプリと同じ data.js／engine.js（数値セット T12＝5ラウンド）から読み込んでいます。2026-11-07 改訂（T12＝T10 の 5ラウンド版＋跳躍形質の強は +1 段＋ゲート+1・発進は獲得量2倍）。</footer>
 
 <script src="../app/js/icons.js"></script>
 <script src="../app/js/data.js"></script>
@@ -292,14 +292,14 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 (function () {
   'use strict';
   const G = window.G1, $ = id => document.getElementById(id);
-  const RULES = 't10'; const R = G.RULESETS[RULES]; // 2026-11-05 既定 t8→t10
+  const RULES = 't12'; const R = G.RULESETS[RULES]; // 2026-11-05 既定 t8→t10／2026-11-07 t10→t12（5R）
   const st = G.newGame({ rules: RULES, ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
   const p0 = st.players[0];
   const txt = s => G.txt(st, s);
   const num = (id, v) => { const el = $(id); if (el) el.textContent = String(v); };
 
   // ---- 0 ----
-  num('k-ver', 'v' + G.VERSION); num('k-rules', R.name); num('k-rounds', G.ROUNDS + 'ラウンド'); num('k-rounds2', G.ROUNDS);
+  num('k-ver', 'v' + G.VERSION); num('k-rules', R.name); num('k-rounds', (R.rounds || G.ROUNDS) + 'ラウンド'); num('k-rounds2', R.rounds || G.ROUNDS);
   num('k-res', 'エネルギー E／遺伝子 G／個体数 P／生命核 L');
 
   // ---- 例題 ----
@@ -401,14 +401,14 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
     ['共用盤', SHARED.filter(id => id !== 'GEM').map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
     ['繁栄度・成熟度', `×3〜×7。繁栄度＝繁殖 P${R.breed[0]}（または L${R.breedL}）で+1／成熟度＝形質${(R.traitCoef || [4, 8]).join('・')}枚目・系統完成で+1`],
     ['知性 Lv4・代謝 Lv4', '知性 Lv4＝形質3枚ごとに祝福+1／代謝 Lv4＝器官建造の G なし・後追い料なし'],
-    ['終了と得点', `${G.ROUNDS}ラウンド固定。痕跡×繁栄度＋祝福×成熟度。最果ての痕跡＝各トラック単独首位（Lv2以上）に痕跡+1`],
+    ['終了と得点', `${R.rounds || G.ROUNDS}ラウンド固定。痕跡×繁栄度＋祝福×成熟度。最果ての痕跡＝各トラック単独首位（Lv2以上）に痕跡+1`],
   ];
   $('qt').innerHTML = QT.map(([a, b]) => `<tr><th>${a}</th><td>${b}</td></tr>`).join('');
   const GL = [
     ['E／G／P／L', 'エネルギー／遺伝子／個体数／生命核'], ['痕跡', '宇宙に残した影響。終了時に繁栄度を掛ける'], ['祝福', '神からの評価。終了時に成熟度を掛ける'],
     ['繁栄度', '×3〜×7。繁殖変換で上がる'], ['成熟度', '×3〜×7。形質3・6枚目と系統完成で上がる'], ['早取り盤', '各枠1ラウンドに1人だけ'], ['共用盤', '何人でも・何回でも'],
     ['先着＝強', '最初に到達・取得した人が強い効果、後の人は弱い効果（トラックは E を払って自力で上がった段なら後着でも強）'], ['二段進行', 'E を払う進行で、2段分の E を合算して一度に2段上がる（Lv5 まで・手番1つ）'], ['収集物', 'トラックを自動で上げる材料（L投入・形質・協調・器官）'],
-    ['緊急発進', '生命核1個で使用済みの資源枠を使う'], ['協調発進', '協調3個で使用済みの資源枠を使う'], ['Wなし実行権', '社会トラックで得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）'],
+    ['緊急発進', '生命核1個で使用済みの資源枠を使う（獲得量2倍）'], ['協調発進', '協調3個で使用済みの資源枠を使う（獲得量2倍）'], ['Wなし実行権', '社会トラックで得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）'],
     ['献上', `資源を捧げて祝福+${TV}。祭壇は3つ（遺伝子・生命核・協調）で${TL}`], ['神の到来', `ラウンド${T.openRound || 6}の開始。恩寵枠が3つ開く`], ['祝福枠', '最終ラウンド、空いている資源枠にコマを置くと資源に加えて祝福+1'], ['最果ての痕跡', '終了時、各トラックの単独首位（Lv2以上）に痕跡+1'],
     ['系統完成', '同じ系統の器官3枚。成熟度+1'], ['復元', '共用盤。誰かに強を取られた形質を、強の値段＋E で強い効果のまま取る（1人1回）'], ['増幅', `共用盤。E を払い、器官1つ（${G.ampTargetText ? G.ampTargetText(st) : '代謝・転写・促進'}）の効果を以後2倍（1人1回）。建造と同時でも`], ['採集', '共用盤。E・G・P のどれか1つを少しだけ得る（協調は P を払って+1）。置ける場所が無いときの逃げ道'],
   ];

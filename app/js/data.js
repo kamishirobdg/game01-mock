@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.70'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.72'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -186,7 +186,11 @@
     lv6Pay: { body: { L: 5 }, intel: { G: 14 }, social: { coop: 8 }, metab: { E: 30 } } });
   G.RULESETS.t11s = Object.assign({}, G.RULESETS.t11, { name: '仮値セットT11・5ラウンド（試作）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t11.tribute, { openRound: 5 }), lv6Pay: Object.assign({}, G.RULESETS.t11.lv6Pay, { body: { L: 3 } }),
     speciesMod: G.scaleRuleset({ speciesMod: G.RULESETS.t10s.speciesMod }, 1 / 3).speciesMod });
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s'];
+  // 2026-11-07 ユーザー決定（第69部 3a＋K1）：T12＝t10s（5R）＋跳躍形質の強は「+1 段＋そのトラックのゲート+1」（色の資源をやめる）＋緊急発進・協調発進で使った資源枠は獲得量 2 倍（launchMul）。
+  //   評価の基準は 5R（7R 版は作らない）。T12 から画面の「ルール数値」は RULES_VISIBLE だけを表示（過去のセットは ?rules= と計測スクリプトからは使える）
+  G.RULESETS.t12 = Object.assign({}, G.RULESETS.t10s, { name: '仮値セットT12（5ラウンド：T10＋跳躍の強＝+1段＋ゲート+1・発進は獲得量2倍）', leapStrong: 'gate', launchMul: 2 });
+  G.RULES_VISIBLE = ['t12'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
   G.GATE_LABEL_L = '生命核の投入（代用払い・緊急発進・適応進化）'; G.GATE_SHORT_L = 'L投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: 'P投入' };
@@ -247,8 +251,8 @@
     MB: { name: '増殖暴走', cat: 'M', cost: [7, 5], strong: '繁殖変換 -{15}P（各段）＋大量消費(身体)-{mbDisc:8}P', weak: '大量消費(身体)-{mbDisc:8}Pのみ', weak2: '繁殖変換 -{mbBreedDiscWeak:15}P（各段）＋大量消費(身体)-{mbDiscWeak:12}P', permWeak: true }, // 2026-10-22 半減→各段-15P（4段で半減だと P300 の価値になるため）
     IM: { name: '代謝亢進', cat: 'I', cost: [8, 6], strong: '好きな1種の収入+3（取得時固定）', weak: '好きな1種の収入+2（取得時固定）', permWeak: true },
     DG: { name: '遺伝子図書館', cat: 'D', cost: [7, 5], strong: '毎R形質1枚を-{2}Gで購入可（排他不要）', weak: '毎R形質1枚を-{1}Gで購入可（排他不要）', weak2: '毎R形質1枚を-{dgDiscW:4}Gで購入可（排他不要）', permWeak: true }, // 2026-11-05 弱の文を単体で読める形に（ユーザー指摘）
-    JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', strongRes: '知性+1段階＋G+{3}（即時）', strongCap: '知性+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '知性+1段階＋Lv5★で必ず強効果', weak2: '知性+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
-    JB: { name: '身体覚醒', cat: 'J', cost: [9, 7], strong: '身体+2段階（即時）', strongRes: '身体+1段階＋生命核+1（即時）', strongCap: '身体+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '身体+1段階＋Lv5★で必ず強効果', weak2: '身体+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
+    JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', strongRes: '知性+1段階＋G+{3}（即時）', strongGate: '知性+1段階＋知性のゲート+1（即時）', strongCap: '知性+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '知性+1段階＋Lv5★で必ず強効果', weak2: '知性+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
+    JB: { name: '身体覚醒', cat: 'J', cost: [9, 7], strong: '身体+2段階（即時）', strongRes: '身体+1段階＋生命核+1（即時）', strongGate: '身体+1段階＋身体のゲート+1（即時）', strongCap: '身体+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '身体+1段階＋Lv5★で必ず強効果', weak2: '身体+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
     // 2026-10-28 ユーザー採用（第42部 N5/N8/N9）：コンボ廃止の補填。序盤に取るほど得な「資源を生む／器官に役立つ」形質
     NE: { name: '代替燃料', cat: 'N', cost: [3, 2], strong: '器官建造の E を P で払える（E1＝P1）', weak: '器官建造の E を P で払える（E3＝P5・切り上げ）', permWeak: true }, // 2026-10-30 弱 E1＝P2 → E3＝P5（強弱の差を縮める・ユーザー採用）
     NS: { name: '共生', cat: 'N', cost: [3, 2] /* 2026-10-29 G6→G9（T8）：九腕 39% の是正・AI52 */, strong: '器官建造時、同じ系統の器官を他者が持っていれば G コストなし', weak: '器官建造時、同じ系統の器官を他者が持っていれば G-{1}', permWeak: true },
