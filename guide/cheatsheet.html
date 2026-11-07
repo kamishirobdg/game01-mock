@@ -72,15 +72,15 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 </div>
 
 <div class="blk"><h2><i>7</i>種族（初期資源 E/G/P）</h2><p id="sp"></p></div>
-<div class="foot">数値はアプリと同じ data.js／engine.js（T12・5ラウンド）から表示・2026-11-07 改訂</div>
+<div class="foot">数値はアプリと同じ data.js／engine.js（T13・5ラウンド）から表示・2026-11-07 改訂（T13＝器官効果の第2版・値段調整）</div>
 
 <script src="../app/js/icons.js"></script>
-<script src="../app/js/data.js"></script>
-<script src="../app/js/engine.js"></script>
+<script src="../app/js/data.js?v=3.74"></script>
+<script src="../app/js/engine.js?v=3.74"></script>
 <script>
 (function () {
-  const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS.t12; // 2026-11-05 既定 t8→t10／2026-11-07 t12
-  const st = G.newGame({ rules: 't12', ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
+  const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS.t13; // 2026-11-05 既定 t8→t10／2026-11-07 t12→t13
+  const st = G.newGame({ rules: 't13', ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
   const set = (id, v) => { $(id).textContent = String(v); };
   const sl = id => G.slotText(st, id); const T = R.tribute;
   set('ver', 'v' + G.VERSION + '・' + R.name + '・数値はすべて仮値'); set('tc', (R.traitCoef || [4, 8]).join('・')); set('rounds', R.rounds || G.ROUNDS); set('yield', R.lYield || 9);
@@ -93,7 +93,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
   set('tribR', T.openRound || 6); set('tribpool', T.pool.map(id => `${G.SLOT_BY_ID[id].name}＝${sl(id)}`).join('／'));
   set('flatG', G.sc(st, T.flatG)); set('lcry', R.lCrystal); set('ccry', R.coopCrystal); set('tvg', R.tributeVg || 1); set('tlim', R.tributeOnceGame ? '各祭壇は1ゲームに1回' : '各品目各自1R1回');
   set('breed', R.breed[0]); set('breedL', R.breedL || '—');
-  set('ocost', R.organCost.map(([e, g]) => `${e}E+${g}G`).join('/')); set('late', G.sc(st, R.organLateFee || 1));
+  set('ocost', R.organCost.map(([e, g]) => `${e}E+${g}G`).join('/') + (R.organCostBy ? '（' + Object.entries(R.organCostBy).map(([l, arr]) => G.LINEAGES[l] + ' ' + arr.map(([e, g]) => `${e}E+${g}G`).join('/')).join('・') + '）' : '')); set('late', G.sc(st, R.organLateFee || 1));
   set('scan', sl('SCAN')); set('lval', G.sc(st, 3)); set('lval2', G.sc(st, 3)); set('coopmax', R.coopMax || G.COOP_MAX);
   set('sp', Object.keys(G.SPECIES).sort((a, b) => G.SPECIES[a].order - G.SPECIES[b].order).map(id => { const s = G.speciesInfo(st, id); return `${s.name} E${s.stock.E}/G${s.stock.G}/P${s.stock.P}・${s.passive}`; }).join('／'));
 })();

@@ -130,6 +130,7 @@ svg.ic { width:16px; height:16px; vertical-align:-3px; margin-right:2px; }
 svg.ic.E { color:#d99a00; } svg.ic.G { color:#1f9c86; } svg.ic.P { color:#d9534f; } svg.ic.L { color:#2a95d3; } svg.ic.coop { color:#666; } svg.ic.gem { color:#777; } svg.ic.W { color:#444; }
 .rbox svg.ic { width:22px; height:22px; }
 .ocard, .tcard, .cardbtn { position:relative; padding-top:24px; }
+.ocard .chg, .tcard .chg { display:inline-block; margin-left:4px; padding:0 4px; border-radius:3px; background:#d9534f; color:#fff; font-size:10px; font-weight:700; vertical-align:1px; } /* T13：この版で変えた効果・値段の目印 */
 .ocard .hd, .tcard .hd, .cardbtn .hd { position:absolute; left:6px; right:6px; top:4px; display:flex; justify-content:space-between; font-size:11px; }
 .ocard .hd .cost, .tcard .hd .cost { color:#2f6fdd; font-weight:600; } .hd .sw { color:#fff; background:#555; border-radius:3px; padding:0 5px; } .hd .sw.strong { background:#2f6fdd; } .hd .sw.weak { background:#999; }
 .tabs { display:flex; gap:4px; margin-bottom:6px; } .tabs button { border-radius:6px 6px 0 0; } .tabs button.on { background:#2f6fdd; color:#fff; border-color:#2f6fdd; }

@@ -205,7 +205,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <h2><span class="no">5</span>繁栄度と成熟度を育てる</h2>
 <div class="kv">
   <div><b>繁栄度 ×3→×7</b><span><strong>繁殖変換</strong>（共用盤・P<span id="k-breed"></span> または生命核 <span id="k-breedL"></span> 個・W 必須）で +1。4段まで。痕跡に掛かる。</span></div>
-  <div><b>成熟度 ×3→×7</b><span>形質 <span id="k-tc"></span> 枚目で +1。器官の<strong>系統完成</strong>（同じ系統3枚）で +1（2系統目まで。適応放散で3系統目）。祝福に掛かる。</span></div>
+  <div><b>成熟度 ×3→×7</b><span>形質 <span id="k-tc"></span> 枚目で +1。器官の<strong>系統完成</strong>（同じ系統3枚）で +1（2系統目まで。適応放散（強）は1系統だけ2枚で完成）。祝福に掛かる。</span></div>
   <div><b>どちらを育てる？</b><span>痕跡が多いなら繁栄度、祝福（献上）が多いなら成熟度。終盤に P が余るなら繁殖。</span></div>
 </div>
 <div class="ex"><div class="q">痕跡5個・祝福2個・成熟度×4のまま、繁栄度が×5から×6に上がった。得点はいくつ増える？</div>
@@ -227,7 +227,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   <li>場には<strong>4系統×3段階</strong>（初心者セットアップは <span id="k-beglin"></span> の固定。熟練者は6系統から4系統を抽選）。系統内は階層順に建てる。</li>
   <li>コスト <span id="k-ocost"></span>。<strong>効果は先着も後続も同じ。後続は後追い料 +<span id="k-late"></span>E</strong>（器官＝早い者が安い、形質＝早い者が強い）。代謝 Lv4 からは G なし・後追い料なし。</li>
   <li>共用盤の<strong>増幅</strong>（E<span id="k-amp"></span>・1人1回）で、数の効果を持つ器官1つ（<span id="k-ampT"></span>）の効果を以後2倍にできる（持っている器官に使うほか、建造のときに「建造と同時に増幅」を選べば手番1つで済む）。</li>
-  <li>同じ系統3枚＝<strong>系統完成</strong>で成熟度+1。3段目は、そのトラックの収集物の数え方を1つ有利にする（ゲート+1）。</li>
+  <li>同じ系統3枚＝<strong>系統完成</strong>で成熟度+1。代謝核・群心核・脈動核（3段目）と転写体（2段目）は、そのトラックの収集物の数え方を1つ有利にする（ゲート+1）。器官の多くは<strong>建てた瞬間に効果がある</strong>（連結は持っている器官の枚数ぶん、転写は G、群心は協調、脈動は生命核）。促進は E・G の支払いを安くする。</li>
 </ul>
 <div class="tabs" id="og-tabs"></div><div class="tabbody" id="og-body"></div>
 </section>
@@ -283,16 +283,16 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <p>スマホ用の1枚版：<a href="img/cheatsheet.png">画像</a>／<a href="img/cheatsheet.pdf">PDF</a>／<a href="cheatsheet.html">ページ</a></p>
 </section>
 </main>
-<footer>ルールの正本は design.md。数値はアプリと同じ data.js／engine.js（数値セット T12＝5ラウンド）から読み込んでいます。2026-11-07 改訂（T12＝T10 の 5ラウンド版＋跳躍形質の強は +1 段＋ゲート+1・発進は獲得量2倍）。</footer>
+<footer>ルールの正本は design.md。数値はアプリと同じ data.js／engine.js（数値セット T13＝5ラウンド）から読み込んでいます。2026-11-07 改訂（T13＝T12＋器官効果の第2版〔建てた瞬間に効果がある型〕・適応放散の強は 2 枚で完成・器官の値段調整。「改」は今回変えたカード）。</footer>
 
 <script src="../app/js/icons.js"></script>
-<script src="../app/js/data.js"></script>
-<script src="../app/js/engine.js"></script>
+<script src="../app/js/data.js?v=3.74"></script>
+<script src="../app/js/engine.js?v=3.74"></script>
 <script>
 (function () {
   'use strict';
   const G = window.G1, $ = id => document.getElementById(id);
-  const RULES = 't12'; const R = G.RULESETS[RULES]; // 2026-11-05 既定 t8→t10／2026-11-07 t10→t12（5R）
+  const RULES = 't13'; const R = G.RULESETS[RULES]; // 2026-11-05 既定 t8→t10／2026-11-07 t10→t12（5R）→t13（器官効果の第2版）
   const st = G.newGame({ rules: RULES, ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }, { name: 'P4' }], mode: 'beginner', seed: 1 });
   const p0 = st.players[0];
   const txt = s => G.txt(st, s);
@@ -360,7 +360,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   num('k-late', G.sc(st, R.organLateFee || 1));
   const LIN = (R.organSet || Object.keys(G.LINEAGES)).map(l => ({ l, label: G.LINEAGES[l] + (BEG.includes(l) ? '★' : '') }));
   const otxt = o => txt(R.hc3Bonus && o.strongB ? o.strongB : o.strong);
-  tabs($('og-tabs'), $('og-body'), LIN, ({ l }) => '<div class="clist">' + [1, 2, 3].map(n => { const id = l + n, o = G.ORGANS[id]; return `<div class="cd ${BEG.includes(l) ? 'beg' : ''}"><span class="c">${n}段階目</span><b>${id} ${o.name}</b><span class="s">${otxt(o)}</span></div>`; }).join('') + '</div>' + (BEG.length ? '<p class="prov">★＝初心者セットアップの4系統</p>' : ''));
+  tabs($('og-tabs'), $('og-body'), LIN, ({ l }) => '<div class="clist">' + [1, 2, 3].map(n => { const id = l + n, o = G.organDef(R, id); return `<div class="cd ${BEG.includes(l) ? 'beg' : ''}"><span class="c">${n}段階目</span><b>${id} ${o.name}</b><span class="s">${otxt(o)}</span></div>`; }).join('') + '</div>' + (BEG.length ? '<p class="prov">★＝初心者セットアップの4系統</p>' : ''));
 
   // ---- 7 盤 ----
   const TV = R.tributeVg || 1, TL = R.tributeOnceGame ? '各祭壇は1ゲームに1回' : '各品目各自1R1回'; num('k-tvg', TV); num('k-tlim', TL); num('k-tlim2', TL); // v3.67 祭壇
