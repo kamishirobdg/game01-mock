@@ -18,7 +18,7 @@
     const R = (x) => Object.assign({ pid, type: 'resolve' }, x);
     switch (pd.type) {
       case 'freeMass': return first(st, [R({ kind: 'MB' }), R({ kind: 'MM' }), R({ kind: 'MS' })]);
-      case 'rewardTrait': { if (pd.freeMax) { const RT = RSo(st); const el = G.traitPool(st).filter(t => !G.trait(p, t) && ((RT.traitCosts || {})[t] || G.TRAITS[t].cost)[0] <= pd.freeMax).sort((a, b) => ((RT.traitCosts || {})[b] || G.TRAITS[b].cost)[0] - ((RT.traitCosts || {})[a] || G.TRAITS[a].cost)[0]); return first(st, el.map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })])); } // T13 全転写：無料なので高い順
+      case 'rewardTrait': { if (pd.freeMax) { const RT = RSo(st); const wi = pd.weakOnly ? 1 : 0; const el = G.traitPool(st).filter(t => !G.trait(p, t) && ((RT.traitCosts || {})[t] || G.TRAITS[t].cost)[wi] <= pd.freeMax).sort((a, b) => ((RT.traitCosts || {})[b] || G.TRAITS[b].cost)[wi] - ((RT.traitCosts || {})[a] || G.TRAITS[a].cost)[wi]); /* T14 転写体（weakOnly）＝弱の値段で */ return first(st, el.map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })])); } // T13 全転写：無料なので高い順
         return first(st, cheapTraits(st, p).map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })])); }
       case 'dgBuy': return first(st, cheapTraits(st, p).map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })]));
       case 'flSwap': return first(st, [p.E > p.G + G.sc(st, 4) ? R({ dir: 'EG', n: Math.min(pd.max, 2) }) : null, R({ skip: true })]);
@@ -162,7 +162,7 @@
     if (rem > 0) { const has = (id) => p.traits.some(t => t.id === id); // T7：効果が得点・資源の差分に出にくい形質の見込み
       if (has('NF')) v += Math.min(4, G.TRACKS.filter(t => p.lv[t] < 5).length) * sc.cfB * 2 * 0.25 * (rem / 7);
       if (has('NM')) v += rem * 2.5;
-      if (has('NR') && RSo(st).nrMode === 'two' && !p.nrTwoLin) { const near = st.shared.lineages.filter(l => G.lineageCount(p, l) >= 1).length; v += Math.min(1, near) * rem * 1.6; } // T13：2 枚で完成（まだ使っていなければ、1 枚ある系統が近い）
+      if (has('NR') && (RSo(st).nrMode === 'two' || RSo(st).nrTwoN) && G.nrTwoLeft(p) > 0) { const near = st.shared.lineages.filter(l => G.lineageCount(p, l) >= 1 && !G.lineageDone(p, l)).length; v += Math.min(G.nrTwoLeft(p), near) * rem * 1.6; } // T14：残り系統数ぶん // T13：2 枚で完成（まだ使っていなければ、1 枚ある系統が近い）
       else if (has('NR') && (RSo(st).lineageCoefMax || 0) > 0) { const near = st.shared.lineages.filter(l => G.lineageCount(p, l) >= 1).length; v += Math.min(1, Math.max(0, near - 1)) * rem * 1.6; } }
     const tg = RSo(st).traitEndGem; if (tg && !st.ended) v += Math.floor(p.traits.length / tg) * sc.cfC * 2 * (rem === 0 ? 1 : 0.6); // 試作 traitEndGem
     const le = RSo(st).lEndGem; if (le) v += Math.min(le.max, Math.floor(p.L / le.per)) * sc.cfC * 2 * (rem === 0 ? 1 : 0.6); // T6 S2：終了時の保有L祝福
@@ -187,8 +187,8 @@
       if (R.organFx === 2) { v += rem * (0.9 + 0.6 + 0.3) * G.cxDisc(p, 'E') * w.E + rem * (0.6 + 0.6) * G.cxDisc(p, 'G') * w.G; } // T13 促進：E の支払い（進行 0.9＋器官 0.6＋共用盤 0.3 回/R）・G の支払い（形質 0.6＋器官 0.6 回/R）。連結は建造時の資源が評価に入るので見込みなし
       else { v += rem * 0.9 * lm('Cx', [1, 2, 3], [1, 1, 2]) * w.E; // 促進：進行 0.9回/R
         const li1 = G.organ(p, 'Li1'); if (li1) v += rem * 0.6 * (li1.strong ? 2 : 1) * k1 * w.E; const li2 = G.organ(p, 'Li2'); if (li2) v += rem * 0.6 * (li2.strong ? 3 : 2) * k1 * w.E; }
-      const dv = G.trait(p, 'DV'); if (dv) v += rem * 0.9 * (dv.strong ? 2 : 1) * k1 * w.E; const dg = G.trait(p, 'DG'); if (dg) v += rem * 0.5 * (R.dgDisc ? R.dgDisc[dg.strong ? 0 : 1] : 2 * k1) * w.G;
-      const mb = G.trait(p, 'MB'); if (mb && mb.strong && R.mbBreedDisc) v += Math.min(rem, (R.breed.length - p.breed)) * 0.5 * R.mbBreedDisc * k1 * w.P;
+      const dv = G.trait(p, 'DV'); if (dv) { if (R.dvMode === 'triple') v += (p.dv3 || 0) * 15 * w.E; else v += rem * 0.9 * (dv.strong ? 2 : 1) * k1 * w.E; } // T14 三段進行＝残り回数×手番 1 つ（E15 相当） const dg = G.trait(p, 'DG'); if (dg) v += rem * 0.5 * (R.dgDisc ? R.dgDisc[dg.strong ? 0 : 1] : 2 * k1) * w.G;
+      const mb = G.trait(p, 'MB'); if (mb && mb.strong && R.mbBreedDisc && R.mbMode !== 'multi') v += Math.min(rem, (R.breed.length - p.breed)) * 0.5 * R.mbBreedDisc * k1 * w.P;
       // 2026-11-04 消費軽減（MC）の見込み：これまで評価に無く（形質1枚ぶんの重みだけ）、G15 の MC は G9 の形質に常に負けて 0.02 枚/戦しか買われなかった。大量消費 0.5回/R × 軽減 を残Rぶん。1回限り（弱／freeOnce の強）は 1回ぶん
       const mcT = G.trait(p, 'MC'); if (mcT) { const fo = R.mcMode === 'freeOnce'; const perm = fo ? (!mcT.strong ? (R.mcDiscWeak !== undefined ? R.mcDiscWeak : R.mcDisc) : 0) : (mcT.strong ? R.mcDisc : 0); v += rem * 0.5 * perm * w.P;
         const once = fo ? (mcT.strong && p.mcFree ? (R.mmCost ? (R.massCost + R.mmCost) / 2 : R.massCost) : 0) : p.next.mass; v += Math.min(1, rem * 0.5) * once * w.P; }
@@ -207,12 +207,14 @@
     G.TRACKS.forEach(t => { const c = G.stepCost(p, t); if (c !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c, p.E) })); if (RSo(st).bodyBulkLv4 && p.L >= 2 && c >= 2 * (p.lValue || 3) && !p.lBulk) out.push(A({ type: 'track', track: t, pay: 'E', useL: 2 })); } });
     if (RSo(st).bodyBulkLv4 && p.L >= 2 && !p.lBulk) st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (c && c.E >= 2 * (p.lValue || 3)) out.push(A({ type: 'organ', organ: o, useL: 2, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); });
     out.push(A({ type: 'breed' })); if (RSo(st).breedE) out.push(A({ type: 'breed', pay: 'E' })); if (RSo(st).breedL) out.push(A({ type: 'breed', pay: 'L' }));
+    if (RSo(st).mbMode === 'multi') { const mx = G.breedMaxN(p); for (let a1 = 0; a1 <= mx; a1++) for (let b1 = 0; b1 <= (RSo(st).breedL ? mx : 0); b1++) if (a1 + b1 >= 2) out.push(A({ type: 'breed', nP: a1, nL: b1 })); } // T14 繁殖の同時払い（2 段以上の組み合わせ。1 段は上の候補）
     if (RSo(st).massL) out.push(A({ type: 'mass', kind: 'MB', pay: 'L' }));
     if (RSo(st).crystal) ['E', 'G'].forEach(r => out.push(A({ type: 'crystal', res: r })));
     if (RSo(st).lCrystal) out.push(A({ type: 'lCrystal' }));
     if (RSo(st).coopCrystal) out.push(A({ type: 'coopCrystal' }));
     if (RSo(st).premium) G.PREMIUM_ORDER.filter(t => !G.trait(p, t)).forEach(t => out.push(A({ type: 'premium', trait: t, useL: 0 })));
     st.shared.organField.forEach(o => { const c = G.organCost(st, p, o); if (!c) return; out.push(A({ type: 'organ', organ: o, useL: lFor(c.E, p.E), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' })); { const AM = RSo(st).amplify; if (AM && !(p.uses && p.uses.amplify) && G.ampOk(st, o, false) && p.E >= c.E + (AM.E || 0)) out.push(A({ type: 'organ', organ: o, useL: 0, amp: true, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); } if (p.altFuel && p.P >= G.altFuelP(p, c.E) && (p.E < c.E || p.P >= G.altFuelP(p, c.E) + G.sc(st, 20))) out.push(A({ type: 'organ', organ: o, useL: 0, payP: true, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })); }); // 第42部 N5 代替燃料：E 不足か P 余剰なら P 払いの候補
+    if (RSo(st).burst) st.shared.lineages.forEach(lin => { const n = G.lineageCount(p, lin); const seq = [1, 2, 3].filter(t => t > n).map(t => lin + t).filter(id => st.shared.organField.includes(id)); for (let k = 2; k <= Math.min(seq.length, RSo(st).burst.max || 3); k++) out.push(A({ type: 'burst', organs: seq.slice(0, k), useL: 0, liRes: p.G < G.sc(st, 2) ? 'G' : 'E' })); }); // T14 一気立て：同じ系統を 2〜3 枚続けて（資源が足りなければ engine が弾く）
     const cheap2 = G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RSo(st).miMaxCost || 4) && !G.trait(p, t)).slice(0, RSo(st).miCount || 2);
     ['MB', 'MI', 'MS', 'MM'].forEach(k => { out.push(A({ type: 'mass', kind: k, traits: cheap2 })); if (used(k) && p.bypassWide && p.L > 0) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassL: true })); if (used(k) && G.coopBypassable(st, k, p) && p.coop >= (RSo(st).bypassCoopCost || 2)) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassCoop: true })); }); // bypassCoopWide：使用済みの大量消費を協調発進で
     const tslots = [{}, { slot: 'TRT2' }]; if (used('TRT') || used('TRT2')) { if (p.coop >= (RSo(st).bypassCoopCost || 2) && st.ext === 'x1') tslots.push({ bypassCoop: true }); if (p.L > 0) tslots.push({ bypassL: true }); }
@@ -237,6 +239,7 @@
     if (RSo(st).restore && !(p.uses && p.uses.restore)) G.traitPool(st).filter(t => st.shared.traitFirst[t] !== undefined && st.shared.traitFirst[t] !== p.id && !G.trait(p, t)).forEach(t => out.push(A({ type: 'restore', trait: t, useL: 0, res: 'E', track: 'intel' })));
     if (RSo(st).amplify && !(p.uses && p.uses.amplify)) p.organs.filter(o => G.ampOk(st, o.id, true) && !o.amp).forEach(o => out.push(A({ type: 'amplify', organ: o.id })));
     if (RSo(st).doubleStep) G.TRACKS.forEach(t => { const c2 = G.stepCostDouble(p, t); if (c2 !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0, steps: 2 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c2, p.E), steps: 2 })); } });
+    if (p.dv3 > 0) G.TRACKS.forEach(t => { const c3 = G.stepCostTriple(p, t); if (c3 !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0, steps: 3 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c3, p.E), steps: 3 })); } }); // T14 三段進行（進化加速の残り回数）
     if (RSo(st).gToE) [1, 2, 4].forEach(n => out.push(A({ type: 'gToE', n })));
     p.cards.forEach(c => { out.push(A({ type: 'card', card: c, choice: 'E' })); if (c === 'J') out.push(A({ type: 'card', card: c, choice: 'G' })); if (p.shields > 0) out.push(A({ type: 'card', card: c, choice: 'E', shield: true })); });
     ['St1', 'St2', 'St3'].forEach(o => { if (G.organ(p, o)) out.push(A({ type: 'stAct', organ: o, pe: 14, pg: 12 })); });
@@ -270,7 +273,7 @@
     const RN = R.rounds || G.ROUNDS;
     if (st.round === RN && bv <= base + 1e-9 && (p.left.W + p.left.AT) >= 2) {
       const SETUP = (a) => a.type === 'res' || a.type === 'convert' || a.type === 'gToE' || a.type === 'card' || a.type === 'scan' || (a.type === 'tributeSlot' && a.res);
-      const SCORE = (a) => ['breed', 'tribute', 'tributeAll', 'tributeSlot', 'track', 'mass', 'trait', 'organ', 'gemset', 'lCrystal', 'coopCrystal', 'express', 'premium', 'crystal'].includes(a.type);
+      const SCORE = (a) => ['breed', 'tribute', 'tributeAll', 'tributeSlot', 'track', 'mass', 'trait', 'organ', 'burst', 'gemset', 'lCrystal', 'coopCrystal', 'express', 'premium', 'crystal'].includes(a.type);
       let b2 = null, b2v = base + 1e-9;
       for (const a1 of candidates(st, p).filter(SETUP)) { let s1; try { s1 = G.tryApply(st, a1); } catch (e) { continue; }
         const p1 = s1.players[pid]; for (const a2 of candidates(s1, p1).filter(SCORE)) { let s2; try { s2 = G.tryApply(s1, a2); } catch (e) { continue; } const v = evaluate(s2, s2.players[pid], w); if (v > b2v) { b2v = v; b2 = a1; } } }

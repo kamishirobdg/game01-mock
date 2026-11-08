@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.74'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.75'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -199,8 +199,18 @@
     // 2026-11-07 v3.74（ユーザー指示「調整して公開して」）：器官の値段の一括調整＝value_scale の比（効果の価値÷手番込みのコスト）と items.js（2 シード）で並べ、脈動 +3E（点 15→18・腺 18→21・核 24 据え置き）・群心網 15→18・結合膜 12→9。代謝・転写・促進は据え置き（比 0.57〜1.0。転写・促進を AI が建てないのは AI 側の癖）。基準の表は [[12,3],[15,6],[21,6]]
     organCostBy: { Pu: [[18, 3], [21, 6], [24, 6]], Hc: [[12, 3], [18, 6], [21, 6]], Li: [[9, 3], [15, 6], [21, 6]] },
     changed: ['Cx1', 'Cx2', 'Cx3', 'Li1', 'Li2', 'Li3', 'Tl1', 'Tl2', 'Tl3', 'Hc1', 'Hc2', 'Mg2', 'Pu1', 'Pu2', 'NR', 'DV', 'MB'] });
-  G.RULES_VISIBLE = ['t13'];
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13'];
+  // 2026-11-08 ユーザー決定（第71部 §11〜§19）：T14＝T13＋ゲート+1 の全廃（群心核＝建造時 Wなし実行権+1／脈動核＝建造時 L+1＋1L＝E18／G18／転写体＝建造時 弱の形質 1 枚を無料〔弱の値段 G12 以下〕／知的跳躍・身体覚醒の強＝+1 段＋痕跡+1。代謝核のゲート+1 は据え置き）
+  //   ＋適応放散＝2 枚で完成が 強 2 系統 G21／弱 1 系統 G12 ＋進化加速＝三段進行を 強 2 回／弱 1 回（割引をやめる）＋増幅→一気立て（同じ系統の器官を 2〜3 枚続けて建造・W 1 個・制限なし）＋光翼 P18→24
+  //   ＋祭壇の内訳（§16 M-a）＝生命核 痕跡+2／遺伝子 痕跡+1＋祝福+1／協調 祝福+2 ＋繁殖変換（§19 S-c）＝P150 の 1 段と L3 の 1 段を同時に払える（増殖暴走の強＝それぞれ 2 段まで・各段 −45P の割引はやめる。弱は現行）。changed（「改」）は外す。
+  //   計測用：Q-b（繁殖 P120）は --set breed=[120,120,120,120] で。
+  G.RULESETS.t14 = Object.assign({}, G.RULESETS.t13, { name: '仮値セットT14（5ラウンド：T13＋ゲート全廃・一気立て・祭壇の痕跡・繁殖の同時払い）',
+    noOrganGate: true, hc3Shield: 1, pu3L: 1, pu3Rate: 6, tlFreeTier2: 12, leapStrong: 'gem', nrTwoN: [2, 1], dvMode: 'triple', dvTriple: [2, 1], mbMode: 'multi', mbBreedN: 2,
+    amplify: null, burst: { max: 3 }, tributeVg: { G: 1, L: 0, coop: 2 }, tributeReal: { G: 1, L: 2 },
+    traitCosts: Object.assign({}, G.RULESETS.t13.traitCosts, { NR: [21, 12] }),
+    speciesMod: Object.assign({}, G.RULESETS.t13.speciesMod, { wing: Object.assign({}, G.RULESETS.t13.speciesMod.wing, { stock: { E: 12, G: 6, P: 24 } }) }),
+    changed: [] });
+  G.RULES_VISIBLE = ['t14'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
   G.GATE_LABEL_L = '生命核の投入（代用払い・緊急発進・適応進化）'; G.GATE_SHORT_L = 'L投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: 'P投入' };
@@ -257,12 +267,12 @@
     MC: { name: '消費軽減', cat: 'M', cost: [3, 2], strong: '次の大量消費1回を無料（コスト0）', weak: '大量消費コスト-{mcDiscWeak:6}P（恒久）', permWeak: true, legacyStrong: '大量消費コスト-{mcDisc:6}P（恒久）', legacyWeak: '次の大量消費1回だけ-{mcDisc:6}P' }, // 2026-11-04 v3.59（第51部 C18）：mcMode='freeOnce' が既定。mcMode の無い数値セット（T7 以前）は legacy の文を ui が表示
     IB: { name: '複合収入', cat: 'I', cost: [4, 3], strong: 'E+1/RかつG+1/R（恒久）', weak: '即時E+3かつG+3', permWeak: false },
     DA: { name: '適応効率', cat: 'D', cost: [2, 1], strong: '選んだ1トラックの進行コスト-1（恒久）', weak: '次の進行1回だけ-1', permWeak: false },
-    DV: { name: '進化加速', cat: 'D', cost: [8, 6], strong: '全トラック進行コスト-{2}（恒久）', weak: '全トラック-{1}（恒久）', weak2: '全トラック進行コスト-{dvDiscW:4}（恒久）', permWeak: true },
-    MB: { name: '増殖暴走', cat: 'M', cost: [7, 5], strong: '繁殖変換 -{15}P（各段）＋大量消費(身体)-{mbDisc:8}P', weak: '大量消費(身体)-{mbDisc:8}Pのみ', weak2: '繁殖変換 -{mbBreedDiscWeak:15}P（各段）＋大量消費(身体)-{mbDiscWeak:12}P', permWeak: true }, // 2026-10-22 半減→各段-15P（4段で半減だと P300 の価値になるため）
+    DV: { name: '進化加速', cat: 'D', cost: [8, 6], strong: '全トラック進行コスト-{2}（恒久）', weak: '全トラック-{1}（恒久）', weak2: '全トラック進行コスト-{dvDiscW:4}（恒久）', strongTriple: '三段進行をゲーム中 2 回（3 段分の E を合算・手番 1 つ・Lv5 まで）', weakTriple: '三段進行をゲーム中 1 回（3 段分の E を合算・手番 1 つ・Lv5 まで）', permWeak: true }, // strongTriple／weakTriple＝T14（dvMode 'triple'・第71部 §9 D-a）
+    MB: { name: '増殖暴走', cat: 'M', cost: [7, 5], strong: '繁殖変換 -{15}P（各段）＋大量消費(身体)-{mbDisc:8}P', weak: '大量消費(身体)-{mbDisc:8}Pのみ', weak2: '繁殖変換 -{mbBreedDiscWeak:15}P（各段）＋大量消費(身体)-{mbDiscWeak:12}P', strongMulti: '繁殖変換で P の段と生命核の段をそれぞれ 2 段まで同時に ＋ 大量消費(身体)-{mbDisc:8}P', permWeak: true }, // strongMulti＝T14（mbMode 'multi'・第71部 §19 S-c） // 2026-10-22 半減→各段-15P（4段で半減だと P300 の価値になるため）
     IM: { name: '代謝亢進', cat: 'I', cost: [8, 6], strong: '好きな1種の収入+3（取得時固定）', weak: '好きな1種の収入+2（取得時固定）', permWeak: true },
     DG: { name: '遺伝子図書館', cat: 'D', cost: [7, 5], strong: '毎R形質1枚を-{2}Gで購入可（排他不要）', weak: '毎R形質1枚を-{1}Gで購入可（排他不要）', weak2: '毎R形質1枚を-{dgDiscW:4}Gで購入可（排他不要）', permWeak: true }, // 2026-11-05 弱の文を単体で読める形に（ユーザー指摘）
-    JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', strongRes: '知性+1段階＋G+{3}（即時）', strongGate: '知性+1段階＋知性のゲート+1（即時）', strongCap: '知性+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '知性+1段階＋Lv5★で必ず強効果', weak2: '知性+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
-    JB: { name: '身体覚醒', cat: 'J', cost: [9, 7], strong: '身体+2段階（即時）', strongRes: '身体+1段階＋生命核+1（即時）', strongGate: '身体+1段階＋身体のゲート+1（即時）', strongCap: '身体+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '身体+1段階＋Lv5★で必ず強効果', weak2: '身体+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
+    JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', strongRes: '知性+1段階＋G+{3}（即時）', strongGate: '知性+1段階＋知性のゲート+1（即時）', strongGem: '知性+1段階＋痕跡+1（即時）', strongCap: '知性+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '知性+1段階＋Lv5★で必ず強効果', weak2: '知性+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
+    JB: { name: '身体覚醒', cat: 'J', cost: [9, 7], strong: '身体+2段階（即時）', strongRes: '身体+1段階＋生命核+1（即時）', strongGate: '身体+1段階＋身体のゲート+1（即時）', strongGem: '身体+1段階＋痕跡+1（即時）', strongCap: '身体+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '身体+1段階＋Lv5★で必ず強効果', weak2: '身体+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
     // 2026-10-28 ユーザー採用（第42部 N5/N8/N9）：コンボ廃止の補填。序盤に取るほど得な「資源を生む／器官に役立つ」形質
     NE: { name: '代替燃料', cat: 'N', cost: [3, 2], strong: '器官建造の E を P で払える（E1＝P1）', weak: '器官建造の E を P で払える（E3＝P5・切り上げ）', permWeak: true }, // 2026-10-30 弱 E1＝P2 → E3＝P5（強弱の差を縮める・ユーザー採用）
     NS: { name: '共生', cat: 'N', cost: [3, 2] /* 2026-10-29 G6→G9（T8）：九腕 39% の是正・AI52 */, strong: '器官建造時、同じ系統の器官を他者が持っていれば G コストなし', weak: '器官建造時、同じ系統の器官を他者が持っていれば G-{1}', permWeak: true },
@@ -276,7 +286,7 @@
     NM: { name: '擬態', cat: 'N', cost: [12, 9], strong: '1ラウンド1回、他者が使用済みの資源獲得枠を無償で使える', weak: '1ラウンド1回、他者が使用済みの資源獲得枠を E{3} を払って使える', weak2: '1ラウンド1回、他者が使用済みの資源獲得枠を E{2} を払って使える', permWeak: true },
     NL: { name: '長命', cat: 'N', cost: [9, 7], strong: '即時 生命核+2', weak: '即時 生命核+1', weak2: '即時 生命核+1＋E+{3}', permWeak: false, instant: true },
     NF: { name: '先見', cat: 'N', cost: [11, 8], strong: 'Lv3★／Lv5★を後着でも強の報酬で受け取る（痕跡の先着ボーナスは除く）', weak: 'Lv5★のみ', weak2: 'Lv3★／Lv5★のどちらか1回、後着でも強の報酬', permWeak: true },
-    NR: { name: '適応放散', cat: 'N', cost: [12, 9], strong: '器官の系統完成（同じ系統3枚）の成熟度+1を、通常の2系統目までに加えて3系統目でも得る', strongTwo: '器官の系統完成が 2 枚で成立する（1 系統だけ・取得時に 2 枚の系統があれば即時）', weak: '系統完成のたびE+{3}', permWeak: true }, // strongTwo＝T13（nrMode 'two'） // 2026-11-05 文言を具体的に（ユーザー「意味がぴんとこない」）
+    NR: { name: '適応放散', cat: 'N', cost: [12, 9], strong: '器官の系統完成（同じ系統3枚）の成熟度+1を、通常の2系統目までに加えて3系統目でも得る', strongTwo: '器官の系統完成が 2 枚で成立する（1 系統だけ・取得時に 2 枚の系統があれば即時）', strongTwo2: '器官の系統完成が 2 枚で成立する（2 系統まで・取得時に 2 枚の系統があれば即時）', weakTwo: '器官の系統完成が 2 枚で成立する（1 系統だけ・取得時に 2 枚の系統があれば即時）', weak: '系統完成のたびE+{3}', permWeak: true }, // strongTwo2／weakTwo＝T14（nrTwoN [2,1]・第71部 §5） // strongTwo＝T13（nrMode 'two'） // 2026-11-05 文言を具体的に（ユーザー「意味がぴんとこない」）
   });
   // 画像の代替（新しいIDは既存の絵を仮に使う）
   G.ART_ALIAS = { NC: 'IG', NB: 'MC', NM: 'DA', NL: 'IP', NF: 'DI', NR: 'DV', Mg1: 'Cv1', Mg2: 'Cv2', Mg3: 'Cv3', Tl1: 'Tr1', Tl2: 'Tr2', Tl3: 'Tr3', Hc1: 'Li1', Hc2: 'Li2', Hc3: 'Li3', Pu1: 'St1', Pu2: 'St2', Pu3: 'St3', Cx1: 'Ca1', Cx2: 'Ca2', Cx3: 'Ca3' };
@@ -350,7 +360,13 @@
     Mg2: { strong: '建造時 E+6 ＋ 収入 E+3 G+3', weak: '同' },
     Pu2: { strong: '建造時 生命核+1 ＋ 生命核の利回り +3/L', weak: '同' },
   };
-  G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; return (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; }; // x＝ゲーム状態 or 数値セット
+  // T14（第71部 §11・ユーザー決定）：ゲート+1 を外した 3 段目・転写体の効果文（noOrganGate のとき V2 の上に重ねる）
+  G.ORGANS_V3 = {
+    Tl2: { strong: '建造時 G+9 ＋ 弱の形質 1 枚を無料で（弱の値段 G12 以下）＋ 形質のGコスト−9（系統内の最大値）', weak: '同' },
+    Hc3: { strong: '協調ボーナス+{1} ＋ 建造時 Wなし実行権+1', weak: '同', strongB: '協調ボーナス+{1} ＋ 建造時 Wなし実行権+1', weakB: '同' },
+    Pu3: { strong: '建造時 生命核+1 ＋ 1L＝E18／G18', weak: '同' },
+  };
+  G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); return o; }; // x＝ゲーム状態 or 数値セット
   G.isChanged = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); return !!(R && R.changed && R.changed.includes(id)); }; // 画面の「改」バッジ
   G.ORGAN_FIELD = ['Li1', 'Li2', 'Li3', 'Tr1', 'Tr2', 'Tr3', 'Fl1', 'Fl2', 'Fl3', 'Rh1', 'Rh2', 'Rh3']; // 初心者固定
   G.LINEAGES = { Li: '連結', Tr: '翻訳', Fl: '転流', Rh: '律動', Ca: '触媒', Cv: '収斂', Re: '感応', St: '応力', Mg: '代謝', Tl: '転写', Hc: '群心', Pu: '脈動', Cx: '促進' };
@@ -430,6 +446,7 @@
     { id: 'RSV',  group: 'cu',   excl: false, name: '予備動員',  text: '無料で E+2 または G+1' },
     { id: 'RST',  group: 'cu',   excl: false, name: '復元',     text: '取られた強の形質を強の効果で取る（強の値段＋E9・1人1回）', rs: 'restore' }, // 2026-11-05 T10（第59部）
     { id: 'AMP',  group: 'cu',   excl: false, name: '増幅',     text: 'E15 → 器官1つ（数の効果を持つ器官）の効果を以後2倍（1人1回）', rs: 'amplify' },
+    { id: 'BST',  group: 'cu',   excl: false, name: '一気立て',  text: '同じ系統の器官を 2〜3 枚、階層順に続けて建造（各々の値段と後追い料・W 1 個）', rs: 'burst' }, // 2026-11-08 T14（第71部 §7・§14）：増幅の置き換え
     { id: 'GTH',  group: 'cu',   excl: false, name: '採集',     text: 'E／G／P／協調+1 のどれか1つを少しだけ（置ける場所が無いときの逃げ道）', rs: 'gather' }, // 2026-11-05 ユーザー指示：パスの代わりに「1アクションで E・G・P・協調のどれかを少し得る」弱い共用アクション（値は数値セット gather）
     { id: 'PASS', group: 'cu',   excl: false, name: 'パス',     text: '置ける場所が無いときに（何も得ない）', rs: 'passSlot' }, // v3.65：採集に置き換え（旧セーブの再生用に ACTIONS.pass は残す）
   ];
