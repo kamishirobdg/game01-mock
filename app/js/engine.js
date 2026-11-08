@@ -1162,7 +1162,7 @@
       return false;
     }
     if (pd.type === 'learn') { p.pending.shift(); if (a.skip) { log(st, p.id, `${p.name}：学習を見送り`); return false; } if (a.kind === 'express') ACTIONS.express(st, p, { track: a.track, free: true }); else ACTIONS.mimic(st, p, { effect: a.effect, free: true }); return false; }
-    if (pd.type === 'dgBuy') { p.pending.shift(); if (a.skip) return false; ACTIONS.trait(st, p, { trait: a.trait, useL: a.useL, res: a.res, track: a.track, viaDG: pd.disc }); return false; }
+    if (pd.type === 'dgBuy') { p.pending.shift(); if (a.skip) return false; ACTIONS.trait(st, p, { trait: a.trait, useL: a.useL, res: a.res, track: a.track, viaDG: pd.disc, weak: a.weak }); return false; } // 2026-11-08：強／弱を選べるように weak を渡す（ユーザー指摘）
     throw new Error('不明な保留');
   };
 

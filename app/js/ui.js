@@ -210,8 +210,23 @@
   const traitDesc = (p, name) => (v) => { const t = v[name]; if (!t || !G.TRAITS[t]) return ''; const c = G.traitCost(st, p, t); return `${c.strong ? '強' : '弱'}：${rtxt(G.traitText(st, t, c.strong))}`; }; // 2026-11-05 v3.63：弱は数値セットの文言（T10 weak2）を G.traitText で
   const traitSel = (p, name, label, filter) => ({ type: 'select', name, label, options: G.traitPool(st).filter(t => !G.trait(p, t) && (!filter || filter(t))).map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}（G${G.traitCost(st, p, t).G}）` })), desc: traitDesc(p, name) });
   // sel＝形質を選ぶ項目名。指定時はその項目で IM／DA を選んだときだけ表示する
-  const imSel = (sel) => Object.assign(resSel('res', '代謝亢進(IM)の資源'), sel ? { when: v => v[sel] === 'IM' } : {});
-  const daSel = (sel) => Object.assign({ type: 'select', name: 'track', label: '適応効率(DA)のトラック', options: G.TRACKS.map(t => ({ value: t, label: G.TRACK_INFO[t].name })) }, sel ? { when: v => v[sel] === 'DA' } : {});
+  const selVal = (sel, v) => typeof sel === 'function' ? sel(v) : v[sel]; // sel＝項目名、または値を取り出す関数（traitPickSel の 'ID:S' から ID を取る等）
+  const imSel = (sel) => Object.assign(resSel('res', '代謝亢進(IM)の資源'), sel ? { when: v => selVal(sel, v) === 'IM' } : {});
+  const daSel = (sel) => Object.assign({ type: 'select', name: 'track', label: '適応効率(DA)のトラック', options: G.TRACKS.map(t => ({ value: t, label: G.TRACK_INFO[t].name })) }, sel ? { when: v => selVal(sel, v) === 'DA' } : {});
+  // 割引付きの形質購入（遺伝子図書館・知性Lv3★の割引報酬）：traitChoice の数値セットでは強／弱を選べる（値＝'ID:S'／'ID:W'・表示は割引後の G）。2026-11-08 ユーザー指摘「遺伝子図書館で強弱を選べない」
+  const traitPickSel = (p, disc) => {
+    const choice = G.RULESETS[st.rules || 'v1'].traitChoice; const opts = [];
+    G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => {
+      const s = G.traitCost(st, p, t, disc);
+      if (!choice) { opts.push({ value: t + ':' + (s.strong ? 'S' : 'W'), label: `${t} ${G.TRAITS[t].name}（${s.strong ? '強' : '弱'}・G${s.G}）` }); return; }
+      const w = G.traitCost(st, p, t, disc, true);
+      if (s.strong) opts.push({ value: t + ':S', label: `${t} ${G.TRAITS[t].name} 強（G${s.G}）` });
+      opts.push({ value: t + ':W', label: `${t} ${G.TRAITS[t].name} 弱（G${w.G}）` });
+    });
+    return { type: 'select', name: 'pick', label: '形質', options: opts, desc: (v) => { if (!v.pick) return ''; const [t, ver] = v.pick.split(':'); return `${ver === 'S' ? '強' : '弱'}：${rtxt(G.traitText(st, t, ver === 'S'))}`; } };
+  };
+  const pickId = (v) => (v.pick || '').split(':')[0];
+  const pickArgs = (r) => { const [t, ver] = r.pick.split(':'); return { trait: t, weak: !!G.RULESETS[st.rules || 'v1'].traitChoice && ver === 'W' }; };
 
   // ---------- 画面：入口 ----------
   function render() {
@@ -855,8 +870,8 @@
         if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit({ pid: p.id, type: 'resolve', dir: r.dir, n: r.n });
       }
       if (pd.type === 'dgBuy') {
-        const r = await ask(`ラウンド開始時：遺伝子図書館で形質1枚を-${pd.disc}Gで購入`, [traitSel(p, 'trait', '形質'), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel('trait'), daSel('trait')], { skipLabel: '買わない', noCancel: true, note: '手番（ワーカー）は消費しません。買っても買わなくても、この後ふつうに行動できます（残りワーカーはヘッダで確認できます）。' }); // 2026-11-05 ユーザーの疑問「手番を消費していた気がする」→ 手番の冒頭に挟まるだけで消費しない旨を明記
-        if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit({ pid: p.id, type: 'resolve', trait: r.trait, useL: +r.useL, res: r.res, track: r.track });
+        const r = await ask(`ラウンド開始時：遺伝子図書館で形質1枚を-${pd.disc}Gで購入`, [traitPickSel(p, pd.disc), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel(pickId), daSel(pickId)], { skipLabel: '買わない', noCancel: true, note: '手番（ワーカー）は消費しません。買っても買わなくても、この後ふつうに行動できます（残りワーカーはヘッダで確認できます）。' }); // 2026-11-05 ユーザーの疑問「手番を消費していた気がする」→ 手番の冒頭に挟まるだけで消費しない旨を明記
+        if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit(Object.assign({ pid: p.id, type: 'resolve', useL: +r.useL, res: r.res, track: r.track }, pickArgs(r)));
       }
       if (pd.type === 'freeMass') {
         const r = await ask('身体Lv3★先着：大量消費を1回無料（排他無視）', [{ type: 'select', name: 'kind', label: '種類', options: ['MB', 'MI', 'MS', 'MM'].map(k => ({ value: k, label: G.SLOT_BY_ID[k].name + '：' + G.SLOT_BY_ID[k].text })) }, { type: 'multi', name: 'traits', label: '（知性のとき）G4以下の形質2種', options: G.TRAIT_ORDER.filter(t => G.TRAITS[t].cost[0] <= 4 && !G.trait(p, t)).map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}` })) }], { noCancel: true });
@@ -874,8 +889,8 @@
           const r = await ask('知性Lv3★先着：今すぐ形質1枚（弱なら無料・強は差額）', [{ type: 'select', name: 'pick', label: '形質', options: opts, desc: (v) => { if (!v.pick) return ''; const [t, ver] = v.pick.split(':'); return `${ver === 'S' ? '強' : '弱'}：${rtxt(G.traitText(st, t, ver === 'S'))}`; } }, { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }], { skipLabel: '見送る', noCancel: true, note: '見送った場合は、次に買う形質1枚に同じ値引きが付きます。' });
           if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); const [t, ver] = r.pick.split(':'); return submit({ pid: p.id, type: 'resolve', trait: t, weak: ver === 'W', useL: +r.useL, res: 'E', track: 'body' });
         }
-        const r = await ask(`知性Lv3★先着：今すぐ形質1枚をG-${pd.disc}で購入できます`, [traitSel(p, 'trait', '形質', null), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel('trait'), daSel('trait')], { skipLabel: '見送る', noCancel: true });
-        if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit({ pid: p.id, type: 'resolve', trait: r.trait, useL: +r.useL, res: r.res, track: r.track });
+        const r = await ask(`知性Lv3★先着：今すぐ形質1枚をG-${pd.disc}で購入できます`, [traitPickSel(p, pd.disc), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel(pickId), daSel(pickId)], { skipLabel: '見送る', noCancel: true });
+        if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit(Object.assign({ pid: p.id, type: 'resolve', useL: +r.useL, res: r.res, track: r.track }, pickArgs(r)));
       }
       if (pd.type === 'cvIncome') { const r = await ask(`収斂膜：好きな資源+${pd.n}`, [resSel('res', '資源')], { noCancel: true }); if (!r) return; return submit({ pid: p.id, type: 'resolve', res: r.res }); }
       if (pd.type === 'lYield') { const r = await ask(`生命核の利回り：+${pd.n}（${pd.opts.join('/')} から選択）`, [{ type: 'select', name: 'res', label: '資源', options: pd.opts.map(k => ({ value: k, label: RES_JP[k] })) }], { noCancel: true }); if (!r) return; return submit({ pid: p.id, type: 'resolve', res: r.res }); }
