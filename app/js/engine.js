@@ -701,8 +701,9 @@
     if (ids.some(id => !st.shared.organField.includes(id))) throw new Error('器官の場にない器官です'); if (a.bonus) throw new Error('追加アクションでは一気立てできません');
     if (B.perGame && (p.uses.burst || 0) >= B.perGame) throw new Error(`一気立ては 1 人 ${B.perGame} 回です`); if (B.perRound && (p.round.burst || 0) >= B.perRound) throw new Error(`一気立ては 1 ラウンド ${B.perRound} 回です`); // 計測用の回数制限（既定なし）
     p.uses.burst = (p.uses.burst || 0) + 1; p.round.burst = (p.round.burst || 0) + 1;
-    let useL = a.useL | 0;
-    ids.forEach((id, i) => { const c = organCost(st, p, id, true); if (!c) throw new Error(`${id} は今は建造できません（系統内は階層順）`); const lk = Math.min(useL, Math.ceil(Math.max(0, c.E - p.E) / (p.lValue || sc(p, 3)))); useL -= lk; doOrgan(st, p, { organ: id, useL: lk, li2Res: a.liRes || a.li2Res, liRes: a.liRes, li3Res: a.liRes || a.li3Res, full: true }, i ? 'chain' : null); });
+    let useL = a.useL | 0; const e0 = p.E, g0 = p.G, L0 = useL; let totE = 0, totG = 0; { const q = clone(p); ids.forEach(id => { const c = organCost(st, q, id, true); if (c) { totE += c.E; totG += c.G; q.organs.push({ id, strong: true }); } }); } // 2026-11-09 ユーザー指摘：不足のメッセージが 1 枚ぶんの値段だった → 合計で出す
+    let at = ids[0]; try { ids.forEach((id, i) => { at = id; const c = organCost(st, p, id, true); if (!c) throw new Error(`${id} は今は建造できません（系統内は階層順）`); const lk = Math.min(useL, Math.ceil(Math.max(0, c.E - p.E) / (p.lValue || sc(p, 3)))); useL -= lk; doOrgan(st, p, { organ: id, useL: lk, li2Res: a.liRes || a.li2Res, liRes: a.liRes, li3Res: a.liRes || a.li3Res, full: true }, i ? 'chain' : null); }); }
+    catch (e) { if (!/が足りません/.test(e.message)) throw e; const lv = p.lValue || sc(p, 3); throw new Error(`一気立て（${ids.join('→')}）は合計 E${totE}+G${totG}（定価）。所持 E${e0}・G${g0}${L0 ? `＋生命核${L0}（=E${L0 * lv}）` : ''}では ${at} の建造で${/遺伝子/.test(e.message) ? 'G' : 'E'}が足りません${!/遺伝子/.test(e.message) && p.L > L0 ? `（生命核1=E${lv}で補えます）` : ''}`); }
     log(st, p.id, `${p.name}：一気立て（${G.LINEAGES[lin]}系統 ${ids.length} 枚・W 1 個）`);
     return true;
   };
