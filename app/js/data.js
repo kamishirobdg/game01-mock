@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.83'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.84'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -228,9 +228,13 @@
     spInc: { SpE: { E: 3 }, SpG: { G: 2 }, SpP: { P: 5 }, SpC: { E: 1, coop: 0.5 }, SpM: { E: 2, G: 1 } },
     spText: { SpC: '収入 器官 1 枚につき E+1 ＋ 2 枚につき 協調+1', SpM: '収入 器官 1 枚につき E+2 G+1' },
     changed: [] });
+  // 2026-11-09 ORDERS O-07（第71部 §30・ユーザー承認）：T17＝T16＋光翼の初期 P24→P21・九腕の初期 E9→E15（O-06 の (h)）
+  G.RULESETS.t17 = Object.assign({}, G.RULESETS.t16, { name: '仮値セットT17（5ラウンド：T16＋光翼 P21・九腕 E15）',
+    speciesMod: Object.assign({}, G.RULESETS.t16.speciesMod, { wing: { stock: { E: 12, G: 6, P: 21 } }, arm: { stock: { E: 15, G: 9, P: 18 } } }),
+    changed: [] });
   G.spText = (R, id) => (R && R.spText && R.spText[id]) || G.ORGANS[id].strong; // 特殊器官の効果文（数値セットで差し替え）
-  G.RULES_VISIBLE = ['t16'];
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16'];
+  G.RULES_VISIBLE = ['t17'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
