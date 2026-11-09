@@ -271,9 +271,9 @@
     return Math.max(sc(p, 1), c - sc(p, o.strong ? 3 : 1));
   }
   function altFuelP(p, e) { const r = p.altFuel; if (!r) return null; return Math.ceil((e * r[0]) / r[1]); } // 代替燃料：E e ぶんを P で払うときの必要 P（切り上げ）
-  function organCost(st, p, oid, full) { // full＝定価（一気立て・T15 の差額払いを使わない）
-    const lin = G.ORGANS[oid].lin; const n = lineageCount(p, lin);
-    const tier = G.ORGANS[oid].tier; if (tier !== n + 1) return null; // 階層順に建造
+  function organCost(st, p, oid, full, anyTier) { // full＝定価（一気立て・T15 の差額払いを使わない）／anyTier＝まだ順番が来ていない上の段も、急速形成で建てるときの値段を返す（表示用・2026-11-09 v3.88）
+    const lin = G.ORGANS[oid].lin; const tier = G.ORGANS[oid].tier; const n0 = lineageCount(p, lin);
+    if (tier !== n0 + 1 && !(anyTier && tier > n0)) return null; const n = tier - 1; // 階層順に建造
     const first = st.shared.organFirst[oid] === undefined || st.shared.organFirst[oid] === p.id;
     const strong = RS(p).organSameEffect ? true : first; // 試作 organSameEffect：後続も同じ効果（先着の差は値段だけ）
     const ctab = ((RS(p).organCostBy || {})[lin] || RS(p).organCost || G.ORGAN_COST); let [e, g] = ctab[n]; const list = { E: e, G: g }; let diff = null; if (RS(p).organCumulative && n > 0 && !full) { diff = { E: ctab[n - 1][0], G: ctab[n - 1][1] }; e -= diff.E; g = Math.max(0, g - diff.G); } // T15 差額払い：1 つ前の段の定価（E・G とも）を引く（一気立て＝full は引かない）
