@@ -599,7 +599,7 @@
   }
   function renderOrganField(p, can) {
     const oex = G.RULESETS[st.rules || 'v1'].organExcl;
-    const box = h('div', { class: 'panel' }, h('h3', null, `器官の場（${st.shared.lineages.map(l => G.LINEAGES[l]).join('・')}・${oex ? '各カード1ラウンド1人' : '排他なし'}）`, h('small', { class: 'sub' }, G.RULESETS[st.rules || 'v1'].organCumulative ? `　系統内は形態の順。カードは定価（追随は代償込み）・1 枚ずつ形成すると 1 つ前の段の定価を引いた差額（急速形成は定価）。同系統 3 枚で系統完成（成熟度+1 は ${(G.RULESETS[st.rules || 'v1'].lineageCoefAt || []).join('・')} 系統目）` : '　系統内は形態の順。先駆＝強・追随＝弱（G0）。同系統3枚で成熟度+1')));
+    const box = h('div', { class: 'panel' }, h('h3', null, `器官の場（${st.shared.lineages.map(l => G.LINEAGES[l]).join('・')}・${oex ? '各カード1ラウンド1人' : '排他なし'}）`, h('small', { class: 'sub' }, G.RULESETS[st.rules || 'v1'].organCumulative ? `　系統内は形態の順。カードの値段は定価（追随は代償込み）。前の段まで形成済みなら 1 つ前の段の定価を引いた差額で、（）に定価（急速形成は定価）。同系統 3 枚で系統完成（成熟度+1 は ${(G.RULESETS[st.rules || 'v1'].lineageCoefAt || []).join('・')} 系統目）` : '　系統内は形態の順。先駆＝強・追随＝弱（G0）。同系統3枚で成熟度+1')));
     const grid = h('div', { class: 'ogrid' });
     const sameEff = !!G.RULESETS[st.rules || 'v1'].organSameEffect;
     st.shared.organField.forEach(id => {
@@ -607,7 +607,7 @@
       const locked = !c && !mine_; // 階層順で未解放
       const reason = !can ? '他プレイヤーの手番' : mine_ ? null : locked ? '前の形態が必要' : check({ pid: p.id, type: 'organ', organ: id, useL: Math.min(p.L, 2), li2Res: 'E', li3Res: 'E', regimeRes: 'E' });
       const cl = mine_ ? null : G.organCost(st, p, id, true, true); // 2026-11-09 v3.88（ユーザー指摘）：順番待ちの段も急速形成の値段（定価）を出す。2026-11-10 v3.90（ユーザー指摘）：形成できるカードも同じ「定価＋追随の代償」に揃える（従来は代償なしの定価で、急速形成の合計と合わなかった）
-      const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, cl ? icost(`E${cl.E}${cl.G ? '+G' + cl.G : ''}`) : (mine_ ? '形成済' : (['Ⅰ', 'Ⅱ', 'Ⅲ'][o.tier - 1] || ''))), h('span', { class: 'sw ' + (c ? (c.strong ? 'strong' : 'weak') : '') }, c ? (G.RULESETS[st.rules || 'v1'].organSameEffect ? (c.first ? '先駆' : '代償') : (c.strong ? '強' : '弱')) : `${G.LINEAGES[o.lin]}`));
+      const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, cl ? (c && c.diff ? [icost(`E${c.E}${c.G ? '+G' + c.G : ''}`), h('small', null, '（', icost(`E${cl.E}${cl.G ? '+G' + cl.G : ''}`), '）')] : icost(`E${cl.E}${cl.G ? '+G' + cl.G : ''}`)) : (mine_ ? '形成済' : (['Ⅰ', 'Ⅱ', 'Ⅲ'][o.tier - 1] || ''))), h('span', { class: 'sw ' + (c ? (c.strong ? 'strong' : 'weak') : '') }, c ? (G.RULESETS[st.rules || 'v1'].organSameEffect ? (c.first ? '先駆' : '代償') : (c.strong ? '強' : '弱')) : `${G.LINEAGES[o.lin]}`));
       grid.appendChild(actBtn({ class: 'ocard' + (mine_ ? ' mine' : locked ? ' locked' : ''), title: `${id} ${o.name}（${G.LINEAGES[o.lin]}系 第 ${o.tier} 形態）\n${sameEff ? '効果：' + otxt(o, true) + '\n追随の代償は +' + G.sc(st, G.RULESETS[st.rules || 'v1'].organLateFee || 1) + 'E' : '強：' + otxt(o, true) + '\n弱：' + otxt(o, false)}`, onclick: () => onOrgan(p, id) }, reason,
         hd, art(id), h('b', null, `${id} ${o.name}`, chgBadge(id)), h('small', null, sameEff ? otxt(o, true) : `強：${otxt(o, true)}`), sameEff ? null : h('small', null, `弱：${otxt(o, false)}`),
         ownersRow(p, id, 'organ'), statusLine(mine_ ? 'ok' : locked ? 'lock' : reason && can ? 'no' : null, mine_ ? '形成済み' : locked ? '前の形態が必要' : reason)));
