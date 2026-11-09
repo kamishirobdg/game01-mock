@@ -218,10 +218,11 @@
     const choice = G.RULESETS[st.rules || 'v1'].traitChoice; const opts = [];
     G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => {
       const s = G.traitCost(st, p, t, disc);
-      if (!choice) { opts.push({ value: t + ':' + (s.strong ? 'S' : 'W'), label: `${t} ${G.TRAITS[t].name}（${s.strong ? '強' : '弱'}・G${s.G}）` }); return; }
+      const gp = (c, weak) => { if (!disc || typeof disc !== 'number') return `G${c.G}`; const b = G.traitCost(st, p, t, 0, weak); return b.G > c.G ? `G${c.G}＝定価 G${b.G}−${b.G - c.G}` : `G${c.G}`; }; // 2026-11-09 v3.87（ユーザー指摘）：割引後の値段だと分かるように定価と割引を並べる（遺伝子図書館・報酬の割引）
+      if (!choice) { opts.push({ value: t + ':' + (s.strong ? 'S' : 'W'), label: `${t} ${G.TRAITS[t].name}（${s.strong ? '強' : '弱'}・${gp(s)}）` }); return; }
       const w = G.traitCost(st, p, t, disc, true);
-      if (s.strong) opts.push({ value: t + ':S', label: `${t} ${G.TRAITS[t].name} 強（G${s.G}）` });
-      opts.push({ value: t + ':W', label: `${t} ${G.TRAITS[t].name} 弱（G${w.G}）` });
+      if (s.strong) opts.push({ value: t + ':S', label: `${t} ${G.TRAITS[t].name} 強（${gp(s)}）` });
+      opts.push({ value: t + ':W', label: `${t} ${G.TRAITS[t].name} 弱（${gp(w, true)}）` });
     });
     return { type: 'select', name: 'pick', label: '形質', options: opts, desc: (v) => { if (!v.pick) return ''; const [t, ver] = v.pick.split(':'); return `${ver === 'S' ? '強' : '弱'}：${rtxt(G.traitText(st, t, ver === 'S'))}`; } };
   };
