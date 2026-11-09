@@ -178,6 +178,7 @@
       p.pending.forEach(x => { x.pre = true; }); // 2026-11-05 v3.63：収入時の保留（利回り選択・収斂膜・転流・遺伝子図書館）は「手番前」の解決＝解決しても手番は進めない（apply）。従来は resolve のたびに advanceTurn され、最初の手番が飛ばされていた（ユーザー指摘）
     });
     log(st, null, `=== ラウンド ${st.round} 開始（手番順：${st.turnOrder.map(i => P(st, i).name).join('→')}）===`, 'round');
+    st.turnOrder.forEach(i => { const p = P(st, i); const n0 = p.pending.length; if (p._coop8Due) { p._coop8Due = false; if (RS(p).coop8Gem) addGem(st, p, 'social', 1, `協調${RS(p).coopGemAt || 8}到達`); if (RS(p).coop8Coef) addUpgrade(st, p, '協調8到達'); } syncGates(st, p); p.pending.slice(n0).forEach(x => { x.pre = true; }); }); // 2026-11-10 v3.90（ユーザー指摘）：収入の協調（連絡腺・協調の収入）でゲートに達しても自動進化が次の行動まで遅れていた → 収入の直後に手番順で判定（先駆も手番順）。派生した保留（報酬の形質など）は手番前
     st.hist = st.hist || []; st.hist.push({ round: st.round, rows: st.players.map(p => summaryRow(st, p)) });
     st.roundStart = null; // ラウンド頭へ戻すのはエントリ列の再構築（rebuild）で行う
   }
