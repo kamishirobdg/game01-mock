@@ -145,13 +145,13 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <p>あなたは宇宙生物の一種族を率い、<strong id="k-rounds"></strong>で進化を競います。終了時の得点は2本立てです。</p>
 <div class="formula">
   <svg class="ico"><use href="#ico-gem"/></svg> 痕跡 × 繁栄度 ＋ 祝福 × 成熟度
-  <small>痕跡＝宇宙に残した影響（トラックの節目・Lv6・大量消費(身体)・最果ての痕跡で得る）／祝福＝神からの評価（献上・Lv6 先着・知性 Lv4・終了時の換算で得る）<br>繁栄度＝×3〜×7（繁殖で上がる）／成熟度＝×3〜×7（形質3・6枚目と器官の系統完成で上がる）</small>
+  <small>痕跡＝宇宙に残した影響（トラックの節目・Lv6・淘汰(身体)・最果ての痕跡で得る）／祝福＝神からの評価（献上・Lv6 先駆・知性 Lv4・神の裁定で得る）<br>繁栄度＝×3〜×7（繁殖で上がる）／成熟度＝×3〜×7（形質3・6枚目と器官の系統完成で上がる）</small>
 </div>
-<p>毎ラウンド、<strong>ワーカー5個</strong>を1個ずつ置いて行動します。資源は4種（<span id="k-res"></span>）。基礎収入はなく、<strong>生命核（L）が毎ラウンド1個</strong>届き、持っている L が個体数（P）を生みます。E・G・P は早取り盤の資源枠、器官、形質から得ます。</p>
+<p>毎ラウンド、<strong>ワーカー5個</strong>を1個ずつ置いて行動します。資源は4種（<span id="k-res"></span>）。基礎収入はなく、<strong>生命核（L）が毎ラウンド1個</strong>届き、持っている L が個体数（P）を生みます。E・G・P は占有盤の資源枠、器官、形質から得ます。</p>
 <div class="kv">
-  <div><b>4本のトラック</b><span>身体・知性・社会・代謝。収集物（L投入・形質・協調・器官）が一定数になると自動で上がる。E を払って先に上がってもよい。</span></div>
-  <div><b>先着＝強</b><span>Lv3★・Lv5★は到達者全員が痕跡+1。最初に着いた人は強い報酬（Lv5★は痕跡をもう+1）。<strong>E を払って自力で上がった段は、後着でも強い報酬</strong>。</span></div>
-  <div><b>献上</b><span>資源を神に捧げて祝福を得る。神の到来で恩寵枠（旧称 恩寵枠）が開き、最終ラウンドは空いている資源枠にコマを置くと祝福+1。</span></div>
+  <div><b>4本のトラック</b><span>身体・知性・社会・代謝。素材（生命核の投入・形質・協調・器官）が一定数になると自動で上がる。E を払って先に上がってもよい。</span></div>
+  <div><b>先駆＝強</b><span>Lv3★・Lv5★は到達者全員が痕跡+1。最初に着いた人は強い報酬（Lv5★は痕跡をもう+1）。<strong>E を払って自力で上がった段は、追随でも強い報酬</strong>。</span></div>
+  <div><b>献上</b><span>資源を神に捧げて祝福を得る。神の到来で恩寵枠が開き、最終ラウンドは空いている資源枠にワーカーを置くと祝福+1。</span></div>
 </div>
 <div class="ex"><div class="q">痕跡4・繁栄度×4・祝福2・成熟度×5。得点は？</div>
   <div class="choices"><button data-ex="score" data-v="0">26点</button><button data-ex="score" data-v="1">26点＋おまけ</button><button data-ex="score" data-v="2">36点</button></div><div class="ans" id="ans-score"></div></div>
@@ -172,7 +172,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   <li><strong>行動</strong>：手番順に<strong>ワーカー1個ずつ</strong>置く。全員が5個使い切るまで繰り返す（置ける場所が無いときは<strong>採集</strong>＝E・G・P・協調のどれかを少しだけ得る）。</li>
   <li><strong>終了判定</strong>：<span id="k-rounds2"></span>ラウンド目が終わったら得点計算。</li>
 </ol>
-<div class="tip">早取り盤の枠は「1ラウンドに1人だけ」。使用済みの資源枠は <strong>緊急発進</strong>（生命核1個を払う）か <strong>協調発進</strong>（協調3個を払う）で突破できます。<strong>発進で使った資源枠は獲得量が2倍</strong>（協調ボーナスは通常どおり・Pブーストは対象外）。生命核を払うたびに、払った個数が身体トラックの収集物になります。</div>
+<div class="tip">占有盤の枠は「1ラウンドに1人だけ」。使用済みの資源枠は <strong>緊急進出</strong>（生命核1個を払う）か <strong>協調進出</strong>（協調3個を払う）で突破できます。<strong>進出で使った資源枠は獲得量が2倍</strong>（協調ボーナスは通常どおり・自己複製は対象外）。生命核を払うたびに、払った個数が身体トラックの素材になります。</div>
 <div class="ex"><div class="q">ラウンド3の開始時、痕跡が P1＝2個、P2＝0個、P3＝1個。新しい手番順は？</div>
   <div class="choices"><button data-ex="order" data-v="0">P1→P3→P2</button><button data-ex="order" data-v="1">P2→P3→P1</button><button data-ex="order" data-v="2">前のラウンドと同じ</button></div><div class="ans" id="ans-order"></div></div>
 </section>
@@ -180,23 +180,23 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <section id="c3">
 <h2><span class="no">3</span>資源4種と協調</h2>
 <div class="kv kv3">
-  <div><b><svg class="ico c-e"><use href="#ico-e"/></svg> エネルギー（E）</b><span>トラック進行・器官建造・献上。最も使う資源。</span></div>
-  <div><b><svg class="ico c-g"><use href="#ico-g"/></svg> 遺伝子（G）</b><span>形質の購入専用に近い。復元・献上（遺伝子）にも。E・G・P は互いに替えられない。</span></div>
-  <div><b><svg class="ico c-p"><use href="#ico-pop"/></svg> 個体数（P）</b><span>大量消費・繁殖（繁栄度）・群体枠の支払い。生命核が生む。</span></div>
-  <div><b><svg class="ico c-l"><use href="#ico-life"/></svg> 生命核（L）</b><span>毎ラウンド1個。持てば P を生み、払えば E<span id="k-lval"></span>／G<span id="k-lval2"></span> の代わり（身体 Lv3 で上がる）。支払いの一部に充てても、<strong>手番を使わずにいつでも E か G に換えてもよい</strong>（個人ボードの「生命核→資源」）。払った個数が身体の収集物。</span></div>
-  <div><b>協調トークン</b><span>群体E/G・大量消費(社会)・群れ本能・群心系の器官で増える（上限 <span id="k-coopmax"></span>）。資源枠を使うたび<strong>協調数ぶん同じ資源が増える</strong>。社会トラックの収集物。献上（協調4）・協調発進（3）で払う。</span></div>
-  <div><b>Wなし実行権</b><span>社会 Lv3★〜Lv5 で得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）。</span></div>
+  <div><b><svg class="ico c-e"><use href="#ico-e"/></svg> エネルギー（E）</b><span>進化・器官形成・献上。最も使う資源。</span></div>
+  <div><b><svg class="ico c-g"><use href="#ico-g"/></svg> 遺伝子（G）</b><span>形質の獲得専用に近い。復元・献上（遺伝子）にも。E・G・P は互いに替えられない。</span></div>
+  <div><b><svg class="ico c-p"><use href="#ico-pop"/></svg> 個体数（P）</b><span>淘汰・繁殖（繁栄度）・群体の枠の支払い。生命核が生む。</span></div>
+  <div><b><svg class="ico c-l"><use href="#ico-life"/></svg> 生命核（L）</b><span>毎ラウンド1個。持てば P を生み、払えば E<span id="k-lval"></span>／G<span id="k-lval2"></span> の代わり（身体 Lv3 で上がる）。支払いの一部に充てても、<strong>手番を使わずにいつでも E か G に換えてもよい</strong>（個人ボードの「生命核→資源」）。払った個数が身体の素材。</span></div>
+  <div><b>協調</b><span>群体同期・群体融合・淘汰(社会)・群れ本能・群心系の器官で増える（上限 <span id="k-coopmax"></span>）。資源枠を使うたび<strong>協調数ぶん同じ資源が増える</strong>。社会トラックの素材。献上（協調4）・協調進出（3）で払う。</span></div>
+  <div><b>自由行動</b><span>社会 Lv3★〜Lv5 で得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）。</span></div>
 </div>
-<p class="prov">初期資源は種族で異なります（10章）。環境スキャン（共用盤）：<span id="k-scan"></span>。資源どうしの変換はありません（足りない G・E は生命核で代用）。</p>
+<p class="prov">初期資源は種族で異なります（10章）。探索（共用盤）：<span id="k-scan"></span>。資源どうしの変換はありません（足りない G・E は生命核の投入で補う）。</p>
 </section>
 
 <section id="c4">
-<h2><span class="no">4</span>進化トラックと先着＝強</h2>
-<p>4本のトラックはそれぞれ Lv1〜6。<strong>収集物が矢印の数に達すると自動で上がります</strong>（E を払って先に上がってもよい。E コストは <span id="k-step"></span>、身体だけ1段高い <span id="k-bstep"></span>）。E で上がるときは、<strong>2段分の E をまとめて払って一度に2段</strong>上がれます（<strong>二段進行</strong>・Lv5 まで・手番は1つ）。</p>
+<h2><span class="no">4</span>進化トラックと先駆＝強</h2>
+<p>4本のトラックはそれぞれ Lv1〜6。<strong>素材が矢印の数に達すると自動で上がります</strong>（E を払って先に上がってもよい。E コストは <span id="k-step"></span>、身体だけ1段高い <span id="k-bstep"></span>）。E で上がるときは、<strong>2段分の E をまとめて払って一度に2段</strong>上がれます（<strong>二段進化</strong>・Lv5 まで・手番は1つ）。</p>
 <table class="qt" id="gates"></table>
-<p>Lv3★・Lv5★は、到達した全員が<strong>痕跡+1</strong>。報酬は<strong>最初に着いた人が強い方、後の人は弱い方</strong>。ただし<strong>E を払って自力で上がった段（E 進行・知的跳躍・身体覚醒）は後着でも強い方</strong>です（収集物で自動的に上がった後着だけが弱い方）。Lv5★の一番乗りは痕跡をもう1個もらえます（これだけは先着のみ）。<strong>Lv6</strong>はそのトラックの資源で払い（<span id="k-lv6"></span>）、先着＝痕跡+1＋祝福+1、後着＝痕跡+1。終了時、Lv6 に達したトラックの収集物3個につき祝福+1。</p>
+<p>Lv3★・Lv5★は、到達した全員が<strong>痕跡+1</strong>。報酬は<strong>最初に着いた人が強い方、後の人は弱い方</strong>。ただし<strong>E を払って自力で上がった段（E での進化・知的跳躍・身体覚醒）は追随でも強い方</strong>です（素材で自動的に上がった追随だけが弱い方）。Lv5★の一番乗りは痕跡をもう1個もらえます（これだけは先駆のみ）。<strong>Lv6</strong>はそのトラックの資源で払い（<span id="k-lv6"></span>）、先駆＝痕跡+1＋祝福+1、追随＝痕跡+1。終了時、Lv6 に達したトラックの素材3個につき祝福+1。</p>
 <div class="tabs" id="tr-tabs"></div><div class="tabbody" id="tr-body"></div>
-<div class="tip">知的跳躍・身体覚醒（形質）で着いた★は「先着」にはなりません（Lv5★の先着ボーナスはなし。先着は次に自力で着いた人のもの）。ただし自分で払って上がった段なので、報酬は強い方です。</div>
+<div class="tip">知的跳躍・身体覚醒（形質）で着いた★は「先駆」にはなりません（Lv5★の先駆ボーナスはなし。先駆は次に自力で着いた人のもの）。ただし自分で払って上がった段なので、報酬は強い方です。</div>
 <div class="ex"><div class="q">知性の Lv5★に2番目に着いた。痕跡は何個？</div>
   <div class="choices"><button data-ex="lv5" data-v="0">0個</button><button data-ex="lv5" data-v="1">1個</button><button data-ex="lv5" data-v="2">2個</button></div><div class="ans" id="ans-lv5"></div></div>
 </section>
@@ -204,7 +204,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <section id="c5">
 <h2><span class="no">5</span>繁栄度と成熟度を育てる</h2>
 <div class="kv">
-  <div><b>繁栄度 ×3→×7</b><span><strong>繁殖変換</strong>（共用盤・W 必須）で +1。P<span id="k-breed"></span> で 1 段・生命核 <span id="k-breedL"></span> 個で 1 段を<strong>同時に行ってよい</strong>（それぞれ 1 段まで。増殖暴走の強なら 2 段ずつ）。4段まで。痕跡に掛かる。</span></div>
+  <div><b>繁栄度 ×3→×7</b><span><strong>繁殖</strong>（共用盤・ワーカー必須）で +1。P<span id="k-breed"></span> で 1 段・生命核 <span id="k-breedL"></span> 個で 1 段を<strong>同時に行ってよい</strong>（それぞれ 1 段まで。増殖暴走の強なら 2 段ずつ）。4段まで。痕跡に掛かる。</span></div>
   <div><b>成熟度 ×3→×7</b><span>形質 <span id="k-tc"></span> 枚目で +1。器官の<strong>系統完成</strong>（同じ系統3枚）で +1（1 系統目と 3 系統目。2 系統目は付かない）。祝福に掛かる。</span></div>
   <div><b>どちらを育てる？</b><span>痕跡が多いなら繁栄度、祝福（献上）が多いなら成熟度。終盤に P が余るなら繁殖。</span></div>
 </div>
@@ -214,40 +214,40 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 
 <section id="c6">
 <h2><span class="no">6</span>形質と器官</h2>
-<h3>形質（知性の収集物・G で買う・<span id="k-ntraits"></span>種）</h3>
+<h3>形質（知性の素材・G で獲得・<span id="k-ntraits"></span>種）</h3>
 <ul class="pts">
   <li><strong>強い版は1枚だけ（早い者勝ち）、弱い版は何枚でも</strong>。強が残っていても安い弱を選んでよい。共用（排他なし）。弱い版にもそれぞれ固有の効果があります（下の一覧の「弱」）。</li>
   <li>強を誰かに取られた形質は、共用盤の<strong>復元</strong>（強の値段＋E<span id="k-rst"></span>・1人1回）で強い効果のまま取れる。</li>
-  <li>買い替え（アップグレード）：持っている形質をより高い形質に差額で替えられる（枚数は変わらない）。</li>
+  <li>形質強化：持っている形質をより高い形質に差額で替えられる（枚数は変わらない）。</li>
   <li><span id="k-tc2"></span>枚目で成熟度+1。知性 Lv4 からは形質3枚ごとに祝福+1。献上（遺伝子）は G<span id="k-flatG"></span> 定額（<span id="k-tlim"></span>）。</li>
 </ul>
 <div class="clist" id="tr-list"></div>
-<h3>器官（代謝の収集物・E＋少しの G で建てる）</h3>
+<h3>器官（代謝の素材・E＋少しの G で形成）</h3>
 <ul class="pts">
-  <li>場には<strong>4系統×3段階</strong>（初心者セットアップは <span id="k-beglin"></span> の固定。熟練者は6系統から4系統を抽選）。系統内は階層順に建てる。</li>
-  <li>コスト（定価）<span id="k-ocost"></span>。<strong>1 枚ずつ建てるときは、同じ系統の 1 つ前の段の定価を引いた差額を払う</strong>（例：定価 12+3／15+6／21+6 なら 2 段目は 3+3・3 段目は 6+0）。<strong>効果は先着も後続も同じ。後続は後追い料 +<span id="k-late"></span>E</strong>（器官＝早い者が安い、形質＝早い者が強い）。代謝 Lv4 に着くと、場の<strong>特殊器官</strong>（5 種）から 1 枚を取る（先着・値段なし・器官 1 枚に数える）。</li>
-  <li>共用盤の<strong>一気立て</strong>（W 1 個）で、同じ系統の器官を 2〜3 枚、階層順に続けて建造できる（各段の<strong>定価</strong>〔差額にならない〕と後追い料を払い、建造時の効果はそれぞれ発動）。系統完成を 1 手で。</li>
-  <li>同じ系統3枚＝<strong>系統完成</strong>で成熟度+1（1・3 系統目）。器官の多くは<strong>建てた瞬間に効果がある</strong>（連結は持っている器官の枚数ぶん、転写は G と弱の形質 1 枚、群心は協調と Wなし実行権、脈動は生命核、孵化腺は P、神経核・発光腺は祝福、発光核は痕跡と祝福）。収入で効くもの＝代謝・孵化（1 枚ごとに P）・神経網・発光点。<strong>神経</strong>の器官は形質 1 枚として数える（知性のゲートと形質 3・6 枚目の成熟度）。孵化核は建てたとき繁殖変換を 1 回、手番なしで行える。代謝核だけは代謝の収集物の数え方を1つ有利にする（ゲート+1）。</li>
+  <li>場には<strong>4系統×3形態</strong>（初心者セットアップは <span id="k-beglin"></span> の固定。熟練者は8系統から4系統を抽選）。系統内は形態の順に形成する。</li>
+  <li>コスト（定価）<span id="k-ocost"></span>。<strong>1 枚ずつ形成するときは、同じ系統の 1 つ前の形態の定価を引いた差額を払う</strong>（例：定価 12+3／18+6／27+9 なら第 2 形態は 6+3・第 3 形態は 9+3）。<strong>効果は先駆も追随も同じ。追随は追随の代償 +<span id="k-late"></span>E</strong>（器官＝早い者が安い、形質＝早い者が強い）。<strong>特殊器官</strong>（5 種）は、代謝 Lv4 に達した順に、残っているものから 1 枚を取る（値段なし・器官 1 枚に数える）。</li>
+  <li>共用盤の<strong>急速形成</strong>（ワーカー 1）で、同じ系統の器官を 2〜3 枚、形態の順に続けて形成できる（各形態の<strong>定価</strong>〔差額にならない〕と追随の代償を払い、形成時の効果はそれぞれ発動）。系統完成を 1 手で。</li>
+  <li>同じ系統3枚＝<strong>系統完成</strong>で成熟度+1（1・3 系統目）。器官の多くは<strong>形成した瞬間に効果がある</strong>（連結は持っている器官の枚数ぶん、転写は G と弱の形質 1 枚、群心は協調と自由行動、脈動は生命核、孵化腺は P、神経核・発光腺は祝福、発光核は痕跡と祝福）。収入で効くもの＝代謝・孵化（1 枚ごとに P）・神経網・発光点。<strong>神経</strong>の器官は形質 1 枚として数える（知性の臨界と形質 3・6 枚目の成熟度）。孵化核は形成したとき繁殖を 1 回、手番なしで行える。代謝核だけは代謝の臨界で器官 1 枚ぶん多く数える。</li>
 </ul>
 <div class="tabs" id="og-tabs"></div><div class="tabbody" id="og-body"></div>
 </section>
 
 <section id="c7">
 <h2><span class="no">7</span>盤と行動</h2>
-<p><strong>早取り盤</strong>＝各枠1ラウンドに1人だけ。<strong>共用盤</strong>＝何人でも何回でも（ワーカーがある限り）。</p>
-<h3>早取り盤</h3>
+<p><strong>占有盤</strong>＝各枠1ラウンドに1人だけ。<strong>共用盤</strong>＝何人でも何回でも（ワーカーがある限り）。</p>
+<h3>占有盤</h3>
 <table class="qt" id="fast"></table>
 <h3>共用盤</h3>
 <table class="qt" id="shared"></table>
-<div class="tip"><strong>大量消費</strong>は個体数 P<span id="k-mass"></span> を払う早取り枠（身体＝痕跡+1、知性＝形質、社会＝協調+3、代謝＝P<span id="k-mm"></span> で E+30 G+30）。共用盤の<strong>復元</strong>（取られた強の形質を強の値段＋E で）・<strong>増幅</strong>（器官1つの効果を2倍）は各自ゲーム中1回。<strong>採集</strong>（E<span id="k-gthE"></span>／G<span id="k-gthG"></span>／P<span id="k-gthP"></span> のどれか1つ、または P<span id="k-gthCP"></span> を払って協調+<span id="k-gthC"></span>）は置ける場所が無いときの逃げ道で、資源枠よりずっと少ない量です。</div>
+<div class="tip"><strong>淘汰</strong>は個体数 P<span id="k-mass"></span> を払う占有盤の枠（身体＝痕跡+1、知性＝形質、社会＝協調+3、代謝＝P<span id="k-mm"></span> で E+30 G+30）。共用盤の<strong>復元</strong>（取られた強の形質を強の値段＋E で）は各自ゲーム中1回。<strong>採集</strong>（E<span id="k-gthE"></span>／G<span id="k-gthG"></span>／P<span id="k-gthP"></span> のどれか1つ、または P<span id="k-gthCP"></span> を払って協調+<span id="k-gthC"></span>）は置ける場所が無いときの逃げ道で、資源枠よりずっと少ない量です。</div>
 </section>
 
 <section id="c8">
 <h2><span class="no">8</span>献上と神の到来</h2>
 <p><strong>献上</strong>（個人ボードの祭壇 3 マス）＝資源を捧げて<strong><span id="k-tout"></span></strong>。祭壇は遺伝子・生命核・協調の3つで、<strong><span id="k-tlim2"></span></strong>（使った祭壇にはワーカーが残る）。</p>
 <table class="qt" id="trib"></table>
-<p><strong>ラウンド<span id="k-tribR"></span>の開始＝神の到来</strong>。早取り盤に<strong>恩寵枠が3つ</strong>開きます（<span id="k-tribpool"></span>種からゲームごとに3種を抽選・1ラウンド1人）。</p>
-<p><strong>最終ラウンド（ラウンド<span id="k-lastR"></span>）＝祝福枠</strong>。空いている資源獲得の枠にコマを置くと、資源に加えて<strong>祝福+1</strong>（Pブーストも対象。緊急発進・協調発進・Wなし実行・神の加護の即時枠で使った枠には付きません）。</p>
+<p><strong>ラウンド<span id="k-tribR"></span>の開始＝神の到来</strong>。占有盤に<strong>恩寵枠が3つ</strong>開きます（<span id="k-tribpool"></span>種からゲームごとに3種を抽選・1ラウンド1人）。</p>
+<p><strong>最終ラウンド（ラウンド<span id="k-lastR"></span>）＝祝福枠</strong>。空いている資源獲得の枠にワーカーを置くと、資源に加えて<strong>祝福+1</strong>（自己複製も対象。緊急進出・協調進出・自由行動・神の加護の即時枠で使った枠には付きません）。</p>
 <div class="clist" id="trib-list"></div>
 </section>
 
@@ -255,9 +255,9 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <h2><span class="no">9</span>得点と勝ち筋</h2>
 <div class="formula">痕跡 × 繁栄度 ＋ 祝福 × 成熟度<small>終了時、各トラックで Lv が最も高い人（単独・Lv2 以上）に痕跡+1（<strong>最果ての痕跡</strong>）。同点なら誰ももらえない。</small></div>
 <h3>痕跡の出どころ</h3>
-<ul class="pts"><li>トラックの Lv3★・Lv5★（先着は Lv5★でもう+1）・Lv6（全員）</li><li>大量消費(身体)・身体 Lv4・初めて協調8に達したとき</li><li>最果ての痕跡（終了時）</li></ul>
+<ul class="pts"><li>トラックの Lv3★・Lv5★（先駆は Lv5★でもう+1）・Lv6（全員）</li><li>淘汰(身体)・身体 Lv4・初めて協調8に達したとき</li><li>最果ての痕跡（終了時）</li></ul>
 <h3>祝福の出どころ</h3>
-<ul class="pts"><li>献上（祭壇：遺伝子 G<span id="k-flatG2"></span>／生命核 L<span id="k-lcry"></span>〔身体 Lv2 で解放〕／協調 <span id="k-ccry"></span>。<span id="k-tout2"></span>・<span id="k-tlim3"></span>）</li><li>最終ラウンドの祝福枠（空いている資源枠にコマを置くと+1）</li><li>知性 Lv4（形質3枚ごとに+1）</li><li>Lv6 の先着・終了時の換算（Lv6 のトラックの収集物3個につき+1）</li></ul>
+<ul class="pts"><li>献上（祭壇：遺伝子 G<span id="k-flatG2"></span>／生命核 L<span id="k-lcry"></span>〔身体 Lv2 で解放〕／協調 <span id="k-ccry"></span>。<span id="k-tout2"></span>・<span id="k-tlim3"></span>）</li><li>最終ラウンドの祝福枠（空いている資源枠にワーカーを置くと+1）</li><li>知性 Lv4（形質3枚ごとに+1）</li><li>Lv6 の先駆・神の裁定（Lv6 のトラックの素材3個につき+1）</li></ul>
 <div class="calc" id="calc"></div>
 <h3>勝ち筋の例</h3>
 <div class="routes">
@@ -272,7 +272,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <section id="c10">
 <h2><span class="no">10</span>種族の選び方</h2>
 <div class="clist" id="sp-body"></div>
-<p class="prov">手番値が大きい種族ほど最初のラウンドで先に動けます（同値はランダム。ラウンド2からは痕跡の少ない順・同数は前のラウンドの順）。初心者には万列協和衆（協調2で始まり資源枠のボーナスが早い）か群泳双盤（初期資源が多い）が扱いやすいです。</p>
+<p class="prov">手番順の数字が大きい種族ほど最初のラウンドで先に動けます（同じ数字はランダム。ラウンド2からは痕跡の少ない順・同数は前のラウンドの順）。初心者には万列協和衆（協調2で始まり資源枠のボーナスが早い）か群泳双盤（初期資源が多い）が扱いやすいです。</p>
 </section>
 
 <section id="ax">
@@ -283,11 +283,11 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <p>スマホ用の1枚版：<a href="img/cheatsheet.png">画像</a>／<a href="img/cheatsheet.pdf">PDF</a>／<a href="cheatsheet.html">ページ</a></p>
 </section>
 </main>
-<footer>ルールの正本は design.md。数値はアプリと同じ data.js／engine.js（数値セット T15＝5ラウンド）から読み込んでいます。2026-11-09 改訂（T15＝T14＋器官の造り直し：1 枚ずつは差額払い・系統完成の成熟度は 1・3 系統目・代謝ゲート 2/4/6/8・代謝 Lv4 は特殊器官・器官の恩寵は 1 段目の定価で 3 段目まで・新系統 孵化／神経／発光・促進と形質 3 種〔共生・代替燃料・適応放散〕の廃止）。</footer>
+<footer>ルールの正本は design.md。数値はアプリと同じ data.js／engine.js（数値セット T16＝5ラウンド）から読み込んでいます。2026-11-09 改訂（T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化／T15＝T14＋器官の造り直し：1 枚ずつは差額払い・系統完成の成熟度は 1・3 系統目・代謝の臨界 2/4/6/8・代謝 Lv4 は特殊器官・器官の恩寵は第 1 形態の定価で第 3 形態まで・新系統 孵化／神経／発光・促進と形質 3 種〔共生・代替燃料・適応放散〕の廃止）。</footer>
 
 <script src="../app/js/icons.js"></script>
-<script src="../app/js/data.js?v=3.75"></script>
-<script src="../app/js/engine.js?v=3.75"></script>
+<script src="../app/js/data.js?v=3.83"></script>
+<script src="../app/js/engine.js?v=3.83"></script>
 <script>
 (function () {
   'use strict';
@@ -306,10 +306,10 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   const EX = {
     score: { ok: 2, text: '痕跡4×繁栄度4＝16、祝福2×成熟度5＝10、合計26点…ではなく、計算し直すと 16＋10＝26点。選択肢「26点」が正解です。' },
     order: { ok: 1, text: 'ラウンド2からは「痕跡の少ない順」。P2（0個）→P3（1個）→P1（2個）です。' },
-    lv5: { ok: 1, text: '2番目以降は痕跡1個（報酬は、収集物で自動的に上がったなら弱い方、E を払って上がったなら強い方）。痕跡2個は一番乗りだけの特典です。' },
+    lv5: { ok: 1, text: '2番目以降は痕跡1個（報酬は、素材で自動的に上がったなら弱い方、E を払って上がったなら強い方）。痕跡2個は一番乗りだけの特典です。' },
     coef: { ok: 1, text: '痕跡の項は 5×5＝25 → 5×6＝30 で 5点増。祝福の項は変わりません。' },
   };
-  EX.score = { ok: 0, text: '痕跡4×繁栄度4＝16、祝福2×成熟度5＝10、合計26点。おまけ点はありません（発展度・体制完成は廃止）。' };
+  EX.score = { ok: 0, text: '痕跡4×繁栄度4＝16、祝福2×成熟度5＝10、合計26点。おまけ点はありません。' };
   document.querySelectorAll('button[data-ex]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.ex, ok = +b.dataset.v === EX[k].ok; const a = $('ans-' + k);
     b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
@@ -318,10 +318,10 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 
   // ---- 1 画面 ----
   const HS = [
-    ['進化トラック', '4本×Lv1〜6。矢印の下の数字が「自動で上がる収集物の数」と E コスト。点線の枠をクリックで E を払って進む。★の段で痕跡。', [0.9, 7, 56, 28.9]],
-    ['早取り盤', '各枠1ラウンドに1人。資源獲得・大量消費・形質購入。神の到来で恩寵枠が開く。', [0.9, 36.6, 56, 28.7]],
-    ['共用盤', '何人でも何回でも。繁殖変換・器官建造・環境スキャン・復元・一気立て・採集（画像は旧版・資源変換と予備動員は廃止。献上は個人ボードの祭壇へ）。', [0.9, 66, 56, 16.4]],
-    ['器官の場／形質プール', 'タブで切替。器官は4系統×3段、形質は強1枚＋弱。カードをクリックで建造／購入。', [0.9, 85.1, 56, 14.9]],
+    ['進化トラック', '4本×Lv1〜6。矢印の下の数字が「自動で上がる素材の数」と E コスト。点線の枠をクリックで E を払って進む。★の段で痕跡。', [0.9, 7, 56, 28.9]],
+    ['占有盤', '各枠1ラウンドに1人。資源獲得・淘汰・形質獲得。神の到来で恩寵枠が開く。', [0.9, 36.6, 56, 28.7]],
+    ['共用盤', '何人でも何回でも。繁殖・器官形成・探索・復元・急速形成・採集（画像は旧版・資源変換と予備動員は廃止。献上は個人ボードの祭壇へ）。', [0.9, 66, 56, 16.4]],
+    ['器官の場／形質プール', 'タブで切替。器官は4系統×3形態、形質は強1枚＋弱。カードをクリックで形成／獲得。', [0.9, 85.1, 56, 14.9]],
     ['手番の人の個人ボード', '資源と次の収入、ワーカー、繁栄度・成熟度のゲージ、協調、痕跡・祝福、現在の点、持っている器官・形質。', [57.7, 7, 41.5, 21.5]],
     ['他プレイヤー', '各自の点・資源・Lv・痕跡・祝福・形質・器官・協調・残りワーカー。', [57.7, 29.4, 41.5, 9.6]],
     ['ログ', '誰が何をしたか。「保存(JSON)」で記録を残せる。', [57.7, 39.7, 41.5, 15.5]],
@@ -342,7 +342,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   const stepArr = R.step.slice(1), bstep = (R.bodyStep || R.step).slice(1);
   num('k-step', stepArr.map(c => c + 'E').join('／')); num('k-bstep', bstep.map(c => c + 'E').join('／'));
   num('k-lv6', G.TRACKS.map(t => G.TRACK_INFO[t].name.split('・')[0] + ' ' + G.lv6CostText(st, t)).join('／'));
-  $('gates').innerHTML = '<tr><th>トラック</th><td>収集物</td><td>Lv2／3／4／5／6 に上がる数</td></tr>' + G.TRACKS.map(t => `<tr><th>${G.TRACK_INFO[t].name}</th><td>${G.gateLabel(st, t)}</td><td>${R.gates[t].slice(2).join('／')}／（Lv6 は ${G.lv6CostText(st, t)}）</td></tr>`).join('');
+  $('gates').innerHTML = '<tr><th>トラック</th><td>素材</td><td>Lv2／3／4／5／6 に上がる数</td></tr>' + G.TRACKS.map(t => `<tr><th>${G.TRACK_INFO[t].name}</th><td>${G.gateLabel(st, t)}</td><td>${R.gates[t].slice(2).join('／')}／（Lv6 は ${G.lv6CostText(st, t)}）</td></tr>`).join('');
   const tabs = (tabEl, bodyEl, items, render) => {
     items.forEach((it, i) => { const b = document.createElement('button'); b.textContent = it.label; b.addEventListener('click', () => { tabEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); bodyEl.innerHTML = render(it); }); tabEl.appendChild(b); if (i === 0) b.click(); });
   };
@@ -360,7 +360,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   num('k-late', G.sc(st, R.organLateFee || 1));
   const LIN = (R.organSet || Object.keys(G.LINEAGES)).map(l => ({ l, label: G.LINEAGES[l] + (BEG.includes(l) ? '★' : '') }));
   const otxt = o => txt(R.hc3Bonus && o.strongB ? o.strongB : o.strong);
-  tabs($('og-tabs'), $('og-body'), LIN, ({ l }) => '<div class="clist">' + [1, 2, 3].map(n => { const id = l + n, o = G.organDef(R, id); return `<div class="cd ${BEG.includes(l) ? 'beg' : ''}"><span class="c">${n}段階目</span><b>${id} ${o.name}</b><span class="s">${otxt(o)}</span></div>`; }).join('') + '</div>' + (BEG.length ? '<p class="prov">★＝初心者セットアップの4系統</p>' : ''));
+  tabs($('og-tabs'), $('og-body'), LIN, ({ l }) => '<div class="clist">' + [1, 2, 3].map(n => { const id = l + n, o = G.organDef(R, id); return `<div class="cd ${BEG.includes(l) ? 'beg' : ''}"><span class="c">第${n}形態</span><b>${id} ${o.name}</b><span class="s">${otxt(o)}</span></div>`; }).join('') + '</div>' + (BEG.length ? '<p class="prov">★＝初心者セットアップの4系統</p>' : ''));
 
   // ---- 7 盤 ----
   const TV = R.tributeVg || 1, TL = R.tributeOnceGame ? '各祭壇は1ゲームに1回' : '各品目各自1R1回'; const TOUT = k => G.tribOutText ? G.tribOutText(st, k) : '祝福+' + TV; const TOUT3 = `遺伝子＝${TOUT('G')}／生命核＝${TOUT('L')}／協調＝${TOUT('coop')}`; num('k-tvg', TV); num('k-tlim', TL); num('k-tlim2', TL); num('k-tout', TOUT3); num('k-tout2', TOUT3); // v3.67 祭壇／T14（§16 M-a）＝痕跡と祝福の組み合わせ
@@ -373,7 +373,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 
   // ---- 8 献上 ----
   const T = R.tribute; num('k-tribR', T.openRound || 6); num('k-lastR', R.rounds || G.ROUNDS); num('k-tribpool', T.pool.length);
-  $('trib').innerHTML = [['遺伝子', `G${G.sc(st, T.flatG)}`], ['生命核', `L${R.lCrystal}（身体 Lv2 で解放。結晶体質で1つ少なく）`], ['協調', `協調${R.coopCrystal}`]].map(([a, b]) => `<tr><th>祭壇（${a}）</th><td>${b} → 祝福+${TV}</td></tr>`).join('');
+  $('trib').innerHTML = [['遺伝子', `G${G.sc(st, T.flatG)}`, 'G'], ['生命核', `L${R.lCrystal}（身体 Lv2 で解放。結晶体質で1つ少なく）`, 'L'], ['協調', `協調${R.coopCrystal}`, 'coop']].map(([a, b, k]) => `<tr><th>祭壇（${a}）</th><td>${b} → ${TOUT(k)}</td></tr>`).join('');
   $('trib-list').innerHTML = T.pool.map(id => `<div class="cd"><b>${G.SLOT_BY_ID[id].name}</b><span class="s">${G.slotTip(st, id)}</span></div>`).join('');
 
   // ---- 9 得点 ----
@@ -386,31 +386,31 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   calc.appendChild(tot); calc.appendChild(bd); drawCalc();
 
   // ---- 10 種族 ----
-  $('sp-body').innerHTML = Object.keys(G.SPECIES).sort((a, b) => G.SPECIES[a].order - G.SPECIES[b].order).map(id => { const s = G.speciesInfo(st, id); return `<div class="cd ${id === 'ant' ? 'beg' : ''}"><span class="c">手番値${G.SPECIES[id].order}・初期 E${s.stock.E}/G${s.stock.G}/P${s.stock.P}</span><b>${s.name}<span class="tag">${s.type}</span></b><span class="s">${s.hint}</span><span class="w">パッシブ：${s.passive}</span></div>`; }).join('');
+  $('sp-body').innerHTML = Object.keys(G.SPECIES).sort((a, b) => G.SPECIES[a].order - G.SPECIES[b].order).map(id => { const s = G.speciesInfo(st, id); return `<div class="cd ${id === 'ant' ? 'beg' : ''}"><span class="c">手番順${G.SPECIES[id].order}・初期 E${s.stock.E}/G${s.stock.G}/P${s.stock.P}</span><b>${s.name}<span class="tag">${s.type}</span></b><span class="s">${s.hint}</span><span class="w">パッシブ：${s.passive}</span></div>`; }).join('');
 
   // ---- 付録 ----
   const QT = [
     ['収入（毎ラウンド）', `L+1 を受け取ってから、持っている L 1個につき P+${R.lYield || 9}（受け取った L も数える。身体 Lv4 で2倍）。基礎収入なし`],
     ['手番', 'ワーカー5個を1個ずつ。ラウンド2から痕跡の少ない順。置ける場所が無いときは採集（資源を少しだけ）'],
-    ['トラック進行（E）', `${stepArr.map(c => c + 'E').join('／')}（身体 ${bstep.map(c => c + 'E').join('／')}）。二段進行＝2段分を合算して手番1つ（Lv5 まで）。三段進行（進化加速）＝3段分を合算して手番1つ（強 2 回／弱 1 回）。自動進行：` + G.TRACKS.map(t => `${G.GATE_SHORT[t] || G.TRACK_INFO[t].jp} ${R.gates[t].slice(2).join('/')}`).join('・')],
-    ['Lv3★・Lv5★・Lv6', '到達で痕跡+1。先着は強い報酬（Lv5★の一番乗りは痕跡+2）。E を払って自力で上がった段は後着でも強い報酬。Lv6＝' + G.TRACKS.map(t => G.lv6CostText(st, t)).join('／') + '。先着は祝福+1も'],
-    ['資源獲得（早取り）', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
-    ['大量消費（早取り）', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace('大量消費', '')} ${G.slotText(st, id)}`).join('／')],
+    ['進化（E）', `${stepArr.map(c => c + 'E').join('／')}（身体 ${bstep.map(c => c + 'E').join('／')}）。二段進化＝2段分を合算して手番1つ（Lv5 まで）。三段進化（進化加速）＝3段分を合算して手番1つ（強 2 回／弱 1 回）。自動進化：` + G.TRACKS.map(t => `${(G.gateShort ? G.gateShort(st, t) : G.GATE_SHORT[t]) || G.TRACK_INFO[t].jp} ${R.gates[t].slice(2).join('/')}`).join('・')],
+    ['Lv3★・Lv5★・Lv6', '到達で痕跡+1。先駆は強い報酬（Lv5★の一番乗りは痕跡+2）。E を払って自力で上がった段は追随でも強い報酬。Lv6＝' + G.TRACKS.map(t => G.lv6CostText(st, t)).join('／') + '。先駆は祝福+1も'],
+    ['資源獲得（占有盤）', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
+    ['淘汰（占有盤）', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace(/^(大量消費|淘汰)/, '')} ${G.slotText(st, id)}`).join('／')],
     ['献上（祭壇）', `遺伝子 G${G.sc(st, T.flatG)} → ${TOUT('G')}／生命核 L${R.lCrystal} → ${TOUT('L')}／協調${R.coopCrystal} → ${TOUT('coop')}（${TL}）`],
-    ['祝福枠（最終R）', '空いている資源枠にコマを置くと資源に加えて祝福+1（緊急発進・協調発進・Wなし実行は対象外）'],
+    ['祝福枠（最終R）', '空いている資源枠にワーカーを置くと資源に加えて祝福+1（緊急進出・協調進出・自由行動は対象外）'],
     ['共用盤', SHARED.filter(id => id !== 'GEM').map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
     ['繁栄度・成熟度', `×3〜×7。繁栄度＝繁殖 P${R.breed[0]} の段と L${R.breedL} の段（同時に行ってよい）で+1ずつ／成熟度＝形質${(R.traitCoef || [4, 8]).join('・')}枚目・系統完成（${(R.lineageCoefAt || [1, 2]).join('・')} 系統目）で+1`],
-    ['知性 Lv4・代謝 Lv4', '知性 Lv4＝形質3枚ごとに祝福+1／代謝 Lv4＝' + (R.metab4 === 'special' ? '場の特殊器官（' + (R.specialOrgans || []).map(id => G.ORGANS[id].name).join('・') + '）から 1 枚（先着・器官 1 枚に数える）' : '器官建造の G なし・後追い料なし')],
+    ['知性 Lv4・代謝 Lv4', '知性 Lv4＝形質3枚ごとに祝福+1／代謝 Lv4＝' + (R.metab4 === 'special' ? '場の特殊器官（' + (R.specialOrgans || []).map(id => G.ORGANS[id].name).join('・') + '）から、代謝 Lv4 に達した順に 1 枚（器官 1 枚に数える）' : '器官形成の G なし・追随の代償なし')],
     ['終了と得点', `${R.rounds || G.ROUNDS}ラウンド固定。痕跡×繁栄度＋祝福×成熟度。最果ての痕跡＝各トラック単独首位（Lv2以上）に痕跡+1`],
   ];
   $('qt').innerHTML = QT.map(([a, b]) => `<tr><th>${a}</th><td>${b}</td></tr>`).join('');
   const GL = [
     ['E／G／P／L', 'エネルギー／遺伝子／個体数／生命核'], ['痕跡', '宇宙に残した影響。終了時に繁栄度を掛ける'], ['祝福', '神からの評価。終了時に成熟度を掛ける'],
-    ['繁栄度', '×3〜×7。繁殖変換で上がる'], ['成熟度', '×3〜×7。形質3・6枚目と系統完成（1・3 系統目）で上がる'], ['早取り盤', '各枠1ラウンドに1人だけ'], ['共用盤', '何人でも・何回でも'],
-    ['先着＝強', '最初に到達・取得した人が強い効果、後の人は弱い効果（トラックは E を払って自力で上がった段なら後着でも強）'], ['二段進行', 'E を払う進行で、2段分の E を合算して一度に2段上がる（Lv5 まで・手番1つ）'], ['収集物', 'トラックを自動で上げる材料（L投入・形質・協調・器官）'],
-    ['緊急発進', '生命核1個で使用済みの資源枠を使う（獲得量2倍）'], ['協調発進', '協調3個で使用済みの資源枠を使う（獲得量2倍）'], ['Wなし実行権', '社会トラックで得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）'],
-    ['献上', `資源を捧げて痕跡や祝福を得る（${TOUT3}）。祭壇は3つで${TL}`], ['神の到来', `ラウンド${T.openRound || 6}の開始。恩寵枠が3つ開く`], ['祝福枠', '最終ラウンド、空いている資源枠にコマを置くと資源に加えて祝福+1'], ['最果ての痕跡', '終了時、各トラックの単独首位（Lv2以上）に痕跡+1'],
-    ['系統完成', '同じ系統の器官3枚。成熟度+1（1・3 系統目）'], ['差額払い', '器官を 1 枚ずつ建てるとき、同じ系統の 1 つ前の段の定価（E・G とも）を引いた差額を払う。一気立ては各段の定価'], ['特殊器官', '代謝 Lv4 で場の 5 種から 1 枚を取る（先着）。系統には属さないが器官 1 枚に数え、収入で器官の枚数ぶんの資源・協調を生む'], ['復元', '共用盤。誰かに強を取られた形質を、強の値段＋E で強い効果のまま取る（1人1回）'], ['一気立て', '共用盤。同じ系統の器官を 2〜3 枚、階層順に続けて建造する（各段の定価と後追い料・建造時効果あり・W 1 個）'], ['三段進行', '進化加速（形質）で、3段分の E を合算して一度に3段上がる（強 2 回／弱 1 回・Lv5 まで）'], ['採集', '共用盤。E・G・P のどれか1つを少しだけ得る（協調は P を払って+1）。置ける場所が無いときの逃げ道'],
+    ['繁栄度', '×3〜×7。繁殖で上がる'], ['成熟度', '×3〜×7。形質3・6枚目と系統完成（1・3 系統目）で上がる'], ['占有盤', '各枠1ラウンドに1人だけ'], ['共用盤', '何人でも・何回でも'],
+    ['先駆＝強', '最初に到達・取得した人が強い効果、後の人は弱い効果（トラックは E を払って自力で上がった段なら追随でも強）'], ['二段進化', 'E を払う進化で、2段分の E を合算して一度に2段上がる（Lv5 まで・手番1つ）'], ['素材', 'トラックを自動で上げる材料（生命核の投入・形質・協調・器官）'],
+    ['緊急進出', '生命核1個で使用済みの資源枠を使う（獲得量2倍）'], ['協調進出', '協調3個で使用済みの資源枠を使う（獲得量2倍）'], ['自由行動', '社会トラックで得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）'],
+    ['献上', `資源を捧げて痕跡や祝福を得る（${TOUT3}）。祭壇は3つで${TL}`], ['神の到来', `ラウンド${T.openRound || 6}の開始。恩寵枠が3つ開く`], ['祝福枠', '最終ラウンド、空いている資源枠にワーカーを置くと資源に加えて祝福+1'], ['最果ての痕跡', '終了時、各トラックの単独首位（Lv2以上）に痕跡+1'],
+    ['系統完成', '同じ系統の器官3枚。成熟度+1（1・3 系統目）'], ['差額払い', '器官を 1 枚ずつ形成するとき、同じ系統の 1 つ前の形態の定価（E・G とも）を引いた差額を払う。急速形成は各形態の定価'], ['特殊器官', '代謝 Lv4 に達した順に、場の 5 種の残りから 1 枚を取る。系統には属さないが器官 1 枚に数え、収入で器官の枚数ぶんの資源・協調を生む'], ['復元', '共用盤。誰かに強を取られた形質を、強の値段＋E で強い効果のまま取る（1人1回）'], ['急速形成', '共用盤。同じ系統の器官を 2〜3 枚、形態の順に続けて形成する（各形態の定価と追随の代償・形成時効果あり・ワーカー 1）'], ['三段進化', '進化加速（形質）で、3段分の E を合算して一度に3段上がる（強 2 回／弱 1 回・Lv5 まで）'], ['採集', '共用盤。E・G・P のどれか1つを少しだけ得る（協調は P を払って+1）。置ける場所が無いときの逃げ道'],
   ];
   $('gl').innerHTML = GL.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('');
 })();

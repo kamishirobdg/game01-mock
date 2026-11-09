@@ -6,10 +6,10 @@
   G.ROUNDS = 7;
   G.TRACKS = ['body', 'intel', 'social', 'metab'];
   G.TRACK_INFO = {
-    body:   { name: '身体適応',   color: 'red',   jp: '赤', res: 'P' },
-    intel:  { name: '知性・認知', color: 'blue',  jp: '青', res: 'G' },
-    social: { name: '社会性',     color: 'white', jp: '白', res: 'coop' },
-    metab:  { name: '代謝・資源効率', color: 'green', jp: '緑', res: 'E' },
+    body:   { name: '身体',   color: 'red',   jp: '赤', res: 'P' },
+    intel:  { name: '知性', color: 'blue',  jp: '青', res: 'G' },
+    social: { name: '社会',     color: 'white', jp: '白', res: 'coop' },
+    metab:  { name: '代謝', color: 'green', jp: '緑', res: 'E' },
   };
   G.STEP_COST = [0, 2, 3, 5, 8]; // index = 現在Lv（1→2 は STEP_COST[1]）※現行値。実際の参照は G.RULESETS[st.rules]
   G.BASE_INCOME = { E: 3, G: 1, P: 4 };  // E は G.RULESETS[st.rules].incE が優先
@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.81'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.83'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -221,11 +221,19 @@
     fkInc: 12, fk2Build: 24, nvTrait: true, nv2Inc: 3, nv3Vg: 1, lm1Inc: 3, lm2Vg: 1, lm3Vg: 1, lm3Real: 1,
     spInc: { SpE: { E: 3 }, SpG: { G: 2 }, SpP: { P: 5 }, SpC: { coop: 0.5 }, SpM: { E: 1, G: 1 } },
     changed: [] });
-  G.RULES_VISIBLE = ['t15'];
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15'];
-  G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・大量消費）' };
-  G.GATE_LABEL_L = '生命核の投入（代用払い・緊急発進・適応進化）'; G.GATE_SHORT_L = 'L投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
-  G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: 'P投入' };
+  // 2026-11-09 ORDERS O-05（第71部 §28・ユーザー承認）：T16＝T15＋器官の定価を全系統一律に 2 段目 +E3・3 段目 +E6 G3／特殊器官 循環腔 E+2 G+1・連絡腺 E+1＋2 枚につき協調+1
+  G.RULESETS.t16 = Object.assign({}, G.RULESETS.t15, { name: '仮値セットT16（5ラウンド：T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化）',
+    organCost: [[12, 3], [18, 6], [27, 9]],
+    organCostBy: { Pu: [[18, 3], [24, 6], [30, 9]], Hc: [[12, 3], [21, 6], [27, 9]], Li: [[9, 3], [18, 6], [27, 9]] },
+    spInc: { SpE: { E: 3 }, SpG: { G: 2 }, SpP: { P: 5 }, SpC: { E: 1, coop: 0.5 }, SpM: { E: 2, G: 1 } },
+    spText: { SpC: '収入 器官 1 枚につき E+1 ＋ 2 枚につき 協調+1', SpM: '収入 器官 1 枚につき E+2 G+1' },
+    changed: [] });
+  G.spText = (R, id) => (R && R.spText && R.spText[id]) || G.ORGANS[id].strong; // 特殊器官の効果文（数値セットで差し替え）
+  G.RULES_VISIBLE = ['t16'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16'];
+  G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
+  G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
+  G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
   G.MASS_COST = 20;
   G.MASS_MIN = { other: 8, body: 10 }; // 身体は2026-10-18に12→10
   G.BREED_COST = [30, 50];
@@ -237,16 +245,16 @@
   // トラック報酬の説明（表示用）。処理は engine 側
   G.TRACK_REWARDS = {
     body: {
-      2: 'P+8', 3: '強：大量消費を1回無料（4種から選択・排他無視）／弱：P+15', 4: '大量消費コスト恒久-5',
-      5: '強：大量消費(身体)を排他無視で使用可＋恒久-5／弱：恒久-5',
+      2: 'P+8', 3: '強：淘汰を1回無料（4種から選択・排他無視）／弱：P+15', 4: '淘汰コスト恒久-5',
+      5: '強：淘汰(身体)を排他無視で使用可＋恒久-5／弱：恒久-5',
     },
     intel: {
-      2: 'G+{3}', 3: '強：今すぐ形質1枚をG-{3}で購入可／弱：G+{1}/R', 4: '追加アクション1回（排他なし・Eコスト半額）',
-      5: '強：形質コスト永続-{2}＋後着でも常に強効果／弱：G+{6}',
+      2: 'G+{3}', 3: '強：今すぐ形質1枚をG-{3}で獲得可／弱：G+{1}/R', 4: '追加アクション1回（排他なし・Eコスト半額）',
+      5: '強：形質コスト永続-{2}＋追随でも常に強効果／弱：G+{6}',
     },
     social: {
-      2: '協調+1', 3: '強：協調+2／弱：協調+1＋G+3', 4: 'Wなし実行権+1（資源獲得スロット／個人カード・コマを置かず占有しない）',
-      5: '強：協調+1＋Wなし実行権+2／弱：協調+1＋Wなし実行権+1',
+      2: '協調+1', 3: '強：協調+2／弱：協調+1＋G+3', 4: '自由行動+1（資源枠をワーカーを置かずに使う・占有しない）',
+      5: '強：協調+1＋自由行動+2／弱：協調+1＋自由行動+1',
     },
     metab: {
       2: 'E収入+{1}', 3: '強：E収入+{1}かつG収入+{1}／弱：即時E+{8}', 4: 'いつでもE↔G 1:1変換（無料・無制限）',
@@ -255,50 +263,50 @@
   };
 
   // T4 の差し替え報酬文（socialRewards='shield'／intel4='traitDisc'）
-  G.TRACK_REWARDS_T5_BODY = { 2: '収入の利回り（保有L1個につき+1）を、Lごとに E か G から選べる', 3: '強：今すぐL+1 ＋ 緊急発進の対象に形質購入・宝石セット・大量消費を追加／弱：今すぐL+1', 4: '1L＝E4／G4（代用払いの価値上昇）＋ 利回りで P も選べる', 5: '強：利回りが保有L1個につき2 ＋ 今すぐL+1／弱：今すぐL+1' };
-  G.TRACK_REWARDS_T6_BODY4 = '痕跡+1 ＋ 1L＝E4／G4 ＋ 利回りで P も選べる ＋ 結晶化（L2→祝福+1・排他なし）を解放';
-  G.TRACK_REWARDS_T7_INTEL = { 2: 'G+{3}', 3: '強：Gを払う先取り枠（模倣・発現）を今すぐ1回 G0 で実行（排他無視）／弱：以後それらの G -{1}', 4: '研究：献上（遺伝子）が1ラウンドに何度でも', 5: '強：後着でも常に強効果／弱：G+{6}' };
+  G.TRACK_REWARDS_T5_BODY = { 2: '収入の産出（保有L1個につき+1）を、Lごとに E か G から選べる', 3: '強：今すぐL+1 ＋ 緊急進出の対象に形質獲得・宝石セット・淘汰を追加／弱：今すぐL+1', 4: '1L＝E4／G4（投入の価値上昇）＋ 産出で P も選べる', 5: '強：産出が保有L1個につき2 ＋ 今すぐL+1／弱：今すぐL+1' };
+  G.TRACK_REWARDS_T6_BODY4 = '痕跡+1 ＋ 1L＝E4／G4 ＋ 産出で P も選べる ＋ 結晶化（L2→祝福+1・排他なし）を解放';
+  G.TRACK_REWARDS_T7_INTEL = { 2: 'G+{3}', 3: '強：Gを払う占有盤の枠（模倣・発現）を今すぐ1回 G0 で実行（排他無視）／弱：以後それらの G -{1}', 4: '研究：献上（遺伝子）が1ラウンドに何度でも', 5: '強：追随でも常に強効果／弱：G+{6}' };
   // 2026-11-05 T10（第58〜59部）：知性 Lv3★／Lv4 の作り直し・代謝 Lv4 の無料変換撤去
-  G.TRACK_REWARDS_T10_INTEL = { 2: 'G+{3}', 3: '強：次の形質1枚を「弱なら無料・強は差額」で／弱：次の形質1枚 -{3}G', 4: '形質3枚ごとに祝福+1（即時。Lv6の終了時換算とは重ねない）', 5: '強：後着でも常に強効果／弱：G+{6}' };
-  G.TRACK_REWARDS_T10_METAB4 = '以後、器官建造のGコストなし＋後追い料なし';
-  G.TRACK_REWARDS_T15_METAB4 = '場の特殊器官 5 枚から 1 枚を取る（先着・値段なし・器官 1 枚に数える）';
+  G.TRACK_REWARDS_T10_INTEL = { 2: 'G+{3}', 3: '強：次の形質1枚を「弱なら無料・強は差額」で／弱：次の形質1枚 -{3}G', 4: '形質3枚ごとに祝福+1（即時。Lv6の神の裁定とは重ねない）', 5: '強：追随でも常に強効果／弱：G+{6}' };
+  G.TRACK_REWARDS_T10_METAB4 = '以後、器官形成のGコストなし＋追随の代償なし';
+  G.TRACK_REWARDS_T15_METAB4 = '代謝 Lv4 に達した順に、残っている特殊器官から 1 枚（値段なし・器官 1 枚に数える）';
   G.MIMIC_EFFECTS = [ // 模倣の対象（!即時効果のみ。◆L+1・∞恒久・手収入は対象外）。誰かがそのLv以上に到達していること
     { id: 'intel2', track: 'intel', lv: 2, label: '知性Lv2：G+{3}' }, { id: 'social2', track: 'social', lv: 2, label: '社会Lv2：P+{6}' },
-    { id: 'social3s', track: 'social', lv: 3, label: '社会Lv3★強：Wなし実行権+1' }, { id: 'social3w', track: 'social', lv: 3, label: '社会Lv3★弱：P+{10}' }, { id: 'metab3w', track: 'metab', lv: 3, label: '代謝Lv3★弱：E+{8}' },
+    { id: 'social3s', track: 'social', lv: 3, label: '社会Lv3★強：自由行動+1' }, { id: 'social3w', track: 'social', lv: 3, label: '社会Lv3★弱：P+{10}' }, { id: 'metab3w', track: 'metab', lv: 3, label: '代謝Lv3★弱：E+{8}' },
   ];
   G.TRACK_REWARDS_T4 = {
-    social: { 2: 'P+{6}', 3: '強：Wなし実行権+1／弱：P+{10}', 4: 'Wなし実行権+1（資源獲得スロット／個人カード・コマを置かず占有しない）', 5: '強：Wなし実行権+2／弱：Wなし実行権+1' },
-    intel: { 4: '形質購入コスト-1（恒久）' },
+    social: { 2: 'P+{6}', 3: '強：自由行動+1／弱：P+{10}', 4: '自由行動+1（資源枠をワーカーを置かずに使う・占有しない）', 5: '強：自由行動+2／弱：自由行動+1' },
+    intel: { 4: '形質獲得コスト-1（恒久）' },
   };
   // 形質14種
   G.TRAITS = {
     IE: { name: 'E収入強化', cat: 'I', cost: [3, 2], strong: 'E+2/R（恒久）', weak: '即時E+6', permWeak: false },
     IG: { name: 'G収入強化', cat: 'I', cost: [2, 1], strong: 'G+1/R（恒久）', weak: '即時G+3', permWeak: false },
     IP: { name: 'P収入強化', cat: 'I', cost: [2, 1], strong: 'P+3/R（恒久）', weak: '即時P+9', permWeak: false },
-    DB: { name: '身体加速', cat: 'D', cost: [3, 2], strong: '身体進行コスト-2（恒久）', weak: '次の身体進行1回だけ-2', permWeak: false },
-    DI: { name: '知性加速', cat: 'D', cost: [3, 2], strong: '知性進行コスト-2（恒久）', weak: '次の知性進行1回だけ-2', permWeak: false },
-    MC: { name: '消費軽減', cat: 'M', cost: [3, 2], strong: '次の大量消費1回を無料（コスト0）', weak: '大量消費コスト-{mcDiscWeak:6}P（恒久）', permWeak: true, legacyStrong: '大量消費コスト-{mcDisc:6}P（恒久）', legacyWeak: '次の大量消費1回だけ-{mcDisc:6}P' }, // 2026-11-04 v3.59（第51部 C18）：mcMode='freeOnce' が既定。mcMode の無い数値セット（T7 以前）は legacy の文を ui が表示
+    DB: { name: '身体加速', cat: 'D', cost: [3, 2], strong: '身体の進化コスト-2（恒久）', weak: '次の身体の進化1回だけ-2', permWeak: false },
+    DI: { name: '知性加速', cat: 'D', cost: [3, 2], strong: '知性の進化コスト-2（恒久）', weak: '次の知性の進化1回だけ-2', permWeak: false },
+    MC: { name: '消費軽減', cat: 'M', cost: [3, 2], strong: '次の淘汰1回を無料（コスト0）', weak: '淘汰コスト-{mcDiscWeak:6}P（恒久）', permWeak: true, legacyStrong: '淘汰コスト-{mcDisc:6}P（恒久）', legacyWeak: '次の淘汰1回だけ-{mcDisc:6}P' }, // 2026-11-04 v3.59（第51部 C18）：mcMode='freeOnce' が既定。mcMode の無い数値セット（T7 以前）は legacy の文を ui が表示
     IB: { name: '複合収入', cat: 'I', cost: [4, 3], strong: 'E+1/RかつG+1/R（恒久）', weak: '即時E+3かつG+3', permWeak: false },
-    DA: { name: '適応効率', cat: 'D', cost: [2, 1], strong: '選んだ1トラックの進行コスト-1（恒久）', weak: '次の進行1回だけ-1', permWeak: false },
-    DV: { name: '進化加速', cat: 'D', cost: [8, 6], strong: '全トラック進行コスト-{2}（恒久）', weak: '全トラック-{1}（恒久）', weak2: '全トラック進行コスト-{dvDiscW:4}（恒久）', strongTriple: '三段進行をゲーム中 2 回（3 段分の E を合算・手番 1 つ・Lv5 まで）', weakTriple: '三段進行をゲーム中 1 回（3 段分の E を合算・手番 1 つ・Lv5 まで）', permWeak: true }, // strongTriple／weakTriple＝T14（dvMode 'triple'・第71部 §9 D-a）
-    MB: { name: '増殖暴走', cat: 'M', cost: [7, 5], strong: '繁殖変換 -{15}P（各段）＋大量消費(身体)-{mbDisc:8}P', weak: '大量消費(身体)-{mbDisc:8}Pのみ', weak2: '繁殖変換 -{mbBreedDiscWeak:15}P（各段）＋大量消費(身体)-{mbDiscWeak:12}P', strongMulti: '繁殖変換で P の段と生命核の段をそれぞれ 2 段まで同時に ＋ 大量消費(身体)-{mbDisc:8}P', permWeak: true }, // strongMulti＝T14（mbMode 'multi'・第71部 §19 S-c） // 2026-10-22 半減→各段-15P（4段で半減だと P300 の価値になるため）
+    DA: { name: '適応効率', cat: 'D', cost: [2, 1], strong: '選んだ1トラックの進化コスト-1（恒久）', weak: '次の進化1回だけ-1', permWeak: false },
+    DV: { name: '進化加速', cat: 'D', cost: [8, 6], strong: '全トラックの進化コスト-{2}（恒久）', weak: '全トラックの進化コスト-{1}（恒久）', weak2: '全トラックの進化コスト-{dvDiscW:4}（恒久）', strongTriple: '三段進化をゲーム中 2 回（3 段分の E を合算・手番 1 つ・Lv5 まで）', weakTriple: '三段進化をゲーム中 1 回（3 段分の E を合算・手番 1 つ・Lv5 まで）', permWeak: true }, // strongTriple／weakTriple＝T14（dvMode 'triple'・第71部 §9 D-a）
+    MB: { name: '増殖暴走', cat: 'M', cost: [7, 5], strong: '繁殖 -{15}P（各段）＋淘汰(身体)-{mbDisc:8}P', weak: '淘汰(身体)-{mbDisc:8}Pのみ', weak2: '繁殖 -{mbBreedDiscWeak:15}P（各段）＋淘汰(身体)-{mbDiscWeak:12}P', strongMulti: '繁殖で P の段と生命核の段をそれぞれ 2 段まで同時に ＋ 淘汰(身体)-{mbDisc:8}P', permWeak: true }, // strongMulti＝T14（mbMode 'multi'・第71部 §19 S-c） // 2026-10-22 半減→各段-15P（4段で半減だと P300 の価値になるため）
     IM: { name: '代謝亢進', cat: 'I', cost: [8, 6], strong: '好きな1種の収入+3（取得時固定）', weak: '好きな1種の収入+2（取得時固定）', permWeak: true },
-    DG: { name: '遺伝子図書館', cat: 'D', cost: [7, 5], strong: '毎R形質1枚を-{2}Gで購入可（排他不要）', weak: '毎R形質1枚を-{1}Gで購入可（排他不要）', weak2: '毎R形質1枚を-{dgDiscW:4}Gで購入可（排他不要）', permWeak: true }, // 2026-11-05 弱の文を単体で読める形に（ユーザー指摘）
-    JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', strongRes: '知性+1段階＋G+{3}（即時）', strongGate: '知性+1段階＋知性のゲート+1（即時）', strongGem: '知性+1段階＋痕跡+1（即時）', strongCap: '知性+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '知性+1段階＋Lv5★で必ず強効果', weak2: '知性+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
-    JB: { name: '身体覚醒', cat: 'J', cost: [9, 7], strong: '身体+2段階（即時）', strongRes: '身体+1段階＋生命核+1（即時）', strongGate: '身体+1段階＋身体のゲート+1（即時）', strongGem: '身体+1段階＋痕跡+1（即時）', strongCap: '身体+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '身体+1段階＋Lv5★で必ず強効果', weak2: '身体+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
+    DG: { name: '遺伝子図書館', cat: 'D', cost: [7, 5], strong: '毎R形質1枚を-{2}Gで獲得可（排他不要）', weak: '毎R形質1枚を-{1}Gで獲得可（排他不要）', weak2: '毎R形質1枚を-{dgDiscW:4}Gで獲得可（排他不要）', permWeak: true }, // 2026-11-05 弱の文を単体で読める形に（ユーザー指摘）
+    JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', strongRes: '知性+1段階＋G+{3}（即時）', strongGate: '知性+1段階＋知性の臨界+1（即時）', strongGem: '知性+1段階＋痕跡+1（即時）', strongCap: '知性+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '知性+1段階＋Lv5★で必ず強効果', weak2: '知性+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
+    JB: { name: '身体覚醒', cat: 'J', cost: [9, 7], strong: '身体+2段階（即時）', strongRes: '身体+1段階＋生命核+1（即時）', strongGate: '身体+1段階＋身体の臨界+1（即時）', strongGem: '身体+1段階＋痕跡+1（即時）', strongCap: '身体+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '身体+1段階＋Lv5★で必ず強効果', weak2: '身体+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
     // 2026-10-28 ユーザー採用（第42部 N5/N8/N9）：コンボ廃止の補填。序盤に取るほど得な「資源を生む／器官に役立つ」形質
-    NE: { name: '代替燃料', cat: 'N', cost: [3, 2], strong: '器官建造の E を P で払える（E1＝P1）', weak: '器官建造の E を P で払える（E3＝P5・切り上げ）', permWeak: true }, // 2026-10-30 弱 E1＝P2 → E3＝P5（強弱の差を縮める・ユーザー採用）
-    NS: { name: '共生', cat: 'N', cost: [3, 2] /* 2026-10-29 G6→G9（T8）：九腕 39% の是正・AI52 */, strong: '器官建造時、同じ系統の器官を他者が持っていれば G コストなし', weak: '器官建造時、同じ系統の器官を他者が持っていれば G-{1}', permWeak: true },
+    NE: { name: '代替燃料', cat: 'N', cost: [3, 2], strong: '器官形成の E を P で払える（E1＝P1）', weak: '器官形成の E を P で払える（E3＝P5・切り上げ）', permWeak: true }, // 2026-10-30 弱 E1＝P2 → E3＝P5（強弱の差を縮める・ユーザー採用）
+    NS: { name: '共生', cat: 'N', cost: [3, 2] /* 2026-10-29 G6→G9（T8）：九腕 39% の是正・AI52 */, strong: '器官形成時、同じ系統の器官を他者が持っていれば G コストなし', weak: '器官形成時、同じ系統の器官を他者が持っていれば G-{1}', permWeak: true },
     NP: { name: '胞子', cat: 'N', cost: [3, 2], strong: 'ラウンド終了時、残った E を P に換える（E1→P3・上限 E{sporeCap:3}）', weak: 'ラウンド終了時、残った E を P に換える（E1→P2・上限 E{sporeCap:3}）', permWeak: true },
   };
   G.TRAIT_ORDER = ['IE', 'IG', 'IP', 'IB', 'DB', 'DI', 'DA', 'MC', 'DV', 'MB', 'IM', 'DG', 'JI', 'JB'];
   // T7（第14部）の新形質＝突然変異。値段は数値セット側（RULESETS.t7.traitCosts）で上書きする
   Object.assign(G.TRAITS, {
     NC: { name: '群れ本能', cat: 'N', cost: [8, 6], strong: '即時 協調+2', weak: '即時 協調+1', weak2: '即時 協調+1＋P+{3}', permWeak: false, instant: true }, // 文言は T7 の ncCoop [2,1] に合わせた（2026-10-24）
-    NB: { name: '結晶体質', cat: 'N', cost: [10, 8], strong: '献上（生命核）の必要数が1つ少なく、払った生命核を身体の収集物に数える', weak: '献上（生命核）の必要数が1つ少ない', permWeak: true, strongNoCoop: '献上（生命核）の必要数が1つ少ない（強：先着）' }, // T7 nbCoopDisc=false では強も結晶化側のみ // 文言は T7 の nbCoopDisc=false（協調側の割引なし）に合わせた。強弱で効果が同じ点は要検討（2026-10-24）
+    NB: { name: '結晶体質', cat: 'N', cost: [10, 8], strong: '献上（生命核）の必要数が1つ少なく、払った生命核を身体の素材に数える', weak: '献上（生命核）の必要数が1つ少ない', permWeak: true, strongNoCoop: '献上（生命核）の必要数が1つ少ない（強：先駆）' }, // T7 nbCoopDisc=false では強も結晶化側のみ // 文言は T7 の nbCoopDisc=false（協調側の割引なし）に合わせた。強弱で効果が同じ点は要検討（2026-10-24）
     NM: { name: '擬態', cat: 'N', cost: [12, 9], strong: '1ラウンド1回、他者が使用済みの資源獲得枠を無償で使える', weak: '1ラウンド1回、他者が使用済みの資源獲得枠を E{3} を払って使える', weak2: '1ラウンド1回、他者が使用済みの資源獲得枠を E{2} を払って使える', permWeak: true },
     NL: { name: '長命', cat: 'N', cost: [9, 7], strong: '即時 生命核+2', weak: '即時 生命核+1', weak2: '即時 生命核+1＋E+{3}', permWeak: false, instant: true },
-    NF: { name: '先見', cat: 'N', cost: [11, 8], strong: 'Lv3★／Lv5★を後着でも強の報酬で受け取る（痕跡の先着ボーナスは除く）', weak: 'Lv5★のみ', weak2: 'Lv3★／Lv5★のどちらか1回、後着でも強の報酬', permWeak: true },
+    NF: { name: '先見', cat: 'N', cost: [11, 8], strong: 'Lv3★／Lv5★を追随でも強の報酬で受け取る（痕跡の先駆ボーナスは除く）', weak: 'Lv5★のみ', weak2: 'Lv3★／Lv5★のどちらか1回、追随でも強の報酬', permWeak: true },
     NR: { name: '適応放散', cat: 'N', cost: [12, 9], strong: '器官の系統完成（同じ系統3枚）の成熟度+1を、通常の2系統目までに加えて3系統目でも得る', strongTwo: '器官の系統完成が 2 枚で成立する（1 系統だけ・取得時に 2 枚の系統があれば即時）', strongTwo2: '器官の系統完成が 2 枚で成立する（2 系統まで・取得時に 2 枚の系統があれば即時）', weakTwo: '器官の系統完成が 2 枚で成立する（1 系統だけ・取得時に 2 枚の系統があれば即時）', weak: '系統完成のたびE+{3}', permWeak: true }, // strongTwo2／weakTwo＝T14（nrTwoN [2,1]・第71部 §5） // strongTwo＝T13（nrMode 'two'） // 2026-11-05 文言を具体的に（ユーザー「意味がぴんとこない」）
   });
   // 画像の代替（新しいIDは既存の絵を仮に使う）
@@ -306,68 +314,68 @@
   // 試作：上位形質（終盤のGの出口。RS.premium のときだけアクション 'premium' で購入可。形質として数える＝青ゲート・4/8枚目にも算入）
   Object.assign(G.TRAITS, {
     XA: { name: '結晶核', cat: 'X', cost: [12, 10], strong: '即時 祝福+2', weak: '即時 祝福+1', permWeak: false, instant: true, premium: true },
-    XB: { name: '超進化', cat: 'X', cost: [12, 10], strong: '係数+1（上限×7）', weak: '即時 祝福+1', permWeak: false, instant: true, premium: true },
+    XB: { name: '超進化', cat: 'X', cost: [12, 10], strong: '成熟度+1（上限×7）', weak: '即時 祝福+1', permWeak: false, instant: true, premium: true },
     XC: { name: '深層記憶', cat: 'X', cost: [10, 8], strong: '収入時 E+3 G+2（恒久）', weak: '収入時 E+2 G+1（恒久）', permWeak: true, premium: true },
-    XD: { name: '適応爆発', cat: 'X', cost: [10, 8], strong: '全トラック進行コスト-3（恒久）', weak: '全トラック進行コスト-2（恒久）', permWeak: true, premium: true },
+    XD: { name: '適応爆発', cat: 'X', cost: [10, 8], strong: '全トラックの進化コスト-3（恒久）', weak: '全トラックの進化コスト-2（恒久）', permWeak: true, premium: true },
   });
   G.PREMIUM_ORDER = ['XA', 'XB', 'XC', 'XD'];
 
   // 器官・初期固定12種（連結/翻訳/転流/律動）
   G.ORGANS = {
-    Li1: { lin: 'Li', tier: 1, name: '結合膜', strong: '以後、器官を建造するたびE+{2}', weak: '以後、器官を建造するたびE+{1}' },
-    Li2: { lin: 'Li', tier: 2, name: '共役組織', strong: '建造するたび好きな資源+{3}', weak: '建造するたび好きな資源+{2}' },
+    Li1: { lin: 'Li', tier: 1, name: '結合膜', strong: '以後、器官を形成するたびE+{2}', weak: '以後、器官を形成するたびE+{1}' },
+    Li2: { lin: 'Li', tier: 2, name: '共役組織', strong: '形成するたび好きな資源+{3}', weak: '形成するたび好きな資源+{2}' },
     Li3: { lin: 'Li', tier: 3, name: '統合体', strong: '系統を完成させるたび好きな資源+{6}', weak: '同 +{4}' },
-    Tr1: { lin: 'Tr', tier: 1, name: '翻訳膜', strong: '形質購入のGコスト-1', weak: 'ゲーム中3回の形質購入のみ-1' },
-    Tr2: { lin: 'Tr', tier: 2, name: '転写酵素', strong: '形質購入＋アップグレードのG-2', weak: '同 -1' },
-    Tr3: { lin: 'Tr', tier: 3, name: '全翻訳', strong: '形質購入・アップグレード・PブーストのG-3', weak: '同 -2' },
+    Tr1: { lin: 'Tr', tier: 1, name: '翻訳膜', strong: '形質獲得のGコスト-1', weak: 'ゲーム中3回の形質獲得のみ-1' },
+    Tr2: { lin: 'Tr', tier: 2, name: '転写酵素', strong: '形質獲得＋形質強化のG-2', weak: '同 -1' },
+    Tr3: { lin: 'Tr', tier: 3, name: '全翻訳', strong: '形質獲得・形質強化・自己複製のG-3', weak: '同 -2' },
     Fl1: { lin: 'Fl', tier: 1, name: '流路', strong: '収入時、E↔Gを最大3振替（1:1）', weak: '最大2' },
     Fl2: { lin: 'Fl', tier: 2, name: '転換槽', strong: '収入時、最大5振替', weak: '最大4' },
     Fl3: { lin: 'Fl', tier: 3, name: '万象炉', strong: 'いつでもE↔G 1:1振替・上限なし', weak: '収入時のみ上限なし' },
     Rh1: { lin: 'Rh', tier: 1, name: '先導', strong: '毎R、整列後の手番順を1つ前に', weak: 'ゲーム中3回' },
     Rh2: { lin: 'Rh', tier: 2, name: '先手核', strong: '毎R、最初のアクションのEコスト-3', weak: '-1' },
-    Rh3: { lin: 'Rh', tier: 3, name: '先制権', strong: '毎R、初手のみ早取り排他を無視', weak: 'ゲーム中3回' },
-    Ca1: { lin: 'Ca', tier: 1, name: '触媒膜', strong: '以後、器官の建造コスト-1E', weak: 'ゲーム中3回の建造のみ-1E' },
-    Ca2: { lin: 'Ca', tier: 2, name: '促進酵素', strong: 'トラック進行コスト-1E（最低1）', weak: 'ゲーム中3回' },
-    Ca3: { lin: 'Ca', tier: 3, name: '全触媒', strong: '進行＋建造＋資源変換(E→G)のコスト-2E（最低1）', weak: '同 -1E' },
+    Rh3: { lin: 'Rh', tier: 3, name: '先制権', strong: '毎R、初手のみ占有盤の排他を無視', weak: 'ゲーム中3回' },
+    Ca1: { lin: 'Ca', tier: 1, name: '触媒膜', strong: '以後、器官の形成コスト-1E', weak: 'ゲーム中3回の形成のみ-1E' },
+    Ca2: { lin: 'Ca', tier: 2, name: '促進酵素', strong: '進化コスト-1E（最低1）', weak: 'ゲーム中3回' },
+    Ca3: { lin: 'Ca', tier: 3, name: '全触媒', strong: '進化＋形成＋資源変換(E→G)のコスト-2E（最低1）', weak: '同 -1E' },
     Cv1: { lin: 'Cv', tier: 1, name: '収斂膜', strong: '収入時、保有器官数÷2（切捨）の好きな資源', weak: '÷3' },
     Cv2: { lin: 'Cv', tier: 2, name: '群心器', strong: '器官が3・6・9枚に達するたび協調+1（遡って算入）', weak: '4枚ごと' },
     Cv3: { lin: 'Cv', tier: 3, name: '極相体', strong: '器官6枚で収入全種+1／9枚で+2', weak: '器官7枚で全種+1のみ' },
-    Re1: { lin: 'Re', tier: 1, name: '感応点', strong: '建造時、到達済みのLv3★/Lv5★報酬1つの弱版を再発動', weak: '同（恒久効果は一時扱い）' },
-    Re2: { lin: 'Re', tier: 2, name: '共鳴膜', strong: '建造時に色を1つ選ぶ。自分の2色コンボ判定でその色をワイルド扱い', weak: '終了時に1コンボのみ' },
-    Re3: { lin: 'Re', tier: 3, name: '環境掌握', strong: '建造時、到達済み報酬1つの強版を再発動＋環境スキャン-2E', weak: '弱版を再発動＋-1E' },
+    Re1: { lin: 'Re', tier: 1, name: '感応点', strong: '形成時、到達済みのLv3★/Lv5★報酬1つの弱版を再発動', weak: '同（恒久効果は一時扱い）' },
+    Re2: { lin: 'Re', tier: 2, name: '共鳴膜', strong: '形成時に色を1つ選ぶ。自分の2色コンボ判定でその色をワイルド扱い', weak: '終了時に1コンボのみ' },
+    Re3: { lin: 'Re', tier: 3, name: '環境掌握', strong: '形成時、到達済み報酬1つの強版を再発動＋探索-2E', weak: '弱版を再発動＋-1E' },
     St1: { lin: 'St', tier: 1, name: '放出腺', strong: 'アクション：P→E 2:1（最大P15→E7）', weak: '最大P10→E5' },
     St2: { lin: 'St', tier: 2, name: '爆発腔', strong: 'アクション：P→G 3:1（最大P12→G4）', weak: '最大P9→G3' },
-    St3: { lin: 'St', tier: 3, name: '臨界炉', strong: 'ラウンド1回・トークン不要でP→E（最大P15→E7）とP→G（最大P12→G4）を同時に', weak: 'トークン必要（上限は同じ）' },
+    St3: { lin: 'St', tier: 3, name: '臨界炉', strong: 'ラウンド1回・ワーカー不要でP→E（最大P15→E7）とP→G（最大P12→G4）を同時に', weak: 'ワーカー必要（上限は同じ）' },
   };
   // T7（第14部）の器官：系統＝トラックの色に対応する「3段階で育つ体のしくみ」
   Object.assign(G.ORGANS, {
     Mg1: { lin: 'Mg', tier: 1, name: '代謝膜', strong: '収入 E+{2}', weak: '収入 E+{1}' }, // ※organSameEffect では weak は使わない
     Mg2: { lin: 'Mg', tier: 2, name: '代謝腺', strong: '収入 E+{1} G+{1}', weak: '収入 G+{1}' },
-    Mg3: { lin: 'Mg', tier: 3, name: '代謝核', strong: '収入 全種+{mg3Inc:1} ＋ 緑の収集物+1扱い', weak: '収入 全種+{mg3Inc:1}' },
+    Mg3: { lin: 'Mg', tier: 3, name: '代謝核', strong: '収入 全種+{mg3Inc:1} ＋ 器官 1 枚ぶんとして数える', weak: '収入 全種+{mg3Inc:1}' },
     Tl1: { lin: 'Tl', tier: 1, name: '転写膜', strong: '形質のGコスト-{2}', weak: '-{1}' },
     Tl2: { lin: 'Tl', tier: 2, name: '転写体', strong: '形質のGコスト-{3}（系統内の最大値）', weak: '-{2}' },
-    Tl3: { lin: 'Tl', tier: 3, name: '全転写', strong: '形質のGコスト-{4} ＋ 知性のゲート+1', weak: '-{3}' },
-    Hc1: { lin: 'Hc', tier: 1, name: '群心点', strong: '建造時 協調+1', weak: '建造時 協調+1' }, // 文言は T7 の hc1Coop [1,1] に合わせた（2026-10-24）
-    Hc2: { lin: 'Hc', tier: 2, name: '群心網', strong: '群体E/Gで協調+2追加', weak: '群体E/Gで協調+1追加' },
-    Hc3: { lin: 'Hc', tier: 3, name: '群心核', strong: '協調ボーナスの端数を切り上げ ＋ 社会のゲート+1', weak: '協調ボーナスの端数を切り上げ', strongB: '協調ボーナス+{1} ＋ 社会のゲート+1', weakB: '協調ボーナス+{1}' }, // 2026-10-20 上限撤廃に伴い「上限+2/+1」から差し替え。倍化版（hc3Bonus）では strongB/weakB
-    Pu1: { lin: 'Pu', tier: 1, name: '脈動点', strong: '建造時 生命核+1', weak: '同' },
-    Pu2: { lin: 'Pu', tier: 2, name: '脈動腺', strong: '生命核の利回り +{1}/L', weak: '同' },
-    Pu3: { lin: 'Pu', tier: 3, name: '脈動核', strong: '1L＝E{4}／G{4} ＋ 身体のゲート+1', weak: '1L＝E{4}／G{4}' },
-    Cx1: { lin: 'Cx', tier: 1, name: '促進点', strong: 'トラック進行 -{1}E', weak: '同' },
-    Cx2: { lin: 'Cx', tier: 2, name: '促進腺', strong: 'トラック進行 -{2}E（系統内の最大値）', weak: '-{1}E' },
-    Cx3: { lin: 'Cx', tier: 3, name: '全促進', strong: 'トラック進行 -{3}E', weak: '-{2}E' },
+    Tl3: { lin: 'Tl', tier: 3, name: '全転写', strong: '形質のGコスト-{4} ＋ 知性の臨界+1', weak: '-{3}' },
+    Hc1: { lin: 'Hc', tier: 1, name: '群心点', strong: '形成時 協調+1', weak: '形成時 協調+1' }, // 文言は T7 の hc1Coop [1,1] に合わせた（2026-10-24）
+    Hc2: { lin: 'Hc', tier: 2, name: '群心網', strong: '群体同期・群体融合で協調+2', weak: '群体同期・群体融合で協調+1' },
+    Hc3: { lin: 'Hc', tier: 3, name: '群心核', strong: '協調ボーナスの端数を切り上げ ＋ 社会の臨界+1', weak: '協調ボーナスの端数を切り上げ', strongB: '協調ボーナス+{1} ＋ 社会の臨界+1', weakB: '協調ボーナス+{1}' }, // 2026-10-20 上限撤廃に伴い「上限+2/+1」から差し替え。倍化版（hc3Bonus）では strongB/weakB
+    Pu1: { lin: 'Pu', tier: 1, name: '脈動点', strong: '形成時 生命核+1', weak: '同' },
+    Pu2: { lin: 'Pu', tier: 2, name: '脈動腺', strong: '生命核の産出 +{1}/L', weak: '同' },
+    Pu3: { lin: 'Pu', tier: 3, name: '脈動核', strong: '1L＝E{4}／G{4} ＋ 身体の臨界+1', weak: '1L＝E{4}／G{4}' },
+    Cx1: { lin: 'Cx', tier: 1, name: '促進点', strong: '進化 -{1}E', weak: '同' },
+    Cx2: { lin: 'Cx', tier: 2, name: '促進腺', strong: '進化 -{2}E（系統内の最大値）', weak: '-{1}E' },
+    Cx3: { lin: 'Cx', tier: 3, name: '全促進', strong: '進化 -{3}E', weak: '-{2}E' },
   });
   // T15（第71部 §25・§26）：新系統 孵化 Fk／神経 Nv／発光 Lm（定価は基準 12+3／15+6／21+6）と代謝 Lv4 の特殊器官（系統なし＝lin 'Sp'・場の 5 枚から先着 1 枚。名前は仮）
   Object.assign(G.ORGANS, {
     Fk1: { lin: 'Fk', tier: 1, name: '孵化膜', strong: '収入 P+12', weak: '同' },
-    Fk2: { lin: 'Fk', tier: 2, name: '孵化腺', strong: '建造時 P+24 ＋ 収入 P+12', weak: '同' },
-    Fk3: { lin: 'Fk', tier: 3, name: '孵化核', strong: '建造時 繁殖変換を 1 回、手番なしで（支払いは通常・同時払いも可）＋ 収入 P+12', weak: '同' },
-    Nv1: { lin: 'Nv', tier: 1, name: '神経点', strong: 'この器官は形質 1 枚として数える（知性のゲート・形質 3／6 枚目の成熟度）', weak: '同' },
+    Fk2: { lin: 'Fk', tier: 2, name: '孵化腺', strong: '形成時 P+24 ＋ 収入 P+12', weak: '同' },
+    Fk3: { lin: 'Fk', tier: 3, name: '孵化核', strong: '形成時 繁殖を 1 回、手番なしで（支払いは通常・同時払いも可）＋ 収入 P+12', weak: '同' },
+    Nv1: { lin: 'Nv', tier: 1, name: '神経点', strong: 'この器官は形質 1 枚として数える（知性の臨界・形質 3／6 枚目の成熟度）', weak: '同' },
     Nv2: { lin: 'Nv', tier: 2, name: '神経網', strong: '形質 1 枚として数える ＋ 収入 G+3', weak: '同' },
-    Nv3: { lin: 'Nv', tier: 3, name: '神経核', strong: '形質 1 枚として数える ＋ 建造時 祝福+1', weak: '同' },
+    Nv3: { lin: 'Nv', tier: 3, name: '神経核', strong: '形質 1 枚として数える ＋ 形成時 祝福+1', weak: '同' },
     Lm1: { lin: 'Lm', tier: 1, name: '発光点', strong: '収入 G+3', weak: '同' },
-    Lm2: { lin: 'Lm', tier: 2, name: '発光腺', strong: '建造時 祝福+1', weak: '同' },
-    Lm3: { lin: 'Lm', tier: 3, name: '発光核', strong: '建造時 痕跡+1 ＋ 祝福+1', weak: '同' },
+    Lm2: { lin: 'Lm', tier: 2, name: '発光腺', strong: '形成時 祝福+1', weak: '同' },
+    Lm3: { lin: 'Lm', tier: 3, name: '発光核', strong: '形成時 痕跡+1 ＋ 祝福+1', weak: '同' },
     SpE: { lin: 'Sp', tier: 0, special: true, name: '蓄電嚢', strong: '収入 器官 1 枚につき E+3', weak: '同' },
     SpG: { lin: 'Sp', tier: 0, special: true, name: '蓄積腺', strong: '収入 器官 1 枚につき G+2', weak: '同' },
     SpP: { lin: 'Sp', tier: 0, special: true, name: '貯蔵腔', strong: '収入 器官 1 枚につき P+5', weak: '同' },
@@ -376,25 +384,25 @@
   });
   // T13（第70部 §6・organFx 2）：器官効果の第2版の効果文（数は T13 の絶対値）。organDef(x, id) で数値セットに応じて差し替える
   G.ORGANS_V2 = {
-    Cx1: { strong: 'E の支払い −3（進行・器官・共用盤）', weak: '同' },
+    Cx1: { strong: 'E の支払い −3（進化・器官・共用盤）', weak: '同' },
     Cx2: { strong: 'E の支払い −6・G の支払い −3（形質・器官。系統内の最大値）', weak: '同' },
     Cx3: { strong: 'E の支払い −9・G の支払い −6', weak: '同' },
-    Li1: { strong: '建造時、持っている器官 1 枚につき E+6（この器官も数える・6 枚まで）', weak: '同' },
-    Li2: { strong: '建造時、持っている器官 1 枚につき好きな資源+6（6 枚まで）', weak: '同' },
-    Li3: { strong: '建造時、持っている器官 1 枚につき好きな資源+9（6 枚まで）', weak: '同' },
-    Tl1: { strong: '建造時 G+6 ＋ 形質のGコスト−6', weak: '同' },
-    Tl2: { strong: '建造時 G+9 ＋ 知性のゲート+1 ＋ 形質のGコスト−9（系統内の最大値）', weak: '同' },
-    Tl3: { strong: '建造時 形質 1 枚を無料で（G15 以下・強が残っていれば強）＋ 形質のGコスト−12', weak: '同' },
-    Hc1: { strong: '建造時 協調+2', weak: '同' },
-    Hc2: { strong: '建造時 協調+2 ＋ 群体E/Gで協調+2追加', weak: '同' },
-    Mg2: { strong: '建造時 E+6 ＋ 収入 E+3 G+3', weak: '同' },
-    Pu2: { strong: '建造時 生命核+1 ＋ 生命核の利回り +3/L', weak: '同' },
+    Li1: { strong: '形成時、持っている器官 1 枚につき E+6（この器官も数える・6 枚まで）', weak: '同' },
+    Li2: { strong: '形成時、持っている器官 1 枚につき好きな資源+6（6 枚まで）', weak: '同' },
+    Li3: { strong: '形成時、持っている器官 1 枚につき好きな資源+9（6 枚まで）', weak: '同' },
+    Tl1: { strong: '形成時 G+6 ＋ 形質のGコスト−6', weak: '同' },
+    Tl2: { strong: '形成時 G+9 ＋ 知性の臨界+1 ＋ 形質のGコスト−9（系統内の最大値）', weak: '同' },
+    Tl3: { strong: '形成時 形質 1 枚を無料で（G15 以下・強が残っていれば強）＋ 形質のGコスト−12', weak: '同' },
+    Hc1: { strong: '形成時 協調+2', weak: '同' },
+    Hc2: { strong: '形成時 協調+2 ＋ 群体同期・群体融合で協調+2', weak: '同' },
+    Mg2: { strong: '形成時 E+6 ＋ 収入 E+3 G+3', weak: '同' },
+    Pu2: { strong: '形成時 生命核+1 ＋ 生命核の産出 +3/L', weak: '同' },
   };
   // T14（第71部 §11・ユーザー決定）：ゲート+1 を外した 3 段目・転写体の効果文（noOrganGate のとき V2 の上に重ねる）
   G.ORGANS_V3 = {
-    Tl2: { strong: '建造時 G+9 ＋ 弱の形質 1 枚を無料で（弱の値段 G12 以下）＋ 形質のGコスト−9（系統内の最大値）', weak: '同' },
-    Hc3: { strong: '協調ボーナス+{1} ＋ 建造時 Wなし実行権+1', weak: '同', strongB: '協調ボーナス+{1} ＋ 建造時 Wなし実行権+1', weakB: '同' },
-    Pu3: { strong: '建造時 生命核+1 ＋ 1L＝E18／G18', weak: '同' },
+    Tl2: { strong: '形成時 G+9 ＋ 弱の形質 1 枚を無料で（弱の値段 G12 以下）＋ 形質のGコスト−9（系統内の最大値）', weak: '同' },
+    Hc3: { strong: '協調ボーナス+{1} ＋ 形成時 自由行動+1', weak: '同', strongB: '協調ボーナス+{1} ＋ 形成時 自由行動+1', weakB: '同' },
+    Pu3: { strong: '形成時 生命核+1 ＋ 1L＝E18／G18', weak: '同' },
   };
   G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); return o; }; // x＝ゲーム状態 or 数値セット
   G.isChanged = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); return !!(R && R.changed && R.changed.includes(id)); }; // 画面の「改」バッジ
@@ -430,9 +438,9 @@
 
   // 種族（基本4）
   G.SPECIES = {
-    wing:  { name: '光翼類',     order: 1, stock: { E: 2, G: 1, P: 4 }, passive: '身体トラックLv2スタート', type: '速攻', hint: '身体トラックをLv2から始められ、身体Lv3★の先着ボーナスを狙いやすい。' },
+    wing:  { name: '光翼類',     order: 1, stock: { E: 2, G: 1, P: 4 }, passive: '身体トラックLv2スタート', type: '速攻', hint: '身体トラックをLv2から始められ、身体Lv3★の先駆ボーナスを狙いやすい。' },
     arm:   { name: '九腕知性体', order: 2, stock: { E: 2, G: 2, P: 4 }, passive: 'コストG4以下の形質1枚を取得済みでスタート', type: '形質', hint: '形質を1枚持って始まる。形質集めと知性トラックに向く。' },
-    ant:   { name: '万列協和衆', order: 4, stock: { E: 4, G: 1, P: 6 }, passive: '協調1でスタート', type: '協調・初心者向け', hint: '協調トークンで序盤から行動が強く、資源も多め。クセが少なく扱いやすい。' },
+    ant:   { name: '万列協和衆', order: 4, stock: { E: 4, G: 1, P: 6 }, passive: '協調1でスタート', type: '協調・初心者向け', hint: '協調で序盤から行動が強く、資源も多め。クセが少なく扱いやすい。' },
     manta: { name: '群泳双盤',   order: 3, stock: { E: 2, G: 0, P: 0 }, passive: 'P+10 ＋ E収入+1（恒久）', type: '物量', hint: 'P+10とE収入+1で資源が豊富。形質の取得は遅め。' },
   };
 
@@ -443,24 +451,24 @@
 
   // 共有スロット定義（表示順）
   G.SLOTS = [
-    { id: 'E5',   group: 'res',  excl: true,  name: '固定E強',   text: '+5E' },
-    { id: 'EG',   group: 'res',  excl: true,  name: '群体E',     text: '+2E ＋ P10ごとに+1E' },
-    { id: 'G3',   group: 'res',  excl: true,  name: '固定G強',   text: '+3G' },
-    { id: 'GG',   group: 'res',  excl: true,  name: '群体G',     text: '+1G ＋ P10ごとに+1G' },
-    { id: 'P8',   group: 'res',  excl: true,  name: 'P増加',     text: '+8P' },
-    { id: 'ALL',  group: 'res',  excl: true,  name: '全資源獲得', text: '+2E +1G +4P' },
-    { id: 'PB',   group: 'res',  excl: true,  name: 'Pブースト購入', text: 'G2 → P+10' },
-    { id: 'TRK',  group: 'trk',  excl: false, name: 'トラック進行', text: '2/3/5/8E（W必須）', worker: true },
-    { id: 'BRD',  group: 'trk',  excl: false, name: '繁殖変換',  text: 'P30→×4 / P50→×5（W必須）', worker: true },
-    { id: 'ORG',  group: 'org',  excl: false, name: '器官建造',  text: '2E+1G / 3E+1G / 5E+1G（弱はG0）' },
-    { id: 'MB',   group: 'mass', excl: true,  name: '大量消費(身体)', text: 'P20 → 痕跡+1' },
-    { id: 'MI',   group: 'mass', excl: true,  name: '大量消費(知性)', text: 'P20 → G4以下の形質を異なる2種' },
-    { id: 'MS',   group: 'mass', excl: true,  name: '大量消費(社会)', text: 'P20 → 協調+2' },
-    { id: 'MM',   group: 'mass', excl: true,  name: '大量消費(代謝)', text: 'P20 → E+10 G+10' },
-    { id: 'TRT',  group: 'oth',  excl: true,  name: '形質購入／アップグレード', text: 'Gを払い形質を取得・差額+1で上位へ' },
-    { id: 'TRT2', group: 'oth',  excl: true,  name: '形質購入（割増）', text: '通常コスト＋ラウンド数ぶんのE', ext: 'x1' }, // 拡張x1のみ
+    { id: 'E5',   group: 'res',  excl: true,  name: '熱源吸収',   text: '+5E' },
+    { id: 'EG',   group: 'res',  excl: true,  name: '群体同期',     text: '+2E ＋ P10ごとに+1E' },
+    { id: 'G3',   group: 'res',  excl: true,  name: '配列解析',   text: '+3G' },
+    { id: 'GG',   group: 'res',  excl: true,  name: '群体融合',     text: '+1G ＋ P10ごとに+1G' },
+    { id: 'P8',   group: 'res',  excl: true,  name: '個体培養',     text: '+8P' },
+    { id: 'ALL',  group: 'res',  excl: true,  name: '資源合成', text: '+2E +1G +4P' },
+    { id: 'PB',   group: 'res',  excl: true,  name: '自己複製', text: 'G2 → P+10' },
+    { id: 'TRK',  group: 'trk',  excl: false, name: '進化', text: '2/3/5/8E（ワーカー必須）', worker: true },
+    { id: 'BRD',  group: 'trk',  excl: false, name: '繁殖',  text: 'P30→×4 / P50→×5（ワーカー必須）', worker: true },
+    { id: 'ORG',  group: 'org',  excl: false, name: '器官形成',  text: '2E+1G / 3E+1G / 5E+1G（弱はG0）' },
+    { id: 'MB',   group: 'mass', excl: true,  name: '淘汰(身体)', text: 'P20 → 痕跡+1' },
+    { id: 'MI',   group: 'mass', excl: true,  name: '淘汰(知性)', text: 'P20 → G4以下の形質を異なる2種' },
+    { id: 'MS',   group: 'mass', excl: true,  name: '淘汰(社会)', text: 'P20 → 協調+2' },
+    { id: 'MM',   group: 'mass', excl: true,  name: '淘汰(代謝)', text: 'P20 → E+10 G+10' },
+    { id: 'TRT',  group: 'oth',  excl: true,  name: '形質獲得／形質強化', text: 'Gを払い形質を取得・差額+1で上位へ' },
+    { id: 'TRT2', group: 'oth',  excl: true,  name: '形質獲得（割増）', text: '通常コスト＋ラウンド数ぶんのE', ext: 'x1' }, // 拡張x1のみ
     { id: 'MIM',  group: 'oth',  excl: true,  name: '模倣',     text: 'Gを払い 到達済みの Lv2／Lv3★ の即時(!)効果を1つ', rs: 'gSlots' }, // T7 第21部：G を払う先取り枠
-    { id: 'EXP',  group: 'oth',  excl: true,  name: '発現',     text: 'Gを払い 痕跡+1（先着なし）', rs: 'gSlots' },
+    { id: 'EXP',  group: 'oth',  excl: true,  name: '発現',     text: 'Gを払い 痕跡+1（先駆なし）', rs: 'gSlots' },
     { id: 'GEM',  group: 'oth',  excl: true,  name: '献上（遺伝子）', text: 'G(10−形質数・下限5) → 祝福+1' },
     { id: 'TE',   group: 'trib', excl: true,  name: '恩寵枠（エネルギー）', text: 'E → 祝福+1', rs: 'tribute' }, // 第33部：R6 から開く早取りの恩寵枠
     { id: 'TP',   group: 'trib', excl: true,  name: '恩寵枠（個体数）', text: 'P → 祝福+1', rs: 'tribute' },
@@ -469,14 +477,14 @@
     { id: 'TT',   group: 'trib', excl: true,  name: '形質の恩寵', text: 'G → 形質2枚まで無料', rs: 'tribute' },
     { id: 'TA',   group: 'trib', excl: true,  name: '錬金', text: '（廃止・色の廃止により未使用）', rs: 'tribute' },
     { id: 'TB',   group: 'trib', excl: true,  name: '神の加護', text: '資源枠1つを今すぐ（使用済みでも）＋残りの手番は資源枠が倍', rs: 'tribute' },
-    { id: 'TJ',   group: 'trib', excl: true,  name: '跳躍', text: 'トラック進行2回・合計 −E', rs: 'tribute' },
-    { id: 'SCAN', group: 'cu',   excl: false, name: '環境スキャン', text: 'E5 → 他者の最高Lv×2の資源' },
-    { id: 'ADP',  group: 'cu',   excl: false, name: '適応進化',  text: 'L1 → Lv1のトラックを+1（W必須）', worker: true },
+    { id: 'TJ',   group: 'trib', excl: true,  name: '跳躍', text: '進化2回・合計 −E', rs: 'tribute' },
+    { id: 'SCAN', group: 'cu',   excl: false, name: '探索', text: 'E5 → 他者の最高Lv×2の資源' },
+    { id: 'ADP',  group: 'cu',   excl: false, name: '適応進化',  text: 'L1 → Lv1のトラックを+1（ワーカー必須）', worker: true },
     { id: 'CNV',  group: 'cu',   excl: false, name: '資源変換',  text: 'E2→G1 / G2→E1 / P8→E3 / P8→G2' },
     { id: 'RSV',  group: 'cu',   excl: false, name: '予備動員',  text: '無料で E+2 または G+1' },
     { id: 'RST',  group: 'cu',   excl: false, name: '復元',     text: '取られた強の形質を強の効果で取る（強の値段＋E9・1人1回）', rs: 'restore' }, // 2026-11-05 T10（第59部）
     { id: 'AMP',  group: 'cu',   excl: false, name: '増幅',     text: 'E15 → 器官1つ（数の効果を持つ器官）の効果を以後2倍（1人1回）', rs: 'amplify' },
-    { id: 'BST',  group: 'cu',   excl: false, name: '一気立て',  text: '同じ系統の器官を 2〜3 枚、階層順に続けて建造（各々の値段と後追い料・W 1 個）', rs: 'burst' }, // 2026-11-08 T14（第71部 §7・§14）：増幅の置き換え
+    { id: 'BST',  group: 'cu',   excl: false, name: '急速形成',  text: '同じ系統の器官を 2〜3 枚、形態の順に続けて形成（各々の値段と追随の代償・ワーカー 1）', rs: 'burst' }, // 2026-11-08 T14（第71部 §7・§14）：増幅の置き換え
     { id: 'GTH',  group: 'cu',   excl: false, name: '採集',     text: 'E／G／P／協調+1 のどれか1つを少しだけ（置ける場所が無いときの逃げ道）', rs: 'gather' }, // 2026-11-05 ユーザー指示：パスの代わりに「1アクションで E・G・P・協調のどれかを少し得る」弱い共用アクション（値は数値セット gather）
     { id: 'PASS', group: 'cu',   excl: false, name: 'パス',     text: '置ける場所が無いときに（何も得ない）', rs: 'passSlot' }, // v3.65：採集に置き換え（旧セーブの再生用に ACTIONS.pass は残す）
   ];
@@ -488,7 +496,7 @@
   G.SLOT_SET_NAME = { v7: '現行7スロット', m4: '統合4スロット' };
   // 試作：拡張ルール（meta.ext）。x1＝①形質購入枠を2つ（通常／割増=ラウンド数ぶんのE追加）②緊急発進（L1）の対象に形質購入を追加
   //   ③協調発進（協調トークン2個を取り除き、使用済みの資源獲得／形質購入スロットを使う）④大量消費（社会）の協調+2→+3。design.md 未変更
-  G.EXT_NAME = { none: 'なし', x1: '形質2枠＋緊急/協調発進＋社会+3' };
+  G.EXT_NAME = { none: 'なし', x1: '形質2枠＋緊急/協調進出＋社会+3' };
   G.TRAIT_SLOTS = ['TRT', 'TRT2'];
-  G.GROUP_NAME = { trib: '恩寵枠（R6 から・早取り）', res: '資源獲得（早取り排他）', trk: 'トラック進行（排他なし）', org: '器官建造（排他なし）', mass: '大量消費（早取り排他）', oth: 'その他共有（早取り排他）', cu: 'キャッチアップ・運用（排他なし）' };
+  G.GROUP_NAME = { trib: '恩寵枠（R6 から・占有）', res: '資源獲得（占有）', trk: '進化（排他なし）', org: '器官形成（排他なし）', mass: '淘汰（占有）', oth: 'その他共有（占有）', cu: 'キャッチアップ・運用（排他なし）' };
 })((typeof window !== "undefined" ? window : globalThis).G1 = (typeof window !== "undefined" ? window : globalThis).G1 || {});
