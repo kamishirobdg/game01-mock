@@ -18,11 +18,16 @@
     const R = (x) => Object.assign({ pid, type: 'resolve' }, x);
     switch (pd.type) {
       case 'freeMass': return first(st, [R({ kind: 'MB' }), R({ kind: 'MM' }), R({ kind: 'MS' })]);
-      case 'rewardTrait': { if (pd.freeMax) { const RT = RSo(st); const wi = pd.weakOnly ? 1 : 0; const el = G.traitPool(st).filter(t => !G.trait(p, t) && ((RT.traitCosts || {})[t] || G.TRAITS[t].cost)[wi] <= pd.freeMax).sort((a, b) => ((RT.traitCosts || {})[b] || G.TRAITS[b].cost)[wi] - ((RT.traitCosts || {})[a] || G.TRAITS[a].cost)[wi]); /* T14 転写体（weakOnly）＝弱の値段で */ return first(st, el.map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })])); } // T13 全転写：無料なので高い順
+      case 'rewardTrait': { if (!pd.freeMax && p.nextTraitFree && W.rtFree) { // 2026-11-09 O-09：知性 Lv3★（T10 以降）＝次の形質は弱なら無料・強は差額。弱（無料）も候補に入れ、評価＋形質の値打ち（弱の定価＋強の上乗せ分×rtStrong）で選ぶ
+          const RT = RSo(st), ws = scaledW(st), price = (t) => ((RT.traitCosts || {})[t] || G.TRAITS[t].cost); const opts = [];
+          G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => { const pr = price(t); if (G.traitCost(st, p, t).strong) opts.push({ a: R({ trait: t, res: 'E', track: 'body' }), mv: pr[1] + (pr[0] - pr[1]) * W.rtStrong }); opts.push({ a: R({ trait: t, res: 'E', track: 'body', weak: true }), mv: pr[1] }); });
+          let best = null, bv = -Infinity; opts.forEach(o => { try { const s2 = G.tryApply(st, o.a); const v = evaluate(s2, s2.players[pid], ws) + o.mv * ws.G * W.rtFree; if (v > bv) { bv = v; best = o.a; } } catch (e) {} }); if (best) return best; }
+        if (pd.freeMax) { const RT = RSo(st); const wi = pd.weakOnly ? 1 : 0; const el = G.traitPool(st).filter(t => !G.trait(p, t) && ((RT.traitCosts || {})[t] || G.TRAITS[t].cost)[wi] <= pd.freeMax).sort((a, b) => ((RT.traitCosts || {})[b] || G.TRAITS[b].cost)[wi] - ((RT.traitCosts || {})[a] || G.TRAITS[a].cost)[wi]); /* T14 転写体（weakOnly）＝弱の値段で */ return first(st, el.map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })])); } // T13 全転写：無料なので高い順
         return first(st, cheapTraits(st, p).map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })])); }
       case 'specialOrgan': case 'fkBreed': { // T15：特殊器官の選択・孵化核の繁殖（手番なし）＝候補を試して評価が最も高いもの
         const opts = pd.type === 'specialOrgan' ? (st.shared.special || []).map(o => R({ organ: o })) : [R({ nP: 1, nL: 1 }), R({ nP: 1, nL: 0 }), R({ nP: 0, nL: 1 }), R({ skip: true })];
-        let best = null, bv = -Infinity; opts.forEach(a => { try { const s2 = G.tryApply(st, a); const v = evaluate(s2, s2.players[pid], W); if (v > bv) { bv = v; best = a; } } catch (e) {} }); return best || opts[opts.length - 1]; }
+        const spOn = pd.type === 'specialOrgan' && W.spPick && RSo(st).spInc; const wv = spOn ? scaledW(st) : W; // 2026-11-09 O-09：特殊器官は「残り収入回数 × 収入の E 換算 × 器官枚数の見込み」で選ぶ（同点は評価）。旧＝規模で割らない W の評価（E を 3 倍に見て E 系に偏り、連絡腺 0.05/戦）
+        let best = null, bv = -Infinity; opts.forEach(a => { try { const s2 = G.tryApply(st, a); const v = (spOn ? spIncomeE(st, p, a.organ) * W.spPick * 1e3 : 0) + evaluate(s2, s2.players[pid], wv); if (v > bv) { bv = v; best = a; } } catch (e) {} }); return best || opts[opts.length - 1]; }
       case 'dgBuy': return first(st, cheapTraits(st, p).map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })]));
       case 'flSwap': return first(st, [p.E > p.G + G.sc(st, 4) ? R({ dir: 'EG', n: Math.min(pd.max, 2) }) : null, R({ skip: true })]);
       case 'cvIncome': return R({ res: p.E < G.sc(st, 6) ? 'E' : p.G < G.sc(st, 4) ? 'G' : 'P' });
@@ -33,6 +38,15 @@
       case 'bonusAction': return first(st, G.TRACKS.map(t => ({ pid, type: 'track', track: t, pay: 'E', useL: 0 })).concat(st.shared.organField.map(o => ({ pid, type: 'organ', organ: o, useL: 0, li2Res: 'E', li3Res: 'E', regimeRes: 'E' })), [{ pid, type: 'convert', kind: 'EG', n: 1 }, { pid, type: 'reserve', res: 'E' }, R({ skip: true })]));
     }
     return null;
+  }
+
+  // 2026-11-09 O-09：greedy と同じ規模補正をした重み（保留の解決で使う。W そのままだと E/G/P を規模ぶん高く見る）
+  function scaledW(st) { const R = RSo(st), w = Object.assign({}, W), k = R.scale || 1; if (k !== 1) ['E', 'G', 'P'].forEach(r => { w[r] = w[r] / k; }); if (R.gToE) w.G = Math.max(w.G, w.E * R.gToE[1] / R.gToE[0]); return w; }
+  // 特殊器官 id の残りの収入を E 換算で（E1＝1・G1＝1.5・P1＝0.6・協調1＝W.coopE）。器官の枚数は取得後の枚数＋1R あたり W.orgRate 枚の伸び（収入は各ラウンドの頭＝残り rem 回）
+  function spIncomeE(st, p, id) {
+    const R = RSo(st), v = (R.spInc || {})[id]; if (!v) return 0; const rem = (R.rounds || G.ROUNDS) - st.round; let e = 0, coopRoom = (R.coopMax || G.COOP_MAX || 99) - p.coop;
+    for (let j = 1; j <= rem; j++) { const n = p.organs.length + 1 + W.orgRate * (j - 0.5); e += ((v.E || 0) * 1 + (v.G || 0) * 1.5 + (v.P || 0) * 0.6) * n; if (v.coop) { const c = Math.min(coopRoom, Math.floor(n * v.coop)); coopRoom -= c; e += c * W.coopE; } }
+    return e;
   }
 
   // ---------- v1/t1/t2 向け（従来） ----------
@@ -156,7 +170,8 @@
   }
 
   // ---------- 貪欲評価型（greedy）：全候補を tryApply → 評価関数の最大を選ぶ。複数ルートを混ぜる「人間らしい」基準線 ----------
-  const W = { E: 0.5, G: 0.7, P: 0.3, L: 1.5, gate: 1.0, coefFuture: 1.6, shield: 4, coop: 0.8, organ: 1.0, trait: 0.8, inc: 1.0, breedFut: 0, breedProg: 0, plan: 1, deny: 1.5, uncrowded: 1.4, denyFinal: 0.5 }; // 2026-11-05 uncrowded＝序盤、他者が選んでいない主トラックのゲート重み（第53部の「未選択の戦略」を重みに反映）／denyFinal＝最終R、首位がまだ使える空き資源枠（祝福枠）を先に取る妨害の重み（deny に掛かる） // 2026-11-04 plan＝ラウンド単位の計画（1＝有効・--bw=plan=0 で旧 greedy）／deny＝終盤の妨害（首位が使える早取り枠を先に取る）の重み // 2026-11-02 breedFut＝繁栄度1段が「これから得る痕跡」に掛かる見込み／breedProg＝次の繁殖（P150／L3）へ貯める途中の価値。第47部：どちらも種族の計測を光翼に偏らせ（7R 混合で 光翼 58〜67%・万列 1〜11%）得点も上がらないため既定 0（--bw= で試せる）
+  const W = { E: 0.5, G: 0.7, P: 0.3, L: 1.5, gate: 1.0, coefFuture: 1.6, shield: 4, coop: 0.8, organ: 1.0, trait: 0.8, inc: 1.0, breedFut: 0, breedProg: 0, plan: 1, deny: 1.5, uncrowded: 1.4, denyFinal: 0.5,
+    spPick: 1, coopE: 7.5, orgRate: 0.6, coopIncE: 3, herdRate: 0.5, dvUse: 1, dvSave: 0.4, rtFree: 1, rtStrong: 0.5 }; // 2026-11-09 O-09（足した重み・0 で旧の挙動）：spPick＝特殊器官を収入の E 換算で選ぶ／coopE＝協調1 の E 換算（6〜9 の中）／orgRate＝器官枚数の伸び（枚/R）／coopIncE＝協調の収入 1/R に上乗せする E（既存の収入項 w.inc×w.coop≈E4.8 と合わせて≈E7.8）／herdRate＝群体同期・融合の見込み回数/R（群心網の協調+ を残R分）／dvUse＝使った三段進行の価値（手番 2 つ分＝E30＋既存の残り回数の E15 を打ち消す分 × これ）／dvSave＝残りの三段進行への E の貯まり具合の価値（E30 × 貯まり具合 × これ。1 だと E を抱えすぎて種族の配分が動く〔万列 53％〕ので 0.4）／rtFree＝知性 Lv3★ の報酬で弱（無料）も候補に・形質の値打ちの重み／rtStrong＝強の上乗せ分（定価の差）の値打ち // 2026-11-05 uncrowded＝序盤、他者が選んでいない主トラックのゲート重み（第53部の「未選択の戦略」を重みに反映）／denyFinal＝最終R、首位がまだ使える空き資源枠（祝福枠）を先に取る妨害の重み（deny に掛かる） // 2026-11-04 plan＝ラウンド単位の計画（1＝有効・--bw=plan=0 で旧 greedy）／deny＝終盤の妨害（首位が使える早取り枠を先に取る）の重み // 2026-11-02 breedFut＝繁栄度1段が「これから得る痕跡」に掛かる見込み／breedProg＝次の繁殖（P150／L3）へ貯める途中の価値。第47部：どちらも種族の計測を光翼に偏らせ（7R 混合で 光翼 58〜67%・万列 1〜11%）得点も上がらないため既定 0（--bw= で試せる）
   function evaluate(st, p, w) {
     w = w || W; const sc = G.score(st, p); let v = sc.total * (2 / (RSo(st).gemPt || 2)); // 2026-10-28：評価の点は gemPt=2 の尺度に正規化（T8 で ×2 を外しても AI の重みづけが変わらないように。以下の「×2」はこの尺度）
     const RN = RSo(st).rounds || G.ROUNDS; const rem = RN - st.round; const k = rem / RN; // rem＝この後に残るラウンド数
@@ -171,6 +186,9 @@
     const le = RSo(st).lEndGem; if (le) v += Math.min(le.max, Math.floor(p.L / le.per)) * sc.cfC * 2 * (rem === 0 ? 1 : 0.6); // T6 S2：終了時の保有L祝福
     const cv6 = RSo(st).lv6Convert; const R6 = RSo(st); if ((R6.maxLv || 5) >= 6) { const cnt = { body: R6.lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: p.traits.length, social: p.coop, metab: p.organs.length }; const by6 = R6.lv6ConvertBy || {}; G.TRACKS.forEach(t => { const conv = cv6 ? Math.floor(cnt[t] / (by6[t] || cv6)) : 0; if (p.lv[t] >= 6) v += conv * ((R6.lv6RealTracks || []).includes(t) ? sc.cfB : sc.cfC) * 2 * (rem === 0 ? 1 : 0.7); else if (p.lv[t] === 5 && rem > 0) { const c6 = G.stepCost(p, t); if (c6 !== null) { const afford = Math.min(1, (p.E + p.L * (p.lValue || 3)) / c6); v += (1 + conv) * sc.cfC * 2 * 0.35 * afford; } } }); } // T6 L6-A：Lv6 の宝石＋転換の見込み（Lv5 のトラックは E で届く分だけ先読み）
     const inc = G.income(p); v += rem * w.inc * (inc.E * w.E + inc.G * w.G + inc.P * w.P + (inc.coop || 0) * w.coop); // T15 連絡腺の協調収入も
+    if (rem > 0) { const room = Math.max(0, (RSo(st).coopMax || G.COOP_MAX) - p.coop); // 2026-11-09 O-09：協調の収入（連絡腺）・群心網（群体同期／融合の協調+）を「残りR × 1R の協調 × 協調1 の E 換算」で上乗せ（協調の上限まで）
+      if (inc.coop && w.coopIncE) v += Math.min(room, inc.coop * rem) * w.coopIncE * w.E;
+      if (p.herdCoopAdd && RSo(st).herd && w.herdRate) v += Math.min(room, rem * w.herdRate * p.herdCoopAdd) * (w.coopE || 0) * w.E; }
     // 2026-11-02 rem>0：最終ラウンドにはゲートの途中（届かない収集）へ価値を置かない（T8-H1：最終Rの形質・器官・資源枠の空振り）
     if (RSo(st).gates && rem > 0) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cfB * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
     v += ((sc.cfB - 3) + (sc.cfC - 3)) / 2 * rem * w.coefFuture; // C2 では2本の平均（1本なら cf-3 と同値）
@@ -190,12 +208,15 @@
       if (R.organFx === 2) { v += rem * (0.9 + 0.6 + 0.3) * G.cxDisc(p, 'E') * w.E + rem * (0.6 + 0.6) * G.cxDisc(p, 'G') * w.G; } // T13 促進：E の支払い（進行 0.9＋器官 0.6＋共用盤 0.3 回/R）・G の支払い（形質 0.6＋器官 0.6 回/R）。連結は建造時の資源が評価に入るので見込みなし
       else { v += rem * 0.9 * lm('Cx', [1, 2, 3], [1, 1, 2]) * w.E; // 促進：進行 0.9回/R
         const li1 = G.organ(p, 'Li1'); if (li1) v += rem * 0.6 * (li1.strong ? 2 : 1) * k1 * w.E; const li2 = G.organ(p, 'Li2'); if (li2) v += rem * 0.6 * (li2.strong ? 3 : 2) * k1 * w.E; }
-      const dv = G.trait(p, 'DV'); if (dv) { if (R.dvMode === 'triple') v += (p.dv3 || 0) * 15 * w.E; else v += rem * 0.9 * (dv.strong ? 2 : 1) * k1 * w.E; } // T14 三段進行＝残り回数×手番 1 つ（E15 相当） const dg = G.trait(p, 'DG'); if (dg) v += rem * 0.5 * (R.dgDisc ? R.dgDisc[dg.strong ? 0 : 1] : 2 * k1) * w.G;
+      const dv = G.trait(p, 'DV'); if (dv) { if (R.dvMode === 'triple') v += (p.dv3 || 0) * 15 * w.E; else v += rem * 0.9 * (dv.strong ? 2 : 1) * k1 * w.E; } /* T14 三段進行＝残り回数×手番 1 つ（E15 相当） */ const dg = G.trait(p, 'DG'); if (dg) v += rem * 0.5 * (R.dgDisc ? R.dgDisc[dg.strong ? 0 : 1] : 2 * k1) * w.G; // 2026-11-09 O-10：DG の行が上のコメントに飲み込まれていたのを生かした
       const mb = G.trait(p, 'MB'); if (mb && mb.strong && R.mbBreedDisc && R.mbMode !== 'multi') v += Math.min(rem, (R.breed.length - p.breed)) * 0.5 * R.mbBreedDisc * k1 * w.P;
       // 2026-11-04 消費軽減（MC）の見込み：これまで評価に無く（形質1枚ぶんの重みだけ）、G15 の MC は G9 の形質に常に負けて 0.02 枚/戦しか買われなかった。大量消費 0.5回/R × 軽減 を残Rぶん。1回限り（弱／freeOnce の強）は 1回ぶん
       const mcT = G.trait(p, 'MC'); if (mcT) { const fo = R.mcMode === 'freeOnce'; const perm = fo ? (!mcT.strong ? (R.mcDiscWeak !== undefined ? R.mcDiscWeak : R.mcDisc) : 0) : (mcT.strong ? R.mcDisc : 0); v += rem * 0.5 * perm * w.P;
         const once = fo ? (mcT.strong && p.mcFree ? (R.mmCost ? (R.massCost + R.mmCost) / 2 : R.massCost) : 0) : p.next.mass; v += Math.min(1, rem * 0.5) * once * w.P; }
     }
+    if (R.dvMode === 'triple' && (w.dvUse || w.dvSave)) { const dvT = G.trait(p, 'DV'); if (dvT) { // 2026-11-09 O-09：三段進行＝手番 2 つの節約（E30）。使った回数は満額、残りは「打てるトラックの数まで × E の貯まり具合（最安の三段の E に対して）」＝ E を貯めて打つ判断。使うと残りの見込みが満額に変わるので、使うことが損にならない
+      const turn2 = 2 * G.sc(st, 5) * w.E; const tot = (R.dvTriple || [2, 1])[dvT.strong ? 0 : 1]; v += Math.max(0, tot - (p.dv3 || 0)) * (turn2 + 15 * w.E) * (w.dvUse || 0); // 使った回数（上の「残り回数 × E15」が使うと減る分も打ち消す）
+      if (rem > 0 && p.dv3 > 0) { const cs = G.TRACKS.map(t => G.stepCostTriple(p, t)).filter(c => c !== null).sort((a, b) => a - b); let pool = p.E + p.L * (p.lValue || G.sc(st, 3)); for (let i = 0; i < Math.min(p.dv3, cs.length); i++) { v += turn2 * (w.dvSave || 0) * Math.max(0, Math.min(1, pool / Math.max(1, cs[i]))); pool -= cs[i]; } } } } // 2 回目は 1 回目の残りの E で
     // 得点に変換できる資源の潜在価値：P は大量消費(身体)（1宝石＝係数×2点）、G は宝石セット（1R1人）に化ける。残ラウンドがあるときだけ
     if (rem > 0) { const gemValR = (RSo(st).massBodyVirtual ? sc.cfC : sc.cfB) * 2, gemValV = sc.cfC * 2; v += Math.min(2, Math.floor(p.P / Math.max(1, G.massCost(p, 'MB')))) * gemValR * 0.5; if (p.G >= G.gemsetPrice(p)) v += gemValV * 0.3; }
     return v;
