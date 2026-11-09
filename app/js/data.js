@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.88'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.89'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -271,7 +271,7 @@
   G.TRACK_REWARDS_T6_BODY4 = '痕跡+1 ＋ 1L＝E4／G4 ＋ 産出で P も選べる ＋ 結晶化（L2→祝福+1・排他なし）を解放';
   G.TRACK_REWARDS_T7_INTEL = { 2: 'G+{3}', 3: '強：Gを払う占有盤の枠（模倣・発現）を今すぐ1回 G0 で実行（排他無視）／弱：以後それらの G -{1}', 4: '研究：献上（遺伝子）が1ラウンドに何度でも', 5: '強：追随でも常に強効果／弱：G+{6}' };
   // 2026-11-05 T10（第58〜59部）：知性 Lv3★／Lv4 の作り直し・代謝 Lv4 の無料変換撤去
-  G.TRACK_REWARDS_T10_INTEL = { 2: 'G+{3}', 3: '強：次の形質1枚を「弱なら無料・強は差額」で／弱：次の形質1枚 -{3}G', 4: '形質3枚ごとに祝福+1（即時。Lv6の神の裁定とは重ねない）', 5: '強：追随でも常に強効果／弱：G+{6}' };
+  G.TRACK_REWARDS_T10_INTEL = { 2: 'G+{3}', 3: '強：その場で形質1枚を「弱なら無料・強は差額」で（見送ると消える）／弱：次の形質1枚 -{3}G', 4: '形質3枚ごとに祝福+1（即時。Lv6の神の裁定とは重ねない）', 5: '強：追随でも常に強効果／弱：G+{6}' };
   G.TRACK_REWARDS_T10_METAB4 = '以後、器官形成のGコストなし＋追随の代償なし';
   G.TRACK_REWARDS_T15_METAB4 = '代謝 Lv4 に達した順に、残っている特殊器官から 1 枚（値段なし・器官 1 枚に数える）';
   G.MIMIC_EFFECTS = [ // 模倣の対象（!即時効果のみ。◆L+1・∞恒久・手収入は対象外）。誰かがそのLv以上に到達していること

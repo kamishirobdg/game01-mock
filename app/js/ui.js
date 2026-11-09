@@ -455,7 +455,7 @@
     if (R.intelRewards === 'learn' && t === 'intel' && REW_SHORT_T7_INTEL[l]) return REW_SHORT_T7_INTEL[l];
     if (R.intelRewards === 'trait' && t === 'intel' && REW_SHORT_T10_INTEL[l]) return REW_SHORT_T10_INTEL[l]; if (R.metab4 === 'special' && t === 'metab' && l === 4) return '特殊器官 1 枚'; if (R.metab4 === 'organNoG' && t === 'metab' && l === 4) return '器官のG・追随の代償なし'; // T10
     if (R.socialRewards === 'shield' && t === 'social') return REW_SHORT_T4.social[l] || REW_SHORT[t][l]; if (R.intel4 === 'traitDisc' && t === 'intel' && l === 4) return REW_SHORT_T4.intel[4]; return REW_SHORT[t][l]; }
-  const REW_SHORT_T10_INTEL = { 2: 'G+{3}', 3: ['次の形質 弱なら無料', '次の形質 -{3}G'], 4: '形質3枚ごと祝福+1', 5: ['常に強効果', 'G+{6}'] }; // T10（第58〜59部）// 2026-11-05：{n} で規模に合わせる（旧 'G+3' は T10 で G+9 なのに G+3 と表示・-9G／G+18 は T11〔×1〕で合わない）
+  const REW_SHORT_T10_INTEL = { 2: 'G+{3}', 3: ['今すぐ形質 弱なら無料', '次の形質 -{3}G'], 4: '形質3枚ごと祝福+1', 5: ['常に強効果', 'G+{6}'] }; // T10（第58〜59部）// 2026-11-05：{n} で規模に合わせる（旧 'G+3' は T10 で G+9 なのに G+3 と表示・-9G／G+18 は T11〔×1〕で合わない）
   const REW_SHORT = {
     body:   { 2: 'P+8', 3: ['淘汰×1無料', 'P+15'], 4: '淘汰-5', 5: ['淘汰 排他無視+-5', '淘汰-5'] },
     intel:  { 2: 'G+3', 3: ['形質1枚 G-3', 'G+1/R'], 4: '追加行動×1 E半額', 5: ['形質-2・常に強', 'G+6'] },
@@ -901,7 +901,7 @@
         }
         if (viewP(p).nextTraitFree) { // T10：弱なら無料・強は差額。2026-11-07 ユーザー指摘：弱が選択肢に無く（強の差額だけ）、表題も旧文「G-3」だった
           const opts = []; G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => { const s = G.traitCost(st, p, t), w = G.traitCost(st, p, t, undefined, true); if (s.strong) opts.push({ value: t + ':S', label: `${t} ${G.TRAITS[t].name} 強（G${s.G}）` }); opts.push({ value: t + ':W', label: `${t} ${G.TRAITS[t].name} 弱（G${w.G}）` }); });
-          const r = await ask('知性Lv3★先駆：今すぐ形質1枚（弱なら無料・強は差額）', [{ type: 'select', name: 'pick', label: '形質', options: opts, desc: (v) => { if (!v.pick) return ''; const [t, ver] = v.pick.split(':'); return `${ver === 'S' ? '強' : '弱'}：${rtxt(G.traitText(st, t, ver === 'S'))}`; } }, { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }], { skipLabel: '見送る', noCancel: true, note: '見送った場合は、次に買う形質1枚に同じ値引きが付きます。' });
+          const r = await ask('知性Lv3★先駆：今すぐ形質1枚（弱なら無料・強は差額）', [{ type: 'select', name: 'pick', label: '形質', options: opts, desc: (v) => { if (!v.pick) return ''; const [t, ver] = v.pick.split(':'); return `${ver === 'S' ? '強' : '弱'}：${rtxt(G.traitText(st, t, ver === 'S'))}`; } }, { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }], { skipLabel: '見送る', noCancel: true });
           if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); const [t, ver] = r.pick.split(':'); return submit({ pid: p.id, type: 'resolve', trait: t, weak: ver === 'W', useL: +r.useL, res: 'E', track: 'body' });
         }
         const r = await ask(`知性Lv3★先駆：今すぐ形質1枚をG-${pd.disc}で獲得できます`, [traitPickSel(p, pd.disc), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel(pickId), daSel(pickId)], { skipLabel: '見送る', noCancel: true });
