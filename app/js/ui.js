@@ -96,11 +96,13 @@
     return null;
   }
   // 今実行したときの増減（previewGain）をアイコンで
-  function gainChips(d) { const out = []; ['E', 'G', 'P', 'L', 'coop'].forEach(k => { if (d[k]) out.push(pc(k, (d[k] > 0 ? '+' : '') + d[k], d[k] < 0 ? { cls: 'neg' } : null)); }); const gs = G.TRACKS.reduce((a, t) => a + (d['gem_' + t] || 0), 0); if (gs) out.push(pc('gem', '+' + gs)); if (d.gemsets) out.push(pc('bless', '+' + d.gemsets)); return out; }
+  // pay＝支払いの P（淘汰）。「P-84 +18」のように支払いと戻りを分けて出す（2026-11-10 v3.93 ユーザー指摘：差し引きの -66 だと割引に見える）
+  const gainStr = (d, pay) => { if (!pay) return G.gainText(d); const d2 = Object.assign({}, d); const back = (d.P || 0) + pay.P; delete d2.P; return [`P-${pay.P}${back ? (back > 0 ? '+' : '') + back : ''}`, G.gainText(d2)].filter(Boolean).join(' '); };
+  function gainChips(d, pay) { const out = []; if (pay) { out.push(pc('P', '-' + pay.P, { cls: 'neg' })); const back = (d.P || 0) + pay.P; if (back) out.push(pc('P', (back > 0 ? '+' : '') + back, back < 0 ? { cls: 'neg' } : null)); } ['E', 'G', 'P', 'L', 'coop'].forEach(k => { if (pay && k === 'P') return; if (d[k]) out.push(pc(k, (d[k] > 0 ? '+' : '') + d[k], d[k] < 0 ? { cls: 'neg' } : null)); }); const gs = G.TRACKS.reduce((a, t) => a + (d['gem_' + t] || 0), 0); if (gs) out.push(pc('gem', '+' + gs)); if (d.gemsets) out.push(pc('bless', '+' + d.gemsets)); return out; }
   // 枠の中身：アイコン表示なら「名前（小）＋絵」、文字表示なら従来どおり。pid＝picto の識別子（slot id 以外の共用盤の枠は擬似 id）
-  function slotBody(p, pid, name, text, d) {
-    const pic = iconView() ? picto(pid, p) : null; const gain = d ? G.gainText(d) : null;
-    if (pic) return [h('span', { class: 'pname' }, name), h('span', { class: 'picto' }, pic), d && gain ? h('span', { class: 'picto pgain', title: '今実行すると：' + gain }, po('⇒'), gainChips(d)) : null];
+  function slotBody(p, pid, name, text, d, pay) {
+    const pic = iconView() ? picto(pid, p) : null; const gain = d ? gainStr(d, pay) : null;
+    if (pic) return [h('span', { class: 'pname' }, name), h('span', { class: 'picto' }, pic), d && gain ? h('span', { class: 'picto pgain', title: '今実行すると：' + gain }, po('⇒'), gainChips(d, pay)) : null];
     return [h('b', null, name), h('small', null, typeof text === 'string' ? icost(text) : text), gain ? h('small', { class: 'gain' }, `→ ${gain}`) : null];
   }
   function viewToggle() {
@@ -517,10 +519,11 @@
     const reason = !can ? roMsg : (s.id === 'TRT' || s.id === 'TRT2' || s.id === 'ORG' || s.id === 'TRK') ? null : (s.id === 'RST' && !restoreCands(p).length) ? '復元できる形質がありません（他の人が強で取った形質がない）' : (s.id === 'AMP' && !amplifyCands(p).length) ? `増幅できる器官がありません（対象＝${G.ampTargetText(st)}。形成と同時の増幅は器官の場から）` : (s.id === 'BST' && !burstCands(p).length) ? '急速形成できる系統がありません（同じ系統で続けて形成できる器官が 2 枚以上ない）' : check(sample(p, s.id));
     const txt = G.slotText(st, s.id, viewP(p));
     // 獲得量プレビュー：今この枠を使うと実際にいくつ得られるか（協調ボーナス・群体のP・Pブースト等を含む）
-    let d = null; if (can && !reason && (s.group === 'res' || s.group === 'mass' || s.id === 'GEM')) { d = G.previewGain(st, sample(p, s.id)); }
-    const gain = d ? G.gainText(d) : null;
+    let d = null; if (can && !reason && (s.group === 'res' || s.group === 'mass' || s.id === 'GEM')) { d = G.previewGain(st, sample(p, s.id), s.id === 'MI' ? { noTraitFx: true } : null); }
+    const pay = d && s.group === 'mass' && G.massCost(p, s.id) > 0 ? { P: G.massCost(p, s.id) } : null; // 2026-11-10 v3.93：淘汰は支払いと戻りを分けて表示
+    const gain = d ? gainStr(d, pay) : null;
     const tip = (G.slotTip(st, s.id) || txt) + (gain ? `\n今実行すると：${gain}` : '');
-    const body = slotBody(p, s.id, s.name, txt, d);
+    const body = slotBody(p, s.id, s.name, txt, d, pay);
     return actBtn({ class: 'slot' + (iconView() && body[0].className === 'pname' ? ' pic' : '') + (used !== undefined ? ' used' : ''), title: tip, onclick }, reason, ...body, used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
   }
   function sample(p, id) { // 事前判定用の代表アクション

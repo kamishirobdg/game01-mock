@@ -551,7 +551,8 @@
     if (tid === 'DA' && strong) rec.track = opt.track || 'body';
     p.traits.push(rec);
     log(st, p.id, `${p.name}：形質 ${tid} ${t.name}（${strong ? '強' : '弱'}・${how}）`);
-    // 即時効果
+    // 即時効果（st._noTraitFx＝枠の見込み表示用。淘汰(知性)はどの形質を選ぶか決まっていないので、形質の効果は数えず枚数だけ数える・2026-11-10 v3.93 ユーザー指摘）
+    if (!st._noTraitFx) {
     if (!strong) {
       if (tid === 'IE') p.E += sc(p, 6); if (tid === 'IG') p.G += sc(p, 3); if (tid === 'IP') p.P += sc(p, 9); if (tid === 'IB') { p.E += sc(p, 3); p.G += sc(p, 3); }
       if (tid === 'DB') p.next.body += 2; if (tid === 'DI') p.next.intel += 2; if (tid === 'MC' && RS(p).mcMode !== 'freeOnce') p.next.mass += RS(p).mcDisc; if (tid === 'DA') p.next.any += 1;
@@ -575,6 +576,7 @@
     const LS = RS(p).leapStrong; const leap2 = (track) => strong && p.lv[track] < jmax && (LS !== 'res') && (LS !== 'gate') && (LS !== 'gem') && !(LS === 'cap4' && p.lv[track] >= 4); // 'gem'（T14・第71部 §12 J-d）＝強は +1 段＋痕跡+1
     if (tid === 'JI') { if (p.lv.intel < jmax) advanceTrack(st, p, 'intel', '知的跳躍'); if (leap2('intel')) advanceTrack(st, p, 'intel', '知的跳躍'); if (strong && LS === 'res') { p.G += sc(p, 3); log(st, p.id, `${p.name}：知的跳躍（強）G+${sc(p, 3)}`); } if (strong && LS === 'gate') { p.gateBonus = p.gateBonus || {}; p.gateBonus.intel = (p.gateBonus.intel || 0) + 1; log(st, p.id, `${p.name}：知的跳躍（強）知性の臨界+1`); } if (strong && LS === 'gem') addGem(st, p, 'intel', 1, '知的跳躍（強）'); } // T12（第69部 3a）：強＝+1 段＋ゲート+1
     if (tid === 'JB') { if (p.lv.body < jmax) advanceTrack(st, p, 'body', '身体覚醒'); if (leap2('body')) advanceTrack(st, p, 'body', '身体覚醒'); if (strong && LS === 'res') { p.L += 1; log(st, p.id, `${p.name}：身体覚醒（強）L+1`); } if (strong && LS === 'gate') { p.gateBonus = p.gateBonus || {}; p.gateBonus.body = (p.gateBonus.body || 0) + 1; log(st, p.id, `${p.name}：身体覚醒（強）身体の臨界+1`); } if (strong && LS === 'gem') addGem(st, p, 'body', 1, '身体覚醒（強）'); }
+    }
     const n = traitCountC(p); if ((RS(p).traitCoef || [4, 8]).includes(n)) addUpgrade(st, p, `形質${n}枚目`);
     if (p.intel4Vg && n % 3 === 0) { p.gemsets += 1; p.intel4VgN = (p.intel4VgN || 0) + 1; log(st, p.id, `${p.name}：祝福+1（知性 Lv4：形質${n}枚目）→ 祝福 ${p.gemsets}`); } // T10 知性 Lv4
   }
@@ -1307,8 +1309,8 @@
   }
 
   // ---------- 獲得量プレビュー（UI用）：アクションを試し打ちして資源の差分を返す。実行不可なら null ----------
-  function previewGain(st, action) {
-    let s2; try { s2 = tryApply(st, action); } catch (e) { return null; }
+  function previewGain(st, action, o) { // o.noTraitFx＝選ぶ形質の効果を数えない（淘汰(知性)の見込み）
+    let s2; if (o && o.noTraitFx) st._noTraitFx = true; try { s2 = tryApply(st, action); } catch (e) { return null; } finally { delete st._noTraitFx; } if (s2) delete s2._noTraitFx;
     const a = st.players[action.pid], b = s2.players[action.pid]; const d = {};
     ['E', 'G', 'P', 'L', 'coop', 'gemsets'].forEach(k => { const v = (b[k] || 0) - (a[k] || 0); if (v) d[k] = v; });
     G.TRACKS.forEach(t => { const v = b.gems[t] - a.gems[t]; if (v) d['gem_' + t] = v; });
