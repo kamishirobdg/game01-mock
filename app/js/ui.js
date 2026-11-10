@@ -69,7 +69,7 @@
       case 'MB': return [massC('MB'), po('→'), pc('gem', '+1')];
       case 'MI': return R.miMaxCost ? [massC('MI'), po('→'), pc('trait', '×' + (R.miCount || 2), { title: `コストG${R.miMaxCost}以下の形質を異なる${R.miCount || 2}種` }), pbad('≤' + R.miMaxCost, `コストG${R.miMaxCost}以下`)] : null;
       case 'MS': return [massC('MS'), po('→'), pc('coop', '+' + (R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)))];
-      case 'MM': return [massC('MM'), po('→'), pc('E', '+' + sc(10)), pc('G', '+' + sc(10))];
+      case 'MM': return [massC('MM'), po('→'), pc('E', '+' + (R.mmGain || sc(10))), pc('G', '+' + (R.mmGain || sc(10)))]; // T18：mmGain
       case 'TRT': return [pcost('G'), po('→'), pc('trait', '+1')];
       case 'TRT2': return [pcost('G'), pcost('E', st.round), po('→'), pc('trait', '+1')];
       case 'MIM': { const b = R.mimicCost || 4; return [pcost('G', G.gSlotCost(vp, b), b), po('→'), pc('copy', null, { title: '模倣：自分を含む誰かが到達済みの Lv2／Lv3★ の即時効果を1つ' }), pbad('Lv2/3★')]; }
@@ -528,7 +528,7 @@
   }
   function sample(p, id) { // 事前判定用の代表アクション
     const pid = p.id;
-    if (G.RES_SLOTS.includes(id)) return { pid, type: 'res', slot: id, coopRes: 'E', useL: p.L > 0, bypassCoop: st.ext === 'x1' && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) };
+    if (G.RES_SLOTS.includes(id)) return { pid, type: 'res', slot: id, coopRes: 'E', useL: p.L > 0 && !G.RULESETS[st.rules || 'v1'].launchFree, /* T18：useL＝緊急進出（空き枠で 3 倍）なので事前判定・見込みは通常の配置 */ bypassCoop: st.ext === 'x1' && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) };
     if (id === 'PB') return { pid, type: 'res', slot: 'PB' };
     if (['MB', 'MI', 'MS', 'MM'].includes(id)) return { pid, type: 'mass', kind: id, traits: G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (G.RULESETS[st.rules || 'v1'].miMaxCost || 4) && !G.trait(p, t)).slice(0, G.RULESETS[st.rules || 'v1'].miCount || 2) };
     if (id === 'GEM') return { pid, type: 'gemset', useL: Math.min(p.L, 3) };
@@ -554,11 +554,11 @@
   function renderExcl(p, can) {
     const m4 = st.slotSet === 'm4';
     const x1 = st.ext === 'x1';
-    const box = h('div', { class: 'panel excl' + (iconView() ? ' picmode' : '') }, h('h3', null, '占有盤', h('small', { class: 'sub' }, (m4 ? '　資源獲得は4枠（E系／G系／P系／全資源）・各枠1ラウンドに1人、枠内のどちらかを選ぶ。使用済み枠は生命核1の「緊急進出」で突破可（自己複製は不可）' : '　各スロットは1ラウンドに1人だけ。使用済みは生命核1の「緊急進出」で資源獲得スロットのみ突破可') + (G.RULESETS[st.rules || 'v1'].traitShared ? '　【形質共用】形質獲得は排他なし（割増枠なし）。使用済みの資源枠は緊急進出（L1）か協調進出（協調）で突破可。群体同期／群体融合はPを払って資源＋協調+1' + (G.RULESETS[st.rules || 'v1'].bodyAxis === 'L' ? '　【生命核軸】収入時に保有L1個につきE+1。身体はLを投入した回数で上がる' : '') : x1 ? '　【拡張x1】形質獲得は2枠（割増枠＝ラウンド数ぶんのE追加）。使用済みの資源／形質枠は緊急進出（L1）か協調進出（協調）で突破可' : ''))));
+    const box = h('div', { class: 'panel excl' + (iconView() ? ' picmode' : '') }, h('h3', null, '占有盤', h('small', { class: 'sub' }, (m4 ? '　資源獲得は4枠（E系／G系／P系／全資源）・各枠1ラウンドに1人、枠内のどちらかを選ぶ。使用済み枠は生命核1の「緊急進出」で突破可（自己複製は不可）' : (G.RULESETS[st.rules || 'v1'].launchFree ? `　各スロットは1ラウンドに1人だけ。空いている資源枠は生命核1の「緊急進出」で獲得量${G.RULESETS[st.rules || 'v1'].launchFree}倍` : '　各スロットは1ラウンドに1人だけ。使用済みは生命核1の「緊急進出」で資源獲得スロットのみ突破可')) + (G.RULESETS[st.rules || 'v1'].traitShared ? '　【形質共用】形質獲得は排他なし（割増枠なし）。' + (G.RULESETS[st.rules || 'v1'].launchFree ? '使用済みの資源枠は協調進出（協調）で突破可。' : '使用済みの資源枠は緊急進出（L1）か協調進出（協調）で突破可。') + '群体同期／群体融合はPを払って資源＋協調+1' + (G.RULESETS[st.rules || 'v1'].bodyAxis === 'L' ? '　【生命核軸】収入時に保有L1個につきE+1。身体はLを投入した回数で上がる' : '') : x1 ? '　【拡張x1】形質獲得は2枠（割増枠＝ラウンド数ぶんのE追加）。使用済みの資源／形質枠は緊急進出（L1）か協調進出（協調）で突破可' : ''))));
     box.firstChild.appendChild(viewToggle()); if (iconView()) box.appendChild(iconLegend());
     const fv = G.RULESETS[st.rules || 'v1'].finalSlotVg, RNf = G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS, finalR = fv && st.round === RNf; // v3.55 祝福枠：最終ラウンドの資源枠
     const g1 = h('div', { class: 'sgroup' + (finalR ? ' god' : '') }, h('h4', null, (m4 ? '資源獲得（統合4・試作）' : '資源獲得') + (!fv ? '' : finalR ? `（最終ラウンド＝祝福枠：空いている枠にワーカーを置くと資源に加えて祝福+${fv.vg || 1}）` : `（最終ラウンド${RNf}は祝福枠＝空いている枠にワーカーを置くと祝福+${fv.vg || 1} も）`)));
-    const bypassHint = () => { const w = [p.mimic && !(p.round && p.round.mimicUsed) ? (p.mimic === 'free' ? '擬態可（無償）' : `擬態可（E${G.sc(st, 3)}）`) : null, p.L > 0 ? '緊急進出可（L1）' : null, x1 && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) ? `協調進出可（協調${G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2}）` : null].filter(Boolean); /* 2026-10-30：擬態が使えるときは選択前の枠にも表示 */ return w.length ? h('small', { class: 'bypass' }, w.join('・')) : null; };
+    const bypassHint = () => { const w = [p.mimic && !(p.round && p.round.mimicUsed) ? (p.mimic === 'free' ? '擬態可（無償）' : `擬態可（E${G.sc(st, 3)}）`) : null, p.L > 0 && !G.RULESETS[st.rules || 'v1'].launchFree ? '緊急進出可（L1）' : null, x1 && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) ? `協調進出可（協調${G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2}）` : null].filter(Boolean); /* 2026-10-30：擬態が使えるときは選択前の枠にも表示 */ return w.length ? h('small', { class: 'bypass' }, w.join('・')) : null; };
     const resBtn = (s, used) => slotButton(p, can, s, () => onSlot(p, s.id), used !== undefined && G.RES_SLOTS.includes(s.id) ? bypassHint() : null);
     if (m4) Object.entries(G.RES_GROUPS).forEach(([gid, grp]) => { const used = st.shared.used[gid]; const gb = h('div', { class: 'merged' + (used !== undefined ? ' used' : '') }, h('h5', null, grp.name)); grp.slots.forEach(id => gb.appendChild(resBtn(G.SLOT_BY_ID[id], used))); g1.appendChild(gb); });
     else G.SLOTS.filter(s => s.group === 'res').forEach(s => g1.appendChild(resBtn(s, st.shared.used[s.id])));
@@ -696,7 +696,7 @@
     const free = h('div', { class: 'free' }, h('b', null, '無料：'));
     if (p.freeConv || (G.organ(p, 'Fl3') && G.organ(p, 'Fl3').strong)) free.appendChild(h('button', { disabled: !can, onclick: () => onFreeConv(p) }, 'E↔G 1:1変換'));
     if (p.shields > 0) free.appendChild(h('button', { disabled: !can, onclick: () => onSlot(p, null, true) }, '自由行動（資源獲得スロット・手番消費なし）'));
-    if (p.L > 0) free.appendChild(h('button', { disabled: !can, title: '生命核を E か G に換える（手番消費なし・いつでも）。払った個数は身体の素材に数える', onclick: () => onLToRes(p) }, `生命核→資源（L1＝E/G${p.lValue || G.sc(st, 3)}）`)); // 2026-11-05 ユーザー要望：生命核の使用に制限を持たせない＝アクションの前でも資源に換えられる
+    if (p.L > 0 && !G.RULESETS[st.rules || 'v1'].noLToRes) free.appendChild(h('button', { disabled: !can, title: '生命核を E か G に換える（手番消費なし・いつでも）。払った個数は身体の素材に数える', onclick: () => onLToRes(p) }, `生命核→資源（L1＝E/G${p.lValue || G.sc(st, 3)}）`)); // 2026-11-05 ユーザー要望：生命核の使用に制限を持たせない＝アクションの前でも資源に換えられる
     if (free.childNodes.length > 1) box.appendChild(free);
     return box;
   }
@@ -751,9 +751,10 @@
       const RCm = G.RULESETS[st.rules || 'v1']; const spendable = RCm.coopMode === 'spend' && p.coop >= 1;
       if (spendable) fields.push({ type: 'check', name: 'coopSpend', label: `協調1個を払って この枠の資源+${RCm.coopSpendGain || 3}`, value: false });
       if (id === 'ALL' && (p.coop > 0 && RCm.coopMode !== 'spend' || spendable)) fields.push(resSel('coopRes', RCm.coopMode === 'spend' ? '協調を払ったときの資源' : `協調ボーナスの資源`));
-      if (used && G.RES_SLOTS.includes(id)) { const bf = bypassField(p); if (!bf) return toast('使用済みです（生命核があれば緊急進出、拡張x1なら協調で協調進出ができます）', true); fields.push(bf); }
+      if (used && G.RES_SLOTS.includes(id)) { const bf = bypassField(p); if (!bf) return toast(RCm.launchFree ? `使用済みです（協調${RCm.bypassCoopCost || 2}があれば協調進出ができます）` : '使用済みです（生命核があれば緊急進出、拡張x1なら協調で協調進出ができます）', true); fields.push(bf); }
+      if (RCm.launchFree && !used && G.RES_SLOTS.includes(id) && p.L > 0) { const pv = (uL) => { const d = G.previewGain(st, { pid: p.id, type: 'res', slot: id, coopRes: 'E', useL: uL }); return d ? gainStr(d) : ''; }; fields.push({ type: 'select', name: 'launch', label: '置き方', value: '', options: [{ value: '', label: `ワーカーだけ（${pv(false)}）` }, { value: 'L', label: `緊急進出：生命核-1 で獲得量${RCm.launchFree}倍（${pv(true)}）` }] }); } // T18（O-12）：空き枠にワーカーを置くとき、生命核 1 個で獲得量 3 倍
       if (!fields.length) return submit({ pid: p.id, type: 'res', slot: id });
-      const r = await ask(s.name, fields, { note: G.slotTip(st, id) }); if (!r) return; return submit({ pid: p.id, type: 'res', slot: id, coopRes: r.coopRes, useL: r.bypass === 'L', bypassCoop: r.bypass === 'coop', bypassMimic: r.bypass === 'mimic', coopSpend: !!r.coopSpend });
+      const r = await ask(s.name, fields, { note: G.slotTip(st, id) }); if (!r) return; return submit({ pid: p.id, type: 'res', slot: id, coopRes: r.coopRes, useL: r.bypass === 'L' || r.launch === 'L', bypassCoop: r.bypass === 'coop', bypassMimic: r.bypass === 'mimic', coopSpend: !!r.coopSpend });
     }
     if (id === 'BRD') { const R0 = G.RULESETS[st.rules || 'v1']; const c = G.breedCost(p); if (c === null) return toast('繁殖は上限です', true); const bl = R0.breedL; const cf = (k) => R0.coef2 ? '繁栄度×' + (G.coefB(p) + k) : '係数×' + (G.coef(p) + k);
       if (!bl) return confirm(`繁殖：P${c}を支払い${cf(1)}。実行しますか？`) && submit({ pid: p.id, type: 'breed' });
@@ -810,7 +811,7 @@
     const c = G.organCost(st, p, id); if (!c) return toast('今は形成できません（系統内は形態の順・形成済み）', true);
     const fields = [{ type: 'select', name: 'useL', label: '生命核をEの代わりに', options: lOpts(p) }];
     if (p.altFuel) fields.push({ type: 'select', name: 'payP', label: '代替燃料（EをPで払う）', options: [{ value: '', label: `Eで払う（E${c.E}）` }, { value: 'P', label: `Pで払う（P${G.altFuelP(p, c.E)}）${p.P < G.altFuelP(p, c.E) ? '・P不足' : ''}` }] }); // 第42部 N5
-    { const R2 = G.RULESETS[st.rules || 'v1']; if (R2.organFx === 2) { if (G.ORGANS[id].lin === 'Li' && (R2.liRes || [])[G.ORGANS[id].tier - 1]) fields.push(resSel('li2Res', `${G.ORGANS[id].name}の資源（器官 ${Math.min(R2.liCap || 99, p.organs.length + 1)} 枚×${(R2.liPer || [])[G.ORGANS[id].tier - 1]}）`)); } // T13 連結＝建造時に枚数ぶん
+    { const R2 = G.RULESETS[st.rules || 'v1']; if (R2.organFx === 2) { if (G.ORGANS[id].lin === 'Li' && (R2.liRes || [])[G.ORGANS[id].tier - 1]) fields.push(resSel('li2Res', R2.liMode === 'lineage' ? (G.ORGANS[id].tier === 3 ? `${G.ORGANS[id].name}の資源（完成した系統 ${st.shared.lineages.filter(l => G.lineageDone(p, l)).length + 1}×${(R2.liPer || [])[2]}）` : `${G.ORGANS[id].name}の資源（+${(R2.liPer || [])[G.ORGANS[id].tier - 1]}）`) : `${G.ORGANS[id].name}の資源（器官 ${Math.min(R2.liCap || 99, p.organs.length + 1)} 枚×${(R2.liPer || [])[G.ORGANS[id].tier - 1]}）`)); } // T18：統合体＝完成した系統の数（この形成で連結が完成する分 +1） // T13 連結＝建造時に枚数ぶん
       else { if (G.organ(p, 'Li2')) fields.push(resSel('li2Res', '共役組織の資源'));
         if (G.organ(p, 'Li3') && G.lineageCount(p, G.ORGANS[id].lin) === 2) fields.push(resSel('li3Res', '統合体の資源（系統完成）')); } }
     const lins = new Set(p.organs.map(o => G.ORGANS[o.id].lin)); lins.add(G.ORGANS[id].lin); if (lins.size >= 4 && !p.regime) fields.push(resSel('regimeRes', '4 系統そろえた収入+1の資源'));
@@ -820,7 +821,7 @@
   }
   // 使用済み枠の突破手段（緊急発進＝L1／協調発進＝協調2・拡張x1）。手段が無ければ null
   function bypassField(p) {
-    const o = [...(p.mimic && !p.round.mimicUsed ? [{ value: 'mimic', label: p.mimic === 'E3' ? `擬態（E${G.sc(st, 3)}）` : '擬態（無償）' }] : []), ...(p.L > 0 ? [{ value: 'L', label: '緊急進出（生命核-1）' }] : []), ...(st.ext === 'x1' && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) ? [{ value: 'coop', label: `協調進出（協調-${G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2}）` }] : [])];
+    const o = [...(p.mimic && !p.round.mimicUsed ? [{ value: 'mimic', label: p.mimic === 'E3' ? `擬態（E${G.sc(st, 3)}）` : '擬態（無償）' }] : []), ...(p.L > 0 && !G.RULESETS[st.rules || 'v1'].launchFree ? [{ value: 'L', label: '緊急進出（生命核-1）' }] : []), ...(st.ext === 'x1' && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) ? [{ value: 'coop', label: `協調進出（協調-${G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2}）` }] : [])];
     return o.length ? { type: 'select', name: 'bypass', label: '使用済み枠の突破', options: o } : null;
   }
   // 形質購入に使う枠と突破手段の既定（通常枠→割増枠→緊急発進→協調発進）。拡張なしで通常枠が使用済みなら null

@@ -172,7 +172,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   <li><strong>行動</strong>：手番順に<strong>ワーカー1個ずつ</strong>置く。全員が5個使い切るまで繰り返す（置ける場所が無いときは<strong>採集</strong>＝E・G・P・協調のどれかを少しだけ得る）。</li>
   <li><strong>終了判定</strong>：<span id="k-rounds2"></span>ラウンド目が終わったら得点計算。</li>
 </ol>
-<div class="tip">占有盤の枠は「1ラウンドに1人だけ」。使用済みの資源枠は <strong>緊急進出</strong>（生命核1個を払う）か <strong>協調進出</strong>（協調3個を払う）で突破できます。<strong>進出で使った資源枠は獲得量が2倍</strong>（協調ボーナスは通常どおり・自己複製は対象外）。生命核を払うたびに、払った個数が身体トラックの素材になります。</div>
+<div class="tip">占有盤の枠は「1ラウンドに1人だけ」。空いている資源枠にワーカーを置くとき、生命核1個を払うと<strong>緊急進出＝獲得量3倍</strong>（協調ボーナスは通常どおり・自己複製は対象外）。使用済みの資源枠は <strong>協調進出</strong>（協調3個を払う）で突破でき、<strong>獲得量2倍</strong>。生命核を払うたびに、払った個数が身体トラックの素材になります。</div>
 <div class="ex"><div class="q">ラウンド3の開始時、痕跡が P1＝2個、P2＝0個、P3＝1個。新しい手番順は？</div>
   <div class="choices"><button data-ex="order" data-v="0">P1→P3→P2</button><button data-ex="order" data-v="1">P2→P3→P1</button><button data-ex="order" data-v="2">前のラウンドと同じ</button></div><div class="ans" id="ans-order"></div></div>
 </section>
@@ -183,7 +183,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   <div><b><svg class="ico c-e"><use href="#ico-e"/></svg> エネルギー（E）</b><span>進化・器官形成・献上。最も使う資源。</span></div>
   <div><b><svg class="ico c-g"><use href="#ico-g"/></svg> 遺伝子（G）</b><span>形質の獲得専用に近い。復元・献上（遺伝子）にも。E・G・P は互いに替えられない。</span></div>
   <div><b><svg class="ico c-p"><use href="#ico-pop"/></svg> 個体数（P）</b><span>淘汰・繁殖（繁栄度）・群体の枠の支払い。生命核が生む。</span></div>
-  <div><b><svg class="ico c-l"><use href="#ico-life"/></svg> 生命核（L）</b><span>毎ラウンド1個。持てば P を生み、払えば E<span id="k-lval"></span>／G<span id="k-lval2"></span> の代わり（身体 Lv3 で上がる）。支払いの一部に充てても、<strong>手番を使わずにいつでも E か G に換えてもよい</strong>（個人ボードの「生命核→資源」）。払った個数が身体の素材。</span></div>
+  <div><b><svg class="ico c-l"><use href="#ico-life"/></svg> 生命核（L）</b><span>毎ラウンド1個。持てば P を生み、払えば E<span id="k-lval"></span>／G<span id="k-lval2"></span> の代わり（身体 Lv3 で上がる）。支払いの一部に充てられる。空いている資源枠にワーカーを置くとき 1 個払うと<strong>獲得量3倍（緊急進出）</strong>。払った個数が身体の素材。</span></div>
   <div><b>協調</b><span>群体同期・群体融合・淘汰(社会)・群れ本能・群心系の器官で増える（上限 <span id="k-coopmax"></span>）。資源枠を使うたび<strong>協調数ぶん同じ資源が増える</strong>。社会トラックの素材。献上（協調4）・協調進出（3）で払う。</span></div>
   <div><b>自由行動</b><span>社会 Lv3★〜Lv5 で得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）。</span></div>
 </div>
@@ -239,7 +239,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <table class="qt" id="fast"></table>
 <h3>共用盤</h3>
 <table class="qt" id="shared"></table>
-<div class="tip"><strong>淘汰</strong>は個体数 P<span id="k-mass"></span> を払う占有盤の枠（身体＝痕跡+1、知性＝形質、社会＝協調+3、代謝＝P<span id="k-mm"></span> で E+30 G+30）。共用盤の<strong>復元</strong>（取られた強の形質を強の値段＋E で）は各自ゲーム中1回。<strong>採集</strong>（E<span id="k-gthE"></span>／G<span id="k-gthG"></span>／P<span id="k-gthP"></span> のどれか1つ、または P<span id="k-gthCP"></span> を払って協調+<span id="k-gthC"></span>）は置ける場所が無いときの逃げ道で、資源枠よりずっと少ない量です。</div>
+<div class="tip"><strong>淘汰</strong>は個体数 P<span id="k-mass"></span> を払う占有盤の枠（身体＝痕跡+1、知性＝形質、社会＝協調+3、代謝＝P<span id="k-mm"></span> で E+<span id="k-mmg"></span> G+<span id="k-mmg2"></span>）。共用盤の<strong>復元</strong>（取られた強の形質を強の値段＋E で）は各自ゲーム中1回。<strong>採集</strong>（E<span id="k-gthE"></span>／G<span id="k-gthG"></span>／P<span id="k-gthP"></span> のどれか1つ、または P<span id="k-gthCP"></span> を払って協調+<span id="k-gthC"></span>）は置ける場所が無いときの逃げ道で、資源枠よりずっと少ない量です。</div>
 </section>
 
 <section id="c8">
@@ -247,7 +247,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <p><strong>献上</strong>（個人ボードの祭壇 3 マス）＝資源を捧げて<strong><span id="k-tout"></span></strong>。祭壇は遺伝子・生命核・協調の3つで、<strong><span id="k-tlim2"></span></strong>（使った祭壇にはワーカーが残る）。</p>
 <table class="qt" id="trib"></table>
 <p><strong>ラウンド<span id="k-tribR"></span>の開始＝神の到来</strong>。占有盤に<strong>恩寵枠が3つ</strong>開きます（<span id="k-tribpool"></span>種からゲームごとに3種を抽選・1ラウンド1人）。</p>
-<p><strong>最終ラウンド（ラウンド<span id="k-lastR"></span>）＝祝福枠</strong>。空いている資源獲得の枠にワーカーを置くと、資源に加えて<strong>祝福+1</strong>（自己複製も対象。緊急進出・協調進出・自由行動・神の加護の即時枠で使った枠には付きません）。</p>
+<p><strong>最終ラウンド（ラウンド<span id="k-lastR"></span>）＝祝福枠</strong>。空いている資源獲得の枠にワーカーを置くと、資源に加えて<strong>祝福+1</strong>（自己複製も対象。緊急進出でも付く。協調進出・自由行動・神の加護の即時枠で使った枠には付きません）。</p>
 <div class="clist" id="trib-list"></div>
 </section>
 
@@ -283,11 +283,11 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
 <p>スマホ用の1枚版：<a href="img/cheatsheet.png">画像</a>／<a href="img/cheatsheet.pdf">PDF</a>／<a href="cheatsheet.html">ページ</a></p>
 </section>
 </main>
-<footer>ルールの正本は design.md。数値はアプリと同じ data.js／engine.js（数値セット T17＝5ラウンド）から読み込んでいます。2026-11-09 改訂（T17＝T16＋光翼の初期 P21・九腕の初期 E15／T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化／T15＝T14＋器官の造り直し：1 枚ずつは差額払い・系統完成の成熟度は 1・3 系統目・代謝の臨界 2/4/6/8・代謝 Lv4 は特殊器官・器官の恩寵は第 1 形態の定価で第 3 形態まで・新系統 孵化／神経／発光・促進と形質 3 種〔共生・代替燃料・適応放散〕の廃止）。</footer>
+<footer>ルールの正本は design.md。数値はアプリと同じ data.js／engine.js（数値セット T18＝5ラウンド）から読み込んでいます。2026-11-10 改訂（T18＝T17＋緊急進出は空き枠で生命核 1 個・獲得量 3 倍（使用済みの枠は協調進出だけ）・生命核→資源の廃止・連結は統合体＝完成した系統 1 つにつき+12・連絡腺＝収入 協調+1・淘汰(代謝) E+20 G+20・社会 Lv6 の神の裁定＝祝福+3 固定／T17＝T16＋光翼の初期 P21・九腕の初期 E15／T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化／T15＝T14＋器官の造り直し：1 枚ずつは差額払い・系統完成の成熟度は 1・3 系統目・代謝の臨界 2/4/6/8・代謝 Lv4 は特殊器官・器官の恩寵は第 1 形態の定価で第 3 形態まで・新系統 孵化／神経／発光・促進と形質 3 種〔共生・代替燃料・適応放散〕の廃止）。</footer>
 
 <script src="../app/js/icons.js"></script>
-<script src="../app/js/data.js?v=3.94"></script>
-<script src="../app/js/engine.js?v=3.94"></script>
+<script src="../app/js/data.js?v=3.95"></script>
+<script src="../app/js/engine.js?v=3.95"></script>
 <script>
 (function () {
   'use strict';
@@ -369,7 +369,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
   const SHARED = ['GEM', 'BRD', 'ORG', 'SCAN'].concat(R.noConvert ? [] : ['CNV'], R.gather ? ['GTH'] : R.noReserve ? ['PASS'] : ['RSV'], R.restore ? ['RST'] : [], R.amplify ? ['AMP'] : [], R.burst ? ['BST'] : []); // T10：資源変換・予備動員なし／復元・増幅・採集（v3.65 パスの置き換え）／T14：増幅→一気立て
   $('fast').innerHTML = FAST.map(row).join('');
   $('shared').innerHTML = SHARED.map(row).join('') + `<tr><th>献上（生命核）</th><td>L${R.lCrystal} → ${TOUT('L')}（身体 Lv2 で解放・${TL}）</td></tr><tr><th>献上（協調）</th><td>協調${R.coopCrystal} → ${TOUT('coop')}（${TL}）</td></tr>`;
-  num('k-mass', R.massCost); num('k-mm', R.mmCost);
+  num('k-mass', R.massCost); num('k-mm', R.mmCost); num('k-mmg', R.mmGain || 30); num('k-mmg2', R.mmGain || 30);
 
   // ---- 8 献上 ----
   const T = R.tribute; num('k-tribR', T.openRound || 6); num('k-lastR', R.rounds || G.ROUNDS); num('k-tribpool', T.pool.length);
@@ -397,7 +397,7 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
     ['資源獲得（占有盤）', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
     ['淘汰（占有盤）', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace(/^(大量消費|淘汰)/, '')} ${G.slotText(st, id)}`).join('／')],
     ['献上（祭壇）', `遺伝子 G${G.sc(st, T.flatG)} → ${TOUT('G')}／生命核 L${R.lCrystal} → ${TOUT('L')}／協調${R.coopCrystal} → ${TOUT('coop')}（${TL}）`],
-    ['祝福枠（最終R）', '空いている資源枠にワーカーを置くと資源に加えて祝福+1（緊急進出・協調進出・自由行動は対象外）'],
+    ['祝福枠（最終R）', '空いている資源枠にワーカーを置くと資源に加えて祝福+1（緊急進出も対象・協調進出・自由行動は対象外）'],
     ['共用盤', SHARED.filter(id => id !== 'GEM').map(id => `${G.SLOT_BY_ID[id].name} ${G.slotText(st, id)}`).join('／')],
     ['繁栄度・成熟度', `×3〜×7。繁栄度＝繁殖 P${R.breed[0]} の段と L${R.breedL} の段（同時に行ってよい）で+1ずつ／成熟度＝形質${(R.traitCoef || [4, 8]).join('・')}枚目・系統完成（${(R.lineageCoefAt || [1, 2]).join('・')} 系統目）で+1`],
     ['知性 Lv4・代謝 Lv4', '知性 Lv4＝形質3枚ごとに祝福+1／代謝 Lv4＝' + (R.metab4 === 'special' ? '場の特殊器官（' + (R.specialOrgans || []).map(id => G.ORGANS[id].name).join('・') + '）から、代謝 Lv4 に達した順に 1 枚（器官 1 枚に数える）' : '器官形成の G なし・追随の代償なし')],
@@ -408,9 +408,9 @@ footer { max-width:760px; margin:0 auto; padding:0 16px 32px; font-size:12px; co
     ['E／G／P／L', 'エネルギー／遺伝子／個体数／生命核'], ['痕跡', '宇宙に残した影響。終了時に繁栄度を掛ける'], ['祝福', '神からの評価。終了時に成熟度を掛ける'],
     ['繁栄度', '×3〜×7。繁殖で上がる'], ['成熟度', '×3〜×7。形質3・6枚目と系統完成（1・3 系統目）で上がる'], ['占有盤', '各枠1ラウンドに1人だけ'], ['共用盤', '何人でも・何回でも'],
     ['先駆＝強', '最初に到達・取得した人が強い効果、後の人は弱い効果（トラックは E を払って自力で上がった段なら追随でも強）'], ['二段進化', 'E を払う進化で、2段分の E を合算して一度に2段上がる（Lv5 まで・手番1つ）'], ['素材', 'トラックを自動で上げる材料（生命核の投入・形質・協調・器官）'],
-    ['緊急進出', '生命核1個で使用済みの資源枠を使う（獲得量2倍）'], ['協調進出', '協調3個で使用済みの資源枠を使う（獲得量2倍）'], ['自由行動', '社会トラックで得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）'],
+    ['緊急進出', '空いている資源枠にワーカーを置くとき、生命核1個を払うと獲得量3倍（自己複製は対象外）'], ['協調進出', '協調3個で使用済みの資源枠を使う（獲得量2倍）'], ['自由行動', '社会トラックで得る。ワーカーを置かずに資源枠を1つ使える（枠は埋まらない）'],
     ['献上', `資源を捧げて痕跡や祝福を得る（${TOUT3}）。祭壇は3つで${TL}`], ['神の到来', `ラウンド${T.openRound || 6}の開始。恩寵枠が3つ開く`], ['祝福枠', '最終ラウンド、空いている資源枠にワーカーを置くと資源に加えて祝福+1'], ['最果ての痕跡', '終了時、各トラックの単独首位（Lv2以上）に痕跡+1'],
-    ['系統完成', '同じ系統の器官3枚。成熟度+1（1・3 系統目）'], ['差額払い', '器官を 1 枚ずつ形成するとき、同じ系統の 1 つ前の形態の定価（E・G とも）を引いた差額を払う。急速形成は各形態の定価'], ['特殊器官', '代謝 Lv4 に達した順に、場の 5 種の残りから 1 枚を取る。系統には属さないが器官 1 枚に数え、収入で器官の枚数ぶんの資源・協調を生む'], ['復元', '共用盤。誰かに強を取られた形質を、強の値段＋E で強い効果のまま取る（1人1回）'], ['急速形成', '共用盤。同じ系統の器官を 2〜3 枚、形態の順に続けて形成する（各形態の定価と追随の代償・形成時効果あり・ワーカー 1）'], ['三段進化', '進化加速（形質）で、3段分の E を合算して一度に3段上がる（強 2 回／弱 1 回・Lv5 まで）'], ['採集', '共用盤。E・G・P のどれか1つを少しだけ得る（協調は P を払って+1）。置ける場所が無いときの逃げ道'],
+    ['系統完成', '同じ系統の器官3枚。成熟度+1（1・3 系統目）'], ['差額払い', '器官を 1 枚ずつ形成するとき、同じ系統の 1 つ前の形態の定価（E・G とも）を引いた差額を払う。急速形成は各形態の定価'], ['特殊器官', '代謝 Lv4 に達した順に、場の 5 種の残りから 1 枚を取る。系統には属さないが器官 1 枚に数え、収入で資源を生む（器官の枚数ぶん。連絡腺だけは枚数によらず協調+1）'], ['復元', '共用盤。誰かに強を取られた形質を、強の値段＋E で強い効果のまま取る（1人1回）'], ['急速形成', '共用盤。同じ系統の器官を 2〜3 枚、形態の順に続けて形成する（各形態の定価と追随の代償・形成時効果あり・ワーカー 1）'], ['三段進化', '進化加速（形質）で、3段分の E を合算して一度に3段上がる（強 2 回／弱 1 回・Lv5 まで）'], ['採集', '共用盤。E・G・P のどれか1つを少しだけ得る（協調は P を払って+1）。置ける場所が無いときの逃げ道'],
   ];
   $('gl').innerHTML = GL.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('');
 })();

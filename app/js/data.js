@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.94'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.95'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -232,9 +232,15 @@
   G.RULESETS.t17 = Object.assign({}, G.RULESETS.t16, { name: '仮値セットT17（5ラウンド：T16＋光翼 P21・九腕 E15）',
     speciesMod: Object.assign({}, G.RULESETS.t16.speciesMod, { wing: { stock: { E: 12, G: 6, P: 21 } }, arm: { stock: { E: 15, G: 9, P: 18 } } }),
     changed: [] });
+  // 2026-11-10 ORDERS O-12（第71部 §36〜§38・ユーザー承認）：T18＝T17＋緊急進出（空いている資源枠にワーカーを置くとき生命核 1 個で獲得量 3 倍・使用済みの枠への緊急進出は廃止）・生命核→資源の廃止・連結（統合体＝完成した系統 1 つにつき好きな資源+12）・連絡腺＝収入 協調+1・淘汰(代謝) E20+G20・社会 Lv6 の神の裁定＝祝福+3 固定
+  G.RULESETS.t18 = Object.assign({}, G.RULESETS.t17, { name: '仮値セットT18（5ラウンド：T17＋緊急進出 3 倍・生命核→資源の廃止・連結・連絡腺・淘汰(代謝)・社会 Lv6 の神の裁定）',
+    launchFree: 3, noLToRes: true, liMode: 'lineage', liPer: [6, 6, 12], mmGain: 20, lv6Fixed: { social: 3 },
+    spInc: Object.assign({}, G.RULESETS.t17.spInc, { SpC: { coopFlat: 1 } }),
+    spText: Object.assign({}, G.RULESETS.t17.spText, { SpC: '収入 協調+1' }),
+    changed: ['Li1', 'Li2', 'Li3', 'SpC'] });
   G.spText = (R, id) => (R && R.spText && R.spText[id]) || G.ORGANS[id].strong; // 特殊器官の効果文（数値セットで差し替え）
-  G.RULES_VISIBLE = ['t17'];
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17'];
+  G.RULES_VISIBLE = ['t18'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
@@ -408,7 +414,13 @@
     Hc3: { strong: '協調ボーナス+{1} ＋ 形成時 自由行動+1', weak: '同', strongB: '協調ボーナス+{1} ＋ 形成時 自由行動+1', weakB: '同' },
     Pu3: { strong: '形成時 生命核+1 ＋ 1L＝E18／G18', weak: '同' },
   };
-  G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); return o; }; // x＝ゲーム状態 or 数値セット
+  // T18（O-12・第71部 §36 C1）：連結の効果文（liMode 'lineage' のとき V2／V3 の上に重ねる）
+  G.ORGANS_V4 = {
+    Li1: { strong: '形成時 E+6', weak: '同' },
+    Li2: { strong: '形成時 好きな資源+6', weak: '同' },
+    Li3: { strong: '形成時、完成した系統 1 つにつき好きな資源+12（この器官で完成する連結も数える）', weak: '同' },
+  };
+  G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); if (R && R.liMode === 'lineage' && G.ORGANS_V4[id]) o = Object.assign({}, o, G.ORGANS_V4[id]); return o; }; // x＝ゲーム状態 or 数値セット
   G.isChanged = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); return !!(R && R.changed && R.changed.includes(id)); }; // 画面の「改」バッジ
   G.ORGAN_FIELD = ['Li1', 'Li2', 'Li3', 'Tr1', 'Tr2', 'Tr3', 'Fl1', 'Fl2', 'Fl3', 'Rh1', 'Rh2', 'Rh3']; // 初心者固定
   G.LINEAGES = { Li: '連結', Tr: '翻訳', Fl: '転流', Rh: '律動', Ca: '触媒', Cv: '収斂', Re: '感応', St: '応力', Mg: '代謝', Tl: '転写', Hc: '群心', Pu: '脈動', Cx: '促進', Fk: '孵化', Nv: '神経', Lm: '発光', Sp: '特殊' };
