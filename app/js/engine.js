@@ -578,7 +578,7 @@
     if (tid === 'JB') { if (p.lv.body < jmax) advanceTrack(st, p, 'body', '身体覚醒'); if (leap2('body')) advanceTrack(st, p, 'body', '身体覚醒'); if (strong && LS === 'res') { p.L += 1; log(st, p.id, `${p.name}：身体覚醒（強）L+1`); } if (strong && LS === 'gate') { p.gateBonus = p.gateBonus || {}; p.gateBonus.body = (p.gateBonus.body || 0) + 1; log(st, p.id, `${p.name}：身体覚醒（強）身体の臨界+1`); } if (strong && LS === 'gem') addGem(st, p, 'body', 1, '身体覚醒（強）'); }
     }
     const n = traitCountC(p); if ((RS(p).traitCoef || [4, 8]).includes(n)) addUpgrade(st, p, `形質${n}枚目`);
-    if (p.intel4Vg && n % 3 === 0) { p.gemsets += 1; p.intel4VgN = (p.intel4VgN || 0) + 1; log(st, p.id, `${p.name}：祝福+1（知性 Lv4：形質${n}枚目）→ 祝福 ${p.gemsets}`); } // T10 知性 Lv4
+    if (p.intel4Vg) { const k = Math.floor(n / 3) - (p.intel4VgN || 0); if (k > 0) { p.gemsets += k; p.intel4VgN = (p.intel4VgN || 0) + k; log(st, p.id, `${p.name}：祝福+${k}（知性 Lv4：形質${n}枚目）→ 祝福 ${p.gemsets}`); } } // T10 知性 Lv4。2026-11-10 v3.94 O-11：形質の取得で Lv4 に上がった（跳躍）とき、到達時の一括（枚数÷3）とこの「3 の倍数枚目 +1」が同じ枚数で二重に入っていた → 受け取り済みの回数（intel4VgN）との差だけ渡す
   }
   function removeTrait(st, p, tid) {
     const i = p.traits.findIndex(t => t.id === tid); if (i < 0) throw new Error('その形質を持っていません');
