@@ -562,6 +562,7 @@
     const resBtn = (s, used) => slotButton(p, can, s, () => onSlot(p, s.id), used !== undefined && G.RES_SLOTS.includes(s.id) ? bypassHint() : null);
     if (m4) Object.entries(G.RES_GROUPS).forEach(([gid, grp]) => { const used = st.shared.used[gid]; const gb = h('div', { class: 'merged' + (used !== undefined ? ' used' : '') }, h('h5', null, grp.name)); grp.slots.forEach(id => gb.appendChild(resBtn(G.SLOT_BY_ID[id], used))); g1.appendChild(gb); });
     else G.SLOTS.filter(s => s.group === 'res').forEach(s => g1.appendChild(resBtn(s, st.shared.used[s.id])));
+    { const LF = G.RULESETS[st.rules || 'v1'].launchFree; if (LF) { const cands = launchCands(p); const reason = !can ? '他プレイヤーの手番' : p.L <= 0 ? '生命核がありません' : !cands.some(c => !c.ng) ? '緊急進出できる空き枠がありません' : null; g1.appendChild(actBtn({ class: 'launchbtn', onclick: () => onLaunch(p) }, reason, `緊急進出（生命核-1・空き枠の獲得量${LF}倍）`)); } } // 2026-11-10 ユーザー要望：枠ごとに置き方を聞かず、専用ボタンから空き枠を選ぶ
     const g2 = h('div', { class: 'sgroup' }, h('h4', null, (() => { const base = G.RULESETS[st.rules || 'v1'].massCost, mine = G.massCost(viewP(p), 'MI'); return `淘汰（P${mine !== base ? mine + '・軽減後' : base}）`; })()));
     G.SLOTS.filter(s => s.group === 'mass').forEach(s => g2.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     { const T = G.RULESETS[st.rules || 'v1'].tribute; if (T) { const open = st.round >= (T.openRound || 6); const gt = h('div', { class: 'sgroup' + (open ? ' god' : '') }, h('b', { class: 'glabel' }, open ? '神の到来：恩寵枠（占有）' : `恩寵枠（ラウンド${T.openRound || 6}から・神の到来）`)); G.tribSlots(st).map(id => G.SLOT_BY_ID[id]).forEach(s => { if (open) gt.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))); else { const b = slotBody(p, s.id, s.name, G.slotText(st, s.id), null); gt.appendChild(h('button', { class: 'slot locked' + (b[0].className === 'pname' ? ' pic' : ''), disabled: true, title: G.slotTip(st, s.id) }, ...b)); } }); box.appendChild(gt); } }
@@ -731,6 +732,21 @@
     if (r.pay === 'E3') return submit({ pid: p.id, type: 'track', track: t, pay: 'E', useL: +(r.useL || 0), steps: 3 }); // T14 三段進行（進化加速）
     submit({ pid: p.id, type: 'track', track: t, pay: r.pay, useL: +(r.useL || 0) });
   }
+  // T18 緊急進出：空いている資源枠（自己複製を除く）を選んで、生命核 1 個で獲得量 launchFree 倍
+  function launchCands(p) { return G.RES_SLOTS.filter(id => id !== 'PB' && G.slotUsedBy(st, id) === undefined).map(id => ({ id, ng: p.L > 0 ? check({ pid: p.id, type: 'res', slot: id, coopRes: 'E', useL: true }) : '生命核がありません' })); }
+  async function onLaunch(p) {
+    const RCm = G.RULESETS[st.rules || 'v1']; const cands = launchCands(p);
+    const pv = (id) => { const d = G.previewGain(st, { pid: p.id, type: 'res', slot: id, coopRes: 'E', useL: true }); return d ? gainStr(d) : ''; };
+    const opts = cands.map(c => ({ value: c.id, label: `${G.SLOT_BY_ID[c.id].name}（${c.ng ? '不可：' + c.ng : pv(c.id)}）`, disabled: !!c.ng }));
+    const first = cands.find(c => !c.ng); if (!first) return toast('緊急進出できる空き枠がありません', true);
+    const spendable = RCm.coopMode === 'spend' && p.coop >= 1;
+    const r = await ask(`緊急進出（生命核-1・獲得量${RCm.launchFree}倍）`, [
+      { type: 'select', name: 'slot', label: '空いている資源枠', value: first.id, options: opts, desc: v => (G.slotTip(st, v.slot) || G.slotText(st, v.slot, viewP(p)) || '').split(/。(使用済み|空いている枠)/)[0] },
+      ...(spendable ? [{ type: 'check', name: 'coopSpend', label: `協調1個を払って この枠の資源+${RCm.coopSpendGain || 3}`, value: false }] : []),
+      Object.assign(resSel('coopRes', RCm.coopMode === 'spend' ? '協調を払ったときの資源' : '協調ボーナスの資源'), { when: v => v.slot === 'ALL' && (p.coop > 0 && RCm.coopMode !== 'spend' || spendable) }),
+    ], { note: `所持 L${p.L}。払った生命核は身体の投入に数えます。` }); if (!r) return;
+    return submit({ pid: p.id, type: 'res', slot: r.slot, coopRes: r.coopRes || 'E', useL: true, coopSpend: !!r.coopSpend });
+  }
   async function onSlot(p, id, shield) {
     if (shield) {
       // Wなし実行（社会性の権利）：資源獲得スロット1つ or 個人カード1枚。コマを置かないのでスロットを占有しない
@@ -752,9 +768,9 @@
       if (spendable) fields.push({ type: 'check', name: 'coopSpend', label: `協調1個を払って この枠の資源+${RCm.coopSpendGain || 3}`, value: false });
       if (id === 'ALL' && (p.coop > 0 && RCm.coopMode !== 'spend' || spendable)) fields.push(resSel('coopRes', RCm.coopMode === 'spend' ? '協調を払ったときの資源' : `協調ボーナスの資源`));
       if (used && G.RES_SLOTS.includes(id)) { const bf = bypassField(p); if (!bf) return toast(RCm.launchFree ? `使用済みです（協調${RCm.bypassCoopCost || 2}があれば協調進出ができます）` : '使用済みです（生命核があれば緊急進出、拡張x1なら協調で協調進出ができます）', true); fields.push(bf); }
-      if (RCm.launchFree && !used && G.RES_SLOTS.includes(id) && p.L > 0) { const pv = (uL) => { const d = G.previewGain(st, { pid: p.id, type: 'res', slot: id, coopRes: 'E', useL: uL }); return d ? gainStr(d) : ''; }; fields.push({ type: 'select', name: 'launch', label: '置き方', value: '', options: [{ value: '', label: `ワーカーだけ（${pv(false)}）` }, { value: 'L', label: `緊急進出：生命核-1 で獲得量${RCm.launchFree}倍（${pv(true)}）` }] }); } // T18（O-12）：空き枠にワーカーを置くとき、生命核 1 個で獲得量 3 倍
+      // T18（O-12）の緊急進出（空き枠・生命核 1 で 3 倍）は占有盤の専用ボタン（onLaunch）から。枠を押したときは聞かない（2026-11-10 ユーザー要望）
       if (!fields.length) return submit({ pid: p.id, type: 'res', slot: id });
-      const r = await ask(s.name, fields, { note: G.slotTip(st, id) }); if (!r) return; return submit({ pid: p.id, type: 'res', slot: id, coopRes: r.coopRes, useL: r.bypass === 'L' || r.launch === 'L', bypassCoop: r.bypass === 'coop', bypassMimic: r.bypass === 'mimic', coopSpend: !!r.coopSpend });
+      const r = await ask(s.name, fields, { note: G.slotTip(st, id) }); if (!r) return; return submit({ pid: p.id, type: 'res', slot: id, coopRes: r.coopRes, useL: r.bypass === 'L', bypassCoop: r.bypass === 'coop', bypassMimic: r.bypass === 'mimic', coopSpend: !!r.coopSpend });
     }
     if (id === 'BRD') { const R0 = G.RULESETS[st.rules || 'v1']; const c = G.breedCost(p); if (c === null) return toast('繁殖は上限です', true); const bl = R0.breedL; const cf = (k) => R0.coef2 ? '繁栄度×' + (G.coefB(p) + k) : '係数×' + (G.coef(p) + k);
       if (!bl) return confirm(`繁殖：P${c}を支払い${cf(1)}。実行しますか？`) && submit({ pid: p.id, type: 'breed' });

@@ -1375,7 +1375,7 @@
     if (id === 'MB') return `P${mass('MB')} → 痕跡+1`;
     if (id === 'MI') return R.miMaxCost ? `P${mass('MI')} → G${R.miMaxCost}以下の形質${R.miCount || 2}種` : `P${mass('MI')} → G4以下の形質を異なる2種`;
     if (id === 'MS') return `P${mass('MS')} → 協調+${R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)}`;
-    if (id === 'MM') return `P${mass('MM')} → E+${sc(st, 10)} G+${sc(st, 10)}`;
+    if (id === 'MM') return `P${mass('MM')} → E+${R.mmGain || sc(st, 10)} G+${R.mmGain || sc(st, 10)}`; // T18：mmGain（v3.96 で短文も）
     if (id === 'RST') return `強の値段＋E${(R.restore || {}).E || 0} → 取られた強の形質を強の効果で（1人1回）`;
     if (id === 'AMP') return `E${(R.amplify || {}).E || 0} → 器官1つ（${(R.amplify || {}).organs ? '数の効果を持つ器官' : ampTargetText(st)}）の効果を以後2倍（1人1回）`;
     if (id === 'BST') return `同じ系統の器官を 2〜${(R.burst || {}).max || 3} 枚続けて形成（各々の${R.organCumulative ? '定価（差額にならない）' : '値段'}・ワーカー 1）`;
