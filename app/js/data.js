@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.98'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.99'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -259,8 +259,15 @@
   G.RULESETS.t20 = Object.assign({}, G.RULESETS.t19, { name: '仮値セットT20（5ラウンド：T19−収入の即時（代謝・器官とも次の収入から）・★の強は自力で上げた段だけ追随でも・神経 1・1・2 枚ぶん・身体 Lv6 L4）',
     incNow: false, noIncNowOrg: true, autoWeak: true, nvW: [1, 1, 2], lv6Pay: Object.assign({}, G.RULESETS.t19.lv6Pay, { body: { L: 4 } }) });
   G.spText = (R, id) => (R && R.spText && R.spText[id]) || G.ORGANS[id].strong; // 特殊器官の効果文（数値セットで差し替え）
-  G.RULES_VISIBLE = ['t20'];
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20'];
+  // T21（2026-11-11 ユーザー指示・試遊 T20-H1：人の卓で P1 が 292 点）＝T20 ＋ 献上（遺伝子）は生命核で払えない（noLTribute）＋ Lv6 のコストを上げる（既に十分な点数源なので割が悪くなってもよい）
+  //   ユーザー指示（2026-11-12）：トラックごとに難しさは違ってよい。協調は 12 だけ（上限 12・ほかのコストは足さない）。主に知性と代謝のコストを上げる
+  //   計測用：t21a＝知性 G84・代謝 E150（×1.25）／t21b＝知性 G99・代謝 E180（×1.5）。身体 L4・社会 協調12 は据え置き
+  G.RULESETS.t21a = Object.assign({}, G.RULESETS.t20, { name: '計測用T21a（T20＋献上（遺伝子）の生命核代用なし＋知性・代謝 Lv6 ×1.25）', noLTribute: true, lv6Pay: { body: { L: 4 }, intel: { G: 84 }, social: { coop: 12 }, metab: { E: 150 } } });
+  G.RULESETS.t21b = Object.assign({}, G.RULESETS.t20, { name: '計測用T21b（T20＋献上（遺伝子）の生命核代用なし＋知性・代謝 Lv6 ×1.5）', noLTribute: true, lv6Pay: { body: { L: 4 }, intel: { G: 99 }, social: { coop: 12 }, metab: { E: 180 } } });
+  // T21（2026-11-12 ユーザー決定：A 案で試す）＝t21a と同じ
+  G.RULESETS.t21 = Object.assign({}, G.RULESETS.t21a, { name: 'T21（T20＋献上（遺伝子）の生命核代用なし＋Lv6 のコスト 知性 G84・代謝 E150）' });
+  G.RULES_VISIBLE = ['t21'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };

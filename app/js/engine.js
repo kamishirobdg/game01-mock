@@ -878,6 +878,7 @@
   ACTIONS.gemset = (st, p, a) => {
     const bk = a.bulk && RS(p).tributeBulk; if (a.bulk && !bk) throw new Error('この数値セットにまとめ献上はありません'); // 試作 tributeBulk（第48部）：{mult, vg}＝コスト×mult で祝福 vg
     const c = bk ? Math.ceil(gemsetPrice(p) * bk.mult) : gemsetPrice(p); const cl = RS(p).gemsetShared ? { bypass: null } : claimSlot(st, p, 'GEM', { useL: a.bypassL }); tribOnce(st, p, 'G', '遺伝子'); useToken(p, false);
+    if (RS(p).noLTribute && a.useL > 0) throw new Error('献上（遺伝子）は生命核で払えません'); // T21（2026-11-11 ユーザー指示）
     const r = payG(p, c, a.useL); const outG = bk ? (p.gemsets += bk.vg, `→ 祝福 ${p.gemsets}`) : tribOut(st, p, 'G', 'intel', '遺伝子'); if (bk) log(st, p.id, `${p.name}：まとめ献上（遺伝子）→ 祝福+${bk.vg}`); // 試作 tributeVg（第47部）：献上1回の祝福数（数値＝全品目／{G,L,coop,E,P}＝品目別）
     afterAction(st, p, `献上（遺伝子G${r.G}${r.L ? '+L' + r.L : ''}${cl.bypass ? '・' + bypassDesc(cl.bypass) : ''}）${outG}`, true);
     return true;
@@ -1449,6 +1450,7 @@
     if (R.metab4 === 'special' && track === 'metab' && lv === 4) s = G.TRACK_REWARDS_T15_METAB4; // T15
     if (R.bodyAxis === 'L' && track === 'body' && G.TRACK_REWARDS_T5_BODY[lv]) s = G.TRACK_REWARDS_T5_BODY[lv];
     if (R.bodyAxis === 'L' && track === 'body' && lv === 4 && R.bodyLv4Gem && R.lCrystal) s = G.TRACK_REWARDS_T6_BODY4;
+    if (R.joinNow && track === 'social' && lv === 3) s = s.replace('自由行動+1', '合流進出 1 回（その場で使う）'); // 2026-11-11 ユーザー指摘（T20-H1）：Lv3★ 強の文が旧「自由行動+1」のまま
     if (R.joinNow && track === 'social') s = { 4: '合流進出 1 回（その場で資源枠を 1 つ使う・使用済みも自己複製も可・使わなければ消える）', 5: '強：協調+1＋合流進出 2 回／弱：協調+1＋合流進出 1 回（その場で使う）' }[lv] || s; // T19（O-13 #1・#2）
     if ((R.incNow || R.metab5Inc) && track === 'metab') { const M5 = R.metab5Inc, N = R.incNow ? '（得たときにも 1 回）' : ''; s = { 2: 'E収入+{1}' + N, 3: '強：E収入+{1}かつG収入+{1}' + N + '／弱：即時E+{8}', 5: M5 ? `強：収入が全種+${M5[0]}／弱：全種+${M5[1]}${N}` : s }[lv] || (lv === 4 && R.incNow ? s + '（取った特殊器官の収入は、そのときにも 1 回）' : s); } /* T20：incNow なし＝即時の注記を出さない */ // T19（O-13 #3・#4）
     return txt(st, s);
@@ -1462,5 +1464,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { advanceTrack, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});
