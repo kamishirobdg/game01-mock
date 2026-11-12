@@ -221,7 +221,7 @@
       const turn2 = 2 * G.sc(st, 5) * w.E; const tot = (R.dvTriple || [2, 1])[dvT.strong ? 0 : 1]; v += Math.max(0, tot - (p.dv3 || 0)) * (turn2 + 15 * w.E) * (w.dvUse || 0); // 使った回数（上の「残り回数 × E15」が使うと減る分も打ち消す）
       if (rem > 0 && p.dv3 > 0) { const cs = G.TRACKS.map(t => G.stepCostTriple(p, t)).filter(c => c !== null).sort((a, b) => a - b); let pool = p.E + p.L * (p.lValue || G.sc(st, 3)); for (let i = 0; i < Math.min(p.dv3, cs.length); i++) { v += turn2 * (w.dvSave || 0) * Math.max(0, Math.min(1, pool / Math.max(1, cs[i]))); pool -= cs[i]; } } } } // 2 回目は 1 回目の残りの E で
     // 得点に変換できる資源の潜在価値：P は大量消費(身体)（1宝石＝係数×2点）、G は宝石セット（1R1人）に化ける。残ラウンドがあるときだけ
-    if (rem > 0) { const gemValR = (RSo(st).massBodyVirtual ? sc.cfC : sc.cfB) * 2, gemValV = sc.cfC * 2; v += Math.min(2, Math.floor(p.P / Math.max(1, G.massCost(p, 'MB')))) * gemValR * 0.5; if (p.G >= G.gemsetPrice(p)) v += gemValV * 0.3; }
+    if (rem > 0) { const gemValR = (RSo(st).massBodyVirtual ? sc.cfC : sc.cfB) * 2, gemValV = sc.cfC * 2; v += Math.min(2, Math.floor(p.P / Math.max(1, G.massCost(p, 'MB')))) * gemValR * 0.5; if (RSo(st).altar) { const nv = G.altarNextVg(p); if (nv && G.ALTAR_KEYS.some(k2 => !(p.tribGame && p.tribGame[k2]) && G.altarCost(p, k2) !== null && p[k2] >= G.altarCost(p, k2))) v += nv * sc.cfC * 2 * 0.3; } /* T23：次の払い口で得る祝福の見込み */ else if (p.G >= G.gemsetPrice(p)) v += gemValV * 0.3; }
     return v;
   }
   function candidates(st, p) {
@@ -246,7 +246,8 @@
     ['MB', 'MI', 'MS', 'MM'].forEach(k => { out.push(A({ type: 'mass', kind: k, traits: cheap2 })); if (used(k) && p.bypassWide && p.L > 0) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassL: true })); if (used(k) && G.coopBypassable(st, k, p) && p.coop >= (RSo(st).bypassCoopCost || 2)) out.push(A({ type: 'mass', kind: k, traits: cheap2, bypassCoop: true })); }); // bypassCoopWide：使用済みの大量消費を協調発進で
     const tslots = [{}, { slot: 'TRT2' }]; if (used('TRT') || used('TRT2')) { if (p.coop >= (RSo(st).bypassCoopCost || 2) && st.ext === 'x1') tslots.push({ bypassCoop: true }); if (p.L > 0) tslots.push({ bypassL: true }); }
     G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => { const tc = G.traitCost(st, p, t); const c = tc.G; tslots.forEach(sl => out.push(A(Object.assign({ type: 'trait', trait: t, useL: lFor(c, p.G), res: 'E', track: 'intel' }, sl)))); if (RSo(st).traitChoice && tc.strong) { const cw = G.traitCost(st, p, t, undefined, true).G; out.push(A({ type: 'trait', trait: t, useL: lFor(cw, p.G), res: 'E', track: 'intel', weak: true })); } }); // traitChoice：弱（安い）も候補に
-    out.push(A({ type: 'gemset', useL: lFor(G.gemsetPrice(p), p.G) }));
+    if (RSo(st).altar) G.ALTAR_KEYS.forEach(k => { if (!(p.tribGame && p.tribGame[k]) && G.altarCost(p, k) !== null && p[k] >= G.altarCost(p, k)) out.push(A({ type: 'altar', res: k })); }); // T23（O-19）：祭壇の払い口 5 つ（評価は得点の祝福＋下の見込み）
+    else out.push(A({ type: 'gemset', useL: lFor(G.gemsetPrice(p), p.G) }));
     if (RSo(st).tributeBulk) { const bk = RSo(st).tributeBulk; out.push(A({ type: 'gemset', useL: lFor(Math.ceil(G.gemsetPrice(p) * bk.mult), p.G), bulk: true })); const T2 = RSo(st).tribute; if (T2 && st.round >= (T2.openRound || 6)) out.push(A({ type: 'tribute', res: 'E', bulk: true }), A({ type: 'tribute', res: 'P', bulk: true })); } // 試作 tributeBulk
     if (RSo(st).tributeAll) out.push(A({ type: 'tributeAll' })); // 試作 tributeAll
     { const T = RSo(st).tribute; if (T && st.round >= (T.openRound || 6)) { if (T.shared) out.push(A({ type: 'tribute', res: 'E' }), A({ type: 'tribute', res: 'P' })); G.tribSlots(st).forEach(sl => { const def = T.slots[sl]; if (!def) return; // 献上（第33部）・恩寵枠（第35部：この卓で開いている枠だけ）
@@ -301,7 +302,7 @@
     const RN = R.rounds || G.ROUNDS;
     if (st.round === RN && bv <= base + 1e-9 && (p.left.W + p.left.AT) >= 2) {
       const SETUP = (a) => a.type === 'res' || a.type === 'convert' || a.type === 'gToE' || a.type === 'card' || a.type === 'scan' || (a.type === 'tributeSlot' && a.res);
-      const SCORE = (a) => ['breed', 'tribute', 'tributeAll', 'tributeSlot', 'track', 'mass', 'trait', 'organ', 'burst', 'gemset', 'lCrystal', 'coopCrystal', 'express', 'premium', 'crystal'].includes(a.type);
+      const SCORE = (a) => ['breed', 'tribute', 'tributeAll', 'tributeSlot', 'track', 'mass', 'trait', 'organ', 'burst', 'gemset', 'altar', 'lCrystal', 'coopCrystal', 'express', 'premium', 'crystal'].includes(a.type);
       let b2 = null, b2v = base + 1e-9;
       for (const a1 of candidates(st, p).filter(SETUP)) { let s1; try { s1 = G.tryApply(st, a1); } catch (e) { continue; }
         const p1 = s1.players[pid]; for (const a2 of candidates(s1, p1).filter(SCORE)) { let s2; try { s2 = G.tryApply(s1, a2); } catch (e) { continue; } const v = evaluate(s2, s2.players[pid], w); if (v > b2v) { b2v = v; b2 = a1; } } }

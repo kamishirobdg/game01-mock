@@ -879,6 +879,7 @@
 
   // 宝石セット： {useL}
   ACTIONS.gemset = (st, p, a) => {
+    if (RS(p).altar) throw new Error('この数値セットの献上は祭壇の払い口です');
     const bk = a.bulk && RS(p).tributeBulk; if (a.bulk && !bk) throw new Error('この数値セットにまとめ献上はありません'); // 試作 tributeBulk（第48部）：{mult, vg}＝コスト×mult で祝福 vg
     const c = bk ? Math.ceil(gemsetPrice(p) * bk.mult) : gemsetPrice(p); const cl = RS(p).gemsetShared ? { bypass: null } : claimSlot(st, p, 'GEM', { useL: a.bypassL }); tribOnce(st, p, 'G', '遺伝子'); useToken(p, false);
     if (RS(p).noLTribute && a.useL > 0) throw new Error('献上（遺伝子）は生命核で払えません'); // T21（2026-11-11 ユーザー指示）
@@ -1038,6 +1039,20 @@
     if (RS(p).lCrystalReal) { addGem(st, p, 'body', 1, '献上'); afterAction(st, p, `献上（生命核L${n}）→ 痕跡+1${ce ? '・E+' + ce : ''}`, true); return true; } // 試作 lCrystalReal：生命核ルート固有の痕跡
     const outL = tribOut(st, p, 'L', 'body', '生命核');
     afterAction(st, p, `献上（生命核L${n}）${outL}${ce ? '・E+' + ce : ''}`, true); return true;
+  };
+  // T23（O-19・第71部 §62）：祭壇＝払い口 5 つ（E／G／P／協調／生命核）。各払い口は 1 ゲーム 1 回・1 手番。報酬は払い口によらず「その人の何個目の献上か」で祝福（altar.vg）。割引・代用なし（結晶体質の生命核 −1 だけ今と同じ形で掛ける）
+  const ALTAR_KEYS = ['E', 'G', 'P', 'coop', 'L']; const ALTAR_JP = { E: 'E', G: 'G', P: 'P', coop: '協調', L: '生命核' };
+  function altarCount(p) { return ALTAR_KEYS.filter(k => p.tribGame && p.tribGame[k]).length; }
+  function altarCost(p, k) { const A = RS(p).altar; if (!A || A.cost[k] === undefined) return null; let c = A.cost[k]; if (k === 'L') c = Math.max(1, c - (p.crystalDiscL || 0)); if (k === 'coop') c = Math.max(1, c - (p.crystalDiscC || 0)); return c; }
+  function altarNextVg(p) { const A = RS(p).altar; if (!A) return 0; const n = altarCount(p); return n < A.vg.length ? A.vg[n] : 0; }
+  ACTIONS.altar = (st, p, a) => {
+    const A = RS(p).altar; if (!A) throw new Error('この数値セットに祭壇の払い口はありません'); const k = a.res; if (!ALTAR_KEYS.includes(k) || A.cost[k] === undefined) throw new Error('払い口を選んでください');
+    if (p.tribGame && p.tribGame[k]) throw new Error(`献上（${ALTAR_JP[k]}）は使用済みです（各払い口は 1 ゲームに 1 回）`);
+    if (k === 'L') { const unlock = RS(p).lCrystalLv || 4; if (p.lv.body < unlock) throw new Error(`献上（生命核）は身体Lv${unlock}で解放されます`); }
+    const c = altarCost(p, k); if (p[k] < c) throw new Error(`${ALTAR_JP[k]}が足りません（必要${c}）`);
+    useToken(p, false); p.tribGame = p.tribGame || {}; p.tribGame[k] = true; p[k] -= c; if (k === 'L' && p.crystalInvest) investL(p, st, c); // 結晶体質（強）：払った生命核を身体の素材に（今と同じ）
+    const nth = altarCount(p), vg = A.vg[nth - 1] || 0; p.gemsets += vg;
+    afterAction(st, p, `献上（${ALTAR_JP[k]}）祝福+${vg}（${nth} 個目）`, true); return true;
   };
   // 試作 crystal：共用アクション「結晶化」＝E または G を払って祝福+1（排他なし・W）
   ACTIONS.crystal = (st, p, a) => {
@@ -1439,7 +1454,7 @@
     const R = RS(st);
     if (lv === 6) return `${R.lv6First ? (R.lv6Gems ? `先駆：痕跡+${R.lv6Gems.first}＋祝福+1／追随：痕跡+${R.lv6Gems.later}` : `先駆：痕跡+1＋祝福+1／追随：痕跡+1`) : `痕跡+1（先駆なし）`}${R.lv6Convert ? `。${R.lv6First ? 'どちらも' : ''}終了時、${R.lv6Fixed && R.lv6Fixed[track] !== undefined ? `祝福+${R.lv6Fixed[track]}（固定）` : `${G.GATE_SHORT_L && track === 'body' && R.bodyAxis === 'L' ? '払ったL' : G.GATE_SHORT[track]}${R.lv6Convert}個につき祝福+1${track === 'intel' && R.nvTrait === 2 ? (R.nvW ? '（神経は 1・1・2 枚ぶん' : '（神経は 1 段 2 枚ぶん') + (R.lv6IntelFull ? '・知性 Lv4 のぶんは引かない）' : '）') : ''}`}` : ''}${lv6PayDef(st, track) ? `。コスト＝${lv6CostText(st, track)}（そのトラックの資源で払う）` : ''}`;
     if (R.bodyAxis === 'L' && track === 'body' && R.bodyRewards === 'P' && R.bodyStar && R.bodyStar[lv]) { const b = R.bodyStar[lv], f = x => ['今すぐL+' + (x.L || 0), x.P ? 'P+' + x.P : null].filter(Boolean).join('・'); return `強：${f(b.s)}／弱：${f(b.w)}`; } // T22（O-18）
-    if (R.bodyAxis === 'L' && track === 'body' && R.bodyRewards === 'P') { const m = { 2: ['今すぐL+1', R.lCrystal && (R.lCrystalLv || 4) === 2 ? `献上（生命核）（L${R.lCrystal}→祝福+1）を解放` : null].filter(Boolean).join('＋'), 3: `1L＝E${sc(st, 4)}／G${sc(st, 4)}（投入の価値上昇）＋強は今すぐL+1`, 4: (R.bodyLv4Gem ? '痕跡+1＋' : '') + '生命核の産出（P）が2倍', 5: `強：1L＝E${sc(st, 5)}／G${sc(st, 5)}＋今すぐL+1／弱：今すぐL+1` }; if (m[lv]) return txt(st, m[lv]); }
+    if (R.bodyAxis === 'L' && track === 'body' && R.bodyRewards === 'P') { const m = { 2: ['今すぐL+1', R.altar && (R.lCrystalLv || 4) === 2 ? '祭壇の生命核の払い口を解放' : R.lCrystal && (R.lCrystalLv || 4) === 2 ? `献上（生命核）（L${R.lCrystal}→祝福+1）を解放` : null].filter(Boolean).join('＋'), 3: `1L＝E${sc(st, 4)}／G${sc(st, 4)}（投入の価値上昇）＋強は今すぐL+1`, 4: (R.bodyLv4Gem ? '痕跡+1＋' : '') + '生命核の産出（P）が2倍', 5: `強：1L＝E${sc(st, 5)}／G${sc(st, 5)}＋今すぐL+1／弱：今すぐL+1` }; if (m[lv]) return txt(st, m[lv]); }
     if (R.bodyAxis === 'L' && track === 'body') { // T5/T6：生命核軸の身体（フラグで文を組み立てる）
       const t2 = ['産出の資源をLごとにE/Gから選べる']; if (R.body2L) t2.push('今すぐL+1'); if (R.body2Gem) t2.push('痕跡+1'); if (R.lCrystal && (R.lCrystalLv || 4) === 2) t2.push(`結晶化（L${R.lCrystal}→祝福+1・排他なし）を解放`);
       const t4 = []; if (R.bodyLv4Gem) t4.push('痕跡+1'); t4.push('1L＝E4／G4', '産出でPも選べる'); if (R.lCrystal && (R.lCrystalLv || 4) === 4) t4.push(`結晶化（L${R.lCrystal}→祝福+1）を解放`);
@@ -1469,5 +1484,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { altarCount, altarCost, altarNextVg, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

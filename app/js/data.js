@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.101'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.102'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -276,8 +276,12 @@
     bodyStar: { 3: { s: { L: 1, P: 30 }, w: { L: 1 } }, 5: { s: { L: 1, P: 60 }, w: { L: 1, P: 20 } } },
     pulseInc: { Pu1: 15, Pu2: 25 }, pu2L: 0, pu3L: 0, pu3Launch: 4,
     lv6Pay: Object.assign({}, G.RULESETS.t21.lv6Pay, { body: { L: 3 } }), endMajorityGem: false });
-  G.RULES_VISIBLE = ['t22'];
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22'];
+  // T23（ORDERS O-19・第71部 §62・2026-11-13 ユーザー承認）＝T22 ＋ 祭壇を払い口 5 つに作り替える（旧の献上 3 種＝遺伝子・生命核・協調は廃止）。
+  //   altar.cost＝払い口の値段（種別に固定・割引なし・代用なし・絶対値）／altar.vg＝その人の何個目の献上かで祝福。各払い口は 1 ゲーム 1 回・1 手番。生命核の払い口は身体 Lv2 で解放（lCrystalLv）
+  G.RULESETS.t23 = Object.assign({}, G.RULESETS.t22, { name: 'T23（T22＋祭壇を払い口 5 つに）', altar: { cost: { E: 60, G: 40, P: 120, coop: 6, L: 3 }, vg: [2, 2, 3, 3, 4] }, lCrystal: 0, coopCrystal: 0 });
+  G.RULESETS.t23L = Object.assign({}, G.RULESETS.t23, { name: 'T23L（計測のみ・祭壇の値段と報酬を軽く）', altar: { cost: { E: 45, G: 30, P: 90, coop: 5, L: 2 }, vg: [2, 2, 2, 3, 3] } });
+  G.RULES_VISIBLE = ['t23'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
