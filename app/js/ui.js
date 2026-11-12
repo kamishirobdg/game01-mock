@@ -166,6 +166,7 @@
     }, fast ? 0 : 500);
   }
   async function submit(entry) {
+    entry = noSub(entry);
     try {
       if (st && st.phase === 'play' && !['undo', 'undoRound', 'undoOk', 'undoCancel'].includes(entry.type)) G.tryApply(st, entry);
       else if (st && st.phase === 'setup' && !['undo', 'undoRound'].includes(entry.type)) { const s = G.clone(st); s.history = []; G.applyEntry(s, entry); }
@@ -443,7 +444,8 @@
   }
 
   // 事前判定：実行できるか（できなければ理由）
-  function check(action) { try { G.tryApply(st, action); return null; } catch (e) { return e.message; } }
+  const noSub = a => (a && a.useL && a.type !== 'res' && G.RULESETS[st.rules || 'v1'].noLSub) ? Object.assign({}, a, { useL: 0 }) : a; // T22（v3.101・ユーザー指摘）：代用払いなしでは事前判定・実行とも生命核の代用を外す（器官カードに「生命核は E の代わりに払えません」が出ていた）
+  function check(action) { try { G.tryApply(st, noSub(action)); return null; } catch (e) { return e.message; } }
   function actBtn(attrs, reason, ...kids) { const b = h('button', attrs, ...kids); if (reason) { b.classList.add('na'); b.title = (b.title ? b.title + '\n' : '') + '× ' + reason; if (reason !== roMsg && !/の手番$/.test(reason)) b.addEventListener('click', () => toast('× ' + reason, true), true); } return b; } // 2026-11-06 ユーザー指摘（T10-H3）：スマホではツールチップが見えず「暗いだけで理由が分からない」→ v3.69 で枠内に常時表示 → 2026-11-07 ユーザー指摘「選択したときに見えればよい。常時は邪魔」：押したときにトーストで出す（押した後の処理〔緊急発進のダイアログ等〕はそのまま続く）
 
   // T4：社会トラック報酬から協調を外す（P／Wなし実行権）・知性Lv4＝形質-1

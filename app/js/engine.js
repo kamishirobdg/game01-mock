@@ -1256,9 +1256,9 @@
     try {
       const wasPre = action.type === 'resolve' && !!(pd && pd.pre); // 手番前の保留（収入時）の解決か
       const consumed = ACTIONS[action.type](st, p, action);
-      if (wasPre) p.pending.forEach(x => { if (x.pre === undefined) x.pre = true; }); // 手番前の解決から派生した保留（例：遺伝子図書館の購入で知性 Lv3★ に到達→報酬の形質）も手番前
       if (p._coop8Due) { p._coop8Due = false; if (RS(p).coop8Gem) addGem(st, p, 'social', 1, `協調${RS(p).coopGemAt || 8}到達`); if (RS(p).coop8Coef) addUpgrade(st, p, '協調8到達'); }
       syncGates(st, p);
+      if (wasPre) p.pending.forEach(x => { if (x.pre === undefined) x.pre = true; }); // 手番前の解決から派生した保留（例：遺伝子図書館の購入で知性 Lv3★ に到達→報酬の形質）も手番前。v3.101（ユーザー指摘・手番がずれた）：自動進化（syncGates）で生まれる報酬の保留も含めるため syncGates の後に移した
       if (viaBonus) { const i = p.pending.findIndex(x => x.type === 'bonusAction'); if (i >= 0) p.pending.splice(i, 1); }
       if ((consumed !== false || action.type === 'resolve' || viaBonus) && !wasPre) advanceTurn(st); // 追加アクション（知性Lv4↗）を実行したら手番は次へ（本体のアクションで既にトークンを消費している）。手番前の保留の解決後はそのまま本人の手番（v3.63）
       else if (!p.pending.length && p.left.W + p.left.AT === 0) advanceTurn(st);
