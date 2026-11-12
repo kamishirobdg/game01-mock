@@ -178,6 +178,7 @@
   // ---------- モーダル／トースト ----------
   function ask(title, fields, opts) {
     opts = opts || {};
+    if (G.RULESETS[st.rules || 'v1'].noLSub) fields = fields.filter(f => !(f.name === 'useL' && /の代わりに/.test(f.label || ''))).map(f => f.options ? Object.assign({}, f, { options: f.options.map(o => o && typeof o.label === 'string' && o.label.includes('（＋生命核）') ? Object.assign({}, o, { label: o.label.replace('（＋生命核）', '') }) : o) }) : f); // T22（O-18）：代用払いなしでは「生命核を E／G の代わりに」の欄を出さない
     return new Promise((resolve) => {
       const back = $('#modal'); back.innerHTML = '';
       const form = h('form', { class: 'modal-box' }, h('h3', null, title));
@@ -452,6 +453,7 @@
   const REW_SHORT_T7_BODY = { 2: 'L+1 献上(生命核)解放', 3: ['1L=E{4}/G{4} L+1', '1L=E{4}/G{4}'], 4: '痕跡+1 産出×2', 5: ['1L=E{5}/G{5} L+1', 'L+1'] };
   const REW_SHORT_T7_INTEL = { 2: 'G+{3}', 3: ['模倣/発現を今すぐG0', '模倣/発現 G-{1}'], 4: '献上(遺伝子)何度でも', 5: ['常に強効果', 'G+{6}'] };
   function rewShort(t, l) { const R = G.RULESETS[st.rules || 'v1']; if (l === 6) return R.lv6First ? [`痕跡+${R.lv6Gems ? R.lv6Gems.first : 1} 祝福+1` + (R.lv6Convert ? ' ＋神の裁定' : ''), `痕跡+${R.lv6Gems ? R.lv6Gems.later : 1}` + (R.lv6Convert ? ' ＋神の裁定' : '')] : (R.lv6Convert ? '痕跡+1 ＋神の裁定' : '痕跡+1');
+    if (R.bodyAxis === 'L' && t === 'body' && R.bodyRewards === 'P' && R.bodyStar && R.bodyStar[l]) { const f = x => ['L+' + (x.L || 0), x.P ? 'P+' + x.P : null].filter(Boolean).join(' '); return [f(R.bodyStar[l].s), f(R.bodyStar[l].w)]; } // T22（O-18）
     if (R.bodyAxis === 'L' && t === 'body' && R.bodyRewards === 'P') { const b = Object.assign({}, REW_SHORT_T7_BODY); if (!(R.lCrystal && (R.lCrystalLv || 4) === 2)) b[2] = 'L+1'; if (!R.bodyLv4Gem) b[4] = '産出×2'; return b[l]; }
     if (R.bodyAxis === 'L' && t === 'body') { const b = { 2: ['産出 E/G選択', R.body2L ? 'L+1' : null, R.lCrystal && (R.lCrystalLv || 4) === 2 ? '結晶化解放' : null].filter(Boolean).join(' '), 4: [R.bodyLv4Gem ? '痕跡+1' : null, '1L=E4/G4 産出P可'].filter(Boolean).join(' '), 5: R.body5Coef ? ['係数+1 L+1', 'L+1'] : REW_SHORT_T5_BODY[5] }; return b[l] || REW_SHORT_T5_BODY[l] || REW_SHORT[t][l]; }
     if (R.intelRewards === 'learn' && t === 'intel' && REW_SHORT_T7_INTEL[l]) return REW_SHORT_T7_INTEL[l];
@@ -652,7 +654,7 @@
     const sp = G.SPECIES[p.species]; const sc = G.score(st, p); const inc = G.income(p);
     const box = h('div', { class: 'panel player p' + p.id }, h('div', { class: 'phead' }, art(SPECIES_ART[p.species] || 'species_wing', 'portrait'), h('h3', null, h('span', { class: 'mk p' + p.id }, p.id + 1), ` ${can ? '手番' : isBot(p.id) ? '手番（AI）' : '手番（他端末）'}：${p.name}（${sp.name}）`, h('small', { class: 'sub' }, `　残り ${p.lRemain} ラウンド`))));
     // ① 資源トラック（E/G/P）＋生命核
-    box.appendChild(h('div', { class: 'res' }, ...['E', 'G', 'P', 'L'].map(k => h('span', { class: 'rbox r' + k, title: `${RES_JP[k]}${k !== 'L' ? '　次の収入 +' + inc[k] : (G.RULESETS[st.rules || 'v1'].lYield ? `　毎ラウンド+1・収入時に保有1個につき${G.RULESETS[st.rules || 'v1'].yieldRes === 'P' ? 'P' : 'E'}+${(G.RULESETS[st.rules || 'v1'].yieldByRound ? G.RULESETS[st.rules || 'v1'].yieldByRound[Math.min(7, st.round + 1)] : G.RULESETS[st.rules || 'v1'].lYield) + (p.yieldAdd || 0)}${p.yieldMul > 1 ? '×' + p.yieldMul : ''}（${p.lValue || 3}E/G代用・${G.RULESETS[st.rules || 'v1'].noAdapt ? '' : '適応進化・'}緊急進出${G.RULESETS[st.rules || 'v1'].breedL ? '・L繁殖' : ''}）` : '　毎ラウンド+1（E3/G3代用・適応進化・緊急進出）')}` }, ic(k), h('b', null, String(p[k])), k !== 'L' ? h('small', null, `+${inc[k]}/R`) : null))));
+    box.appendChild(h('div', { class: 'res' }, ...['E', 'G', 'P', 'L'].map(k => h('span', { class: 'rbox r' + k, title: `${RES_JP[k]}${k !== 'L' ? '　次の収入 +' + inc[k] : (G.RULESETS[st.rules || 'v1'].lYield ? `　毎ラウンド+1・収入時に保有1個につき${G.RULESETS[st.rules || 'v1'].yieldRes === 'P' ? 'P' : 'E'}+${(G.RULESETS[st.rules || 'v1'].yieldByRound ? G.RULESETS[st.rules || 'v1'].yieldByRound[Math.min(7, st.round + 1)] : G.RULESETS[st.rules || 'v1'].lYield) + (p.yieldAdd || 0)}${p.yieldMul > 1 ? '×' + p.yieldMul : ''}（${G.RULESETS[st.rules || 'v1'].noLSub ? '' : `${p.lValue || 3}E/G代用・`}${G.RULESETS[st.rules || 'v1'].noAdapt ? '' : '適応進化・'}緊急進出${G.RULESETS[st.rules || 'v1'].breedL ? '・L繁殖' : ''}）` : '　毎ラウンド+1（E3/G3代用・適応進化・緊急進出）')}` }, ic(k), h('b', null, String(p[k])), k !== 'L' ? h('small', null, `+${inc[k]}/R`) : null))));
     box.appendChild(h('div', { class: 'note', title: inc.parts.join('\n') }, `次の収入 E+${inc.E} G+${inc.G} P+${inc.P} L+1（内訳はマウスで）`));
     // ② 5コマ（係数）＋強W置き場
     const gauge = G.RULESETS[st.rules || 'v1'].gauge;

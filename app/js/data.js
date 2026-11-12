@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.99'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.100'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -266,8 +266,18 @@
   G.RULESETS.t21b = Object.assign({}, G.RULESETS.t20, { name: '計測用T21b（T20＋献上（遺伝子）の生命核代用なし＋知性・代謝 Lv6 ×1.5）', noLTribute: true, lv6Pay: { body: { L: 4 }, intel: { G: 99 }, social: { coop: 12 }, metab: { E: 180 } } });
   // T21（2026-11-12 ユーザー決定：A 案で試す）＝t21a と同じ
   G.RULESETS.t21 = Object.assign({}, G.RULESETS.t21a, { name: 'T21（T20＋献上（遺伝子）の生命核代用なし＋Lv6 のコスト 知性 G84・代謝 E150）' });
-  G.RULES_VISIBLE = ['t21'];
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21'];
+  // T22a〜T22d（2026-11-12・ORDERS O-17・計測のみ・第71部 §53）：代用払いの廃止はユーザー決定、置き換え・身体 Lv6 L6・最果ての痕跡は設計の案（承認待ち）
+  G.RULESETS.t22a = Object.assign({}, G.RULESETS.t21, { name: '計測用T22a（T21−代用払い）', noLSub: true });
+  G.RULESETS.t22b = Object.assign({}, G.RULESETS.t22a, { name: '計測用T22b（T22a＋置き換え：身体 Lv3★ 弱 P+30・Lv5★ 強 生命核+2・脈動核 緊急進出 4 倍）', body3WeakP: 30, body5StrongL: 2, pu3Launch: 4 });
+  G.RULESETS.t22c = Object.assign({}, G.RULESETS.t22b, { name: '計測用T22c（T22b＋身体 Lv6 L6）', lv6Pay: Object.assign({}, G.RULESETS.t21.lv6Pay, { body: { L: 6 } }) });
+  G.RULESETS.t22d = Object.assign({}, G.RULESETS.t22c, { name: '計測用T22d（T22c＋最果ての痕跡は Lv6 のいないトラックだけ）', endMajorityNoLv6: true });
+  // T22（2026-11-12・ORDERS O-18・ユーザー承認・第71部 §57）＝T21 ＋ 代用払いなし ＋ 身体 Lv3★／Lv5★ を生命核と P に ＋ 脈動点 収入 P+15・脈動腺 収入 P+25・脈動核 緊急進出 4 倍（脈動は生命核を出さない）＋ 身体 Lv6 L3 ＋ 最果ての痕跡の廃止
+  G.RULESETS.t22 = Object.assign({}, G.RULESETS.t21, { name: 'T22（T21＋代用払いなし・身体★と脈動の置き換え・身体 Lv6 L3・最果ての痕跡の廃止）', noLSub: true,
+    bodyStar: { 3: { s: { L: 1, P: 30 }, w: { L: 1 } }, 5: { s: { L: 1, P: 60 }, w: { L: 1, P: 20 } } },
+    pulseInc: { Pu1: 15, Pu2: 25 }, pu2L: 0, pu3L: 0, pu3Launch: 4,
+    lv6Pay: Object.assign({}, G.RULESETS.t21.lv6Pay, { body: { L: 3 } }), endMajorityGem: false });
+  G.RULES_VISIBLE = ['t22'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
@@ -460,7 +470,13 @@
     Nv2: { strong: '形質 1 枚として数える ＋ 収入 G+{nv2Inc:3}', weak: '同' },
     Nv3: { strong: '形質 2 枚として数える ＋ 形成時 祝福+1', weak: '同' },
   };
-  G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); if (R && R.liMode === 'lineage' && G.ORGANS_V4[id]) o = Object.assign({}, o, G.ORGANS_V4[id]); if (R && R.nvTrait === 2 && G.ORGANS_V5[id]) o = Object.assign({}, o, G.ORGANS_V5[id]); if (R && R.nvW && G.ORGANS_V6[id]) o = Object.assign({}, o, G.ORGANS_V6[id]); return o; }; // x＝ゲーム状態 or 数値セット
+  // T22（O-18）：脈動の効果文（pulseInc のとき重ねる）
+  G.ORGANS_V7 = {
+    Pu1: { strong: '収入 P+15', weak: '同' },
+    Pu2: { strong: '収入 P+25', weak: '同' },
+    Pu3: { strong: '緊急進出の獲得量 4 倍（協調の上乗せは別）', weak: '同' },
+  };
+  G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); if (R && R.liMode === 'lineage' && G.ORGANS_V4[id]) o = Object.assign({}, o, G.ORGANS_V4[id]); if (R && R.nvTrait === 2 && G.ORGANS_V5[id]) o = Object.assign({}, o, G.ORGANS_V5[id]); if (R && R.nvW && G.ORGANS_V6[id]) o = Object.assign({}, o, G.ORGANS_V6[id]); if (R && R.pulseInc && G.ORGANS_V7[id]) o = Object.assign({}, o, G.ORGANS_V7[id]); return o; }; // x＝ゲーム状態 or 数値セット
   G.isChanged = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); return !!(R && R.changed && R.changed.includes(id)); }; // 画面の「改」バッジ
   G.ORGAN_FIELD = ['Li1', 'Li2', 'Li3', 'Tr1', 'Tr2', 'Tr3', 'Fl1', 'Fl2', 'Fl3', 'Rh1', 'Rh2', 'Rh3']; // 初心者固定
   G.LINEAGES = { Li: '連結', Tr: '翻訳', Fl: '転流', Rh: '律動', Ca: '触媒', Cv: '収斂', Re: '感応', St: '応力', Mg: '代謝', Tl: '転写', Hc: '群心', Pu: '脈動', Cx: '促進', Fk: '孵化', Nv: '神経', Lm: '発光', Sp: '特殊' };

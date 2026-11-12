@@ -207,6 +207,7 @@
     if (RS(p).lYield) { const rate = RS(p).yieldByRound ? (RS(p).yieldByRound[Math.min(RS(p).yieldByRound.length - 1, (p._round || 0) + 1)] || 0) : RS(p).lYield; const n = Ln * (rate + (p.yieldAdd || 0)) * (p.yieldMul || 1); if (n > 0) { if (RS(p).yieldRes === 'P') add('生命核の産出', 0, 0, n); else { inc.lyield = n; if (p.yieldPick) inc.parts.push(`生命核の産出 ${n}（資源を選択）`); else add('生命核の産出', n, 0, 0); } } } // T5（yieldByRound＝次ラウンド番号で引く）／T7試作 yieldRes='P'
     { const R5 = RS(p); // T15：新系統の収入・特殊器官（器官の枚数は特殊器官自身も数える）
       const fk = lineageCount(p, 'Fk'); if (fk && R5.fkInc) { add('孵化', 0, 0, fk * R5.fkInc); inc.by['org:Fk'] = { E: 0, G: 0, P: R5.fkInc, coop: 0 }; } // 即時の 1 回ぶんは形成した 1 枚ぶん
+      if (R5.pulseInc) ['Pu1', 'Pu2'].forEach(id => { const o = organ(p, id); if (o && R5.pulseInc[id]) add(G.ORGANS[id].name, 0, 0, R5.pulseInc[id] * (o.amp ? 2 : 1), 'org:' + id); }); // T22（O-18）：脈動点 P+15・脈動腺 P+25
       if (organ(p, 'Nv2') && R5.nv2Inc) add('神経網', 0, R5.nv2Inc, 0, 'org:Nv2'); if (organ(p, 'Lm1') && R5.lm1Inc) add('発光点', 0, R5.lm1Inc, 0, 'org:Lm1');
       if (R5.spInc) p.organs.forEach(o => { const v = R5.spInc[o.id]; if (!v) return; const n = p.organs.length, key = 'org:' + o.id; if (v.coopFlat) addC(G.ORGANS[o.id].name, v.coopFlat, key); if (v.coop) addC(G.ORGANS[o.id].name, Math.floor(n * v.coop), key); if (v.E || v.G || v.P) add(G.ORGANS[o.id].name, (v.E || 0) * n, (v.G || 0) * n, (v.P || 0) * n, key); }); }
     p.traits.forEach(t => {
@@ -386,16 +387,16 @@
   // ---------- 支払い ----------
   // pay: {E:n} を E と L（1L=3E）で支払う。useL = 使うL個数
   function payE(p, amount, useL) {
-    useL = useL | 0;
+    useL = useL | 0; if (useL > 0 && RS(p).noLSub) throw new Error('生命核は E の代わりに払えません'); // T22（O-17・第71部 §53）：代用払いの廃止
     if (useL > p.L) throw new Error(`生命核が足りません（指定L${useL}・所持L${p.L}）`);
     const lv = p.lValue || sc(p, 3); const covered = useL * lv; const needE = Math.max(0, amount - covered);
-    if (p.E < needE) throw new Error(`エネルギーが足りません（必要E${amount}・所持E${p.E}${p.L ? `・生命核1=E${lv}で補えます` : ''}）`);
+    if (p.E < needE) throw new Error(`エネルギーが足りません（必要E${amount}・所持E${p.E}${p.L && !RS(p).noLSub ? `・生命核1=E${lv}で補えます` : ''}）`);
     p.E -= needE; p.L -= useL; if (useL > 0) investL(p, null, useL); if (RS(p).bodyBulkLv4 && useL >= RS(p).bodyBulkLv4) p.lBulk = true;
     return { E: needE, L: useL };
   }
   function payG(p, amount, useL) {
-    useL = useL | 0; if (useL > p.L) throw new Error(`生命核が足りません（指定L${useL}・所持L${p.L}）`);
-    const lv = p.lValue || sc(p, 3); const needG = Math.max(0, amount - useL * lv); if (p.G < needG) throw new Error(`遺伝子が足りません（必要G${amount}・所持G${p.G}${p.L ? `・生命核1=G${lv}で補えます` : ''}）`);
+    useL = useL | 0; if (useL > 0 && RS(p).noLSub) throw new Error('生命核は G の代わりに払えません'); if (useL > p.L) throw new Error(`生命核が足りません（指定L${useL}・所持L${p.L}）`);
+    const lv = p.lValue || sc(p, 3); const needG = Math.max(0, amount - useL * lv); if (p.G < needG) throw new Error(`遺伝子が足りません（必要G${amount}・所持G${p.G}${p.L && !RS(p).noLSub ? `・生命核1=G${lv}で補えます` : ''}）`);
     p.G -= needG; p.L -= useL; if (useL > 0) investL(p, null, useL); if (RS(p).bodyBulkLv4 && useL >= RS(p).bodyBulkLv4) p.lBulk = true; return { G: needG, L: useL };
   }
 
@@ -510,9 +511,10 @@
   function applyReward(st, p, track, lv, strong, temp) {
     if (track === 'body' && RS(p).bodyAxis === 'L' && RS(p).bodyRewards === 'P') { // T7試作：利回りがPの世界の身体報酬（序中盤の投入で後のLの価値を上げる）
       if (lv === 2) { if (RS(p).body2L) p.L += 1; }
-      if (lv === 3) { p.lValue = Math.max(p.lValue || sc(p, 3), sc(p, 4)); if (strong) p.L += 1; }
+      if (RS(p).bodyStar && RS(p).bodyStar[lv]) { const bs = RS(p).bodyStar[lv][strong ? 's' : 'w']; p.L += bs.L || 0; if (bs.P) p.P += bs.P; return; } // T22（O-18・第71部 §57）：身体 Lv3★／Lv5★＝生命核と P（代用の値はなし）
+      if (lv === 3) { p.lValue = Math.max(p.lValue || sc(p, 3), sc(p, 4)); if (strong) p.L += 1; else if (RS(p).body3WeakP) p.P += RS(p).body3WeakP; } // T22b：弱＝P+30（代用の値の置き換え）
       if (lv === 4) { if (RS(p).bodyLv4Gem) addGem(st, p, 'body', 1, '身体 Lv4（生命核軸）'); p.yieldMul = 2; }
-      if (lv === 5) { p.L += 1; if (strong) p.lValue = Math.max(p.lValue || sc(p, 3), sc(p, 5)); }
+      if (lv === 5) { p.L += 1; if (strong) { p.lValue = Math.max(p.lValue || sc(p, 3), sc(p, 5)); if (RS(p).body5StrongL) p.L += RS(p).body5StrongL - 1; } } // T22b：強＝生命核+2
     } else if (track === 'body' && RS(p).bodyAxis === 'L') { // T5：身体＝生命核軸（宝石・係数・大量消費の軽減は持たない）
       if (lv === 2) { p.yieldPick = ['E', 'G']; if (RS(p).body2L) p.L += 1; if (RS(p).body2Gem) addGem(st, p, 'body', 1, '身体 Lv2（生命核軸）'); if (RS(p).lValueLv2) p.lValue = Math.max(p.lValue || 3, 4); }
       if (lv === 3) { p.L += 1; if (strong) { if (RS(p).body3YieldAdd) p.yieldAdd = (p.yieldAdd || 0) + 1; else p.bypassWide = true; } }
@@ -624,7 +626,7 @@
     if (a.shield) { if (p.shields <= 0) throw new Error('自由行動がありません'); if (a.slot === 'PB') throw new Error('自己複製は対象外'); }
     if (RS(p).herd && (a.slot === 'EG' || a.slot === 'GG') && p.P < (RS(p).herdCost || 6)) throw new Error(`個体数が足りません（群体はP${RS(p).herdCost || 6}を払い資源＋協調+1）`);
     // Wなし実行はコマを置かないのでスロットを占有しない（使用済みにしない）。既に使用済みのスロットは不可（緊急発進との併用は可）
-    const LF = RS(p).launchFree; // T18（O-12・第71部 §38 U7）：緊急進出＝空いている資源枠にワーカーを置くとき、生命核 1 個で獲得量 LF 倍（自己複製・自由行動・神の加護の即時枠は対象外）
+    const LF = (RS(p).pu3Launch && organ(p, 'Pu3')) ? RS(p).pu3Launch : RS(p).launchFree; // T22b：脈動核を持つと緊急進出の獲得量 3→4 倍（協調の上乗せには掛けない） // T18（O-12・第71部 §38 U7）：緊急進出＝空いている資源枠にワーカーを置くとき、生命核 1 個で獲得量 LF 倍（自己複製・自由行動・神の加護の即時枠は対象外）
     if (LF && a.useL) { if (a.slot === 'PB') throw new Error('緊急進出は自己複製には使えません'); if (a.shield || a.viaBoost || J) throw new Error('緊急進出はワーカーを置くときだけ使えます'); if (p.L <= 0) throw new Error('生命核がありません'); if (st.shared.used[usedKey(st, a.slot)] !== undefined) throw new Error('緊急進出は空いている資源枠にだけ使えます（使用済みの枠は協調進出）'); }
     if (J && (a.useL || a.bypassCoop || a.bypassMimic)) throw new Error('合流進出は緊急進出・協調進出と重ねられません');
     const cl = (a.viaBoost || J) ? { bypass: null } : a.shield ? peekSlot(st, p, a.slot, { useL: LF ? false : a.useL }) : claimSlot(st, p, a.slot, { useL: LF ? false : a.useL, useCoop: a.bypassCoop, mimic: a.bypassMimic });
@@ -758,14 +760,15 @@
     { const amp = p.ampReserve === a.organ || !!a.amp; p.organs.push(amp ? { id: a.organ, strong: c.strong, amp: true } : { id: a.organ, strong: c.strong }); if (p.ampReserve === a.organ) { p.ampReserve = null; log(st, p.id, `${p.name}：${a.organ} は増幅の予約により効果2倍`); } else if (a.amp) log(st, p.id, `${p.name}：${a.organ} を形成と同時に増幅（E${ampE}）→ 効果2倍`); } if (RS(st).organExcl) st.shared.organUsed[a.organ] = p.id; // v3.65 増幅の予約
     { const gb = (t) => { p.gateBonus = p.gateBonus || {}; p.gateBonus[t] = (p.gateBonus[t] || 0) + 1; }; const o = a.organ, sg = c.strong; const am = p.organs[p.organs.length - 1].amp ? 2 : 1; // T7 器官の建造時効果（v3.70：建造と同時の増幅なら数の効果 2 倍）
       if (o === 'Hc1') gainRes(p, 'coop', (RS(p).hc1Coop || [2, 1])[sg ? 0 : 1] * am); if (o === 'Hc2') p.herdCoopAdd = (sg ? 2 : 1) * am; if (o === 'Hc3') { if (RS(p).hc3Bonus) p.coopBonusAdd = (p.coopBonusAdd || 0) + sc(p, RS(p).hc3Bonus); else if (RS(p).hc3RoundUp) p.coopRoundUp = true; else p.coopCapAdd = sg ? 2 : 1; if (sg && !RS(p).noOrganGate) gb('social'); if (RS(p).hc3Shield) { if (RS(p).joinNow) addShield(st, p, RS(p).hc3Shield, '群心核'); else { p.shields += RS(p).hc3Shield; log(st, p.id, `${p.name}：群心核で自由行動+${RS(p).hc3Shield}`); } } } // T14（第71部 §11 H3-e）：ゲート+1 の代わりに建造時 Wなし実行権+1
-      if (o === 'Pu1') p.L += am; if (o === 'Pu2') p.yieldAdd = (p.yieldAdd || 0) + sc(p, 1) * am; if (o === 'Pu3') { p.lValue = Math.max(p.lValue || sc(p, 3), sc(p, RS(p).pu3Rate || 4)); if (sg && !RS(p).noOrganGate) gb('body'); if (RS(p).pu3L) { p.L += RS(p).pu3L * am; log(st, p.id, `${p.name}：脈動核で 生命核+${RS(p).pu3L * am}`); } } // T14（第71部 §11 P3-a）：建造時 L+1 ＋ 1L＝18（pu3Rate 6）
+      const PI = RS(p).pulseInc; // T22（O-18）：脈動点・脈動腺は収入 P（形成時の生命核・産出+3 はなし）・脈動核は緊急進出 4 倍（pu3Launch）
+      if (o === 'Pu1' && !PI) p.L += am; if (o === 'Pu2' && !PI) p.yieldAdd = (p.yieldAdd || 0) + sc(p, 1) * am; if (o === 'Pu3' && !PI) { p.lValue = Math.max(p.lValue || sc(p, 3), sc(p, RS(p).pu3Rate || 4)); if (sg && !RS(p).noOrganGate) gb('body'); if (RS(p).pu3L) { p.L += RS(p).pu3L * am; log(st, p.id, `${p.name}：脈動核で 生命核+${RS(p).pu3L * am}`); } } // T14（第71部 §11 P3-a）：建造時 L+1 ＋ 1L＝18（pu3Rate 6）
       if (o === 'Mg3' && sg && !RS(p).mg3NoGate) gb('metab'); if (o === 'Tl3' && sg && (RS(p).tlGateTier || 3) === 3) gb('intel'); // mg3NoGate＝試作：代謝核のゲート+1なし／tlGateTier＝T13 では知性のゲート+1 を 2 段目に
       if (RS(p).organFx === 2) { const R2 = RS(p), d = G.ORGANS[o]; // T13（第70部 §6）：器官効果の第2版＝建造時の効果（数の効果は建造と同時の増幅で 2 倍）
         if (d.lin === 'Li') { const lm2 = R2.liMode === 'lineage'; const n = lm2 ? (d.tier === 3 ? st.shared.lineages.filter(l => lineageDone(p, l)).length : 1) : Math.min(R2.liCap || 99, p.organs.length); const per = (R2.liPer || [0, 0, 0])[d.tier - 1] || 0; const res = (R2.liRes || [])[d.tier - 1] ? (a.liRes || a.li2Res || 'E') : 'E'; const k = per * n; if (k) { gainRes(p, res, k); log(st, p.id, `${p.name}：${d.name}で ${res}+${k}（${lm2 ? (d.tier === 3 ? `完成した系統 ${n}×${per}` : '形成時') : `器官 ${n} 枚×${per}`}）`); } } // T18（O-12）liMode 'lineage'：結合膜・共役組織は固定、統合体は完成した系統 1 つにつき（連結自身を含む）
         if (d.lin === 'Tl') { const gk = ((R2.tlBuild || [])[d.tier - 1] || 0) * am; if (gk) { p.G += gk; log(st, p.id, `${p.name}：${d.name}で G+${gk}`); } if (sg && d.tier === (R2.tlGateTier || 3) && d.tier !== 3 && !R2.noOrganGate) gb('intel'); if (d.tier === 2 && R2.tlFreeTier2) p.pending.push({ type: 'rewardTrait', freeMax: R2.tlFreeTier2, weakOnly: true }); if (d.tier === 3 && R2.tlFreeMax) p.pending.push({ type: 'rewardTrait', freeMax: R2.tlFreeMax }); } // T14（第71部 §11 T2-c）：転写体＝弱の形質 1 枚を無料（弱の値段 G12 以下）
         if (o === 'Hc2' && R2.hc2Coop) gainRes(p, 'coop', R2.hc2Coop * am);
         if (o === 'Mg2' && R2.mg2Build) { p.E += R2.mg2Build * am; log(st, p.id, `${p.name}：代謝腺で E+${R2.mg2Build * am}`); }
-        if (o === 'Pu2' && R2.pu2L) p.L += R2.pu2L * am; } }
+        if (o === 'Pu2' && R2.pu2L && !R2.pulseInc) p.L += R2.pu2L * am; } }
     { const R5 = RS(p), o = a.organ; // T15（第71部 §25・§26）：新系統の建造時効果
       if (o === 'Fk2' && R5.fk2Build) { p.P += R5.fk2Build; log(st, p.id, `${p.name}：孵化腺で P+${R5.fk2Build}`); }
       if (o === 'Fk3') p.pending.push({ type: 'fkBreed' });
@@ -1336,8 +1339,9 @@
   }
   function endGame(st) {
     st.ended = true; st.phase = 'end';
-    if (RS(st).endMajorityGem) G.TRACKS.forEach(t => { const mx = Math.max(...st.players.map(p => p.lv[t])); const tops = st.players.filter(p => p.lv[t] === mx); if (tops.length === 1 && mx >= (RS(st).endMajorityMinLv || 2)) addGem(st, tops[0], t, 1, `${G.TRACK_INFO[t].name}の首位（最果ての痕跡）`); }); // 試作 endMajorityGem（第30部 B1）：各色の単独首位に痕跡+1
+    if (RS(st).endMajorityGem) G.TRACKS.forEach(t => { const mx = Math.max(...st.players.map(p => p.lv[t])); const tops = st.players.filter(p => p.lv[t] === mx); if (tops.length === 1 && mx >= (RS(st).endMajorityMinLv || 2) && !(RS(st).endMajorityNoLv6 && mx >= 6)) addGem(st, tops[0], t, 1, `${G.TRACK_INFO[t].name}の首位（最果ての痕跡）`); }); // 試作 endMajorityGem（第30部 B1）：各色の単独首位に痕跡+1
     { const cv = RS(st).lv6Convert, rt = RS(st).lv6RealTracks || []; if (cv && rt.length) st.players.forEach(p => { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: intelCnt6(st, p), social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; rt.forEach(t => { if (p.lv[t] >= 6) { const k = lv6N(st, t, cnt, by, cv); if (k > 0) addGem(st, p, t, k, `${G.TRACK_INFO[t].name} Lv6 神の裁定`); } }); }); } // 試作 lv6RealTracks
+    { const cv = RS(st).lv6Convert, rt = RS(st).lv6RealTracks || []; if (cv) st.players.forEach(p => { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: intelCnt6(st, p), social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; G.TRACKS.forEach(t => { if (p.lv[t] >= 6 && !rt.includes(t)) { const k = lv6N(st, t, cnt, by, cv); if (k > 0) log(st, p.id, `${p.name}：祝福+${k}（${G.TRACK_INFO[t].name} Lv6 神の裁定）`); } }); }); } // O-16（2026-11-12）：終了時の神の裁定の祝福は virtualGems で数えるだけでログに出ていなかった（得点は正しい）
     st.hist = st.hist || []; st.hist.push({ round: st.round + 1, label: '終了', rows: st.players.map(p => summaryRow(st, p)) });
     const rows = st.players.map(p => Object.assign({ pid: p.id, name: p.name }, score(st, p)));
     rows.sort((a, b) => b.total - a.total || b.tie[0] - a.tie[0] || b.tie[1] - a.tie[1] || b.tie[2] - a.tie[2]);
@@ -1434,6 +1438,7 @@
   function trackRewardText(st, track, lv) {
     const R = RS(st);
     if (lv === 6) return `${R.lv6First ? (R.lv6Gems ? `先駆：痕跡+${R.lv6Gems.first}＋祝福+1／追随：痕跡+${R.lv6Gems.later}` : `先駆：痕跡+1＋祝福+1／追随：痕跡+1`) : `痕跡+1（先駆なし）`}${R.lv6Convert ? `。${R.lv6First ? 'どちらも' : ''}終了時、${R.lv6Fixed && R.lv6Fixed[track] !== undefined ? `祝福+${R.lv6Fixed[track]}（固定）` : `${G.GATE_SHORT_L && track === 'body' && R.bodyAxis === 'L' ? '払ったL' : G.GATE_SHORT[track]}${R.lv6Convert}個につき祝福+1${track === 'intel' && R.nvTrait === 2 ? (R.nvW ? '（神経は 1・1・2 枚ぶん' : '（神経は 1 段 2 枚ぶん') + (R.lv6IntelFull ? '・知性 Lv4 のぶんは引かない）' : '）') : ''}`}` : ''}${lv6PayDef(st, track) ? `。コスト＝${lv6CostText(st, track)}（そのトラックの資源で払う）` : ''}`;
+    if (R.bodyAxis === 'L' && track === 'body' && R.bodyRewards === 'P' && R.bodyStar && R.bodyStar[lv]) { const b = R.bodyStar[lv], f = x => ['今すぐL+' + (x.L || 0), x.P ? 'P+' + x.P : null].filter(Boolean).join('・'); return `強：${f(b.s)}／弱：${f(b.w)}`; } // T22（O-18）
     if (R.bodyAxis === 'L' && track === 'body' && R.bodyRewards === 'P') { const m = { 2: ['今すぐL+1', R.lCrystal && (R.lCrystalLv || 4) === 2 ? `献上（生命核）（L${R.lCrystal}→祝福+1）を解放` : null].filter(Boolean).join('＋'), 3: `1L＝E${sc(st, 4)}／G${sc(st, 4)}（投入の価値上昇）＋強は今すぐL+1`, 4: (R.bodyLv4Gem ? '痕跡+1＋' : '') + '生命核の産出（P）が2倍', 5: `強：1L＝E${sc(st, 5)}／G${sc(st, 5)}＋今すぐL+1／弱：今すぐL+1` }; if (m[lv]) return txt(st, m[lv]); }
     if (R.bodyAxis === 'L' && track === 'body') { // T5/T6：生命核軸の身体（フラグで文を組み立てる）
       const t2 = ['産出の資源をLごとにE/Gから選べる']; if (R.body2L) t2.push('今すぐL+1'); if (R.body2Gem) t2.push('痕跡+1'); if (R.lCrystal && (R.lCrystalLv || 4) === 2) t2.push(`結晶化（L${R.lCrystal}→祝福+1・排他なし）を解放`);
