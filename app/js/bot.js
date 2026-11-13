@@ -113,7 +113,7 @@
       list.sort((a, b) => (G.ORGANS[b.o].tier - G.ORGANS[a.o].tier) || (b.c.strong - a.c.strong) || (a.c.E - b.c.E));
       return list.map(x => A({ type: 'organ', organ: x.o, useL: Math.max(0, Math.min(p.L, Math.ceil((x.c.E - p.E) / 3))), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' }));
     };
-    const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'NP', 'NE', 'NS', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM'].filter(t => G.traitPool(st).includes(t));
+    const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'NP', 'NE', 'NS', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'JS', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM'].filter(t => G.traitPool(st).includes(t));
     const traitCands = (slots) => traitPref.filter(t => !G.trait(p, t)).flatMap(t => slots.map(sl => A(Object.assign({ type: 'trait', trait: t, useL: Math.max(0, Math.min(p.L, Math.ceil((G.traitCost(st, p, t).G - p.G) / 3))), res: pref[0], track: 'intel' }, sl))));
     const traitSlots = [{}, { slot: 'TRT2' }, p.coop >= 2 && style !== 'white' ? { bypassCoop: true } : null, p.L >= 2 ? { bypassL: true } : null].filter(Boolean);
     const mass = (k) => A({ type: 'mass', kind: k, traits: G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RSo(st).miMaxCost || 4) && !G.trait(p, t)).slice(0, RSo(st).miCount || 2) });
@@ -195,6 +195,7 @@
     // 2026-11-02 rem>0：最終ラウンドにはゲートの途中（届かない収集）へ価値を置かない（T8-H1：最終Rの形質・器官・資源枠の空振り）
     if (RSo(st).gates && rem > 0) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cfB * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
     v += ((sc.cfB - 3) + (sc.cfC - 3)) / 2 * rem * w.coefFuture;
+    { const SJ = RSo(st).star && RSo(st).star.top && RSo(st).star.top.judge; if (SJ && (p.star | 0) >= G.STAR_MAX) v += SJ * sc.cfC * 2 * (rem === 0 ? 1 : 0.7); } // T26（O-26）：星海開拓 Lv6 の神の裁定（4 本の Lv6 と同じ見方）
     if ((p.trialGem || p.starGem) && rem > 0) v += ((p.trialGem || 0) + (p.starGem || 0)) * 2 * rem * 0.5; /* T25（O-23）：星海開拓の痕跡も同じ考え方 */ // T24（O-20）：試練の痕跡は早い R ほど多く、いまの係数で数えると安く見える。終了までの係数の伸び（実測 R1 3.0→終了 4.9≈0.5/R）を上乗せ // C2 では2本の平均（1本なら cf-3 と同値）
     // 2026-11-02 繁殖の方策（T8-H1：AI が一度も繁殖しない）：①繁栄度の1段は「これから得る痕跡」にも掛かる（自分の痕跡の歩調 × 残R）②次の段の支払い（P150／L3）へ貯める途中にも価値を置く（貯めずに大量消費(代謝)で P を崩すのを防ぐ）
     if (rem > 0 && RSo(st).breed) { const pace = Math.max(1, sc.real / Math.max(1, st.round - 1)); const fut = pace * rem; const bc = G.breedCost(p);
@@ -276,7 +277,7 @@
     if (RSo(st).amplify && !(p.uses && p.uses.amplify)) p.organs.filter(o => G.ampOk(st, o.id, true) && !o.amp).forEach(o => out.push(A({ type: 'amplify', organ: o.id })));
     if (RSo(st).doubleStep) G.TRACKS.forEach(t => { const c2 = G.stepCostDouble(p, t); if (c2 !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0, steps: 2 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c2, p.E), steps: 2 })); } });
     if (G.starOn(st)) { // T25（O-23）：星海開拓（1／2／3 段・跳躍は下の leap）。先駆の繁栄度は「その段を除いた終了時の痕跡の見込み ＞ 5 × 今の繁栄度」なら選ぶ
-      const s0 = p.star | 0; [1, 2, 3].forEach(n => { if (s0 + n > G.STAR_MAX || (n === 2 && !RSo(st).doubleStep) || (n === 3 && !(p.dv3 > 0))) return; const lvs = []; for (let l = s0 + 1; l <= s0 + n; l++) lvs.push(l); out.push(A({ type: 'track', track: 'star', steps: n, pros: starPros(st, p, lvs) })); }); }
+      const s0 = p.star | 0; [1, 2, 3].forEach(n => { if (s0 + n > G.STAR_MAX || (n > 1 && (RSo(st).star || {}).top && s0 + n >= G.STAR_MAX) || (n === 2 && !RSo(st).doubleStep) || (n === 3 && !(p.dv3 > 0))) return; const lvs = []; for (let l = s0 + 1; l <= s0 + n; l++) lvs.push(l); out.push(A({ type: 'track', track: 'star', steps: n, pros: starPros(st, p, lvs) })); }); }
     if (p.dv3 > 0) G.TRACKS.forEach(t => { const c3 = G.stepCostTriple(p, t); if (c3 !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0, steps: 3 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c3, p.E), steps: 3 })); } }); // T14 三段進行（進化加速の残り回数）
     if (RSo(st).gToE) [1, 2, 4].forEach(n => out.push(A({ type: 'gToE', n })));
     p.cards.forEach(c => { out.push(A({ type: 'card', card: c, choice: 'E' })); if (c === 'J') out.push(A({ type: 'card', card: c, choice: 'G' })); if (p.shields > 0) out.push(A({ type: 'card', card: c, choice: 'E', shield: true })); });

@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.106'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.108'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -285,15 +285,22 @@
   G.RULESETS.t24H = Object.assign({}, G.RULESETS.t24, { name: 'T24H（計測のみ・試練の額 約 1.5 倍）', trial: { cost: { E: [30, 45, 70, 90, 110], G: [15, 30, 45, 60, 75], P: [45, 90, 135, 180, 225], coop: [2, 3, 5, 6, 8], L: [2, 2, 3, 3, 4] }, gem: [2, 2, 2, 3, 3] } });
   G.RULESETS.t24F = Object.assign({}, G.RULESETS.t24, { name: 'T24F（計測のみ・試練の報酬 全 R 痕跡+2）', trial: Object.assign({}, G.RULESETS.t24.trial, { gem: [2, 2, 2, 2, 2] }) });
   // T25（O-23・第71部 §71〜§75）：T24 − 試練 ＋ 星海開拓（進化で進める 5 本目のトラック・段のコスト＝着く段の条件カードの額）− 器官の後追い料。t25S・t25N は計測のみ
-  G.STAR_NAME = '星海開拓'; G.STAR_CARD_NAME = '開拓の条件'; // 表示名はここだけで持つ（O-23：あとで差し替えやすく）
+  G.STAR_NAME = '星海開拓'; G.STAR_CARD_NAME = '開拓の条件'; G.STAR_JUMP_NAME = '星渡り'; // 表示名はここだけで持つ（O-23：あとで差し替えやすく）
   { const STAR2 = { EG: { E: [10, 20, 30, 40, 50], G: [5, 10, 15, 20, 25] }, GP: { G: [5, 10, 15, 20, 25], P: [15, 30, 45, 60, 75] }, Pc: { P: [15, 30, 45, 60, 75], coop: [1, 1, 2, 2, 3] }, cL: { coop: [1, 1, 2, 2, 3], L: [1, 1, 1, 2, 2] }, LE: { L: [1, 1, 1, 2, 2], E: [10, 20, 30, 40, 50] } };
     const STAR1 = { E: { E: [20, 30, 45, 60, 75] }, G: { G: [10, 20, 30, 40, 50] }, P: { P: [30, 60, 90, 120, 150] }, coop: { coop: [1, 2, 3, 4, 5] }, L: { L: [1, 1, 2, 2, 3] } };
     // star.first[段]：先駆の段（3・5 段目）。先駆は「痕跡 gem+1」か「痕跡 pros・繁栄度 +1」を選ぶ（pros がなければ痕跡 +1 だけ）
     G.RULESETS.t25 = Object.assign({}, G.RULESETS.t24, { name: 'T25（T24−試練＋星海開拓）', trial: null, organLateFee: 0, star: { cards: STAR2, gem: [2, 3, 4, 4, 5], first: { 3: { pros: 0 }, 5: { pros: 1 } } } });
     G.RULESETS.t25S = Object.assign({}, G.RULESETS.t25, { name: 'T25S（計測のみ・条件 1 種払い）', star: { cards: STAR1, gem: [2, 2, 3, 4, 5], first: { 3: { pros: 0 }, 5: { pros: 1 } } } });
-    G.RULESETS.t25N = Object.assign({}, G.RULESETS.t25, { name: 'T25N（計測のみ・先駆の繁栄度なし）', star: Object.assign({}, G.RULESETS.t25.star, { first: { 3: {}, 5: {} } }) }); }
+    G.RULESETS.t25N = Object.assign({}, G.RULESETS.t25, { name: 'T25N（計測のみ・先駆の繁栄度なし）', star: Object.assign({}, G.RULESETS.t25.star, { first: { 3: {}, 5: {} } }) });
+    // T26（2026-11-14・ORDERS O-26・ユーザー承認・第71部 §78〜§79・隠しセット）＝T25 ＋ 星海開拓を Lv1〜Lv6 に（内部は 0〜5 のまま・表示は +1）・Lv5／Lv6 の値上げ（×6・×8）・最上段は Lv6 の扱い（先着 痕跡 3＋祝福 1・後着 痕跡 2・二段／三段進化では入れない・神の裁定 祝福 +2）・先駆は Lv4 だけ ＋ 代謝 Lv6 E100 ＋ 開拓の跳躍形質（JS・強 G40／弱 G35）
+    const STAR3 = { EG: { E: [10, 20, 30, 60, 80], G: [5, 10, 15, 30, 40] }, GP: { G: [5, 10, 15, 30, 40], P: [15, 30, 45, 90, 120] }, Pc: { P: [15, 30, 45, 90, 120], coop: [1, 1, 2, 3, 4] }, cL: { coop: [1, 1, 2, 3, 4], L: [1, 1, 1, 2, 3] }, LE: { L: [1, 1, 1, 2, 3], E: [10, 20, 30, 60, 80] } };
+    const STAR3L = { EG: { E: [10, 20, 30, 50, 70], G: [5, 10, 15, 25, 35] }, GP: { G: [5, 10, 15, 25, 35], P: [15, 30, 45, 75, 105] }, Pc: { P: [15, 30, 45, 75, 105], coop: [1, 1, 2, 3, 4] }, cL: { coop: [1, 1, 2, 3, 4], L: [1, 1, 1, 2, 3] }, LE: { L: [1, 1, 1, 2, 3], E: [10, 20, 30, 50, 70] } };
+    const T25 = G.RULESETS.t25, star26 = { cards: STAR3, gem: [2, 3, 4, 4, 0], first: { 3: { pros: 0 } }, lv1: true, top: { judge: 2 } }; // lv1＝表示は Lv（内部の段＋1）／top＝最上段（内部 5＝Lv6）は 4 本の Lv6 と同じ（lv6Gems・先着の祝福+1・二段／三段進化では入れない）＋神の裁定 祝福 judge
+    G.RULESETS.t26 = Object.assign({}, T25, { name: 'T26（T25＋星海開拓 Lv1〜Lv6・Lv5／Lv6 の値上げ・代謝 Lv6 E100・星渡り）', star: star26, lv6Pay: Object.assign({}, T25.lv6Pay, { metab: { E: 100 } }), traitPool: T25.traitPool.concat(['JS']), traitCosts: Object.assign({}, T25.traitCosts, { JS: [40, 35] }) });
+    G.RULESETS.t26L = Object.assign({}, G.RULESETS.t26, { name: 'T26L（計測のみ・星海開拓の Lv5／Lv6 が ×5／×7）', star: Object.assign({}, star26, { cards: STAR3L }) });
+    G.RULESETS.t26M = Object.assign({}, G.RULESETS.t26, { name: 'T26M（計測のみ・代謝 Lv6 E120）', lv6Pay: Object.assign({}, T25.lv6Pay, { metab: { E: 120 } }) }); }
   G.RULES_VISIBLE = ['t25'];
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
@@ -356,6 +363,7 @@
     IM: { name: '代謝亢進', cat: 'I', cost: [8, 6], strong: '好きな1種の収入+3（取得時固定）', weak: '好きな1種の収入+2（取得時固定）', permWeak: true },
     DG: { name: '遺伝子図書館', cat: 'D', cost: [7, 5], strong: '毎R形質1枚を-{2}Gで獲得可（排他不要）', weak: '毎R形質1枚を-{1}Gで獲得可（排他不要）', weak2: '毎R形質1枚を-{dgDiscW:4}Gで獲得可（排他不要）', permWeak: true }, // 2026-11-05 弱の文を単体で読める形に（ユーザー指摘）
     JI: { name: '知的跳躍', cat: 'J', cost: [9, 7], strong: '知性+2段階（即時）', strongRes: '知性+1段階＋G+{3}（即時）', strongGate: '知性+1段階＋知性の臨界+1（即時）', strongGem: '知性+1段階＋痕跡+1（即時）', strongCap: '知性+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '知性+1段階＋Lv5★で必ず強効果', weak2: '知性+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
+    JS: { name: G.STAR_JUMP_NAME, cat: 'J', cost: [13, 11], strong: `${G.STAR_NAME}+1段階（${G.STAR_CARD_NAME}は払わない）＋痕跡+1（即時・Lv6 には入れない）`, weak: `${G.STAR_NAME}+1段階（${G.STAR_CARD_NAME}は払わない・即時・Lv6 には入れない）`, permWeak: false, instant: true }, // T26（O-26）：開拓の跳躍形質（表示名は G.STAR_JUMP_NAME と揃える・値段は数値セットの traitCosts）
     JB: { name: '身体覚醒', cat: 'J', cost: [9, 7], strong: '身体+2段階（即時）', strongRes: '身体+1段階＋生命核+1（即時）', strongGate: '身体+1段階＋身体の臨界+1（即時）', strongGem: '身体+1段階＋痕跡+1（即時）', strongCap: '身体+2段階（即時・Lv4 まで。Lv4 以上なら+1段階）', weak: '身体+1段階＋Lv5★で必ず強効果', weak2: '身体+1段階（その段が★なら強の報酬）', permWeak: false, instant: true },
     // 2026-10-28 ユーザー採用（第42部 N5/N8/N9）：コンボ廃止の補填。序盤に取るほど得な「資源を生む／器官に役立つ」形質
     NE: { name: '代替燃料', cat: 'N', cost: [3, 2], strong: '器官形成の E を P で払える（E1＝P1）', weak: '器官形成の E を P で払える（E3＝P5・切り上げ）', permWeak: true }, // 2026-10-30 弱 E1＝P2 → E3＝P5（強弱の差を縮める・ユーザー採用）
