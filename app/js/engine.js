@@ -74,6 +74,7 @@
     if (G.RULESETS[rules].noCombo) { st.shared.combos.two = []; st.shared.combos.three = []; } else log(st, null, 'コンボ：' + comboNames(st).join('／')); // 2026-10-28 noCombo：コンボ廃止
     log(st, null, '器官の場：' + st.shared.lineages.map(l => G.LINEAGES[l]).join('・'));
     { const T7 = G.RULESETS[rules].tribute; if (T7 && T7.pool) { st.shared.tribSlots = shuffle(st, T7.pool).slice(0, T7.pick || 3); log(st, null, `恩寵枠（ラウンド${T7.openRound || 6}の神の到来で開く）：` + st.shared.tribSlots.map(id => G.SLOT_BY_ID[id].name).join('・')); } } // 第35部：候補から抽選
+    if (G.RULESETS[rules].trial) { st.shared.trials = shuffle(st, ['E', 'G', 'P', 'coop', 'L']); st.shared.trialBy = {}; log(st, null, '試練（R1〜R5）：' + st.shared.trials.map(k => ALTAR_JP[k]).join('→')); } // T24（O-20・第71部 §65）：試練 5 種を R1〜R5 に 1 種ずつ（乱数・全員に公開）。trial のないセットは乱数を引かない＝既定の対局は変わらない
     return st;
   }
   function comboNames(st) {
@@ -1054,6 +1055,19 @@
     const nth = altarCount(p), vg = A.vg[nth - 1] || 0; p.gemsets += vg;
     afterAction(st, p, `献上（${ALTAR_JP[k]}）祝福+${vg}（${nth} 個目）`, true); return true;
   };
+  // T24（O-20・第71部 §65）：試練＝いまの R の試練に、その R の額を払う（1 人 1 回・排他なし・解放条件なし・後払いなし）。報酬は R で決まる痕跡（trial.gem）。割引・代用・結晶体質なし。払った生命核・P は投入に数えない
+  function trialKey(st, r) { return RS(st).trial && st.shared.trials ? st.shared.trials[(r || st.round) - 1] || null : null; }
+  function trialCost(st, r) { const k = trialKey(st, r); return k ? RS(st).trial.cost[k][(r || st.round) - 1] : null; }
+  function trialGem(st, r) { const T = RS(st).trial; return T ? T.gem[(r || st.round) - 1] || 0 : 0; }
+  function trialDone(st, p, r) { const b = st.shared.trialBy && st.shared.trialBy[r || st.round]; return !!(b && b.includes(p.id)); }
+  function trialCount(st, p) { return Object.values(st.shared.trialBy || {}).filter(b => b.includes(p.id)).length; }
+  ACTIONS.trial = (st, p, a) => {
+    if (!RS(p).trial) throw new Error('この数値セットに試練はありません'); const k = trialKey(st); if (!k) throw new Error('このラウンドに試練はありません');
+    if (trialDone(st, p)) throw new Error(`試練（${ALTAR_JP[k]}）は打ち済みです（1 人 1 回）`);
+    const c = trialCost(st); if (p[k] < c) throw new Error(`${ALTAR_JP[k]}が足りません（必要${c}）`);
+    useToken(p, false); st.shared.trialBy[st.round] = (st.shared.trialBy[st.round] || []).concat(p.id); p[k] -= c; const n = trialGem(st); addGem(st, p, 'body', n, `試練（${ALTAR_JP[k]}）`); p.trialGem = (p.trialGem || 0) + n; /* bot の評価用 */
+    afterAction(st, p, `試練（${ALTAR_JP[k]}）痕跡+${n}`, true); return true;
+  };
   // 試作 crystal：共用アクション「結晶化」＝E または G を払って祝福+1（排他なし・W）
   ACTIONS.crystal = (st, p, a) => {
     const cfg = RS(p).crystal; if (!cfg) throw new Error('この数値セットに結晶化はありません');
@@ -1484,5 +1498,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { altarCount, altarCost, altarNextVg, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { trialKey, trialCost, trialGem, trialDone, trialCount, altarCount, altarCost, altarNextVg, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

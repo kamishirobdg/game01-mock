@@ -290,3 +290,9 @@ button.slot.altar.used.na { opacity:.8; }
 .slot .why { display:block; font-size:10px; line-height:1.25; color:#b00; margin-top:2px; white-space:normal; }
 button.slot.na { opacity:.6; }
 [data-theme="dark"] .slot .why { color:#ff8a8a; }
+/* T24（O-20）：試練 */
+.slot.trial { width:auto; min-width:0; flex:1 1 110px; }
+.slot.trial.now { border:2px solid #7a5cc4; }
+.slot.trial.past { opacity:.45; background:#f3f3f3; }
+.slot.trial .tw { display:inline-flex; gap:2px; margin-top:3px; }
+[data-theme="dark"] .slot.trial.past { background:#262b35; }

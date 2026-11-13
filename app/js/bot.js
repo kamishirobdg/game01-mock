@@ -194,7 +194,8 @@
       if (p.herdCoopAdd && RSo(st).herd && w.herdRate) v += Math.min(room, rem * w.herdRate * p.herdCoopAdd) * (w.coopE || 0) * w.E; }
     // 2026-11-02 rem>0：最終ラウンドにはゲートの途中（届かない収集）へ価値を置かない（T8-H1：最終Rの形質・器官・資源枠の空振り）
     if (RSo(st).gates && rem > 0) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cfB * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
-    v += ((sc.cfB - 3) + (sc.cfC - 3)) / 2 * rem * w.coefFuture; // C2 では2本の平均（1本なら cf-3 と同値）
+    v += ((sc.cfB - 3) + (sc.cfC - 3)) / 2 * rem * w.coefFuture;
+    if (p.trialGem && rem > 0) v += p.trialGem * 2 * rem * 0.5; // T24（O-20）：試練の痕跡は早い R ほど多く、いまの係数で数えると安く見える。終了までの係数の伸び（実測 R1 3.0→終了 4.9≈0.5/R）を上乗せ // C2 では2本の平均（1本なら cf-3 と同値）
     // 2026-11-02 繁殖の方策（T8-H1：AI が一度も繁殖しない）：①繁栄度の1段は「これから得る痕跡」にも掛かる（自分の痕跡の歩調 × 残R）②次の段の支払い（P150／L3）へ貯める途中にも価値を置く（貯めずに大量消費(代謝)で P を崩すのを防ぐ）
     if (rem > 0 && RSo(st).breed) { const pace = Math.max(1, sc.real / Math.max(1, st.round - 1)); const fut = pace * rem; const bc = G.breedCost(p);
       v += (sc.cfB - (RSo(st).coef2 ? RSo(st).coef2.breedBase : 3)) * fut * 2 * w.breedFut * (RSo(st).gemPt === 1 ? 1 : 0.5);
@@ -248,6 +249,7 @@
     G.traitPool(st).filter(t => !G.trait(p, t)).forEach(t => { const tc = G.traitCost(st, p, t); const c = tc.G; tslots.forEach(sl => out.push(A(Object.assign({ type: 'trait', trait: t, useL: lFor(c, p.G), res: 'E', track: 'intel' }, sl)))); if (RSo(st).traitChoice && tc.strong) { const cw = G.traitCost(st, p, t, undefined, true).G; out.push(A({ type: 'trait', trait: t, useL: lFor(cw, p.G), res: 'E', track: 'intel', weak: true })); } }); // traitChoice：弱（安い）も候補に
     if (RSo(st).altar) G.ALTAR_KEYS.forEach(k => { if (!(p.tribGame && p.tribGame[k]) && G.altarCost(p, k) !== null && p[k] >= G.altarCost(p, k)) out.push(A({ type: 'altar', res: k })); }); // T23（O-19）：祭壇の払い口 5 つ（評価は得点の祝福＋下の見込み）
     else out.push(A({ type: 'gemset', useL: lFor(G.gemsetPrice(p), p.G) }));
+    if (RSo(st).trial) { const k = G.trialKey(st); if (k && !G.trialDone(st, p) && p[k] >= G.trialCost(st)) out.push(A({ type: 'trial' })); } // T24（O-20）：いまの R の試練（評価は得点の痕跡。R が終わると消えるので見込みの項は置かない）
     if (RSo(st).tributeBulk) { const bk = RSo(st).tributeBulk; out.push(A({ type: 'gemset', useL: lFor(Math.ceil(G.gemsetPrice(p) * bk.mult), p.G), bulk: true })); const T2 = RSo(st).tribute; if (T2 && st.round >= (T2.openRound || 6)) out.push(A({ type: 'tribute', res: 'E', bulk: true }), A({ type: 'tribute', res: 'P', bulk: true })); } // 試作 tributeBulk
     if (RSo(st).tributeAll) out.push(A({ type: 'tributeAll' })); // 試作 tributeAll
     { const T = RSo(st).tribute; if (T && st.round >= (T.openRound || 6)) { if (T.shared) out.push(A({ type: 'tribute', res: 'E' }), A({ type: 'tribute', res: 'P' })); G.tribSlots(st).forEach(sl => { const def = T.slots[sl]; if (!def) return; // 献上（第33部）・恩寵枠（第35部：この卓で開いている枠だけ）
@@ -302,7 +304,7 @@
     const RN = R.rounds || G.ROUNDS;
     if (st.round === RN && bv <= base + 1e-9 && (p.left.W + p.left.AT) >= 2) {
       const SETUP = (a) => a.type === 'res' || a.type === 'convert' || a.type === 'gToE' || a.type === 'card' || a.type === 'scan' || (a.type === 'tributeSlot' && a.res);
-      const SCORE = (a) => ['breed', 'tribute', 'tributeAll', 'tributeSlot', 'track', 'mass', 'trait', 'organ', 'burst', 'gemset', 'altar', 'lCrystal', 'coopCrystal', 'express', 'premium', 'crystal'].includes(a.type);
+      const SCORE = (a) => ['breed', 'tribute', 'tributeAll', 'tributeSlot', 'track', 'mass', 'trait', 'organ', 'burst', 'gemset', 'altar', 'trial', 'lCrystal', 'coopCrystal', 'express', 'premium', 'crystal'].includes(a.type);
       let b2 = null, b2v = base + 1e-9;
       for (const a1 of candidates(st, p).filter(SETUP)) { let s1; try { s1 = G.tryApply(st, a1); } catch (e) { continue; }
         const p1 = s1.players[pid]; for (const a2 of candidates(s1, p1).filter(SCORE)) { let s2; try { s2 = G.tryApply(s1, a2); } catch (e) { continue; } const v = evaluate(s2, s2.players[pid], w); if (v > b2v) { b2v = v; b2 = a1; } } }

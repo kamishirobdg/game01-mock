@@ -58,6 +58,7 @@
     const massC = (k) => pcost('P', G.massCost(vp, k), k === 'MM' && R.mmCost ? R.mmCost : k === 'MS' && R.msCost ? R.msCost : R.massCost);
     const w = (R.gauge ? [] : [pc('W', null, { title: 'ワーカー必須（ATでは置けない）' })]);
     const bless = (k) => { const kk = k || 'G'; const vg = G.tribVg ? G.tribVg(st, kk) : 1, tr = G.tribReal ? G.tribReal(st, kk) : 0; const a = []; if (tr) a.push(pc('gem', '+' + tr)); if (vg) a.push(pc('bless', '+' + vg)); return a; }; // v3.67 祭壇＝祝福+2／T14（§16 M-a）＝痕跡と祝福の組み合わせ（配列で返す）
+    if (/^TRL_/.test(id) && R.trial) { const r = +id.slice(4); const k = st.shared.trials[r - 1]; return [pcost(k, G.trialCost(st, r)), po('→'), pc('gem', '+' + G.trialGem(st, r))]; } // T24（O-20）：試練
     if (/^ALT_/.test(id) && R.altar) { const k = id.slice(4); const c = G.altarCost(vp, k), nv = G.altarNextVg(vp); return [pcost(k, c, R.altar.cost[k]), ...(vp.tribGame && vp.tribGame[k] ? [] : [po('→'), pc('bless', '+' + nv)])]; } // T23（O-19）：祭壇の払い口
     switch (id) {
       case 'E5': return [pc('E', '+' + G.slotAmt(st, 'E5').E), ...resB]; // T19 #6：slotAmt
@@ -279,6 +280,7 @@
     form.appendChild(h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, okLabel)));
     form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); rememberForm(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || 'v1', ext: fd.get('ext') || 'none', undoMode: fd.get('undoMode'), players, bots, aiDepth: +(fd.get('aiDepth') || 1) }); });
     restoreForm(form);
+    { const qr = new URLSearchParams(location.search).get('rules'), rs = form.elements.rules; if (qr && G.RULESETS[qr] && rs) { if (![...rs.options].some(o => o.value === qr)) rs.appendChild(h('option', { value: qr }, G.RULESETS[qr].name)); rs.value = qr; } } // O-20：隠しセット（T24 など）は ?rules= のときだけ選択肢に足す
     return form;
   }
   // 前回の設定値（シード以外）を localStorage に残し、次回のフォームに引き継ぐ
@@ -590,7 +592,19 @@
     { const Rc = G.RULESETS[st.rules || 'v1']; G.SLOTS.filter(s => ['trk', 'org', 'cu'].includes(s.group) && s.id !== 'TRK' && !(s.id === 'ADP' && Rc.noAdapt) && !(s.id === 'CNV' && Rc.noConvert) && !(s.id === 'RSV' && Rc.noReserve) && (!s.rs || Rc[s.rs])).forEach(s => g.appendChild(slotButton(p, can, s, () => onSlot(p, s.id)))); } // T10：資源変換・予備動員は撤去、復元・増幅・パスは rs で表示
     // v3.55：献上（エネルギー／個体数）は T8 では廃止（数値セットに shared が無ければ表示しない）
     if (R6.tribute && R6.tribute.shared) { const T = R6.tribute; const open = st.round >= (T.openRound || 6); ['E', 'P'].forEach(res => { const a = { pid: p.id, type: 'tribute', res }; const c = G.sc(st, T.shared[res]); const reason = !open ? `ラウンド${T.openRound || 6}から（神の到来）` : can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot' + (open ? ' god' : ' locked') + (iconView() ? ' pic' : ''), title: `献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}を払って祝福+1。ラウンド${T.openRound || 6}から・共用・各自1ラウンド1回・ワーカー`, onclick: () => open && confirm(`献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}→祝福+1。実行しますか？`) && submit(a) }, reason, ...slotBody(p, 'TRIB_' + res, `献上（${res === 'E' ? 'エネルギー' : '個体数'}）`, `${res}${c} → 祝福+1`, null))); }); }
+    if (R6.trial && st.shared.trials) box.appendChild(renderTrials(p, can)); // T24（O-20）：試練（?rules=t24 のときだけ）
     if (gTop.childNodes.length > 1) box.appendChild(gTop); box.appendChild(g); return box;
+  }
+  // T24（O-20・第71部 §65）：試練 R1〜R5。いまの R の 1 枚だけ打てる・打った人のコマ・過ぎた R は打てない
+  function renderTrials(p, can) {
+    const gt = h('div', { class: 'sgroup trials' }, h('h4', null, '試練（いまのラウンドだけ・1 人 1 回）'));
+    st.shared.trials.forEach((k, i) => { const r = i + 1; const jp = G.ALTAR_JP[k], c = G.trialCost(st, r), g = G.trialGem(st, r); const ct = (k === 'coop' ? '協調' : k) + c; const nm = `R${r} 試練（${jp}）`;
+      const by = (st.shared.trialBy || {})[r] || []; const now = r === st.round, past = r < st.round;
+      const reason = past ? `R${r} の試練は終わりました` : !now ? `R${r} に打てます` : can ? check({ pid: p.id, type: 'trial' }) : roMsg;
+      const b = actBtn({ class: 'slot trial' + (now ? ' now' : past ? ' past' : ' later') + (iconView() ? ' pic' : ''), title: `${nm}：${ct} → 痕跡+${g}`, onclick: () => now && confirm(`試練（${jp}）：${ct} → 痕跡+${g}。実行しますか？`) && submit({ pid: p.id, type: 'trial' }) }, reason, ...slotBody(p, 'TRL_' + r, nm, `${ct} → 痕跡+${g}`, null));
+      if (by.length) b.appendChild(h('span', { class: 'tw' }, ...by.map(id => h('span', { class: 'mk p' + id, title: st.players[id].name }, id + 1))));
+      gt.appendChild(b); });
+    return gt;
   }
   // 献上（遺伝子・生命核・協調）のボタン。altar=true（T10 v3.68・tributeOnceGame）＝個人ボードの祭壇 3 マス：各祭壇は 1 ゲームに 1 回で、使った祭壇には自分のワーカーが乗る（engine の p.tribGame）。altar=false＝旧数値セットの共用盤（各品目 1R1回）
   function tributeButtons(p, can, altar) {
