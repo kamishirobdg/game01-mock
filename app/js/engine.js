@@ -75,6 +75,7 @@
     log(st, null, '器官の場：' + st.shared.lineages.map(l => G.LINEAGES[l]).join('・'));
     { const T7 = G.RULESETS[rules].tribute; if (T7 && T7.pool) { st.shared.tribSlots = shuffle(st, T7.pool).slice(0, T7.pick || 3); log(st, null, `恩寵枠（ラウンド${T7.openRound || 6}の神の到来で開く）：` + st.shared.tribSlots.map(id => G.SLOT_BY_ID[id].name).join('・')); } } // 第35部：候補から抽選
     if (G.RULESETS[rules].trial) { st.shared.trials = shuffle(st, ['E', 'G', 'P', 'coop', 'L']); st.shared.trialBy = {}; log(st, null, '試練（R1〜R5）：' + st.shared.trials.map(k => ALTAR_JP[k]).join('→')); } // T24（O-20・第71部 §65）：試練 5 種を R1〜R5 に 1 種ずつ（乱数・全員に公開）。trial のないセットは乱数を引かない＝既定の対局は変わらない
+    if (G.RULESETS[rules].star) { st.shared.starCards = shuffle(st, Object.keys(G.RULESETS[rules].star.cards)); st.shared.starFirst = {}; st.players.forEach(q => { q.star = 0; q.starGem = 0; q.starPros = 0; }); log(st, null, `${G.STAR_NAME}（1〜5 段目）：` + st.shared.starCards.map(k => starCardName(st, k)).join('→')); } // T25（O-23）：条件カード 5 枚を 1〜5 段目に（乱数・全員に公開）
     return st;
   }
   function comboNames(st) {
@@ -294,6 +295,7 @@
     const o = organ(p, 'Rh2'); if (!o) return c;
     return Math.max(sc(p, 1), c - sc(p, o.strong ? 3 : 1));
   }
+  function lateFee(p) { const f = RS(p).organLateFee; return f === undefined ? 1 : f; } // 器官の後追い料（基準単位）。T25（O-23）は 0＝廃止（`|| 1` だと 0 が 1 に戻る）
   function altFuelP(p, e) { const r = p.altFuel; if (!r) return null; return Math.ceil((e * r[0]) / r[1]); } // 代替燃料：E e ぶんを P で払うときの必要 P（切り上げ）
   function organCost(st, p, oid, full, anyTier) { // full＝定価（一気立て・T15 の差額払いを使わない）／anyTier＝まだ順番が来ていない上の段も、急速形成で建てるときの値段を返す（表示用・2026-11-09 v3.88）
     const lin = G.ORGANS[oid].lin; const tier = G.ORGANS[oid].tier; const n0 = lineageCount(p, lin);
@@ -301,7 +303,7 @@
     const first = st.shared.organFirst[oid] === undefined || st.shared.organFirst[oid] === p.id;
     const strong = RS(p).organSameEffect ? true : first; // 試作 organSameEffect：後続も同じ効果（先着の差は値段だけ）
     const ctab = ((RS(p).organCostBy || {})[lin] || RS(p).organCost || G.ORGAN_COST); let [e, g] = ctab[n]; const list = { E: e, G: g }; let diff = null; if (RS(p).organCumulative && n > 0 && !full) { diff = { E: ctab[n - 1][0], G: ctab[n - 1][1] }; e -= diff.E; g = Math.max(0, g - diff.G); } // T15 差額払い：1 つ前の段の定価（E・G とも）を引く（一気立て＝full は引かない）
-    if (!first) { if (RS(p).organSameEffect) { if (!p.organNoG) e += sc(p, RS(p).organLateFee || 1); } else g = 0; } if (p.organNoG) g = 0; // T10 代謝 Lv4：G なし＋後追い料なし // organCostBy：系統別のコスト表／organLateFee：後追い料（基準単位）
+    if (!first) { if (RS(p).organSameEffect) { if (!p.organNoG) e += sc(p, lateFee(p)); } else g = 0; } if (p.organNoG) g = 0; // T10 代謝 Lv4：G なし＋後追い料なし // organCostBy：系統別のコスト表／organLateFee：後追い料（基準単位）
     if (RS(p).organEscalate) e += Math.floor(p.organs.length / RS(p).organEscalate); // T4：所持器官数が増えるほど建造コスト+1E（N枚ごと）
     const ca1 = organ(p, 'Ca1'); if (ca1 && (ca1.strong || p.uses.ca1 < 3)) e -= sc(p, 1);
     const ca3 = organ(p, 'Ca3'); if (ca3) e -= sc(p, ca3.strong ? 2 : 1);
@@ -379,7 +381,8 @@
   function ampTargetText(x) { const AM = RS(x).amplify || {}; const lins = (AM.lins || ['Mg', 'Tl', 'Cx']).map(l => G.LINEAGES[l]).join('・'); const os = (AM.organs || []).map(id => G.ORGANS[id].name).join('・'); const bo = (AM.buildOnly || []).map(id => G.ORGANS[id].name).join('・'); return os ? `${lins}の器官と${os}。数の効果だけ2倍${bo ? '・' + bo + 'は形成と同時のみ' : ''}` : lins; }
   function tribOutText(x, k) { const vg = tribVg(x, k), tr = tribReal(x, k); const a = []; if (tr) a.push(`痕跡+${tr}`); if (vg) a.push(`祝福+${vg}`); return a.join('・') || '—'; } // T14（第71部 §16 M-a）：祭壇の出力の表示（遺伝子＝痕跡+1・祝福+1／生命核＝痕跡+2／協調＝祝福+2）
   function tribLimitText(x) { return RS(x).tributeOnceGame ? '個人ボードの祭壇・1ゲームに1回' : '各自1ラウンド1回'; } // v3.67 祭壇（第67部 案 B）
-  function breedCost(p) { if (p.breed >= RS(p).breed.length) return null; const mb = trait(p, 'MB'); const c = RS(p).breed[p.breed]; if (mb && !mb.strong && RS(p).mbBreedDiscWeak !== undefined) return Math.max(sc(p, 10), c - RS(p).mbBreedDiscWeak); return mb && mb.strong ? (RS(p).mbMode === 'multi' ? c : RS(p).mbBreedDisc !== undefined ? Math.max(sc(p, 10), c - sc(p, RS(p).mbBreedDisc)) : Math.ceil(c / 2)) : c; } // mbMode 'multi'（T14）：強の割引なし（代わりに同時払い 2 段ずつ）
+  function breedCost(p) { if (breedLeft(p) <= 0) return null; const mb = trait(p, 'MB'); const c = RS(p).breed[p.breed]; if (mb && !mb.strong && RS(p).mbBreedDiscWeak !== undefined) return Math.max(sc(p, 10), c - RS(p).mbBreedDiscWeak); return mb && mb.strong ? (RS(p).mbMode === 'multi' ? c : RS(p).mbBreedDisc !== undefined ? Math.max(sc(p, 10), c - sc(p, RS(p).mbBreedDisc)) : Math.ceil(c / 2)) : c; } // mbMode 'multi'（T14）：強の割引なし（代わりに同時払い 2 段ずつ）
+  function breedLeft(p) { const R = RS(p); const n = R.breed.length - p.breed; return R.star && R.coef2 ? Math.min(n, prosRoom(p)) : n; } // T25（O-23）：繁殖は「繁栄度 ×7 まで」（星海開拓の先駆で繁栄度を得た人は 1 段少ない）
   function breedMaxN(p) { const mb = trait(p, 'MB'); return RS(p).mbMode === 'multi' && mb && mb.strong ? (RS(p).mbBreedN || 2) : 1; } // T14 繁殖変換：P 払い・L 払いそれぞれの上限段数（増殖暴走の強で 2） // mbBreedDisc：増殖暴走の強＝各段 -N（旧は半減） // 段数＝breed 配列の長さ（C2 で上限を伸ばす試作）
   function gemsetPrice(p) { const T = RS(p).tribute; if (T && T.flatG) return sc(p, T.flatG); return sc(p, Math.max(G.GEMSET_FLOOR, G.GEMSET_BASE - p.traits.length - (RS(p).gemsetCoopDisc ? Math.floor(p.coop / 2) : 0))) + (RS(p).gemsetEscalate && !p.gemsetNoEsc ? RS(p).gemsetEscalate * p.gemsets : 0); } // tribute.flatG：献上（遺伝子）は定額 // 試作 gemsetEscalate：購入ごとに+N／gemsetCoopDisc：−協調÷2
   function pbGain(x) { const v = RS(x).pbGain; return v !== undefined ? v : sc(x, 10); } // pbGain：Pブーストの獲得量（数値セットの絶対値。未指定は P10×倍率）
@@ -668,6 +671,7 @@
 
   // トラック進行： {track, pay:'E'|'P'|'G', useL, bonus}
   ACTIONS.track = (st, p, a) => {
+    if (a.track === 'star') return starTrack(st, p, a); // T25（O-23）：星海開拓
     const c = stepCost(p, a.track, a.bonus); if (c === null) throw new Error('Lv5です');
     if (a.steps === 2) { // T10（第58部 §4-1）二段進行：E 進行は 2 段まとめて払える（手番 1 つ・Lv6 には入らない・E 払いのみ）
       if (!RS(p).doubleStep) throw new Error('この数値セットに二段進化はありません'); if (a.bonus) throw new Error('追加アクションでは二段進化できません');
@@ -710,7 +714,7 @@
       afterAction(st, p, `繁殖（E${eAlt}）`, !a.bonus); addUpgrade(st, p, `繁殖×${3 + p.breed}`); return !a.bonus; }
     let nP, nL; if (a.nP !== undefined || a.nL !== undefined) { nP = a.nP | 0; nL = a.nL | 0; } else { nP = a.pay === 'L' ? 0 : 1; nL = a.pay === 'L' ? 1 : 0; }
     const total = nP + nL; if (total < 1) throw new Error('繁殖：段数を選んでください');
-    const left = R.breed.length - p.breed; if (left <= 0) throw new Error('繁殖は上限です'); if (total > left) throw new Error(`繁殖はあと ${left} 段です`);
+    const left = breedLeft(p); if (left <= 0) throw new Error('繁殖は上限です'); if (total > left) throw new Error(`繁殖はあと ${left} 段です`);
     if (nL && !R.breedL) throw new Error('この数値セットでは生命核で繁殖できません');
     if (!multi && total > 1) throw new Error('繁殖は 1 段ずつです');
     const mx = breedMaxN(p); if (nP > mx || nL > mx) throw new Error(`繁殖：P 払い・生命核払いはそれぞれ ${mx} 段まで${mx === 1 && multi ? '（増殖暴走の強で 2 段）' : ''}`);
@@ -1068,6 +1072,46 @@
     useToken(p, false); st.shared.trialBy[st.round] = (st.shared.trialBy[st.round] || []).concat(p.id); p[k] -= c; const n = trialGem(st); addGem(st, p, 'body', n, `試練（${ALTAR_JP[k]}）`); p.trialGem = (p.trialGem || 0) + n; /* bot の評価用 */
     afterAction(st, p, `試練（${ALTAR_JP[k]}）痕跡+${n}`, true); return true;
   };
+  // T25（O-23・第71部 §71〜§75）：星海開拓＝進化で進める 5 本目のトラック（0〜5 段）。段のコスト＝着く段の条件カードの額（2 種とも払う）。割引・代用・結晶体質なし。払った生命核・P は投入に数えない
+  //   報酬＝着いた段の痕跡（star.gem）。3・5 段目に最初に着いた人（先駆）は「痕跡 gem+1」か「痕跡 first[段].pros・繁栄度 +1」を選ぶ（a.pros＝繁栄度を選ぶ段の配列）。繁栄度の上限は今のまま
+  const STAR_MAX = 5;
+  function starOn(st) { return !!(RS(st).star && st.shared.starCards); }
+  function starCardName(st, k) { return Object.keys(RS(st).star.cards[k]).map(r => ALTAR_JP[r]).join('＋'); }
+  function starCost(st, lv) { const S = RS(st).star; const k = st.shared.starCards[lv - 1]; const c = S.cards[k]; const o = {}; Object.keys(c).forEach(r => { o[r] = c[r][lv - 1]; }); return o; } // {E:10, G:5}
+  function starCostText(c) { return Object.keys(c).map(r => (r === 'coop' ? '協調' : r === 'L' ? '生命核' : r) + c[r]).join('＋'); }
+  function starGem(st, lv) { return RS(st).star.gem[lv - 1] || 0; }
+  function starFirstDef(st, lv) { return (RS(st).star.first || {})[lv] || null; }
+  function starIsFirst(st, lv) { return !!starFirstDef(st, lv) && st.shared.starFirst[lv] === undefined; }
+  function prosRoom(p) { const c2 = RS(p).coef2; return c2 ? (c2.breedMax || 4) - (p.breedUps || 0) : 0; } // 繁栄度をあと何上げられるか（上限 ×7）
+  function starProsOk(st, p, lv) { const F = starFirstDef(st, lv); return !!F && F.pros !== undefined && starIsFirst(st, lv) && prosRoom(p) > 0; }
+  function starPlan(st, p, from, n) { const out = []; for (let lv = from + 1; lv <= from + n; lv++) { if (lv > STAR_MAX) return null; out.push({ lv, c: starCost(st, lv) }); } return out; } // n 段ぶんの各段の額
+  function starCheckPros(st, p, lvs, pros) { // 繁栄度を選ぶ段の検証（先駆の段で・上限に余地があるとき）
+    const ps = (pros || []).map(Number); let room = prosRoom(p);
+    ps.forEach(lv => { if (!lvs.includes(lv)) throw new Error(`${G.STAR_NAME}：${lv} 段目には着きません`); const F = starFirstDef(st, lv); if (!F || F.pros === undefined || !starIsFirst(st, lv)) throw new Error(`${G.STAR_NAME}：${lv} 段目の先駆ではないので繁栄度は選べません`); if (room <= 0) throw new Error('繁栄度は上限です'); room -= 1; });
+    return ps;
+  }
+  function starPay(p, c, eDisc) { // c＝1 段の額。eDisc＝E の部分から引く額（跳躍）。足りなければ例外
+    const need = Object.assign({}, c); let used = 0; if (need.E && eDisc) { used = Math.min(eDisc, need.E); need.E -= used; }
+    Object.keys(need).forEach(r => { if (p[r] < need[r]) throw new Error(`${ALTAR_JP[r]}が足りません（必要${need[r]}・所持${p[r]}）`); });
+    Object.keys(need).forEach(r => { p[r] -= need[r]; }); return { txt: starCostText(need), used };
+  }
+  function starStep(st, p, pros, why) { // 1 段進めて報酬（支払いは済み）
+    const lv = (p.star | 0) + 1; p.star = lv; let n = starGem(st, lv); let first = false, tookPros = false;
+    if (starIsFirst(st, lv)) { first = true; const F = starFirstDef(st, lv); if (pros.includes(lv) && F.pros !== undefined && prosRoom(p) > 0) { n = F.pros; tookPros = true; } else n += 1; st.shared.starFirst[lv] = p.id; }
+    if (n) addGem(st, p, 'body', n, `${G.STAR_NAME} ${lv} 段目${first ? '・先駆' : ''}`); p.starGem = (p.starGem || 0) + n; // starGem：bot の評価用
+    if (tookPros) { p.breedUps = (p.breedUps || 0) + 1; p.upgrades += 1; p.starPros = (p.starPros || 0) + 1; log(st, p.id, `${p.name}：${G.STAR_NAME} ${lv} 段目・先駆 → 繁栄度 ×${coefB(p)}`); }
+    log(st, p.id, `${p.name}：${G.STAR_NAME} ${lv} 段目（${why}）`);
+  }
+  function starTrack(st, p, a) { // ACTIONS.track の track:'star'（steps 1／2／3）
+    if (!starOn(st)) throw new Error(`この数値セットに${G.STAR_NAME}はありません`); if (a.bonus) throw new Error(`追加アクションでは${G.STAR_NAME}を進められません`);
+    const n = a.steps || 1; if (![1, 2, 3].includes(n)) throw new Error('段数が不正です'); if (n === 2 && !RS(p).doubleStep) throw new Error('この数値セットに二段進化はありません'); if (n === 3 && !(p.dv3 > 0)) throw new Error('三段進化は進化加速の回数が残っているときだけです');
+    const plan = starPlan(st, p, p.star | 0, n); if (!plan) throw new Error(n === 1 ? `${G.STAR_NAME}は ${STAR_MAX} 段目です` : `${G.STAR_NAME}は ${STAR_MAX} 段目までです`);
+    const pros = starCheckPros(st, p, plan.map(x => x.lv), a.pros);
+    const tot = {}; plan.forEach(x => Object.keys(x.c).forEach(r => { tot[r] = (tot[r] || 0) + x.c[r]; })); Object.keys(tot).forEach(r => { if (p[r] < tot[r]) throw new Error(`${ALTAR_JP[r]}が足りません（必要${tot[r]}・所持${p[r]}）`); });
+    useToken(p, true); const paid = plan.map(x => starPay(p, x.c, 0).txt); if (n === 3) p.dv3 -= 1;
+    afterAction(st, p, `${G.STAR_NAME}を${n === 2 ? '二段' : n === 3 ? '三段' : ''}進化（${paid.join('・')}${n === 3 ? '・進化加速 残' + p.dv3 : ''}）`, true);
+    plan.forEach(() => starStep(st, p, pros, '進化')); return true;
+  }
   // 試作 crystal：共用アクション「結晶化」＝E または G を払って祝福+1（排他なし・W）
   ACTIONS.crystal = (st, p, a) => {
     const cfg = RS(p).crystal; if (!cfg) throw new Error('この数値セットに結晶化はありません');
@@ -1171,11 +1215,14 @@
     }
     if (def.kind === 'leap') { // 跳躍：トラック進行を n 回（同じでも別でも）・合計コストから −disc（W必須。2回目は1回目を進めた後の Lv の値段）
       const n = def.n || 2; const ts = (a.tracks || []).slice(0, n); if (ts.length !== n) throw new Error(`進めるトラックを${n}つ選んでください（同じでも可）`);
-      ts.forEach(t => { if (!G.TRACKS.includes(t)) throw new Error('トラックが不正です'); });
+      ts.forEach(t => { if (!G.TRACKS.includes(t) && !(t === 'star' && starOn(st))) throw new Error('トラックが不正です'); });
+      const nStar = ts.filter(t => t === 'star').length; const s0 = p.star | 0; let pros = [];
+      if (nStar) { const plan = starPlan(st, p, s0, nStar); if (!plan) throw new Error(`${G.STAR_NAME}はこれ以上進めません`); pros = starCheckPros(st, p, plan.map(x => x.lv), a.pros); }
       claimSlot(st, p, a.slot, {}); useToken(p, true);
       let d = sc(p, def.disc || 0); const paid = []; const lv0 = Object.assign({}, p.lv);
       try {
         ts.forEach((t, i) => {
+          if (t === 'star') { const lv = (p.star | 0) + 1; const r = starPay(p, starCost(st, lv), d); d -= r.used; p.star = lv; paid.push(`${G.STAR_NAME} ${lv} 段目（${r.txt || 'なし'}）`); return; } // T25（O-23）：各段の額・割引は E の部分にだけ
           const c = stepCost(p, t); if (c === null) throw new Error(`${G.TRACK_INFO[t].name}はこれ以上進めません`);
           if (t === 'body' && RS(p).bodyNoE && p.lv.body < 5) throw new Error('身体は生命核の投入でのみ上がります');
           const g5 = (p.lv[t] === 4 && RS(p).lv5G) ? RS(p).lv5G : (p.lv[t] === 5 && RS(p).lv6G) ? RS(p).lv6G : 0; if (g5 && p.G < g5) throw new Error(`Lv${p.lv[t] + 1}に入るには遺伝子G${g5}が必要です`);
@@ -1183,9 +1230,9 @@
           const pay = Math.max(0, c - d); d -= (c - pay); const r = payE(p, pay, i === 0 ? a.useL : 0); if (g5) p.G -= g5; consumeNext(p, t);
           p.lv[t] += 1; paid.push(`${G.TRACK_INFO[t].name} Lv${p.lv[t]}（E${r.E}${r.L ? '+L' + r.L : ''}${g5 ? '+G' + g5 : ''}）`);
         });
-      } finally { Object.assign(p.lv, lv0); } // 本番の進行は advanceTrack（報酬・先着の処理）
+      } finally { Object.assign(p.lv, lv0); if (nStar) p.star = s0; } // 本番の進行は advanceTrack（報酬・先着の処理）
       const used = sc(p, def.disc || 0) - d; afterAction(st, p, `恩寵枠（${name}）：${paid.join('・')}${used > 0 ? '・割引E' + used : ''}`, true); // v3.104（O-21）：実際に引いた額だけ出す（E の支払いがない段には効かない）
-      ts.forEach(t => advanceTrack(st, p, t, name));
+      ts.forEach(t => t === 'star' ? starStep(st, p, pros, name) : advanceTrack(st, p, t, name));
       return true;
     }
     throw new Error('恩寵枠の種別が不正です');
@@ -1395,7 +1442,9 @@
     return parts.join(' ');
   }
   // 数値セット連動の説明文（ツールチップ用。静的な TIPS の代わり）
-  function slotTip(st, id) {
+  function noLateTxt(st, t) { if (RS(st).organLateFee !== 0 || typeof t !== 'string') return t; return t.replace(/と追随の代償/g, '').replace(/（追随の代償なし・/g, '（').replace(/（追随の代償なし）|・追随の代償なし|（追随は代償込み）|・追随の代償込み/g, '').replace(/＋追随の代償なし/g, ''); } // T25（O-23）：後追い料なし＝「追随の代償」の文言を落とす
+  function slotTip(st, id) { return noLateTxt(st, slotTip0(st, id)); }
+  function slotTip0(st, id) {
     const R = RS(st); const cb = R.coopMode === 'spend' ? `協調1個を払うと この枠の資源+${R.coopSpendGain || 3}（1回1個まで）` : R.coopMode === 'half' ? `協調ボーナス＝＋協調数の半分（切り捨て${R.coopBonusCap !== undefined ? `・上限+${Math.floor(R.coopBonusCap / 2)}` : ''}）` : R.coopMode === 'tier' ? `協調ボーナス＝協調1〜3で+1・4〜7で+2・8で+3${R.coopBonusSlots ? '（' + R.coopBonusSlots.map(x => G.SLOT_BY_ID[x].name).join('・') + 'のみ）' : ''}` : R.coopBonusCap !== undefined ? `協調ボーナス＝＋協調数（上限+${R.coopBonusCap}）` : '協調ボーナス＝＋協調数';
     const byp0 = R.launchFree ? `使用済みは協調進出（協調${R.bypassCoopCost || 2}）で突破可` : `使用済みは緊急進出（生命核1）${st.ext === 'x1' ? `・協調進出（協調${R.bypassCoopCost || 2}）` : ''}で突破可`; const byp = (R.launchFree ? `空いている枠なら緊急進出（生命核1）で獲得量${R.launchFree}倍。` : '') + byp0 + (R.launchMul ? `（獲得量${R.launchMul}倍）` : ''); // T18：緊急進出＝空き枠で 3 倍・後乗りは協調進出だけ // T12：発進は獲得量 2 倍（資源枠のみ）
     const bypM = R.bypassCoopWide && st.ext === 'x1' ? `。使用済みは協調進出（協調${R.bypassCoopCost || 2}）で突破可` : '';
@@ -1433,7 +1482,8 @@
 
   // ---------- 表示文（数値セット連動） ----------
   // 2026-10-29：p（見ている人）を渡すと、形質・器官・報酬による割引を反映した「その人の実際のコスト」を表示する（基準値と違うときは「（軽減後）」）
-  function slotText(st, id, p) {
+  function slotText(st, id, p) { return noLateTxt(st, slotText0(st, id, p)); }
+  function slotText0(st, id, p) {
     const R = RS(st); const s = G.SLOT_BY_ID[id]; if (!s) return '';
     const eff = (base, mine) => (p && mine !== null && mine !== undefined && mine !== base) ? `${mine}（軽減後）` : String(base);
     const mass = (kind) => eff(kind === 'MM' && R.mmCost ? R.mmCost : kind === 'MS' && R.msCost ? R.msCost : R.massCost, p ? massCost(p, kind) : null);
@@ -1459,7 +1509,7 @@
     if (id === 'EXP') return `G${eff(R.expressCost || 10, p ? gSlotCost(p, R.expressCost || 10) : null)} → 痕跡+1（先駆なし）`;
     if (id === 'P8' && R.p8) return `+${R.p8}P`;
     if (id === 'TRT' && R.traitShared) return 'Gを払い形質を取得（共用・排他なし）';
-    if (id === 'ORG') { const oc = R.organCost || G.ORGAN_COST; return oc.map(([e, g]) => `${e}E+${g}G`).join(' / ') + (R.organSameEffect ? `（代償 +${sc(st, R.organLateFee || 1)}E）` : '（弱はG0' + (R.organEscalate ? `・所持${R.organEscalate}枚ごとに+1E` : '') + '）'); }
+    if (id === 'ORG') { const oc = R.organCost || G.ORGAN_COST; return oc.map(([e, g]) => `${e}E+${g}G`).join(' / ') + (R.organSameEffect ? (R.organLateFee !== 0 ? `（代償 +${sc(st, R.organLateFee || 1)}E）` : '') : '（弱はG0' + (R.organEscalate ? `・所持${R.organEscalate}枚ごとに+1E` : '') + '）'); }
     if (id === 'E5') return `+${slotAmt(st, 'E5').E}E`; if (id === 'G3') return `+${slotAmt(st, 'G3').G}G`; if (id === 'ALL') { const a = slotAmt(st, 'ALL'); return `+${a.E}E +${a.G}G +${a.P}P`; } if (id === 'PB') return `G${eff(sc(st, 2), p ? pbCost(p) : null)} → P+${pbGain(st)}`;
     if (id === 'SCAN') return `E${sc(st, 5)} → 他者の最高Lv×${sc(st, 2)}の資源`; if (id === 'CNV') return `E${sc(st, 2)}→G${sc(st, 1)} / G${sc(st, 2)}→E${sc(st, 1)} / P${sc(st, 8)}→E${sc(st, 3)} / P${sc(st, 8)}→G${sc(st, 2)}`;
     return txt(st, s.text);
@@ -1498,5 +1548,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { trialKey, trialCost, trialGem, trialDone, trialCount, altarCount, altarCost, altarNextVg, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { noLateTxt, starOn, starCardName, starCost, starCostText, starGem, starFirstDef, starIsFirst, starProsOk, starPlan, prosRoom, breedLeft, lateFee, STAR_MAX, trialKey, trialCost, trialGem, trialDone, trialCount, altarCount, altarCost, altarNextVg, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

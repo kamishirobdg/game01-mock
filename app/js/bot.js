@@ -195,7 +195,7 @@
     // 2026-11-02 rem>0：最終ラウンドにはゲートの途中（届かない収集）へ価値を置かない（T8-H1：最終Rの形質・器官・資源枠の空振り）
     if (RSo(st).gates && rem > 0) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cfB * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
     v += ((sc.cfB - 3) + (sc.cfC - 3)) / 2 * rem * w.coefFuture;
-    if (p.trialGem && rem > 0) v += p.trialGem * 2 * rem * 0.5; // T24（O-20）：試練の痕跡は早い R ほど多く、いまの係数で数えると安く見える。終了までの係数の伸び（実測 R1 3.0→終了 4.9≈0.5/R）を上乗せ // C2 では2本の平均（1本なら cf-3 と同値）
+    if ((p.trialGem || p.starGem) && rem > 0) v += ((p.trialGem || 0) + (p.starGem || 0)) * 2 * rem * 0.5; /* T25（O-23）：星海開拓の痕跡も同じ考え方 */ // T24（O-20）：試練の痕跡は早い R ほど多く、いまの係数で数えると安く見える。終了までの係数の伸び（実測 R1 3.0→終了 4.9≈0.5/R）を上乗せ // C2 では2本の平均（1本なら cf-3 と同値）
     // 2026-11-02 繁殖の方策（T8-H1：AI が一度も繁殖しない）：①繁栄度の1段は「これから得る痕跡」にも掛かる（自分の痕跡の歩調 × 残R）②次の段の支払い（P150／L3）へ貯める途中にも価値を置く（貯めずに大量消費(代謝)で P を崩すのを防ぐ）
     if (rem > 0 && RSo(st).breed) { const pace = Math.max(1, sc.real / Math.max(1, st.round - 1)); const fut = pace * rem; const bc = G.breedCost(p);
       v += (sc.cfB - (RSo(st).coef2 ? RSo(st).coef2.breedBase : 3)) * fut * 2 * w.breedFut * (RSo(st).gemPt === 1 ? 1 : 0.5);
@@ -224,6 +224,11 @@
     // 得点に変換できる資源の潜在価値：P は大量消費(身体)（1宝石＝係数×2点）、G は宝石セット（1R1人）に化ける。残ラウンドがあるときだけ
     if (rem > 0) { const gemValR = (RSo(st).massBodyVirtual ? sc.cfC : sc.cfB) * 2, gemValV = sc.cfC * 2; v += Math.min(2, Math.floor(p.P / Math.max(1, G.massCost(p, 'MB')))) * gemValR * 0.5; if (RSo(st).altar) { const nv = G.altarNextVg(p); if (nv && G.ALTAR_KEYS.some(k2 => !(p.tribGame && p.tribGame[k2]) && G.altarCost(p, k2) !== null && p[k2] >= G.altarCost(p, k2))) v += nv * sc.cfC * 2 * 0.3; } /* T23：次の払い口で得る祝福の見込み */ else if (p.G >= G.gemsetPrice(p)) v += gemValV * 0.3; }
     return v;
+  }
+  function starPros(st, p, lvs) { // T25（O-23）：先駆の段で繁栄度を選ぶか（その段を除いた終了時の痕跡の見込み ＞ 5 × 今の繁栄度・5 段目は痕跡 1 が残るので +1）
+    const RN = RSo(st).rounds || G.ROUNDS; const real = G.realGems(p); const proj = real * RN / Math.max(1, st.round); let room = G.prosRoom(p); const out = [];
+    lvs.forEach(lv => { if (room <= 0 || !G.starProsOk(st, p, lv)) return; const keep = (G.starFirstDef(st, lv).pros || 0); if (proj + keep > 5 * (G.coefB(p) + (out.length))) { out.push(lv); room -= 1; } });
+    return out.length ? out : undefined;
   }
   function candidates(st, p) {
     const pid = p.id, A = (x) => Object.assign({ pid }, x); const out = [];
@@ -259,7 +264,7 @@
       if (def.kind === 'trait') { const un = G.traitPool(st).filter(t => !G.trait(p, t)); const top = un.slice().sort((x, y) => G.baseTraitCost(st, y) - G.baseTraitCost(st, x)).slice(0, 5); un.forEach(t => out.push(A({ type: 'tributeSlot', slot: sl, traits: [t], useL: 0, res: 'E', track: 'intel' }))); if ((def.n || 2) >= 2) for (let i = 0; i < top.length; i++) for (let j = i + 1; j < top.length; j++) out.push(A({ type: 'tributeSlot', slot: sl, traits: [top[i], top[j]], useL: 0, res: 'E', track: 'intel' })); return; }
       if (def.kind === 'alchemy') { const singles = []; G.TRACKS.forEach(f => { if (p.gems[f] < 1) return; G.TRACKS.forEach(t => { if (t !== f) singles.push({ from: f, to: t }); }); }); singles.forEach(c => out.push(A({ type: 'tributeSlot', slot: sl, changes: [c] }))); if ((def.n || 2) >= 2) { const need = new Set(); st.shared.combos.two.forEach(i => { const c = G.COMBOS2[i]; const miss = c.filter(t => p.gems[t] === 0); if (miss.length === 1) need.add(miss[0]); }); st.shared.combos.three.forEach(i => { const c = G.COMBOS3[i]; const miss = c.filter(t => p.gems[t] === 0); if (miss.length >= 1 && miss.length <= 2) miss.forEach(t => need.add(t)); }); const ns = singles.filter(c => need.has(c.to)); for (let i = 0; i < ns.length; i++) for (let j = i + 1; j < ns.length; j++) { const a1 = ns[i], a2 = ns[j]; if (a1.to === a2.to) continue; if (a1.from === a2.from && p.gems[a1.from] < 2) continue; if (a2.from === a1.to || a1.from === a2.to) continue; out.push(A({ type: 'tributeSlot', slot: sl, changes: [a1, a2] })); } } return; }
       if (def.kind === 'boost') { if (def.instant) G.RES_SLOTS.concat(['PB']).forEach(s => { if (s === 'ALL') ['E', 'G', 'P'].forEach(r => out.push(A({ type: 'tributeSlot', slot: sl, res: s, coopRes: r }))); else out.push(A({ type: 'tributeSlot', slot: sl, res: s, coopRes: 'E' })); }); else out.push(A({ type: 'tributeSlot', slot: sl })); return; }
-      if (def.kind === 'leap') { const ok = G.TRACKS.filter(t => G.stepCost(p, t) !== null); ok.forEach((t1, i) => ok.forEach((t2, j) => { if (j < i) return; out.push(A({ type: 'tributeSlot', slot: sl, tracks: [t1, t2], useL: 0 })); })); return; }
+      if (def.kind === 'leap') { const ok = G.TRACKS.filter(t => G.stepCost(p, t) !== null); const s0 = p.star | 0; if (G.starOn(st) && s0 < G.STAR_MAX) ok.push('star'); ok.forEach((t1, i) => ok.forEach((t2, j) => { if (j < i) return; const ns = [t1, t2].filter(t => t === 'star').length; if (s0 + ns > G.STAR_MAX) return; const lvs = ns ? [s0 + 1, s0 + 2].slice(0, ns) : []; out.push(A({ type: 'tributeSlot', slot: sl, tracks: [t1, t2], useL: 0, pros: ns ? starPros(st, p, lvs) : undefined })); })); return; } // T25：星海開拓も跳躍の対象
     }); } }
     if (RSo(st).gSlots) { const mc = G.gSlotCost(p, RSo(st).mimicCost || 4), ec = G.gSlotCost(p, RSo(st).expressCost || 10); G.mimicOptions(st, p).forEach(e => out.push(A({ type: 'mimic', effect: e.id, useL: lFor(mc, p.G) }))); G.TRACKS.forEach(t => { out.push(A({ type: 'express', track: t, useL: lFor(ec, p.G) })); if (used('EXP') && G.coopBypassable(st, 'EXP', p) && p.coop >= (RSo(st).bypassCoopCost || 2)) out.push(A({ type: 'express', track: t, useL: lFor(ec, p.G), bypassCoop: true })); }); } if (used('GEM') && p.bypassWide && p.L > 0) out.push(A({ type: 'gemset', useL: 0, bypassL: true }));
     G.scanCandidates(st, p).slice(0, 2).forEach(tg => out.push(A({ type: 'scan', target: tg, useL: 0 })));
@@ -270,6 +275,8 @@
     if (RSo(st).restore && !(p.uses && p.uses.restore)) G.traitPool(st).filter(t => st.shared.traitFirst[t] !== undefined && st.shared.traitFirst[t] !== p.id && !G.trait(p, t)).forEach(t => out.push(A({ type: 'restore', trait: t, useL: 0, res: 'E', track: 'intel' })));
     if (RSo(st).amplify && !(p.uses && p.uses.amplify)) p.organs.filter(o => G.ampOk(st, o.id, true) && !o.amp).forEach(o => out.push(A({ type: 'amplify', organ: o.id })));
     if (RSo(st).doubleStep) G.TRACKS.forEach(t => { const c2 = G.stepCostDouble(p, t); if (c2 !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0, steps: 2 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c2, p.E), steps: 2 })); } });
+    if (G.starOn(st)) { // T25（O-23）：星海開拓（1／2／3 段・跳躍は下の leap）。先駆の繁栄度は「その段を除いた終了時の痕跡の見込み ＞ 5 × 今の繁栄度」なら選ぶ
+      const s0 = p.star | 0; [1, 2, 3].forEach(n => { if (s0 + n > G.STAR_MAX || (n === 2 && !RSo(st).doubleStep) || (n === 3 && !(p.dv3 > 0))) return; const lvs = []; for (let l = s0 + 1; l <= s0 + n; l++) lvs.push(l); out.push(A({ type: 'track', track: 'star', steps: n, pros: starPros(st, p, lvs) })); }); }
     if (p.dv3 > 0) G.TRACKS.forEach(t => { const c3 = G.stepCostTriple(p, t); if (c3 !== null) { out.push(A({ type: 'track', track: t, pay: 'E', useL: 0, steps: 3 })); if (p.L) out.push(A({ type: 'track', track: t, pay: 'E', useL: lFor(c3, p.E), steps: 3 })); } }); // T14 三段進行（進化加速の残り回数）
     if (RSo(st).gToE) [1, 2, 4].forEach(n => out.push(A({ type: 'gToE', n })));
     p.cards.forEach(c => { out.push(A({ type: 'card', card: c, choice: 'E' })); if (c === 'J') out.push(A({ type: 'card', card: c, choice: 'G' })); if (p.shields > 0) out.push(A({ type: 'card', card: c, choice: 'E', shield: true })); });
