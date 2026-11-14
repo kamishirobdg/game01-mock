@@ -74,11 +74,11 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 </div>
 
 <div class="blk"><h2><i>7</i>種族（初期資源 E/G/P）</h2><p id="sp"></p></div>
-<div class="foot">数値はアプリと同じ data.js／engine.js（T25・5ラウンド）から表示・2026-11-13 改訂（T25＝T24−試練＋星海開拓〔進化で進める 5 本目のトラック・痕跡 +2／+3／+4／+4／+5・3／5 段目の先駆は痕跡 +1 か繁栄度 +1〕−器官の追随の代償／T24＝T23＋試練〔R1〜R5 に 1 種ずつ・いまのラウンドだけ・痕跡 +2／+2／+2／+3／+3〕／T23＝T22＋祭壇を払い口 5 つに〔各 1 ゲーム 1 回・何個目かで祝福 +2／+2／+3／+3／+4〕／T22＝T21＋生命核の代用払いなし・身体★ L＋P・脈動 P 収入／脈動核 緊急進出 4 倍・身体 Lv6 L3・最果ての痕跡の廃止／T21＝T20＋献上（遺伝子）は生命核で払えない・Lv6 知性 G84・代謝 E150／T20＝T19−収入の即時（代謝・器官とも）・★は自動進化の追随なら弱・神経 1・1・2 枚ぶん・身体 Lv6 L4／T19＝T18＋合流進出・収入は得たときにも 1 回・神経 2 枚ぶん・資源枠の強化・Lv6 のコストと得点・知性の神の裁定／T18＝T17＋緊急進出 3 倍・生命核→資源の廃止・連結・連絡腺・淘汰(代謝) E20+G20・社会 Lv6 の神の裁定 祝福+3／T17＝T16＋光翼 P21・九腕 E15／T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化）</div>
+<div class="foot">数値はアプリと同じ data.js／engine.js（T28・5ラウンド）から表示・2026-11-14 改訂（T28＝T27＋群心網 形成時 協調+1・群体同期／融合で協調+1・星海開拓で払った生命核を投入に数える／T27＝T26＋器官の系統「推進」・星渡〔着く Lv の条件の 2 種のうち 1 種を 1.5 倍払って +1 段〕・先駆を Lv3／Lv5 に／T26＝T25＋星海開拓を Lv1〜Lv6〔Lv5／Lv6 の値上げ・Lv6 は 4 本の Lv6 と同じ先着／後着・神の裁定 祝福 +2〕・代謝 Lv6 E100・星渡／T25＝T24−試練＋星海開拓〔進化で進める 5 本目のトラック・痕跡 +2／+3／+4／+4／+5・3／5 段目の先駆は痕跡 +1 か繁栄度 +1〕−器官の追随の代償／T24＝T23＋試練〔R1〜R5 に 1 種ずつ・いまのラウンドだけ・痕跡 +2／+2／+2／+3／+3〕／T23＝T22＋祭壇を払い口 5 つに〔各 1 ゲーム 1 回・何個目かで祝福 +2／+2／+3／+3／+4〕／T22＝T21＋生命核の代用払いなし・身体★ L＋P・脈動 P 収入／脈動核 緊急進出 4 倍・身体 Lv6 L3・最果ての痕跡の廃止／T21＝T20＋献上（遺伝子）は生命核で払えない・Lv6 知性 G84・代謝 E150／T20＝T19−収入の即時（代謝・器官とも）・★は自動進化の追随なら弱・神経 1・1・2 枚ぶん・身体 Lv6 L4／T19＝T18＋合流進出・収入は得たときにも 1 回・神経 2 枚ぶん・資源枠の強化・Lv6 のコストと得点・知性の神の裁定／T18＝T17＋緊急進出 3 倍・生命核→資源の廃止・連結・連絡腺・淘汰(代謝) E20+G20・社会 Lv6 の神の裁定 祝福+3／T17＝T16＋光翼 P21・九腕 E15／T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化）</div>
 
 <script src="../app/js/icons.js"></script>
-<script src="../app/js/data.js?v=3.110"></script>
-<script src="../app/js/engine.js?v=3.110"></script>
+<script src="../app/js/data.js?v=3.111"></script>
+<script src="../app/js/engine.js?v=3.111"></script>
 <script>
 (function () {
   const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS[(G.RULES_VISIBLE || ['t15'])[0]]; // 2026-11-05 既定 t8→t10／2026-11-07 t12→t13／2026-11-08 RULES_VISIBLE の先頭（T14）
@@ -97,7 +97,9 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
   const X = (n) => { document.querySelectorAll('.x2').forEach(e => { e.textContent = n; }); }; X(R.trial ? '試練' : R.star ? G.STAR_NAME : ''); if (!R.trial && !R.star) document.querySelectorAll('.x2').forEach(e => { e.previousSibling && (e.previousSibling.textContent = e.previousSibling.textContent.replace(/・$/, '')); });
   if (R.organLateFee === 0) document.getElementById('latex').hidden = true; // T25（O-23）：追随の代償なし
   if (R.star) { const S = R.star, RJ = r => r === 'coop' ? '協調' : r === 'L' ? '生命核' : r, li = document.getElementById('trialli'); li.hidden = false; // T25（O-23）：星海開拓
-    li.innerHTML = `<b>${G.STAR_NAME}</b>（5 本目のトラック・0〜5 段・<b>進化と同じ手番</b>・二段／三段進化・跳躍も可）：開始時に${G.STAR_CARD_NAME} 5 枚を 1〜5 段目に並べる。1 段＝着く段の額（2 種・割引なし）${Object.keys(S.cards).map(k => Object.keys(S.cards[k]).map(r => RJ(r) + S.cards[k][r].join('/')).join('＋')).join('・')} → 痕跡+${S.gem.join('/')}。<b>3・5 段目の先駆</b>は痕跡をもう+1 か 繁栄度+1（痕跡 ${S.first[3].pros}／${S.first[5].pros} に）`;
+    if (S.lv1) { const LT = l => G.starLvText(st, l), M = G.STAR_MAX, LG = R.lv6Gems || { first: 1, later: 1 }, SJ = S.top && S.top.judge, FL = Object.keys(S.first || {}).map(Number); // T26〜（v3.111 で既定を T28 に）
+      li.innerHTML = `<b>${G.STAR_NAME}</b>（5 本目のトラック・${LT(0)}〜${LT(M)}・<b>進化と同じ手番</b>・二段／三段進化は ${LT(M - 1)} まで・跳躍も可）：開始時に${G.STAR_CARD_NAME} 5 枚を ${LT(1)}〜${LT(M)} に並べる。1 段＝着く Lv の額（2 種・割引なし）${Object.keys(S.cards).map(k => Object.keys(S.cards[k]).map(r => RJ(r) + S.cards[k][r].join('/')).join('＋')).join('・')} → 痕跡+${S.gem.slice(0, M - 1).join('/')}（${LT(1)}〜${LT(M - 1)}）。<b>${FL.map(LT).join('・')} の先駆</b>は痕跡をもう+1 か 繁栄度+1（痕跡 ${FL.map(l => S.first[l].pros).join('／')} に）。<b>${LT(M)}</b>＝先着 痕跡+${LG.first}＋祝福+1／後着 痕跡+${LG.later}${SJ ? `・終了時 祝福+${SJ}（神の裁定）` : ''}${R.starLInvest ? '。払った生命核は投入に数える' : ''}${G.traitPool(st).includes('JS') ? `。${G.STAR_JUMP_NAME}（形質）でも 1 段` : ''}`; }
+    else li.innerHTML = `<b>${G.STAR_NAME}</b>（5 本目のトラック・0〜5 段・<b>進化と同じ手番</b>・二段／三段進化・跳躍も可）：開始時に${G.STAR_CARD_NAME} 5 枚を 1〜5 段目に並べる。1 段＝着く段の額（2 種・割引なし）${Object.keys(S.cards).map(k => Object.keys(S.cards[k]).map(r => RJ(r) + S.cards[k][r].join('/')).join('＋')).join('・')} → 痕跡+${S.gem.join('/')}。<b>3・5 段目の先駆</b>は痕跡をもう+1 か 繁栄度+1（痕跡 ${S.first[3].pros}／${S.first[5].pros} に）`;
     set('breedcap', `・${G.STAR_NAME}の繁栄度と合わせて ×7 まで`); }
   if (R.trial) { const TR = R.trial, li = document.getElementById('trialli'); li.hidden = false; li.innerHTML = `<b>試練</b>（いまのラウンドの 1 枚だけ・1 人 1 回・ワーカー 1・割引なし）：開始時に 5 種を R1〜R5 に並べる。額 ${G.ALTAR_KEYS.map(k => (k === 'coop' ? '協調' : k) + TR.cost[k].join('/')).join('・')}（R1〜R5）→ 痕跡+${TR.gem.join('/')}`; } // T24（O-22）
   if (R.altar) { const A = R.altar; document.getElementById('altarli').innerHTML = `<b>献上（個人ボードの祭壇）</b>（払い口 5 つ・各 1 ゲームに 1 回・ワーカー 1）：E${A.cost.E}／G${A.cost.G}／P${A.cost.P}／協調 ${A.cost.coop}／生命核 ${A.cost.L}（身体 Lv2 で解放）から 1 つ → 何個目かで祝福 ${A.vg.map(x => '+' + x).join('／')}`; } // T23（O-19）

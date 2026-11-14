@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.110'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.111'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -306,7 +306,7 @@
     // T28（2026-11-14・ORDERS O-29・ユーザー承認・第71部 §84〜§85・隠しセット）＝T27 ＋ 群心網の協調を +1 ずつに（形成時 hc2Coop・群体同期／融合 hc2Herd）＋ 星海開拓で払った生命核を投入に数える（starLInvest）
     const T27 = G.RULESETS.t27; G.RULESETS.t28 = Object.assign({}, T27, { name: 'T28（T27＋群心網 +1/+1・星海開拓の生命核を投入に）', hc2Coop: 1, hc2Herd: 1, starLInvest: true });
     G.RULESETS.t28a = Object.assign({}, T27, { name: 'T28a（計測のみ・T27＋星海開拓の生命核を投入に）', starLInvest: true });
-  G.RULES_VISIBLE = ['t25'];
+  G.RULES_VISIBLE = ['t28']; // v3.111（2026-11-14 ユーザー指示）：既定を T28 に（T25〜T27 は ?rules= で打てる）
   G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
