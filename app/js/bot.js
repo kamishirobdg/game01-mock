@@ -27,6 +27,11 @@
           let best = null, bv = -Infinity; opts.forEach(o => { try { const s2 = G.tryApply(st, o.a); const v = evaluate(s2, s2.players[pid], ws) + o.mv * ws.G * W.rtFree; if (v > bv) { bv = v; best = o.a; } } catch (e) {} }); if (best) return best; }
         if (pd.freeMax) { const RT = RSo(st); const wi = pd.weakOnly ? 1 : 0; const el = G.traitPool(st).filter(t => !G.trait(p, t) && ((RT.traitCosts || {})[t] || G.TRAITS[t].cost)[wi] <= pd.freeMax).sort((a, b) => ((RT.traitCosts || {})[b] || G.TRAITS[b].cost)[wi] - ((RT.traitCosts || {})[a] || G.TRAITS[a].cost)[wi]); /* T14 転写体（weakOnly）＝弱の値段で */ return first(st, el.map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })])); } // T13 全転写：無料なので高い順
         return first(st, cheapTraits(st, p).map(t => R({ trait: t, res: 'E', track: 'body' })).concat([R({ skip: true })])); }
+      case 'starJump': case 'prStar': { // T27（O-27）：星渡の片方払い・推進核の手番なしの進化＝候補を試して評価が最も高いもの
+        const opts = []; const s0 = p.star | 0;
+        if (pd.type === 'starJump') { const lv = G.starJumpLv(st, p); G.starJumpOpts(st, p).forEach(o => { opts.push(R({ res: o.res })); if (lv && G.starProsOk(st, p, lv)) opts.push(R({ res: o.res, pros: [lv] })); }); }
+        else [1, 2].forEach(n => { if (s0 + n > G.STAR_MAX || (n > 1 && (RSo(st).star || {}).top && s0 + n >= G.STAR_MAX) || (n === 2 && !RSo(st).doubleStep)) return; const lvs = []; for (let l = s0 + 1; l <= s0 + n; l++) lvs.push(l); opts.push(R({ steps: n })); const pr = starPros(st, p, lvs); if (pr) opts.push(R({ steps: n, pros: pr })); });
+        opts.push(R({ skip: true })); let best = null, bv = -Infinity; opts.forEach(a => { try { const s2 = G.tryApply(st, a); const v = evaluate(s2, s2.players[pid], W); if (v > bv) { bv = v; best = a; } } catch (e) {} }); return best || opts[opts.length - 1]; }
       case 'specialOrgan': case 'fkBreed': { // T15：特殊器官の選択・孵化核の繁殖（手番なし）＝候補を試して評価が最も高いもの
         const opts = pd.type === 'specialOrgan' ? (st.shared.special || []).map(o => R({ organ: o })) : [R({ nP: 1, nL: 1 }), R({ nP: 1, nL: 0 }), R({ nP: 0, nL: 1 }), R({ skip: true })];
         const spOn = pd.type === 'specialOrgan' && W.spPick && RSo(st).spInc; const wv = spOn ? scaledW(st) : W; // 2026-11-09 O-09：特殊器官は「残り収入回数 × 収入の E 換算 × 器官枚数の見込み」で選ぶ（同点は評価）。旧＝規模で割らない W の評価（E を 3 倍に見て E 系に偏り、連絡腺 0.05/戦）
@@ -114,7 +119,8 @@
       return list.map(x => A({ type: 'organ', organ: x.o, useL: Math.max(0, Math.min(p.L, Math.ceil((x.c.E - p.E) / 3))), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' }));
     };
     const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'NP', 'NE', 'NS', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'JS', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM'].filter(t => G.traitPool(st).includes(t));
-    const traitCands = (slots) => traitPref.filter(t => !G.trait(p, t)).flatMap(t => slots.map(sl => A(Object.assign({ type: 'trait', trait: t, useL: Math.max(0, Math.min(p.L, Math.ceil((G.traitCost(st, p, t).G - p.G) / 3))), res: pref[0], track: 'intel' }, sl))));
+    const jsVar = (t) => { if (t !== 'JS' || !((RSo(st).star || {}).jump === 'half')) return [{}]; const lv = G.starJumpLv(st, p); if (!lv) return [{ jsPay: 'skip' }]; const c = G.starCost(st, lv); return Object.keys(c).map(r => ({ jsPay: r, jsPros: G.starProsOk(st, p, lv) ? starPros(st, p, [lv]) : undefined })).concat([{ jsPay: 'skip' }]); }; // T27（O-27）：星渡は払う 1 種まで含めて候補にする
+    const traitCands = (slots) => traitPref.filter(t => !G.trait(p, t)).flatMap(t => jsVar(t).flatMap(jv => slots.map(sl => A(Object.assign({ type: 'trait', trait: t, useL: Math.max(0, Math.min(p.L, Math.ceil((G.traitCost(st, p, t).G - p.G) / 3))), res: pref[0], track: 'intel' }, jv, sl)))));
     const traitSlots = [{}, { slot: 'TRT2' }, p.coop >= 2 && style !== 'white' ? { bypassCoop: true } : null, p.L >= 2 ? { bypassL: true } : null].filter(Boolean);
     const mass = (k) => A({ type: 'mass', kind: k, traits: G.traitPool(st).filter(t => G.baseTraitCost(st, t) <= (RSo(st).miMaxCost || 4) && !G.trait(p, t)).slice(0, RSo(st).miCount || 2) });
     const breed = A({ type: 'breed' }); const gemset = A({ type: 'gemset', useL: 0 });
@@ -195,6 +201,7 @@
     // 2026-11-02 rem>0：最終ラウンドにはゲートの途中（届かない収集）へ価値を置かない（T8-H1：最終Rの形質・器官・資源枠の空振り）
     if (RSo(st).gates && rem > 0) G.TRACKS.forEach(t => { const g = G.gateReq(p, t); if (!g || !g.need) return; const nl = p.lv[t] + 1; const val = (nl === 3 || nl === 5) ? sc.cfB * 2 * (nl === 5 ? 1.6 : 1) : 4; const tw = w[t + 'Gate'] || 1; v += w.gate * tw * Math.min(1, g.have / g.need) * val * 0.6; });
     v += ((sc.cfB - 3) + (sc.cfC - 3)) / 2 * rem * w.coefFuture;
+    { const PR = RSo(st).propel; if (PR && PR.pr1E && G.organ(p, 'Pr1') && rem > 0) v += PR.pr1E * Math.min(G.STAR_MAX - (p.star | 0), Math.ceil(rem * 1.2)) * w.E * 0.6; } // T27（O-27）：推進膜＝これから上げる段の E の見込み
     { const SJ = RSo(st).star && RSo(st).star.top && RSo(st).star.top.judge; if (SJ && (p.star | 0) >= G.STAR_MAX) v += SJ * sc.cfC * 2 * (rem === 0 ? 1 : 0.7); } // T26（O-26）：星海開拓 Lv6 の神の裁定（4 本の Lv6 と同じ見方）
     if ((p.trialGem || p.starGem) && rem > 0) v += ((p.trialGem || 0) + (p.starGem || 0)) * 2 * rem * 0.5; /* T25（O-23）：星海開拓の痕跡も同じ考え方 */ // T24（O-20）：試練の痕跡は早い R ほど多く、いまの係数で数えると安く見える。終了までの係数の伸び（実測 R1 3.0→終了 4.9≈0.5/R）を上乗せ // C2 では2本の平均（1本なら cf-3 と同値）
     // 2026-11-02 繁殖の方策（T8-H1：AI が一度も繁殖しない）：①繁栄度の1段は「これから得る痕跡」にも掛かる（自分の痕跡の歩調 × 残R）②次の段の支払い（P150／L3）へ貯める途中にも価値を置く（貯めずに大量消費(代謝)で P を崩すのを防ぐ）

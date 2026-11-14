@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.108'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.109'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -285,7 +285,7 @@
   G.RULESETS.t24H = Object.assign({}, G.RULESETS.t24, { name: 'T24H（計測のみ・試練の額 約 1.5 倍）', trial: { cost: { E: [30, 45, 70, 90, 110], G: [15, 30, 45, 60, 75], P: [45, 90, 135, 180, 225], coop: [2, 3, 5, 6, 8], L: [2, 2, 3, 3, 4] }, gem: [2, 2, 2, 3, 3] } });
   G.RULESETS.t24F = Object.assign({}, G.RULESETS.t24, { name: 'T24F（計測のみ・試練の報酬 全 R 痕跡+2）', trial: Object.assign({}, G.RULESETS.t24.trial, { gem: [2, 2, 2, 2, 2] }) });
   // T25（O-23・第71部 §71〜§75）：T24 − 試練 ＋ 星海開拓（進化で進める 5 本目のトラック・段のコスト＝着く段の条件カードの額）− 器官の後追い料。t25S・t25N は計測のみ
-  G.STAR_NAME = '星海開拓'; G.STAR_CARD_NAME = '開拓の条件'; G.STAR_JUMP_NAME = '星渡り'; // 表示名はここだけで持つ（O-23：あとで差し替えやすく）
+  G.STAR_NAME = '星海開拓'; G.STAR_CARD_NAME = '開拓の条件'; G.STAR_JUMP_NAME = '星渡'; // O-27：「星渡り」→「星渡」（全セットの表示） // 表示名はここだけで持つ（O-23：あとで差し替えやすく）
   { const STAR2 = { EG: { E: [10, 20, 30, 40, 50], G: [5, 10, 15, 20, 25] }, GP: { G: [5, 10, 15, 20, 25], P: [15, 30, 45, 60, 75] }, Pc: { P: [15, 30, 45, 60, 75], coop: [1, 1, 2, 2, 3] }, cL: { coop: [1, 1, 2, 2, 3], L: [1, 1, 1, 2, 2] }, LE: { L: [1, 1, 1, 2, 2], E: [10, 20, 30, 40, 50] } };
     const STAR1 = { E: { E: [20, 30, 45, 60, 75] }, G: { G: [10, 20, 30, 40, 50] }, P: { P: [30, 60, 90, 120, 150] }, coop: { coop: [1, 2, 3, 4, 5] }, L: { L: [1, 1, 2, 2, 3] } };
     // star.first[段]：先駆の段（3・5 段目）。先駆は「痕跡 gem+1」か「痕跡 pros・繁栄度 +1」を選ぶ（pros がなければ痕跡 +1 だけ）
@@ -298,9 +298,13 @@
     const T25 = G.RULESETS.t25, star26 = { cards: STAR3, gem: [2, 3, 4, 4, 0], first: { 3: { pros: 0 } }, lv1: true, top: { judge: 2 } }; // lv1＝表示は Lv（内部の段＋1）／top＝最上段（内部 5＝Lv6）は 4 本の Lv6 と同じ（lv6Gems・先着の祝福+1・二段／三段進化では入れない）＋神の裁定 祝福 judge
     G.RULESETS.t26 = Object.assign({}, T25, { name: 'T26（T25＋星海開拓 Lv1〜Lv6・Lv5／Lv6 の値上げ・代謝 Lv6 E100・星渡り）', star: star26, lv6Pay: Object.assign({}, T25.lv6Pay, { metab: { E: 100 } }), traitPool: T25.traitPool.concat(['JS']), traitCosts: Object.assign({}, T25.traitCosts, { JS: [40, 35] }) });
     G.RULESETS.t26L = Object.assign({}, G.RULESETS.t26, { name: 'T26L（計測のみ・星海開拓の Lv5／Lv6 が ×5／×7）', star: Object.assign({}, star26, { cards: STAR3L }) });
-    G.RULESETS.t26M = Object.assign({}, G.RULESETS.t26, { name: 'T26M（計測のみ・代謝 Lv6 E120）', lv6Pay: Object.assign({}, T25.lv6Pay, { metab: { E: 120 } }) }); }
+    G.RULESETS.t26M = Object.assign({}, G.RULESETS.t26, { name: 'T26M（計測のみ・代謝 Lv6 E120）', lv6Pay: Object.assign({}, T25.lv6Pay, { metab: { E: 120 } }) });
+    // T27（2026-11-14・ORDERS O-27・ユーザー承認・第71部 §79・§81）＝T26 ＋ 器官の系統「推進」（Pr1〜Pr3・propel）＋ 星渡の改定（star.jump 'half'＝着く Lv の 2 種のうち 1 種を 1.5 倍〔切り上げ〕払う・払わなければ進まない・星渡で着いても先駆・強 G15／弱 G12）＋ 星海開拓の先駆を Lv3・Lv5 に（内部の段 2・4）
+    const T26 = G.RULESETS.t26, star27 = Object.assign({}, T26.star, { first: { 2: { pros: 0 }, 4: { pros: 0 } }, jump: 'half' });
+    G.RULESETS.t27 = Object.assign({}, T26, { name: 'T27（T26＋推進・星渡の片方払い・先駆を Lv3／Lv5 に）', organSet: T26.organSet.concat(['Pr']), propel: { pr1E: 6, pr2P: 6 }, star: star27, traitCosts: Object.assign({}, T26.traitCosts, { JS: [15, 12] }) });
+    G.RULESETS.t27a = Object.assign({}, G.RULESETS.t27, { name: 'T27a（計測のみ・T27−推進）', organSet: T26.organSet.slice(), propel: null }); }
   G.RULES_VISIBLE = ['t25'];
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
@@ -444,6 +448,9 @@
     Nv1: { lin: 'Nv', tier: 1, name: '神経点', strong: 'この器官は形質 1 枚として数える（知性の臨界・形質 3／6 枚目の成熟度）', weak: '同' },
     Nv2: { lin: 'Nv', tier: 2, name: '神経網', strong: '形質 1 枚として数える ＋ 収入 G+3', weak: '同' },
     Nv3: { lin: 'Nv', tier: 3, name: '神経核', strong: '形質 1 枚として数える ＋ 形成時 祝福+1', weak: '同' },
+    Pr1: { lin: 'Pr', tier: 1, name: '推進膜', strong: `${G.STAR_NAME}を 1 段上げるたび E+6（上げ方を問わない）`, weak: '同' }, // T27（O-27）：推進（数値は propel）
+    Pr2: { lin: 'Pr', tier: 2, name: '推進腺', strong: `収入 ${G.STAR_NAME}の Lv2 以上 1 つにつき P+6`, weak: '同' },
+    Pr3: { lin: 'Pr', tier: 3, name: '推進核', strong: `形成時 ${G.STAR_NAME}の進化を 1 回、手番なしで（額は払う・1 段か二段進化）`, weak: '同' },
     Lm1: { lin: 'Lm', tier: 1, name: '発光点', strong: '収入 G+3', weak: '同' },
     Lm2: { lin: 'Lm', tier: 2, name: '発光腺', strong: '形成時 祝福+1', weak: '同' },
     Lm3: { lin: 'Lm', tier: 3, name: '発光核', strong: '形成時 痕跡+1 ＋ 祝福+1', weak: '同' },
@@ -503,7 +510,7 @@
   G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); if (R && R.liMode === 'lineage' && G.ORGANS_V4[id]) o = Object.assign({}, o, G.ORGANS_V4[id]); if (R && R.nvTrait === 2 && G.ORGANS_V5[id]) o = Object.assign({}, o, G.ORGANS_V5[id]); if (R && R.nvW && G.ORGANS_V6[id]) o = Object.assign({}, o, G.ORGANS_V6[id]); if (R && R.pulseInc && G.ORGANS_V7[id]) o = Object.assign({}, o, G.ORGANS_V7[id]); return o; }; // x＝ゲーム状態 or 数値セット
   G.isChanged = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); return !!(R && R.changed && R.changed.includes(id)); }; // 画面の「改」バッジ
   G.ORGAN_FIELD = ['Li1', 'Li2', 'Li3', 'Tr1', 'Tr2', 'Tr3', 'Fl1', 'Fl2', 'Fl3', 'Rh1', 'Rh2', 'Rh3']; // 初心者固定
-  G.LINEAGES = { Li: '連結', Tr: '翻訳', Fl: '転流', Rh: '律動', Ca: '触媒', Cv: '収斂', Re: '感応', St: '応力', Mg: '代謝', Tl: '転写', Hc: '群心', Pu: '脈動', Cx: '促進', Fk: '孵化', Nv: '神経', Lm: '発光', Sp: '特殊' };
+  G.LINEAGES = { Li: '連結', Tr: '翻訳', Fl: '転流', Rh: '律動', Ca: '触媒', Cv: '収斂', Re: '感応', St: '応力', Mg: '代謝', Tl: '転写', Hc: '群心', Pu: '脈動', Cx: '促進', Fk: '孵化', Nv: '神経', Lm: '発光', Pr: '推進', Sp: '特殊' };
   G.LINEAGE_TYPE = { cumulative: ['Li', 'Ca', 'Cv', 'Tr'], functional: ['Fl', 'Rh', 'Re', 'St'] };
   G.ST_CAPS = { St1: [15, 10], St2: [12, 9], St3: [15, 12] }; // [強, 弱] or St3:[P→E上限, P→G上限]
 
