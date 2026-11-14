@@ -770,7 +770,7 @@
       const li2 = organ(p, 'Li2'); if (li2) gainRes(p, a.li2Res || 'E', sc(p, li2.strong ? 3 : 2) * (li2.amp ? 2 : 1)); } // T13（organFx 2）では連結は建造時だけの効果（下）
     { const amp = p.ampReserve === a.organ || !!a.amp; p.organs.push(amp ? { id: a.organ, strong: c.strong, amp: true } : { id: a.organ, strong: c.strong }); if (p.ampReserve === a.organ) { p.ampReserve = null; log(st, p.id, `${p.name}：${a.organ} は増幅の予約により効果2倍`); } else if (a.amp) log(st, p.id, `${p.name}：${a.organ} を形成と同時に増幅（E${ampE}）→ 効果2倍`); } if (RS(st).organExcl) st.shared.organUsed[a.organ] = p.id; // v3.65 増幅の予約
     { const gb = (t) => { p.gateBonus = p.gateBonus || {}; p.gateBonus[t] = (p.gateBonus[t] || 0) + 1; }; const o = a.organ, sg = c.strong; const am = p.organs[p.organs.length - 1].amp ? 2 : 1; // T7 器官の建造時効果（v3.70：建造と同時の増幅なら数の効果 2 倍）
-      if (o === 'Hc1') gainRes(p, 'coop', (RS(p).hc1Coop || [2, 1])[sg ? 0 : 1] * am); if (o === 'Hc2') p.herdCoopAdd = (sg ? 2 : 1) * am; if (o === 'Hc3') { if (RS(p).hc3Bonus) p.coopBonusAdd = (p.coopBonusAdd || 0) + sc(p, RS(p).hc3Bonus); else if (RS(p).hc3RoundUp) p.coopRoundUp = true; else p.coopCapAdd = sg ? 2 : 1; if (sg && !RS(p).noOrganGate) gb('social'); if (RS(p).hc3Shield) { if (RS(p).joinNow) addShield(st, p, RS(p).hc3Shield, '群心核'); else { p.shields += RS(p).hc3Shield; log(st, p.id, `${p.name}：群心核で自由行動+${RS(p).hc3Shield}`); } } } // T14（第71部 §11 H3-e）：ゲート+1 の代わりに建造時 Wなし実行権+1
+      if (o === 'Hc1') gainRes(p, 'coop', (RS(p).hc1Coop || [2, 1])[sg ? 0 : 1] * am); if (o === 'Hc2') p.herdCoopAdd = (RS(p).hc2Herd || (sg ? 2 : 1)) * am; /* T28（O-29）hc2Herd */ if (o === 'Hc3') { if (RS(p).hc3Bonus) p.coopBonusAdd = (p.coopBonusAdd || 0) + sc(p, RS(p).hc3Bonus); else if (RS(p).hc3RoundUp) p.coopRoundUp = true; else p.coopCapAdd = sg ? 2 : 1; if (sg && !RS(p).noOrganGate) gb('social'); if (RS(p).hc3Shield) { if (RS(p).joinNow) addShield(st, p, RS(p).hc3Shield, '群心核'); else { p.shields += RS(p).hc3Shield; log(st, p.id, `${p.name}：群心核で自由行動+${RS(p).hc3Shield}`); } } } // T14（第71部 §11 H3-e）：ゲート+1 の代わりに建造時 Wなし実行権+1
       const PI = RS(p).pulseInc; // T22（O-18）：脈動点・脈動腺は収入 P（形成時の生命核・産出+3 はなし）・脈動核は緊急進出 4 倍（pu3Launch）
       if (o === 'Pu1' && !PI) p.L += am; if (o === 'Pu2' && !PI) p.yieldAdd = (p.yieldAdd || 0) + sc(p, 1) * am; if (o === 'Pu3' && !PI) { p.lValue = Math.max(p.lValue || sc(p, 3), sc(p, RS(p).pu3Rate || 4)); if (sg && !RS(p).noOrganGate) gb('body'); if (RS(p).pu3L) { p.L += RS(p).pu3L * am; log(st, p.id, `${p.name}：脈動核で 生命核+${RS(p).pu3L * am}`); } } // T14（第71部 §11 P3-a）：建造時 L+1 ＋ 1L＝18（pu3Rate 6）
       if (o === 'Mg3' && sg && !RS(p).mg3NoGate) gb('metab'); if (o === 'Tl3' && sg && (RS(p).tlGateTier || 3) === 3) gb('intel'); // mg3NoGate＝試作：代謝核のゲート+1なし／tlGateTier＝T13 では知性のゲート+1 を 2 段目に
@@ -975,7 +975,7 @@
     const o = p.organs.find(x => x.id === a.organ);
     if (!ampOk(p, a.organ, !!o)) throw new Error(`増幅できるのは${ampTargetText(p)}の器官です`);
     const cE = ampE(p); if (p.E < cE) throw new Error(`エネルギーが足りません（必要E${cE}）`); // T13 促進の割引込み
-    if (o) { if (o.amp) throw new Error('その器官は増幅済みです'); useToken(p, false); p.E -= cE; o.amp = true; p.uses.amplify += 1; if (o.id === 'Hc2') p.herdCoopAdd = (p.herdCoopAdd || 0) + (o.strong ? 2 : 1); if (o.id === 'Pu2') p.yieldAdd = (p.yieldAdd || 0) + sc(p, 1); /* v3.70：恒久効果の器官は増幅時に加算 */ afterAction(st, p, `増幅 ${o.id} ${G.ORGANS[o.id].name}（E${cE}）→ 効果2倍`, true); }
+    if (o) { if (o.amp) throw new Error('その器官は増幅済みです'); useToken(p, false); p.E -= cE; o.amp = true; p.uses.amplify += 1; if (o.id === 'Hc2') p.herdCoopAdd = (p.herdCoopAdd || 0) + (RS(p).hc2Herd || (o.strong ? 2 : 1)); if (o.id === 'Pu2') p.yieldAdd = (p.yieldAdd || 0) + sc(p, 1); /* v3.70：恒久効果の器官は増幅時に加算 */ afterAction(st, p, `増幅 ${o.id} ${G.ORGANS[o.id].name}（E${cE}）→ 効果2倍`, true); }
     else { // 2026-11-05 v3.65 ユーザー要望：まだ建てていない（今から建造できる）器官も対象に＝予約して、建造したときから 2 倍
       if (!st.shared.organField.includes(a.organ) || !organCost(st, p, a.organ)) throw new Error('その器官はいま形成できません（場にあり、系統の順番が来ているものだけ）');
       useToken(p, false); p.E -= cE; p.ampReserve = a.organ; p.uses.amplify += 1; afterAction(st, p, `増幅 ${a.organ} ${G.ORGANS[a.organ].name}（E${cE}・未形成）→ 形成したときから効果2倍`, true); }
@@ -1102,7 +1102,7 @@
   function starPay(p, c, eDisc) { // c＝1 段の額。eDisc＝E の部分から引く額（跳躍）。足りなければ例外
     const need = Object.assign({}, c); let used = 0; if (need.E && eDisc) { used = Math.min(eDisc, need.E); need.E -= used; }
     Object.keys(need).forEach(r => { if (p[r] < need[r]) throw new Error(`${ALTAR_JP[r]}が足りません（必要${need[r]}・所持${p[r]}）`); });
-    Object.keys(need).forEach(r => { p[r] -= need[r]; }); return { txt: starCostText(need), used };
+    Object.keys(need).forEach(r => { p[r] -= need[r]; }); if (need.L && RS(p).starLInvest) investL(p, null, need.L); /* T28（O-29）：星海開拓で払った生命核を投入に数える */ return { txt: starCostText(need), used };
   }
   function starStep(st, p, pros, why, opt) { // 1 段進めて報酬（支払いは済み）。opt.noFirst＝先駆を取らない（星渡り：先駆は次に進化か跳躍で着いた人に残る）
     const lv = (p.star | 0) + 1; p.star = lv; const LT = starLvText(st, lv);
@@ -1125,7 +1125,7 @@
     if (!res || res === 'skip') { log(st, p.id, `${p.name}：${G.STAR_JUMP_NAME}で${G.STAR_NAME}を進めるのを見送り`); return; }
     const lv = starJumpLv(st, p); if (!lv) throw new Error(`${G.STAR_JUMP_NAME}では ${starLvText(st, STAR_MAX)} に入れません`);
     const n = starJumpCost(st, p, res); if (n === null) throw new Error(`${starLvText(st, lv)} の${G.STAR_CARD_NAME}に ${ALTAR_JP[res]} はありません`); if (p[res] < n) throw new Error(`${ALTAR_JP[res]}が足りません（必要${n}・所持${p[res]}）`);
-    const ps = starCheckPros(st, p, [lv], pros); p[res] -= n;
+    const ps = starCheckPros(st, p, [lv], pros); p[res] -= n; if (res === 'L' && RS(p).starLInvest) investL(p, st, n); /* T28（O-29） */
     log(st, p.id, `${p.name}：${G.STAR_JUMP_NAME}で${G.STAR_NAME}を進める（${ALTAR_JP[res]}${n}＝1.5 倍）`); starStep(st, p, ps, G.STAR_JUMP_NAME);
     if (strong) { addGem(st, p, 'body', 1, `${G.STAR_JUMP_NAME}（強）`); p.starGem = (p.starGem || 0) + 1; }
   }
