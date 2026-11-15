@@ -515,6 +515,7 @@
       }
       lane.appendChild(body); lanes.appendChild(lane);
     });
+    { const RS1 = G.RULESETS[st.rules || 'v1']; if (RS1.star && st.shared.starCards) lanes.appendChild(renderStar(p, can)); } // v3.114（2026-11-15 ユーザー指示）：星海開拓は進化トラックの 5 段目（画面の位置だけ。ルール上の置き場所は共用盤のまま）
     if (!G.RULESETS[st.rules || 'v1'].noCombo) box.appendChild(h('p', { class: 'note' }, 'コンボ：' + G.comboNames(st).join('／') + '　（対応色の痕跡を揃えると祝福+1）'));
     return box;
   }
@@ -594,15 +595,15 @@
     // v3.55：献上（エネルギー／個体数）は T8 では廃止（数値セットに shared が無ければ表示しない）
     if (R6.tribute && R6.tribute.shared) { const T = R6.tribute; const open = st.round >= (T.openRound || 6); ['E', 'P'].forEach(res => { const a = { pid: p.id, type: 'tribute', res }; const c = G.sc(st, T.shared[res]); const reason = !open ? `ラウンド${T.openRound || 6}から（神の到来）` : can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot' + (open ? ' god' : ' locked') + (iconView() ? ' pic' : ''), title: `献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}を払って祝福+1。ラウンド${T.openRound || 6}から・共用・各自1ラウンド1回・ワーカー`, onclick: () => open && confirm(`献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}→祝福+1。実行しますか？`) && submit(a) }, reason, ...slotBody(p, 'TRIB_' + res, `献上（${res === 'E' ? 'エネルギー' : '個体数'}）`, `${res}${c} → 祝福+1`, null))); }); }
     if (R6.trial && st.shared.trials) box.appendChild(renderTrials(p, can)); // T24（O-20）：試練（?rules=t24）
-    if (R6.star && st.shared.starCards) box.appendChild(renderStar(p, can)); // T25（O-23）：星海開拓
+    // v3.114：星海開拓は renderTracks（進化トラックの 5 段目）へ移した
     if (gTop.childNodes.length > 1) box.appendChild(gTop); box.appendChild(g); return box;
   }
   // T25（O-23・第71部 §71〜§75）：星海開拓＝進化で進める 5 本目のトラック。各段＝条件カードの額（2 種）・痕跡・3／5 段目の先駆・各自のコマ。次の段をクリックで進化
   function renderStar(p, can) {
     const R = G.RULESETS[st.rules || 'v1']; const S = R.star; const my = p.star | 0;
     const LT = lv => G.starLvText(st, lv), LG = R.lv6Gems || { first: 1, later: 1 }, SJ = S.top && S.top.judge;
-    const gt = h('div', { class: 'sgroup star' }, h('h4', { title: S.lv1 ? `進化で進める 5 本目のトラック（Lv1〜Lv6・全員 Lv1 から）。1 段＝着く Lv の${G.STAR_CARD_NAME}の額（2 種とも払う・割引なし）。二段進化・三段進化は Lv5 まで（Lv6 は 1 段の進化か恩寵枠の跳躍で）。${Object.keys(S.first || {}).map(l => LT(+l)).join('・')} に最初に着いた人は痕跡 +1 か繁栄度 +1 を選ぶ。Lv6 は先着 痕跡+${LG.first}＋祝福+1・後着 痕跡+${LG.later}${SJ ? `・終了時に祝福+${SJ}（神の裁定）` : ''}` : `進化で進める 5 本目のトラック。1 段＝着く段の${G.STAR_CARD_NAME}の額（2 種とも払う・割引なし）。二段進化・三段進化・跳躍も使える。3・5 段目に最初に着いた人は痕跡 +1 か繁栄度 +1 を選ぶ` }, G.STAR_NAME));
-    const row = h('div', { class: 'starrow' });
+    const gt = h('div', { class: 'lane lane-star' }, h('div', { class: 'lane-lbl', title: S.lv1 ? `進化で進める 5 本目のトラック（Lv1〜Lv6・全員 Lv1 から）。1 段＝着く Lv の${G.STAR_CARD_NAME}の額（2 種とも払う・割引なし）。二段進化・三段進化は Lv5 まで（Lv6 は 1 段の進化か恩寵枠の跳躍で）。${Object.keys(S.first || {}).map(l => LT(+l)).join('・')} に最初に着いた人は痕跡 +1 か繁栄度 +1 を選ぶ。Lv6 は先着 痕跡+${LG.first}＋祝福+1・後着 痕跡+${LG.later}${SJ ? `・終了時に祝福+${SJ}（神の裁定）` : ''}` : `進化で進める 5 本目のトラック。1 段＝着く段の${G.STAR_CARD_NAME}の額（2 種とも払う・割引なし）。二段進化・三段進化・跳躍も使える。3・5 段目に最初に着いた人は痕跡 +1 か繁栄度 +1 を選ぶ` }, h('b', null, G.STAR_NAME), h('small', null, '額を払う・自動進化なし')));
+    const row = h('div', { class: 'lane-body starrow' });
     if (S.lv1) { const mk0 = st.players.filter(q => (q.star | 0) === 0); const b0 = h('div', { class: 'slot starstep' + (my > 0 ? ' past' : ''), title: `${G.STAR_NAME} Lv1：開始` }, h('b', { class: 'pname' }, 'Lv1'), h('small', null, 'START')); if (mk0.length) b0.appendChild(h('span', { class: 'tw' }, ...mk0.map(q => h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1)))); row.appendChild(b0); } // T26（O-26）：Lv1 の開始マス
     for (let lv = 1; lv <= G.STAR_MAX; lv++) { const k = st.shared.starCards[lv - 1]; const c = G.starCost(st, lv); const ct = G.starCostText(c); const g = G.starGem(st, lv); const F = G.starFirstDef(st, lv); const fb = st.shared.starFirst[lv];
       const isNext = lv === my + 1; const top = G.starTop(st, lv); const reason = !isNext ? (lv <= my ? '到達済み' : `${LT(my + 1)}から順に`) : can ? check({ pid: p.id, type: 'track', track: 'star' }) : roMsg;

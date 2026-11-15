@@ -304,3 +304,4 @@ button.slot.na { opacity:.6; }
 .slot.starstep .first { color:#7a5cc4; }
 .slot.starstep .tw { display:inline-flex; gap:2px; margin-top:3px; }
 [data-theme="dark"] .slot.starstep.past { background:#262b35; }
+.lane-star .lane-lbl { background:#6a4fb3; } .lane-star .starrow { flex-wrap:nowrap; } .lane-star .slot.starstep { margin:0; } /* v3.114：星海開拓＝進化トラックの 5 段目 */
