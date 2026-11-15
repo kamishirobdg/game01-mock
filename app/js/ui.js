@@ -464,7 +464,7 @@
     if (R.intelRewards === 'learn' && t === 'intel' && REW_SHORT_T7_INTEL[l]) return REW_SHORT_T7_INTEL[l];
     if (R.intelRewards === 'trait' && t === 'intel' && REW_SHORT_T10_INTEL[l]) return REW_SHORT_T10_INTEL[l]; if (R.metab4 === 'special' && t === 'metab' && l === 4) return '特殊器官 1 枚'; if (R.metab4 === 'organNoG' && t === 'metab' && l === 4) return R.organLateFee === 0 ? '器官のGなし' : '器官のG・追随の代償なし'; // T10
     if (R.joinNow && t === 'social' && l === 3) { const s3 = REW_SHORT_T4.social[3]; return R.socialRewards === 'shield' ? ['合流進出×1', s3[1]] : REW_SHORT[t][l]; } // 2026-11-11 ユーザー指摘（T20-H1）：Lv3★ 強が「自由行動+1」のまま
-    if (R.joinNow && t === 'social' && (l === 4 || l === 5)) return { 4: '合流進出×1', 5: ['協調+1 合流進出×2', '協調+1 合流進出×1'] }[l]; // T19 #1
+    if (R.joinNow && t === 'social' && (l === 4 || l === 5)) return { 4: '合流進出×1', 5: R.socialRewards === 'shield' ? ['合流進出×2', '合流進出×1'] : ['協調+1 合流進出×2', '協調+1 合流進出×1'] }[l]; // T19 #1。O-33（v3.116）：shield の世界は協調+1 なし
     if (R.metab3Inc !== undefined && t === 'metab' && l === 3) return [`E・G収入+${R.metab3Inc}`, REW_SHORT.metab[3][1]]; // T29（O-30 ③）
     if (R.metab5Inc && t === 'metab' && l === 5) return [`収入全種+${R.metab5Inc[0]}`, `収入全種+${R.metab5Inc[1]}`]; // T19 #4
     if (R.socialRewards === 'shield' && t === 'social') return REW_SHORT_T4.social[l] || REW_SHORT[t][l]; if (R.intel4 === 'traitDisc' && t === 'intel' && l === 4) return REW_SHORT_T4.intel[4]; return REW_SHORT[t][l]; }

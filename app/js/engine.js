@@ -1570,7 +1570,7 @@
     if (R.bodyAxis === 'L' && track === 'body' && G.TRACK_REWARDS_T5_BODY[lv]) s = G.TRACK_REWARDS_T5_BODY[lv];
     if (R.bodyAxis === 'L' && track === 'body' && lv === 4 && R.bodyLv4Gem && R.lCrystal) s = G.TRACK_REWARDS_T6_BODY4;
     if (R.joinNow && track === 'social' && lv === 3) s = s.replace('自由行動+1', '合流進出 1 回（その場で使う）'); // 2026-11-11 ユーザー指摘（T20-H1）：Lv3★ 強の文が旧「自由行動+1」のまま
-    if (R.joinNow && track === 'social') s = { 4: '合流進出 1 回（その場で資源枠を 1 つ使う・使用済みも自己複製も可・使わなければ消える）', 5: '強：協調+1＋合流進出 2 回／弱：協調+1＋合流進出 1 回（その場で使う）' }[lv] || s; // T19（O-13 #1・#2）
+    if (R.joinNow && track === 'social') s = { 4: '合流進出 1 回（その場で資源枠を 1 つ使う・使用済みも自己複製も可・使わなければ消える）', 5: R.socialRewards === 'shield' ? '強：合流進出 2 回／弱：合流進出 1 回（その場で使う）' : '強：協調+1＋合流進出 2 回／弱：協調+1＋合流進出 1 回（その場で使う）' }[lv] || s; // T19（O-13 #1・#2）。O-33（v3.116）：socialRewards 'shield'（T8〜）の処理は協調+1 を足さないので文から外す
     if ((R.incNow || R.metab5Inc) && track === 'metab') { const M5 = R.metab5Inc, N = R.incNow ? '（得たときにも 1 回）' : ''; const M3 = R.metab3Inc !== undefined ? R.metab3Inc : '{1}'; s = { 2: 'E収入+{1}' + N, 3: `強：E収入+${M3}かつG収入+${M3}` + N + '／弱：即時E+{8}', 5: M5 ? `強：収入が全種+${M5[0]}／弱：全種+${M5[1]}${N}` : s }[lv] || (lv === 4 && R.incNow ? s + '（取った特殊器官の収入は、そのときにも 1 回）' : s); } /* T20：incNow なし＝即時の注記を出さない */ // T19（O-13 #3・#4）
     return txt(st, s);
   }
