@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.111'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.112'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -306,8 +306,14 @@
     // T28（2026-11-14・ORDERS O-29・ユーザー承認・第71部 §84〜§85・隠しセット）＝T27 ＋ 群心網の協調を +1 ずつに（形成時 hc2Coop・群体同期／融合 hc2Herd）＋ 星海開拓で払った生命核を投入に数える（starLInvest）
     const T27 = G.RULESETS.t27; G.RULESETS.t28 = Object.assign({}, T27, { name: 'T28（T27＋群心網 +1/+1・星海開拓の生命核を投入に）', hc2Coop: 1, hc2Herd: 1, starLInvest: true });
     G.RULESETS.t28a = Object.assign({}, T27, { name: 'T28a（計測のみ・T27＋星海開拓の生命核を投入に）', starLInvest: true });
+    // T29（2026-11-15・ORDERS O-30・ユーザー承認・第71部 §88〜§91・隠しセット）＝T28 ＋ ①祭壇 +2/+3/+4/+5/+6 ②星海開拓の先駆 痕跡 +2（Lv3 5・Lv5 6＝star.first[].add）③代謝ゲート 3/6/9/12＋Lv3★ 強 収入 E/G+4（metab3Inc）・Lv5★ +10/+5 ④知性ゲート 2/4/7/10 ⑤知的跳躍＝形質 4／3 枚として数える（jiCount・段は上げない・痕跡なし）⑥身体覚醒＝生命核の投入数 +3／+2（jbInv・段は上げない・強の痕跡+1 はそのまま）⑦身体 Lv4 のまとめ払いの条件なし（bodyBulkLv4: 0）
+    { const T28 = G.RULESETS.t28; const A = { altar: Object.assign({}, T28.altar, { vg: [2, 3, 4, 5, 6] }), star: Object.assign({}, T28.star, { first: { 2: { pros: 0, add: 2 }, 4: { pros: 0, add: 2 } } }) }, MG = { gates: { metab: [0, 0, 3, 6, 9, 12] } }, MR = { metab3Inc: 4, metab5Inc: [10, 5] }, IG = { gates: { intel: [0, 0, 2, 4, 7, 10] } }, JI = { jiCount: [4, 3] }, JB = { jbInv: [3, 2] }, BK = { bodyBulkLv4: 0 }; // ⑦（ユーザー決定 2026-11-15）：身体 Lv4 のまとめ払いの条件を外す
+      const mk = (name, ...xs) => Object.assign({}, T28, ...xs, { name, gates: Object.assign({}, T28.gates, ...xs.map(x => x.gates || {})) }); // gates はトラックごとに重ねる
+      G.RULESETS.t29 = mk('T29（T28＋祭壇・星海開拓の先駆・代謝と知性のゲート・跳躍を数える形に）', A, MG, MR, IG, JI, JB, BK);
+      G.RULESETS.t29a = mk('T29a（計測のみ・T28＋祭壇と星海開拓の先駆）', A); G.RULESETS.t29b = mk('T29b（計測のみ・T28＋代謝のゲートと報酬）', MG, MR); G.RULESETS.t29c = mk('T29c（計測のみ・T28＋知性のゲートと知的跳躍）', IG, JI);
+      G.RULESETS.t29d = mk('T29d（計測のみ・T28＋身体覚醒）', JB); G.RULESETS.t29e = mk('T29e（計測のみ・T28＋代謝のゲートだけ）', MG); G.RULESETS.t29f = mk('T29f（計測のみ・T28−身体 Lv4 のまとめ払いの条件）', BK); }
   G.RULES_VISIBLE = ['t28']; // v3.111（2026-11-14 ユーザー指示）：既定を T28 に（T25〜T27 は ?rules= で打てる）
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28'];
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
