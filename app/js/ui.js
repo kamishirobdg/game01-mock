@@ -970,10 +970,10 @@
       }
       if (pd.type === 'flip') { // O-37（T30）：知性 Lv3★ 弱（1 枚）／Lv5★ 弱（2 枚まで）／Lv5★ 強（好きなだけ）で弱の形質を強に裏返す。裏返さない 1 枚につき G+pd.g（好きなだけの段は G なし）
         const ids = G.flippable(p); const src = { '3w': '知性 Lv3★ 弱', '5w': '知性 Lv5★ 弱', '5s': '知性 Lv5★ 強' }[pd.src] || '知性'; const all = pd.n >= 99;
-        const fx = (t) => `弱：${rtxt(G.traitText(st, t, false))} → 強：${rtxt(G.traitText(st, t, true))}`; const gTxt = (k) => !all && pd.g && k > 0 ? `G+${k * pd.g}` : '';
+        const fx = (t) => `弱：${rtxt(G.traitText(st, t, false))} → 強：${rtxt(G.traitText(st, t, true))}`; const R30 = G.RULESETS[st.rules || 'v1']; const lab = (t) => `${t} ${G.TRAITS[t].name}` + (t === 'MC' && R30.mcMode === 'freeOnce' ? `（毎回 P−${R30.mcDiscWeak !== undefined ? R30.mcDiscWeak : R30.mcDisc} → 次の 1 回だけ無料）` : ''); // O-42：消費軽減は裏返すと恒久の割引が消える const gTxt = (k) => !all && pd.g && k > 0 ? `G+${k * pd.g}` : '';
         const note = `${all ? '持っている弱の形質を好きなだけ' : `弱の形質を ${pd.n} 枚まで`}強に裏返す。${all ? '' : `裏返さない 1 枚につき G+${pd.g}。`}群れ本能・長命・星渡は対象外。得たときの資源・痕跡は受け取り直さない`;
-        if (pd.n === 1) { const r = await ask(`${src}：弱の形質を強に裏返す`, [{ type: 'select', name: 't', label: '形質', options: ids.map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}` })).concat([{ value: '', label: `裏返さない（${gTxt(1) || 'なし'}）` }]), desc: v => v.t ? fx(v.t) : '' }], { noCancel: true, note }); if (!r) return; return submit({ pid: p.id, type: 'resolve', traits: r.t ? [r.t] : [] }); }
-        for (;;) { const r = await ask(`${src}：弱の形質を強に裏返す（${all ? '好きなだけ' : pd.n + ' 枚まで'}）`, ids.map(t => ({ type: 'check', name: t, label: `${t} ${G.TRAITS[t].name}`, value: all || ids.length <= pd.n, hint: fx(t) })), { noCancel: true, note, okLabel: '裏返す' });
+        if (pd.n === 1) { const r = await ask(`${src}：弱の形質を強に裏返す`, [{ type: 'select', name: 't', label: '形質', options: ids.map(t => ({ value: t, label: lab(t) })).concat([{ value: '', label: `裏返さない（${gTxt(1) || 'なし'}）` }]), desc: v => v.t ? fx(v.t) : '' }], { noCancel: true, note }); if (!r) return; return submit({ pid: p.id, type: 'resolve', traits: r.t ? [r.t] : [] }); }
+        for (;;) { const r = await ask(`${src}：弱の形質を強に裏返す（${all ? '好きなだけ' : pd.n + ' 枚まで'}）`, ids.map(t => ({ type: 'check', name: t, label: lab(t), value: all || ids.length <= pd.n, hint: fx(t) })), { noCancel: true, note, okLabel: '裏返す' });
           if (!r) return; const pick = ids.filter(t => r[t]); if (pick.length > pd.n) { toast(`裏返せるのは ${pd.n} 枚までです`, true); continue; }
           return submit({ pid: p.id, type: 'resolve', traits: pick }); }
       }
