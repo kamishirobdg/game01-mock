@@ -431,6 +431,14 @@
     if (!s.excl) return { bypass: null };
     const key = usedKey(st, slotId);
     if (st.shared.used[key] === undefined) { st.shared.used[key] = p.id; return { bypass: null }; }
+    if (opt.second) { // O-39 計測のみ massSecond：使用済みの淘汰に 2 人目として入る（W1＝協調 3／W2＝生命核 1・投入に数える／W3＝払いなし）。1 R に 2 人まで・同じ人は同じ淘汰に 2 回入れない
+      const ms = RS(p).massSecond; if (!ms || s.group !== 'mass') throw new Error('この数値セットに淘汰の 2 人目はありません');
+      if (st.shared.used[key] === p.id) throw new Error('同じ淘汰に同じラウンドで 2 回は入れません');
+      if (st.shared.used[key + '#2'] !== undefined) throw new Error('この淘汰は今ラウンド 2 人まで埋まっています');
+      if (ms.pay === 'coop') { if (p.coop < ms.n) throw new Error(`2 人目には協調${ms.n}が必要です`); p.coop -= ms.n; }
+      else if (ms.pay === 'L') { if (p.L < ms.n) throw new Error(`2 人目には生命核${ms.n}が必要です`); p.L -= ms.n; investL(p, st, ms.n); }
+      st.shared.used[key + '#2'] = p.id; return { bypass: 'second' };
+    }
     // 使用済み：突破手段
     if (opt.bodyMass && p.flags.strong['body5'] && RS(p).bodyAxis !== 'L') { if (RS(p).body5Once) { if (p.round.mbBypass) throw new Error('身体Lv5★の排他無視はこの数値セットでは1ラウンド1回です'); p.round.mbBypass = true; } return { bypass: 'body5' }; }
     if (!p.round.firstDone) { const o = organ(p, 'Rh3'); if (o && (o.strong || p.uses.rh3 < 3)) { if (!o.strong) p.uses.rh3 += 1; return { bypass: 'Rh3' }; } }
@@ -448,7 +456,7 @@
   // 試作 bypassCoopWide（2026-10-26・第39部）：協調発進の突破対象に大量消費4枠と発現を加える（拡張x1）。緊急発進（L）の対象は bypassable のまま
   function coopBypassable(st, slotId, p) { if (!(RS(p).bypassCoopWide && st.ext === 'x1')) return false; const s = G.SLOT_BY_ID[slotId]; return !!s && (s.group === 'mass' || slotId === 'EXP'); }
   function bypassable(st, slotId, p) { if (G.RES_SLOTS.includes(slotId) || slotId === 'PB' || (st.ext === 'x1' && G.TRAIT_SLOTS.includes(slotId))) return true; /* 2026-11-05 ユーザー指示：Pブースト購入も緊急発進（L1）・協調発進の対象に（Wなし実行・祝福枠の扱いは従来どおり） */ if (p && p.bypassWide) { const s = G.SLOT_BY_ID[slotId]; return !!s && (s.group === 'mass' || slotId === 'GEM' || G.TRAIT_SLOTS.includes(slotId)); } return false; } // T5 身体Lv3★強：緊急発進の対象に大量消費・宝石セット・形質購入
-  const bypassDesc = (b) => b === 'L' ? '緊急進出（L-1）' : b === 'coop' ? '協調進出' : b === 'mimic' ? '擬態' : b === 'intel2' ? '知性 Lv2 で入る' : `排他突破（${b}）`;
+  const bypassDesc = (b) => b === 'second' ? '2 人目として入る' : b === 'L' ? '緊急進出（L-1）' : b === 'coop' ? '協調進出' : b === 'mimic' ? '擬態' : b === 'intel2' ? '知性 Lv2 で入る' : `排他突破（${b}）`;
   // コマを置かない実行（Wなし実行）用：使用可否だけ判定し、使用済みにはしない
   function peekSlot(st, p, slotId, opt) {
     opt = opt || {};
@@ -553,7 +561,8 @@
         if (lv === 5) { if (strong) p.alwaysStrong = true; else p.G += sc(p, 6); }
       } else if (RS(p).intelRewards === 'trait') { // T10（第58〜59部）：Lv3★ 強＝次の形質1枚を弱なら無料（強は差額）／弱＝次の形質 -9G、Lv4＝形質3枚ごとに祝福+1（即時・Lv6 換算と重ねない）、Lv5★＝T7 と同じ
         if (lv === 3) { if (strong) p.nextTraitFree = true; else if (!temp) { if (IF) flipStart(st, p, 1, sc(p, 3), '3w'); else if (IK) p.G += IK.g3w; else p.nextTraitDisc = (p.nextTraitDisc || 0) + sc(p, 3); } }
-        if (lv === 4 && !temp) { p.intel4Vg = true; const ni = traitCountI(p); const k = Math.floor(ni / 3) - (p.intel4VgN || 0); if (k > 0) { p.gemsets += k; p.intel4VgN = (p.intel4VgN || 0) + k; log(st, p.id, `${p.name}：祝福+${k}（知性 Lv4：形質${ni}枚${ni !== p.traits.length ? 'ぶん・神経を含む' : ''}）→ 祝福 ${p.gemsets}`); } } // T19 #5：traitCountI＝神経 2 枚ぶんを含む（T18 以前は形質カードだけ）
+        if (lv === 4 && !temp && (RS(p).intel4Mut || RS(p).intel4Re)) { if (RS(p).intel4Mut) { const mo = mutOpts(st, p); if (mo.give.length && mo.take.length) p.pending.push({ type: 'mutate', mode: RS(p).intel4Mut }); else log(st, p.id, `${p.name}：知性 Lv4 の変異で返せる・受け取れる形質が無い`); } if (RS(p).intel4Re) intel4Re(st, p); } // O-38 計測のみ：知性 Lv4 の替え（変異／再発動）
+        if (lv === 4 && !temp && !RS(p).intel4NoVg) { p.intel4Vg = true; const ni = traitCountI(p); const k = Math.floor(ni / 3) - (p.intel4VgN || 0); if (k > 0) { p.gemsets += k; p.intel4VgN = (p.intel4VgN || 0) + k; log(st, p.id, `${p.name}：祝福+${k}（知性 Lv4：形質${ni}枚${ni !== p.traits.length ? 'ぶん・神経を含む' : ''}）→ 祝福 ${p.gemsets}`); } } // T19 #5：traitCountI＝神経 2 枚ぶんを含む（T18 以前は形質カードだけ）
         if (lv === 5) { if (strong) { p.alwaysStrong = true; if (IK) p.G += IK.g5s; if (IF) flipStart(st, p, 99, 0, '5s'); } else if (IF) flipStart(st, p, 2, sc(p, 3), '5w'); else p.G += IK ? IK.g5w : sc(p, 6); }
       } else {
       if (lv === 4) { if (RS(p).intel4 === 'traitDisc') { if (!temp) p.traitDisc += sc(p, 1); } else p.pending.push({ type: 'bonusAction' }); }
@@ -605,6 +614,23 @@
     const n = traitCountC(p); if (n > n0) { (R.traitCoef || [4, 8]).filter(x => x > n0 && x <= n).forEach(x => addUpgrade(st, p, `形質${x}枚目`)); if (p.intel4Vg) { const k = Math.floor(n / 3) - (p.intel4VgN || 0); if (k > 0) { p.gemsets += k; p.intel4VgN = (p.intel4VgN || 0) + k; log(st, p.id, `${p.name}：祝福+${k}（知性 Lv4：形質${n}枚ぶん）→ 祝福 ${p.gemsets}`); } } }
     syncGates(st, p);
   }
+  // O-38 計測のみ：知性 Lv4 の替え。intel4Mut＝変異（持っている形質 1 枚を返し、持っていない形質 1 枚を無料で受け取る・'same'＝返した形質と同じ面／'strong'＝いつも強・先着は見ない）／intel4Re＝再発動（群れ本能・長命の弱の効果をもう一度）／intel4NoVg＝Lv4 の祝福をやめる
+  const MUT_NG = ['JI', 'JB']; // 知的跳躍・身体覚醒は返せず、受け取る側にもできない
+  function mutOpts(st, p) { const give = p.traits.map(t => t.id).filter(id => !MUT_NG.includes(id)); const take = traitPool(st).filter(id => !trait(p, id) && !MUT_NG.includes(id) && !(id === 'JS' && starOn(st) && RS(p).star.jump === 'half' && !starJumpOpts(st, p).length)); return { give, take }; } // 星渡は払いが要るので、払えなければ受け取れない
+  function mutateTrait(st, p, give, take, mode) {
+    const t = trait(p, give); if (!t || MUT_NG.includes(give)) throw new Error('変異で返せない形質です（知的跳躍・身体覚醒は返せない）');
+    if (take === give || !mutOpts(st, p).take.includes(take)) throw new Error('変異で受け取れない形質です');
+    const R = RS(p), was = t.strong; p.traits.splice(p.traits.indexOf(t), 1);
+    if (was && st.shared.traitFirst[give] === p.id) delete st.shared.traitFirst[give]; // 返した強は、ほかの人がまた先着で取れる
+    if (give === 'MC') p.mcFree = 0; if (give === 'NB') { p.crystalDiscL = 0; p.crystalDiscC = 0; p.crystalInvest = false; } if (give === 'NM') delete p.mimic; if (give === 'NF') delete p.foresight; if (give === 'NE') delete p.altFuel; if (give === 'NS') delete p.symbiosis; if (give === 'NP') delete p.spore; // 返した形質の効果・残り回数を失う
+    if (give === 'DV' && R.dvTriple) p.dv3 = Math.max(0, (p.dv3 || 0) - R.dvTriple[was ? 0 : 1]);
+    const strong = mode === 'strong' || was;
+    log(st, p.id, `${p.name}：知性 Lv4 の変異で ${give} ${G.TRAITS[give].name}（${was ? '強' : '弱'}）を返し、${take} ${G.TRAITS[take].name} を${strong ? '強' : '弱'}で受け取る`);
+    giveTrait(st, p, take, strong, '変異', { weak: !strong, swap: true }); syncGates(st, p); // 枚数は変わらない（成熟度・祝福の数え直しなし）
+  }
+  function intel4Re(st, p) { const R = RS(p); const got = ['NC', 'NL'].filter(id => trait(p, id)).slice(0, 2);
+    got.forEach(id => { if (id === 'NC') { gainRes(p, 'coop', (R.ncCoop || [3, 2])[1]); if (R.weakTraits2) p.P += sc(p, 3); } else { p.L += 1; if (R.weakTraits2) p.E += sc(p, 3); } });
+    log(st, p.id, `${p.name}：知性 Lv4 の再発動 ${got.length} 種${got.length ? '（' + got.join('・') + ' の弱の効果）' : '（群れ本能・長命を持っていない）'}`); }
   function reachedMilestones(p) { const out = []; G.TRACKS.forEach(t => { [3, 5].forEach(lv => { if (p.lv[t] >= lv) out.push({ track: t, lv }); }); }); return out; }
 
   function giveTrait(st, p, tid, forceStrong, how, opt) {
@@ -649,8 +675,8 @@
     if (tid === 'JB' && RS(p).jbInv) { const k = RS(p).jbInv[strong ? 0 : 1]; p.lInvested = (p.lInvested || 0) + k; if (RS(p).bodyBulkLv4 && k >= RS(p).bodyBulkLv4) p.lBulk = true; /* O-30 回答 1＝ア：強 +3 は 3 個を同時に投入した扱い（身体 Lv4 のまとめ払いも満たす）・弱 +2 は満たさない */ log(st, p.id, `${p.name}：身体覚醒（${strong ? '強' : '弱'}）＝生命核の投入 +${k}（投入 ${p.lInvested}・生命核は減らない）`); if (strong && LS === 'gem') addGem(st, p, 'body', 1, '身体覚醒（強）'); } // T29（O-30 ⑥）：段は上げない（投入数で通常の自動進化）
     else if (tid === 'JB') { if (p.lv.body < jmax) advanceTrack(st, p, 'body', '身体覚醒'); if (leap2('body')) advanceTrack(st, p, 'body', '身体覚醒'); if (strong && LS === 'res') { p.L += 1; log(st, p.id, `${p.name}：身体覚醒（強）L+1`); } if (strong && LS === 'gate') { p.gateBonus = p.gateBonus || {}; p.gateBonus.body = (p.gateBonus.body || 0) + 1; log(st, p.id, `${p.name}：身体覚醒（強）身体の臨界+1`); } if (strong && LS === 'gem') addGem(st, p, 'body', 1, '身体覚醒（強）'); }
     }
-    const n = traitCountC(p); { const n0 = n - (tid === 'JI' ? 1 + jiExtra(p) : 1); (RS(p).traitCoef || [4, 8]).filter(t => t > n0 && t <= n).forEach(t => addUpgrade(st, p, `形質${t}枚目`)); } // T29（O-30 ⑤）：知的跳躍は 3／6 枚目を飛び越えることがある（他の形質は 1 枚＝従来の一致と同じ）
-    if (p.intel4Vg) { const k = Math.floor(n / 3) - (p.intel4VgN || 0); if (k > 0) { p.gemsets += k; p.intel4VgN = (p.intel4VgN || 0) + k; log(st, p.id, `${p.name}：祝福+${k}（知性 Lv4：形質${n}枚目）→ 祝福 ${p.gemsets}`); } } // T10 知性 Lv4。2026-11-10 v3.94 O-11：形質の取得で Lv4 に上がった（跳躍）とき、到達時の一括（枚数÷3）とこの「3 の倍数枚目 +1」が同じ枚数で二重に入っていた → 受け取り済みの回数（intel4VgN）との差だけ渡す
+    const n = traitCountC(p); if (!opt.swap) { const n0 = n - (tid === 'JI' ? 1 + jiExtra(p) : 1); (RS(p).traitCoef || [4, 8]).filter(t => t > n0 && t <= n).forEach(t => addUpgrade(st, p, `形質${t}枚目`)); } // T29（O-30 ⑤）：知的跳躍は 3／6 枚目を飛び越えることがある（他の形質は 1 枚＝従来の一致と同じ）
+    if (p.intel4Vg && !opt.swap) { const k = Math.floor(n / 3) - (p.intel4VgN || 0); if (k > 0) { p.gemsets += k; p.intel4VgN = (p.intel4VgN || 0) + k; log(st, p.id, `${p.name}：祝福+${k}（知性 Lv4：形質${n}枚目）→ 祝福 ${p.gemsets}`); } } // T10 知性 Lv4。2026-11-10 v3.94 O-11：形質の取得で Lv4 に上がった（跳躍）とき、到達時の一括（枚数÷3）とこの「3 の倍数枚目 +1」が同じ枚数で二重に入っていた → 受け取り済みの回数（intel4VgN）との差だけ渡す
   }
   function removeTrait(st, p, tid) {
     const i = p.traits.findIndex(t => t.id === tid); if (i < 0) throw new Error('その形質を持っていません');
@@ -856,10 +882,10 @@
     const c = a.free ? 0 : massCost(p, a.kind);
     let byp = null;
     const lm = (!a.free && a.kind === 'MB' && a.pay === 'L' && RS(p).massL) ? RS(p).massL : null; // 試作 massL：大量消費(身体)を生命核でも
-    if (lm !== null) { if (p.L < lm) throw new Error(`生命核が足りません（必要L${lm}）`); byp = claimSlot(st, p, a.kind, { bodyMass: true, useL: a.bypassL, useCoop: a.bypassCoop }).bypass; useToken(p, false); p.L -= lm; investL(p, st, lm); if (RS(p).bodyBulkLv4 && lm >= RS(p).bodyBulkLv4) p.lBulk = true; }
+    if (lm !== null) { if (p.L < lm) throw new Error(`生命核が足りません（必要L${lm}）`); byp = claimSlot(st, p, a.kind, { bodyMass: true, useL: a.bypassL, useCoop: a.bypassCoop, second: a.second }).bypass; useToken(p, false); p.L -= lm; investL(p, st, lm); if (RS(p).bodyBulkLv4 && lm >= RS(p).bodyBulkLv4) p.lBulk = true; }
     const nMM = a.kind === 'MM' && !a.free && lm === null ? (a.n || 1) : 1; let cAll = c; // O-34 計測のみ：淘汰（代謝）の口数（2 口目以降は消費軽減の強・一度きりの軽減なし）
     if (nMM > 1) { if (nMM > mmMax(p)) throw new Error(`淘汰（代謝）は ${mmMax(p)} 口までです`); const f0 = p.mcFree, n0 = p.next.mass; p.mcFree = 0; p.next.mass = 0; const cR = massCost(p, 'MM'); p.mcFree = f0; p.next.mass = n0; cAll = c + cR * (nMM - 1); }
-    if (lm === null && !a.free) { if (p.P < cAll) throw new Error(`個体数が足りません（必要P${cAll}・所持P${p.P}）`); byp = claimSlot(st, p, a.kind, { bodyMass: a.kind === 'MB', useL: a.bypassL, useCoop: a.bypassCoop }).bypass; useToken(p, false); p.P -= cAll; p.next.mass = 0; if (p.mcFree && RS(p).mcMode === 'freeOnce' && c === 0) p.mcFree -= 1; }
+    if (lm === null && !a.free) { if (p.P < cAll) throw new Error(`個体数が足りません（必要P${cAll}・所持P${p.P}）`); byp = claimSlot(st, p, a.kind, { bodyMass: a.kind === 'MB', useL: a.bypassL, useCoop: a.bypassCoop, second: a.second }).bypass; useToken(p, false); p.P -= cAll; p.next.mass = 0; if (p.mcFree && RS(p).mcMode === 'freeOnce' && c === 0) p.mcFree -= 1; }
     const ret = massRet(p); // O-36 計測のみ massRetMetab：淘汰 4 種を実行したあと P が（代謝 Lv−1）×massRetMetab 返る（実行した時点の Lv）
     const mmG = a.kind === 'MM' ? mmGainOf(p) : null; const mmX = !!(RS(p).mmLv || RS(p).mmMulti || RS(p).mmLvMetab); // 実行した時点の Lv
     const desc = `${G.SLOT_BY_ID[a.kind].name}${nMM > 1 ? ` ${nMM} 口` : ''}（${a.free ? '無料・報酬' : lm !== null ? 'L' + lm : 'P' + cAll}${mmX && mmG ? `→E+${mmG.E * nMM} G+${mmG.G * nMM}` : ''}）${byp ? '・' + bypassDesc(byp) : ''}${ret > 0 ? `・P+${ret} が返る` : ''}`;
@@ -1365,6 +1391,7 @@
       const ids = a.skip ? [] : (a.traits || []); if (ids.length > pd.n) throw new Error(`裏返せるのは ${pd.n} 枚までです`); if (new Set(ids).size !== ids.length) throw new Error('同じ形質は 1 回だけ');
       p.pending.shift(); ids.forEach(t => flipTrait(st, p, t)); const rest = pd.n >= 99 ? 0 : pd.n - ids.length; if (rest && pd.g) p.G += rest * pd.g;
       log(st, p.id, `${p.name}：${FLIP_SRC[pd.src]}で強に裏返し ${ids.length} 枚${ids.length ? '（' + ids.join('・') + '）' : ''}${rest && pd.g ? `・G+${rest * pd.g}（G ${rest} 回）` : ''}`); return false; }
+    if (pd.type === 'mutate') { p.pending.shift(); if (a.skip) { log(st, p.id, `${p.name}：知性 Lv4 の変異を見送り`); return false; } mutateTrait(st, p, a.give, a.take, pd.mode); return false; } // O-38 計測のみ
     if (pd.type === 'freeMass') { p.pending.shift(); ACTIONS.mass(st, p, { kind: a.kind, traits: a.traits, free: true }); return false; }
     if (pd.type === 'rewardTrait') { p.pending.shift(); if (a.skip) { if (!pd.freeMax) p.nextTraitFree = false; log(st, p.id, `${p.name}：報酬の形質獲得を見送り`); return false; } // 2026-11-10 v3.89（ユーザー指示）：知性 Lv3★ の「弱なら無料・強は差額」は見送ると消える（次の形質へ持ち越さない＝管理が大変） if (pd.freeMax) { const tw = (RS(p).traitCosts || {})[a.trait] || G.TRAITS[a.trait].cost; if ((pd.weakOnly ? tw[1] : tw[0]) > pd.freeMax) throw new Error(pd.weakOnly ? `転写体で無料にできるのは弱の値段が G${pd.freeMax} 以下の形質だけです` : `全転写で無料にできるのは G${pd.freeMax} 以下の形質だけです`); } // T13 全転写／T14 転写体（weakOnly＝弱で受け取る）
       if (pd.weakOnly) log(st, p.id, `${p.name}：転写体で ${a.trait} ${G.TRAITS[a.trait].name} を弱で無料`); ACTIONS.trait(st, p, { trait: a.trait, useL: a.useL, res: a.res, track: a.track, viaReward: pd.freeMax ? 'free' : pd.disc, weak: pd.weakOnly ? 'force' : a.weak }); return false; } // 'force'＝traitChoice が無い数値セットでも弱で受け取る // 2026-11-07：T10 の「弱なら無料」を選べるように weak を渡す
@@ -1439,6 +1466,7 @@
     const replay = (list) => {
       const s = newGame(meta); s.roundStarts = []; let lastRound = 0;
       list.forEach((x, i) => { applyEntry(s, x); if (s.round > lastRound) { s.roundStarts.push(i + 1); lastRound = s.round; } });
+      s._lr = s.round; // O-40：戻したあとの最初の手を R の頭と誤って記録しないように（「ラウンド頭へ」が戻したあとの 1 手目までしか戻らなかった）
       return s;
     };
     const eff = []; let st = replay(eff); let pendingUndo = null; const rejected = []; let undoInfo = null;
@@ -1450,7 +1478,7 @@
         if (e.type === 'undo') {
           // pids 指定あり＝要求者の（人間の）席。直前の自分の手まで戻す（間にある AI・他プレイヤーの手も取り消す）。自分の手が無ければ何も戻さない
           const pids = Array.isArray(e.pids) && e.pids.length ? e.pids : null;
-          while (eff.length && eff[eff.length - 1].type !== 'finish') { const x = eff.pop(); removed.unshift(x); if (!pids || pids.includes(x.pid)) break; }
+          while (eff.length && eff[eff.length - 1].type !== 'finish') { const x = eff.pop(); removed.unshift(x); if (!pids || pids.includes(x.pid)) { if (e.whole && x.type === 'resolve') continue; break; } } // O-40 whole（ローカル・自由のとき UI が付ける）：自分の選択（resolve）はそのもとになった手とまとめて戻す
           if (pids && !removed.some(x => pids.includes(x.pid))) { removed.forEach(x => eff.push(x)); removed.length = 0; }
         } else { const rs = st.roundStarts.length ? st.roundStarts[st.roundStarts.length - 1] : 0; const cut = Math.min(eff.length, rs); removed.push(...eff.slice(cut)); eff.length = cut; }
         undoInfo = { key: e.id || ('local' + idx), uid: e.uid, type: e.type, removed: removed.map(x => ({ pid: x.pid, type: x.type })) };
@@ -1629,5 +1657,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { noLateTxt, starOn, starLvText, starTop, starJumpLv, starJumpCost, starJumpOpts, starCardName, starCost, starCostText, starGem, starFirstDef, starFirstGem, starIsFirst, starProsOk, starPlan, prosRoom, breedLeft, lateFee, STAR_MAX, trialKey, trialCost, trialGem, trialDone, trialCount, altarCount, altarCost, altarNextVg, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, mmMax, mmGainOf, flippable, massRet, mmForm, retForm, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { noLateTxt, starOn, starLvText, starTop, starJumpLv, starJumpCost, starJumpOpts, starCardName, starCost, starCostText, starGem, starFirstDef, starFirstGem, starIsFirst, starProsOk, starPlan, prosRoom, breedLeft, lateFee, STAR_MAX, trialKey, trialCost, trialGem, trialDone, trialCount, altarCount, altarCost, altarNextVg, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, mmMax, mmGainOf, flippable, mutOpts, massRet, mmForm, retForm, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

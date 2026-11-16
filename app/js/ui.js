@@ -183,7 +183,7 @@
   function ask(title, fields, opts) {
     opts = opts || {};
     if (G.RULESETS[st.rules || 'v1'].noLSub) fields = fields.filter(f => !(f.name === 'useL' && /の代わりに/.test(f.label || ''))).map(f => f.options ? Object.assign({}, f, { options: f.options.map(o => o && typeof o.label === 'string' && o.label.includes('（＋生命核）') ? Object.assign({}, o, { label: o.label.replace('（＋生命核）', '') }) : o) }) : f); // T22（O-18）：代用払いなしでは「生命核を E／G の代わりに」の欄を出さない
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const back = $('#modal'); back.innerHTML = '';
       const form = h('form', { class: 'modal-box' }, h('h3', null, title));
       if (opts.note) form.appendChild(h('p', { class: 'note' }, opts.note));
@@ -205,6 +205,7 @@
       const btns = h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, opts.okLabel || '実行'));
       if (opts.skipLabel) btns.appendChild(h('button', { type: 'button', onclick: () => { back.classList.remove('open'); resolve({ __skip: true }); } }, opts.skipLabel));
       if (!opts.noCancel) btns.appendChild(h('button', { type: 'button', onclick: () => { back.classList.remove('open'); resolve(null); } }, 'キャンセル'));
+      if (inPending && wholeUndo()) btns.appendChild(h('button', { type: 'button', title: 'この選択のもとになった自分の手の前まで戻す（間にある AI の手も取り消される）', onclick: () => { back.classList.remove('open'); reject(UNDO_REQ); } }, '1手戻す'));
       form.appendChild(btns);
       form.addEventListener('submit', ev => { ev.preventDefault(); const out = read(); back.classList.remove('open'); resolve(out); });
       back.appendChild(form); back.classList.add('open'); const first = form.querySelector('select,input,button'); if (first) first.focus();
@@ -395,7 +396,7 @@
       hres.appendChild(row); });
     if (hres.childNodes.length) hd.appendChild(hres);
     const btns = h('span', { class: 'hbtns menu' + (menuOpen ? '' : ' hidden') });
-    btns.appendChild(h('button', { title: '自分の直前の行動まで戻す（間にあるAI・他プレイヤーの行動も取り消される）', onclick: () => submit({ type: 'undo', pids: myHumanPids() }) }, '1手戻す'));
+    btns.appendChild(h('button', { title: '自分の直前の行動まで戻す（間にあるAI・他プレイヤーの行動も取り消される）', onclick: () => submit(undoEntry()) }, '1手戻す'));
     btns.appendChild(h('button', { title: 'このラウンドの頭（収入直後）まで戻す', onclick: () => { if (confirm('ラウンドの頭まで戻しますか？')) submit({ type: 'undoRound' }); } }, 'ラウンド頭へ'));
     btns.appendChild(h('button', { onclick: () => { logOpen = !logOpen; render(); } }, logOpen ? 'ログを隠す' : 'ログ'));
     btns.appendChild(h('button', { onclick: exportJson }, '保存(JSON)'));
@@ -950,9 +951,14 @@
   async function onFreeConv(p) { const r = await ask('無料E↔G変換', [{ type: 'select', name: 'dir', label: '方向', options: [{ value: 'EG', label: 'E→G' }, { value: 'GE', label: 'G→E' }] }, { type: 'number', name: 'n', label: '個数', value: 1, min: 1, max: 99 }]); if (!r) return; submit({ pid: p.id, type: 'freeConv', dir: r.dir, n: r.n }); }
 
   let pendingBusy = false;
+  // O-40：ローカル・自由のときは、選択のダイアログにも「1手戻す」を出す（押すとダイアログを閉じ、その選択のもとになった自分の手の前まで戻る）
+  const UNDO_REQ = { undo: true }; let inPending = false;
+  const wholeUndo = () => !isOnline() && !!game && (game.meta || {}).undoMode !== 'approve';
+  const undoEntry = () => wholeUndo() ? { type: 'undo', pids: myHumanPids(), whole: true } : { type: 'undo', pids: myHumanPids() };
   async function handlePending(p, pd) {
-    if (pendingBusy) return; pendingBusy = true;
-    try { await handlePendingBody(p, pd); } finally { pendingBusy = false; } // 送信の完了（await）まで待ってから解放する（return submit(...) だと finally が先に走る）
+    if (pendingBusy) return; pendingBusy = true; let undone = false;
+    try { inPending = true; await handlePendingBody(p, pd); } catch (e) { if (e !== UNDO_REQ) throw e; undone = true; } finally { pendingBusy = false; inPending = false; }
+    if (undone) { await submit(undoEntry()); return; } // 送信の完了（await）まで待ってから解放する（return submit(...) だと finally が先に走る）
     // 送信中の再描画は pendingBusy で弾かれるため、次の保留が残っていればここで描画し直して続きのダイアログを出す
     const q = st && st.players[p.id]; if (q && q.pending.length && st.phase === 'play' && G.cur(st).id === q.id) setTimeout(render, 0);
   }
