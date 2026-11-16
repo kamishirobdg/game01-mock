@@ -543,7 +543,7 @@
     if (s.id === 'MM' && R9.mmLv) { const g = G.mmGainOf(vq); mine += `\nいまの獲得量：E${g.E}＋G${g.G}（身体 Lv${vq.lv.body}・知性 Lv${vq.lv.intel}）`; }
     if (['MB', 'MI', 'MS', 'MM'].includes(s.id) && G.massRet(vq)) mine += `\nいま返る P：+${G.massRet(vq)}（代謝 Lv${vq.lv.metab}）`;
     const tip = (G.slotTip(st, s.id) || txt) + mine + (gain ? `\n今実行すると：${gain}` : '');
-    const body = slotBody(p, s.id, s.name, txt, d, pay);
+    const body = slotBody(p, s.id, slotName(s), txt, d, pay);
     return actBtn({ class: 'slot' + (iconView() && body[0].className === 'pname' ? ' pic' : '') + (used !== undefined ? ' used' : ''), title: tip, onclick }, reason, ...body, used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`, ...(st.shared.used[s.id + '#2'] !== undefined ? [' ', h('span', { class: 'mk p' + st.shared.used[s.id + '#2'] }, st.shared.used[s.id + '#2'] + 1), ` ${st.players[st.shared.used[s.id + '#2']].name} 2 人目`] : [])) : null, extra || null); // O-44（T31）：淘汰の 2 人目
   }
   // O-44（T31）：淘汰の 2 人目。ふつうに打てない使用済みの淘汰で、2 人目に入れるときだけ second を付ける（払いは協調を優先・払えなければ生命核）
@@ -551,6 +551,7 @@
   function massSecondPays(p) { const ms = G.RULESETS[st.rules || 'v1'].massSecond; if (!ms) return []; if (ms.pay !== 'either') return [ms.pay]; return ['coop', 'L'].filter(k => p[k] >= ms[k]); }
   function massSecondArgs(p, id, a) { if (!massSecondOk(p, id) || !check(a)) return a; const pays = massSecondPays(p); return Object.assign({}, a, { second: true }, G.RULESETS[st.rules || 'v1'].massSecond.pay === 'either' ? { secondPay: pays[0] || 'coop' } : {}); }
   function massSecondField(p) { const ms = G.RULESETS[st.rules || 'v1'].massSecond; if (!ms || ms.pay !== 'either') return null; const pays = massSecondPays(p); return { type: 'select', name: 'secondPay', label: '2 人目の払い', value: pays[0], options: [{ value: 'coop', label: `協調${ms.coop}`, disabled: p.coop < ms.coop }, { value: 'L', label: `生命核${ms.L}（投入に数える）`, disabled: p.L < ms.L }] }; }
+  function slotName(s) { return G.RULESETS[st.rules || 'v1'].noUpgrade ? s.name.replace('／形質強化', '') : s.name; } // O-45：形質強化のないセット（T2 以降）では枠の名前を「形質獲得」だけに
   function sample(p, id) { // 事前判定用の代表アクション
     const pid = p.id;
     if (G.RES_SLOTS.includes(id)) return { pid, type: 'res', slot: id, coopRes: 'E', useL: p.L > 0 && !G.RULESETS[st.rules || 'v1'].launchFree, /* T18：useL＝緊急進出（空き枠で 3 倍）なので事前判定・見込みは通常の配置 */ bypassCoop: st.ext === 'x1' && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) };
@@ -711,7 +712,7 @@
     G.traitPool(st).forEach(id => {
       const t = G.TRAITS[id]; const c = G.traitCost(st, p, id); const mine_ = G.trait(p, id); const first = st.shared.traitFirst[id];
       const pl = traitPlan(p) || {}; const reason = !can ? '他プレイヤーの手番' : mine_ ? null : check(Object.assign({ pid: p.id, type: 'trait', trait: id, useL: Math.min(Math.max(0, p.L - (pl.bypassL ? 1 : 0)), 3), res: 'E', track: 'body' }, pl));
-      const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, mine_ ? `取得済→交換` : [ic('G'), `${c.G}`, h('small', null, `（表示${G.baseTraitCost(st, id)}/${G.baseTraitCost(st, id, false)}）`)]), h('span', { class: 'sw ' + ((mine_ ? mine_.strong : c.strong) ? 'strong' : 'weak') }, mine_ ? (mine_.strong ? '強' : '弱') : G.RULESETS[st.rules || 'v1'].traitChoice ? (c.strong ? '強あり' : '弱のみ') : (c.strong ? '強' : '弱')));
+      const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, mine_ ? (noUp ? '取得済' : `取得済→交換`) : [ic('G'), `${c.G}`, h('small', null, `（表示${G.baseTraitCost(st, id)}/${G.baseTraitCost(st, id, false)}）`)]), h('span', { class: 'sw ' + ((mine_ ? mine_.strong : c.strong) ? 'strong' : 'weak') }, mine_ ? (mine_.strong ? '強' : '弱') : G.RULESETS[st.rules || 'v1'].traitChoice ? (c.strong ? '強あり' : '弱のみ') : (c.strong ? '強' : '弱')));
       grid.appendChild(actBtn({ class: 'tcard' + (mine_ ? ' mine' : ''), title: `${id} ${t.name}\n強：${rtxt(G.traitText(st, id, true))}\n弱：${rtxt(G.traitText(st, id, false))}`, onclick: () => onTrait(p, id) }, reason,
         hd, art(id), h('b', null, `${id} ${t.name}`, chgBadge(id)), h('small', null, `強：${rtxt(G.traitText(st, id, true))}`), h('small', null, `弱：${rtxt(G.traitText(st, id, false))}`),
         ownersRow(p, id, 'trait'), statusLine(mine_ ? 'ok' : reason && can ? 'no' : null, mine_ ? (noUp ? '取得済み' : '取得済み（クリックで上位へ交換）') : reason)));
