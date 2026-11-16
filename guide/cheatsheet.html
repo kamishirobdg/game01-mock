@@ -45,7 +45,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 <p><b class="k">素材が数に達すると自動で上がる</b>（E で先に上がってもよい：<span id="step"></span>・身体 <span id="bstep"></span>。<b>二段進化</b>＝2段分を合算して手番1つ・Lv5 まで。進化加速なら<b>三段進化</b>）</p>
 <div class="trk" id="trk"></div>
 <p id="starli" hidden></p>
-<p><b class="k">Lv3★・Lv5★</b>で痕跡+1、<b class="k">先駆＝強い報酬</b>（Lv5★の一番乗りは痕跡+2）。<b class="k">E を払って自力で上がった段は追随でも強</b>（<span id="leapE">知的跳躍・身体覚醒も。</span>素材で自動的に上がった追随は弱）。知性 Lv4＝形質3枚ごとに祝福+1／代謝 Lv4＝特殊器官を 1 枚（達した順）。<b class="k">Lv6</b>＝<span id="lv6"></span>：先駆 痕跡+3＋祝福+1／追随 痕跡+2。終了時 Lv6 のトラックの素材3個につき祝福+1（社会は祝福+3 固定）</p></div>
+<p><b class="k">Lv3★・Lv5★</b>で痕跡+1、<b class="k">先駆＝強い報酬</b>（Lv5★の一番乗りは痕跡+2）。<b class="k">E を払って自力で上がった段は追随でも強</b>（<span id="leapE">知的跳躍・身体覚醒も。</span>素材で自動的に上がった追随は弱）。知性 Lv4＝形質3枚ごとに祝福+1／代謝 Lv4＝特殊器官を 1 枚（達した順）。<span id="flipli" hidden><b class="k">強に裏返す</b>＝知性 Lv3★ 弱 1 枚・Lv5★ 弱 2 枚まで（裏返さない 1 枚につき G+<span id="flipg"></span>）・Lv5★ 強 好きなだけ、弱の形質を強に（群れ本能・長命・星渡は対象外）。</span><b class="k">Lv6</b>＝<span id="lv6"></span>：先駆 痕跡+3＋祝福+1／追随 痕跡+2。終了時 Lv6 のトラックの素材3個につき祝福+1（社会は祝福+3 固定）</p></div>
 
 <div class="blk"><h2><i>3</i>占有盤（各枠1ラウンドに1人）</h2>
 <ul>
@@ -75,11 +75,11 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 </div>
 
 <div class="blk"><h2><i>7</i>種族（初期資源 E/G/P）</h2><p id="sp"></p></div>
-<div class="foot">数値はアプリと同じ data.js／engine.js（T29・5ラウンド）から表示・2026-11-16 改訂（星海開拓は 4 本の下の 5 段目／T29＝T28＋祭壇 祝福 +2／+3／+4／+5／+6・星海開拓の先駆 Lv3 痕跡 5／Lv5 6・代謝の素材 3／6／9／12（Lv3★ 強 E・G 収入 +4・Lv5★ +10／+5）・知性の素材 2／4／7／10・知的跳躍＝形質 4／3 枚として数える・身体覚醒＝生命核の投入 +3／+2・身体 Lv4 のまとめ払いの条件なし／T28＝T27＋群心網 形成時 協調+1・群体同期／融合で協調+1・星海開拓で払った生命核を投入に数える／T27＝T26＋器官の系統「推進」・星渡〔着く Lv の条件の 2 種のうち 1 種を 1.5 倍払って +1 段〕・先駆を Lv3／Lv5 に／T26＝T25＋星海開拓を Lv1〜Lv6〔Lv5／Lv6 の値上げ・Lv6 は 4 本の Lv6 と同じ先着／後着・神の裁定 祝福 +2〕・代謝 Lv6 E100・星渡／T25＝T24−試練＋星海開拓〔進化で進める 5 本目のトラック・痕跡 +2／+3／+4／+4／+5・3／5 段目の先駆は痕跡 +1 か繁栄度 +1〕−器官の追随の代償／T24＝T23＋試練〔R1〜R5 に 1 種ずつ・いまのラウンドだけ・痕跡 +2／+2／+2／+3／+3〕／T23＝T22＋祭壇を払い口 5 つに〔各 1 ゲーム 1 回・何個目かで祝福 +2／+2／+3／+3／+4〕／T22＝T21＋生命核の代用払いなし・身体★ L＋P・脈動 P 収入／脈動核 緊急進出 4 倍・身体 Lv6 L3・最果ての痕跡の廃止／T21＝T20＋献上（遺伝子）は生命核で払えない・Lv6 知性 G84・代謝 E150／T20＝T19−収入の即時（代謝・器官とも）・★は自動進化の追随なら弱・神経 1・1・2 枚ぶん・身体 Lv6 L4／T19＝T18＋合流進出・収入は得たときにも 1 回・神経 2 枚ぶん・資源枠の強化・Lv6 のコストと得点・知性の神の裁定／T18＝T17＋緊急進出 3 倍・生命核→資源の廃止・連結・連絡腺・淘汰(代謝) E20+G20・社会 Lv6 の神の裁定 祝福+3／T17＝T16＋光翼 P21・九腕 E15／T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化）</div>
+<div class="foot">数値はアプリと同じ data.js／engine.js（T30・5ラウンド）から表示・2026-11-16 改訂（星海開拓は 4 本の下の 5 段目／T30＝T29＋知性 Lv3★ 弱・Lv5★ 弱／強を「弱の形質を強に裏返す」能力に（Lv3★ 弱 1 枚・Lv5★ 弱 2 枚まで・裏返さない 1 枚につき G+9／Lv5★ 強 好きなだけ）・淘汰(代謝) E15＋身体 Lv×5／G15＋知性 Lv×5・淘汰 4 種のあと P が代謝 Lv×5 返る／T29＝T28＋祭壇 祝福 +2／+3／+4／+5／+6・星海開拓の先駆 Lv3 痕跡 5／Lv5 6・代謝の素材 3／6／9／12（Lv3★ 強 E・G 収入 +4・Lv5★ +10／+5）・知性の素材 2／4／7／10・知的跳躍＝形質 4／3 枚として数える・身体覚醒＝生命核の投入 +3／+2・身体 Lv4 のまとめ払いの条件なし／T28＝T27＋群心網 形成時 協調+1・群体同期／融合で協調+1・星海開拓で払った生命核を投入に数える／T27＝T26＋器官の系統「推進」・星渡〔着く Lv の条件の 2 種のうち 1 種を 1.5 倍払って +1 段〕・先駆を Lv3／Lv5 に／T26＝T25＋星海開拓を Lv1〜Lv6〔Lv5／Lv6 の値上げ・Lv6 は 4 本の Lv6 と同じ先着／後着・神の裁定 祝福 +2〕・代謝 Lv6 E100・星渡／T25＝T24−試練＋星海開拓〔進化で進める 5 本目のトラック・痕跡 +2／+3／+4／+4／+5・3／5 段目の先駆は痕跡 +1 か繁栄度 +1〕−器官の追随の代償／T24＝T23＋試練〔R1〜R5 に 1 種ずつ・いまのラウンドだけ・痕跡 +2／+2／+2／+3／+3〕／T23＝T22＋祭壇を払い口 5 つに〔各 1 ゲーム 1 回・何個目かで祝福 +2／+2／+3／+3／+4〕／T22＝T21＋生命核の代用払いなし・身体★ L＋P・脈動 P 収入／脈動核 緊急進出 4 倍・身体 Lv6 L3・最果ての痕跡の廃止／T21＝T20＋献上（遺伝子）は生命核で払えない・Lv6 知性 G84・代謝 E150／T20＝T19−収入の即時（代謝・器官とも）・★は自動進化の追随なら弱・神経 1・1・2 枚ぶん・身体 Lv6 L4／T19＝T18＋合流進出・収入は得たときにも 1 回・神経 2 枚ぶん・資源枠の強化・Lv6 のコストと得点・知性の神の裁定／T18＝T17＋緊急進出 3 倍・生命核→資源の廃止・連結・連絡腺・淘汰(代謝) E20+G20・社会 Lv6 の神の裁定 祝福+3／T17＝T16＋光翼 P21・九腕 E15／T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化）</div>
 
 <script src="../app/js/icons.js"></script>
-<script src="../app/js/data.js?v=3.116"></script>
-<script src="../app/js/engine.js?v=3.116"></script>
+<script src="../app/js/data.js?v=3.117"></script>
+<script src="../app/js/engine.js?v=3.117"></script>
 <script>
 (function () {
   const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS[(G.RULES_VISIBLE || ['t15'])[0]]; // 2026-11-05 既定 t8→t10／2026-11-07 t12→t13／2026-11-08 RULES_VISIBLE の先頭（T14）
@@ -90,8 +90,9 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
   const stepArr = R.step.slice(1), bstep = (R.bodyStep || R.step).slice(1); set('step', stepArr.join('/') + 'E'); set('bstep', bstep.join('/') + 'E');
   $('trk').innerHTML = G.TRACKS.map(t => `<span style="border-color:var(--${G.TRACK_INFO[t].color})"><b>${G.TRACK_INFO[t].name.split('・')[0]}</b><br>${(G.gateShort ? G.gateShort(st, t) : G.GATE_SHORT[t]) || ''} ${R.gates[t].slice(2).join('/')}</span>`).join('');
   set('lv6', G.TRACKS.map(t => G.lv6CostText(st, t)).join('／'));
+  if (R.intelFlip) { $('flipli').hidden = false; set('flipg', G.sc(st, 3)); } // T30（O-37）
   set('res', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${sl(id)}`).join('／'));
-  set('mass', ['MB', 'MI', 'MS', 'MM'].map(id => `${G.SLOT_BY_ID[id].name.replace(/^(大量消費|淘汰)/, '')} ${sl(id)}`).join('／'));
+  { const rt = /・P が.+ 返る$/; const ms = ['MB', 'MI', 'MS', 'MM'].map(id => sl(id)); set('mass', ['MB', 'MI', 'MS', 'MM'].map((id, i) => `${G.SLOT_BY_ID[id].name.replace(/^(大量消費|淘汰)/, '')} ${ms[i].replace(rt, '')}`).join('／') + (R.massRetMetab ? `（どれも実行したあと P が${G.retForm(st)} 返る）` : '')); } // T30（O-37）：P のリターンは 1 回だけ書く
   set('rst', sl('RST')); set('bst', sl('BST')); set('gth', sl('GTH').replace(/（.*$/, ''));
   set('tribR', T.openRound || 6); set('tribpool', T.pool.map(id => `${G.SLOT_BY_ID[id].name}＝${sl(id)}`).join('／'));
   set('flatG', G.sc(st, T.flatG)); set('lcry', R.lCrystal); set('ccry', R.coopCrystal); set('toutG', G.tribOutText(st, 'G')); set('toutL', G.tribOutText(st, 'L')); set('toutC', G.tribOutText(st, 'coop')); set('tlim', R.tributeOnceGame ? '各祭壇は1ゲームに1回' : '各品目各自1R1回');

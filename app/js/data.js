@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.116'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.117'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -312,8 +312,19 @@
       G.RULESETS.t29 = mk('T29（T28＋祭壇・星海開拓の先駆・代謝と知性のゲート・跳躍を数える形に）', A, MG, MR, IG, JI, JB, BK);
       G.RULESETS.t29a = mk('T29a（計測のみ・T28＋祭壇と星海開拓の先駆）', A); G.RULESETS.t29b = mk('T29b（計測のみ・T28＋代謝のゲートと報酬）', MG, MR); G.RULESETS.t29c = mk('T29c（計測のみ・T28＋知性のゲートと知的跳躍）', IG, JI);
       G.RULESETS.t29d = mk('T29d（計測のみ・T28＋身体覚醒）', JB); G.RULESETS.t29e = mk('T29e（計測のみ・T28＋代謝のゲートだけ）', MG); G.RULESETS.t29f = mk('T29f（計測のみ・T28−身体 Lv4 のまとめ払いの条件）', BK); }
-  G.RULES_VISIBLE = ['t29']; // v3.113（2026-11-15 ユーザー指示）：既定を T29 に（T25〜T28 は ?rules= で打てる）
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29'];
+  // O-34（2026-11-16・計測のみ・第71部 §96・画面に出さない）＝T29 ＋ 淘汰（代謝）・自己複製を身体・知性の Lv で伸ばす：X1＝mmLv（E に〔身体 Lv−1〕×5・G に〔知性 Lv−1〕×5）／X2＝1 手で複数口（身体 Lv4 で 2・さらに知性 Lv4 で 3）／X3＝X1＋どちらか Lv4 で 2 口／X4＝X1＋自己複製の P に（身体 Lv−1＋知性 Lv−1）×5
+  { const T29 = G.RULESETS.t29; G.RULESETS.t29x1 = Object.assign({}, T29, { name: 'T29X1（計測のみ・淘汰（代謝）に身体・知性の Lv）', mmLv: 5 }); G.RULESETS.t29x2 = Object.assign({}, T29, { name: 'T29X2（計測のみ・淘汰（代謝）を複数口）', mmMulti: 'both' });
+    G.RULESETS.t29x3 = Object.assign({}, T29, { name: 'T29X3（計測のみ・X1＋どちらか Lv4 で 2 口）', mmLv: 5, mmMulti: 'either' }); G.RULESETS.t29x4 = Object.assign({}, T29, { name: 'T29X4（計測のみ・X1＋自己複製に身体・知性の Lv）', mmLv: 5, pbLv: 5 }); }
+  // O-35（2026-11-16・計測のみ・第71部 §97・画面に出さない）＝T29 ＋ K（知性 Lv2 G+15・Lv3★ 弱 その場で G+15〔割引なし〕・Lv5★ 弱 G+25・強 G+25＋以後すべて強）／Y1＝K＋X1／Y2＝K＋淘汰（代謝）の E・G に（代謝 Lv−1）×5／Y3＝K＋淘汰 4 種の P を（代謝 Lv−1）×5 軽減／Y4＝Y1＋Y3 の軽減
+  { const T29 = G.RULESETS.t29, K = { intelK: { g2: 15, g3w: 15, g5w: 25, g5s: 25 } }; G.RULESETS.t29k = Object.assign({}, T29, K, { name: 'T29K（計測のみ・知性の段の手直し）' }); G.RULESETS.t29y1 = Object.assign({}, T29, K, { name: 'T29Y1（計測のみ・K＋X1）', mmLv: 5 });
+    G.RULESETS.t29y2 = Object.assign({}, T29, K, { name: 'T29Y2（計測のみ・K＋淘汰（代謝）に代謝の Lv）', mmLvMetab: 5 }); G.RULESETS.t29y3 = Object.assign({}, T29, K, { name: 'T29Y3（計測のみ・K＋淘汰の P を代謝の Lv で軽減）', massDiscMetab: 5 }); G.RULESETS.t29y4 = Object.assign({}, T29, K, { name: 'T29Y4（計測のみ・Y1＋Y3 の軽減）', mmLv: 5, massDiscMetab: 5 }); }
+  // O-36（第71部 §98・計測のみ・画面に出さない）：I＝知性の段を「弱の形質を強に裏返す」能力に（intelFlip）／Z1＝I＋淘汰（代謝）に身体・知性の Lv（+5）＋淘汰 4 種のあと P が（代謝 Lv−1）×5 返る（massRetMetab）／Z2＝Z1 の上乗せを +3 に／Z3＝I＋Y2 の淘汰（代謝）／I9＝I で知性 Lv2 の G+9 を残す（参考）
+  { const T29 = G.RULESETS.t29, I = { intelFlip: true }; G.RULESETS.t29i = Object.assign({}, T29, I, { name: 'T29I（計測のみ・知性の段を裏返しの能力に）' }); G.RULESETS.t29i9 = Object.assign({}, T29, I, { name: 'T29I9（計測のみ・I＋知性 Lv2 の G+9 を残す）', flipKeepG2: true });
+    G.RULESETS.t29z1 = Object.assign({}, T29, I, { name: 'T29Z1（計測のみ・I＋淘汰（代謝）に身体・知性の Lv＋代謝で P が返る）', mmLv: 5, massRetMetab: 5 }); G.RULESETS.t29z2 = Object.assign({}, T29, I, { name: 'T29Z2（計測のみ・Z1 の上乗せを 1 段 +3 に）', mmLv: 3, massRetMetab: 5 }); G.RULESETS.t29z3 = Object.assign({}, T29, I, { name: 'T29Z3（計測のみ・I＋淘汰（代謝）に代謝の Lv）', mmLvMetab: 5 }); }
+  // T30（2026-11-16・ORDERS O-37・ユーザー承認・第71部 §99 の 1.）＝T29 ＋ ①知性 Lv3★ 弱／Lv5★ 弱／Lv5★ 強を「弱の形質を強に裏返す」能力に（intelFlip・Lv2 は G+9 のまま＝flipKeepG2・枠の通り抜けなし）②淘汰（代謝）の E に（身体 Lv−1）×5・G に（知性 Lv−1）×5（mmLv）③淘汰 4 種のあと P が代謝 Lv×5 返る（massRetMetab＋lvTimes）＝O-36 の t29i9 の知性＋t29z1 の淘汰（リターンは Z1 より毎回 P5 多い）
+  G.RULESETS.t30 = Object.assign({}, G.RULESETS.t29, { name: 'T30（T29＋知性の裏返し・淘汰（代謝）に身体・知性の Lv・淘汰で P が返る）', intelFlip: true, flipKeepG2: true, intelFlipSlot: false, mmLv: 5, massRetMetab: 5, lvTimes: true }); // lvTimes（O-37 追記・ユーザー決定）：式を「Lv×5」にそろえる＝淘汰（代謝）E15＋身体 Lv×5／G15＋知性 Lv×5（値は同じ）・P のリターンは代謝 Lv×5（Lv1 でも P5）
+  G.RULES_VISIBLE = ['t30']; // v3.117（O-37）：既定を T30 に（T25〜T29 は ?rules= で打てる）
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };

@@ -56,6 +56,7 @@
     const R = G.RULESETS[st.rules || 'v1']; const vp = viewP(p); const sc = (n) => G.sc(st, n); const T = R.tribute || {}; const TS = T.slots || {};
     const resB = G.RES_SLOTS.includes(id) && R.coopMode !== 'spend' && (!R.coopBonusSlots || R.coopBonusSlots.includes(id)) ? [coopBonus()] : [];
     const massC = (k) => pcost('P', G.massCost(vp, k), k === 'MM' && R.mmCost ? R.mmCost : k === 'MS' && R.msCost ? R.msCost : R.massCost);
+    const mret = () => { const r = G.massRet(vp); return r ? [po('＋'), pc('P', '+' + r, { cls: 'bonus', title: `実行したあと P+${r} が返る（${G.retForm(st)}・代謝 Lv${vp.lv.metab}）` })] : []; }; // O-37：淘汰 4 種のあと返る P（0 のときは出さない）
     const w = (R.gauge ? [] : [pc('W', null, { title: 'ワーカー必須（ATでは置けない）' })]);
     const bless = (k) => { const kk = k || 'G'; const vg = G.tribVg ? G.tribVg(st, kk) : 1, tr = G.tribReal ? G.tribReal(st, kk) : 0; const a = []; if (tr) a.push(pc('gem', '+' + tr)); if (vg) a.push(pc('bless', '+' + vg)); return a; }; // v3.67 祭壇＝祝福+2／T14（§16 M-a）＝痕跡と祝福の組み合わせ（配列で返す）
     if (/^TRL_/.test(id) && R.trial) { const r = +id.slice(4); const k = st.shared.trials[r - 1]; return [pcost(k, G.trialCost(st, r)), po('→'), pc('gem', '+' + G.trialGem(st, r))]; } // T24（O-20）：試練
@@ -68,10 +69,10 @@
       case 'EG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('E', '+' + G.slotAmt(st, 'EG').E), pc('coop', '+' + (R.herdCoop || 1)), ...resB] : null;
       case 'GG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('G', '+' + G.slotAmt(st, 'GG').G), pc('coop', '+' + (R.herdCoop || 1)), ...resB] : null;
       case 'PB': return [pcost('G', G.pbCost(vp), sc(2)), po('→'), pc('P', '+' + G.pbGain(st)), ...(R.pbCoop ? [coopBonus()] : [])];
-      case 'MB': return [massC('MB'), po('→'), pc('gem', '+1')];
-      case 'MI': return R.miMaxCost ? [massC('MI'), po('→'), pc('trait', '×' + (R.miCount || 2), { title: `コストG${R.miMaxCost}以下の形質を異なる${R.miCount || 2}種` }), pbad('≤' + R.miMaxCost, `コストG${R.miMaxCost}以下`)] : null;
-      case 'MS': return [massC('MS'), po('→'), pc('coop', '+' + (R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)))];
-      case 'MM': return [massC('MM'), po('→'), pc('E', '+' + (R.mmGain || sc(10))), pc('G', '+' + (R.mmGain || sc(10)))]; // T18：mmGain
+      case 'MB': return [massC('MB'), po('→'), pc('gem', '+1'), ...mret()];
+      case 'MI': return R.miMaxCost ? [massC('MI'), po('→'), pc('trait', '×' + (R.miCount || 2), { title: `コストG${R.miMaxCost}以下の形質を異なる${R.miCount || 2}種` }), pbad('≤' + R.miMaxCost, `コストG${R.miMaxCost}以下`), ...mret()] : null;
+      case 'MS': return [massC('MS'), po('→'), pc('coop', '+' + (R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2))), ...mret()];
+      case 'MM': { const g = (R.mmLv || R.mmLvMetab) ? G.mmGainOf(vp) : { E: R.mmGain || sc(10), G: R.mmGain || sc(10) }; return [massC('MM'), po('→'), pc('E', '+' + g.E, R.mmLv ? { title: `${G.mmForm(st).E}（身体 Lv${vp.lv.body}）` } : null), pc('G', '+' + g.G, R.mmLv ? { title: `${G.mmForm(st).G}（知性 Lv${vp.lv.intel}）` } : null), ...mret()]; } // T18：mmGain／O-37：mmLv＝いまの自分の量
       case 'TRT': return [pcost('G'), po('→'), pc('trait', '+1')];
       case 'TRT2': return [pcost('G'), pcost('E', st.round), po('→'), pc('trait', '+1')];
       case 'MIM': { const b = R.mimicCost || 4; return [pcost('G', G.gSlotCost(vp, b), b), po('→'), pc('copy', null, { title: '模倣：自分を含む誰かが到達済みの Lv2／Lv3★ の即時効果を1つ' }), pbad('Lv2/3★')]; }
@@ -462,6 +463,7 @@
     if (R.bodyAxis === 'L' && t === 'body' && R.bodyRewards === 'P') { const b = Object.assign({}, REW_SHORT_T7_BODY); if (!((R.lCrystal || R.altar) && (R.lCrystalLv || 4) === 2)) b[2] = 'L+1'; if (!R.bodyLv4Gem) b[4] = '産出×2'; return b[l]; }
     if (R.bodyAxis === 'L' && t === 'body') { const b = { 2: ['産出 E/G選択', R.body2L ? 'L+1' : null, R.lCrystal && (R.lCrystalLv || 4) === 2 ? '結晶化解放' : null].filter(Boolean).join(' '), 4: [R.bodyLv4Gem ? '痕跡+1' : null, '1L=E4/G4 産出P可'].filter(Boolean).join(' '), 5: R.body5Coef ? ['係数+1 L+1', 'L+1'] : REW_SHORT_T5_BODY[5] }; return b[l] || REW_SHORT_T5_BODY[l] || REW_SHORT[t][l]; }
     if (R.intelRewards === 'learn' && t === 'intel' && REW_SHORT_T7_INTEL[l]) return REW_SHORT_T7_INTEL[l];
+    if (R.intelFlip && t === 'intel' && (l === 3 || l === 5)) return l === 3 ? [REW_SHORT_T10_INTEL[3][0], '弱の形質1枚を強に'] : ['弱の形質を全部強に・常に強', '弱の形質2枚まで強に']; // O-37（T30）
     if (R.intelRewards === 'trait' && t === 'intel' && REW_SHORT_T10_INTEL[l]) return REW_SHORT_T10_INTEL[l]; if (R.metab4 === 'special' && t === 'metab' && l === 4) return '特殊器官 1 枚'; if (R.metab4 === 'organNoG' && t === 'metab' && l === 4) return R.organLateFee === 0 ? '器官のGなし' : '器官のG・追随の代償なし'; // T10
     if (R.joinNow && t === 'social' && l === 3) { const s3 = REW_SHORT_T4.social[3]; return R.socialRewards === 'shield' ? ['合流進出×1', s3[1]] : REW_SHORT[t][l]; } // 2026-11-11 ユーザー指摘（T20-H1）：Lv3★ 強が「自由行動+1」のまま
     if (R.joinNow && t === 'social' && (l === 4 || l === 5)) return { 4: '合流進出×1', 5: R.socialRewards === 'shield' ? ['合流進出×2', '合流進出×1'] : ['協調+1 合流進出×2', '協調+1 合流進出×1'] }[l]; // T19 #1。O-33（v3.116）：shield の世界は協調+1 なし
@@ -489,6 +491,8 @@
     if (R.mmCost && !R.mcAfterCap && /^(淘汰コスト|次の淘汰1回だけ)-/.test(s)) s += '（代謝は対象外）'; // 固定コストが先の数値セットでは代謝に効かない
     return s;
   }
+  // O-37（T30）：身体・知性・代謝のトラックが淘汰に効く分（1 段ごとに E+5／G+5／P+5）
+  function massTip(p, t) { const R = G.RULESETS[st.rules || 'v1'], vp = viewP(p), lv = vp.lv[t]; if (t === 'body' && R.mmLv) return `淘汰（代謝）の獲得 ${G.mmForm(st).E}（いま Lv${lv}＝E${G.mmGainOf(vp).E}）`; if (t === 'intel' && R.mmLv) return `淘汰（代謝）の獲得 ${G.mmForm(st).G}（いま Lv${lv}＝G${G.mmGainOf(vp).G}）`; if (t === 'metab' && R.massRetMetab) return `淘汰 4 種を実行したあと P が${G.retForm(st)} 返る（いま Lv${lv}＝P+${G.massRet(vp)}）`; return null; }
   function renderTracks(p, can) {
     const box = h('div', { class: 'panel tracksp' }, h('h3', null, '進化トラック', h('small', { class: 'sub' }, G.RULESETS[st.rules || 'v1'].gates ? '　素材（器官・形質・協調・投入）が矢印の数に達すると自動で上がる。Eでの進化（点線をクリック）も自由。★＝痕跡・先駆は強い報酬' : '　次の段（点線）をクリックで進化（ワーカー必須・排他なし）。★＝痕跡・先駆は強い報酬')));
     const lanes = h('div', { class: 'lanes' }); box.appendChild(lanes); // レーンだけ横スクロール（スマホ）
@@ -496,7 +500,7 @@
       const info = G.TRACK_INFO[t]; const nxt = p.lv[t] + 1;
       const reason = can ? check({ pid: p.id, type: 'track', track: t, pay: 'E', useL: Math.min(p.L, 3) }) : roMsg;
       const lane = h('div', { class: 'lane lane-' + info.color });
-      lane.appendChild(h('div', { class: 'lane-lbl' }, h('b', null, info.name), h('small', null, `素材：${G.gateLabel(st, t)}`)));
+      lane.appendChild(h('div', { class: 'lane-lbl', title: massTip(p, t) }, h('b', null, info.name), h('small', null, `素材：${G.gateLabel(st, t)}`)));
       const body = h('div', { class: 'lane-body' });
       const RS0 = G.RULESETS[st.rules || 'v1']; const maxLv = RS0.maxLv || 5;
       for (let l = 1; l <= maxLv; l++) {
@@ -534,7 +538,10 @@
     let d = null; if (can && !reason && (s.group === 'res' || s.group === 'mass' || s.id === 'GEM')) { d = G.previewGain(st, sample(p, s.id), s.id === 'MI' ? { noTraitFx: true } : null); }
     const pay = d && s.group === 'mass' && G.massCost(p, s.id) > 0 ? { P: G.massCost(p, s.id) } : null; // 2026-11-10 v3.93：淘汰は支払いと戻りを分けて表示
     const gain = d ? gainStr(d, pay) : null;
-    const tip = (G.slotTip(st, s.id) || txt) + (gain ? `\n今実行すると：${gain}` : '');
+    const vq = viewP(p), R9 = G.RULESETS[st.rules || 'v1']; let mine = ''; // O-37（T30）：いまの自分の淘汰（代謝）の獲得量と内訳・淘汰 4 種のあと返る P
+    if (s.id === 'MM' && R9.mmLv) { const g = G.mmGainOf(vq); mine += `\nいまの獲得量：E${g.E}＋G${g.G}（身体 Lv${vq.lv.body}・知性 Lv${vq.lv.intel}）`; }
+    if (['MB', 'MI', 'MS', 'MM'].includes(s.id) && G.massRet(vq)) mine += `\nいま返る P：+${G.massRet(vq)}（代謝 Lv${vq.lv.metab}）`;
+    const tip = (G.slotTip(st, s.id) || txt) + mine + (gain ? `\n今実行すると：${gain}` : '');
     const body = slotBody(p, s.id, s.name, txt, d, pay);
     return actBtn({ class: 'slot' + (iconView() && body[0].className === 'pname' ? ' pic' : '') + (used !== undefined ? ' used' : ''), title: tip, onclick }, reason, ...body, used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`) : null, extra || null);
   }
@@ -954,6 +961,15 @@
       if (pd.type === 'flSwap') {
         const r = await ask(`収入時の転流：E↔Gを最大${pd.max}振替（1:1）`, [{ type: 'select', name: 'dir', label: '方向', options: [{ value: 'EG', label: 'E→G' }, { value: 'GE', label: 'G→E' }] }, { type: 'number', name: 'n', label: '個数', value: 1, min: 1, max: pd.max }], { skipLabel: '振替しない', noCancel: true });
         if (!r || r.__skip) return submit({ pid: p.id, type: 'resolve', skip: true }); return submit({ pid: p.id, type: 'resolve', dir: r.dir, n: r.n });
+      }
+      if (pd.type === 'flip') { // O-37（T30）：知性 Lv3★ 弱（1 枚）／Lv5★ 弱（2 枚まで）／Lv5★ 強（好きなだけ）で弱の形質を強に裏返す。裏返さない 1 枚につき G+pd.g（好きなだけの段は G なし）
+        const ids = G.flippable(p); const src = { '3w': '知性 Lv3★ 弱', '5w': '知性 Lv5★ 弱', '5s': '知性 Lv5★ 強' }[pd.src] || '知性'; const all = pd.n >= 99;
+        const fx = (t) => `弱：${rtxt(G.traitText(st, t, false))} → 強：${rtxt(G.traitText(st, t, true))}`; const gTxt = (k) => !all && pd.g && k > 0 ? `G+${k * pd.g}` : '';
+        const note = `${all ? '持っている弱の形質を好きなだけ' : `弱の形質を ${pd.n} 枚まで`}強に裏返す。${all ? '' : `裏返さない 1 枚につき G+${pd.g}。`}群れ本能・長命・星渡は対象外。得たときの資源・痕跡は受け取り直さない`;
+        if (pd.n === 1) { const r = await ask(`${src}：弱の形質を強に裏返す`, [{ type: 'select', name: 't', label: '形質', options: ids.map(t => ({ value: t, label: `${t} ${G.TRAITS[t].name}` })).concat([{ value: '', label: `裏返さない（${gTxt(1) || 'なし'}）` }]), desc: v => v.t ? fx(v.t) : '' }], { noCancel: true, note }); if (!r) return; return submit({ pid: p.id, type: 'resolve', traits: r.t ? [r.t] : [] }); }
+        for (;;) { const r = await ask(`${src}：弱の形質を強に裏返す（${all ? '好きなだけ' : pd.n + ' 枚まで'}）`, ids.map(t => ({ type: 'check', name: t, label: `${t} ${G.TRAITS[t].name}`, value: all || ids.length <= pd.n, hint: fx(t) })), { noCancel: true, note, okLabel: '裏返す' });
+          if (!r) return; const pick = ids.filter(t => r[t]); if (pick.length > pd.n) { toast(`裏返せるのは ${pd.n} 枚までです`, true); continue; }
+          return submit({ pid: p.id, type: 'resolve', traits: pick }); }
       }
       if (pd.type === 'dgBuy') {
         const r = await ask(`ラウンド開始時：遺伝子図書館で形質1枚を-${pd.disc}Gで獲得`, [traitPickSel(p, pd.disc), { type: 'select', name: 'useL', label: '生命核をGの代わりに', options: lOpts(p, 'G') }, imSel(pickId), daSel(pickId)], { skipLabel: '買わない', noCancel: true, note: '手番（ワーカー）は消費しません。買っても買わなくても、この後ふつうに行動できます（残りワーカーはヘッダで確認できます）。' }); // 2026-11-05 ユーザーの疑問「手番を消費していた気がする」→ 手番の冒頭に挟まるだけで消費しない旨を明記
