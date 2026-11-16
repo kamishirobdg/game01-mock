@@ -436,9 +436,12 @@
       const ms = RS(p).massSecond; if (!ms || s.group !== 'mass') throw new Error('この数値セットに淘汰の 2 人目はありません');
       if (st.shared.used[key] === p.id) throw new Error('同じ淘汰に同じラウンドで 2 回は入れません');
       if (st.shared.used[key + '#2'] !== undefined) throw new Error('この淘汰は今ラウンド 2 人まで埋まっています');
-      if (ms.pay === 'coop') { if (p.coop < ms.n) throw new Error(`2 人目には協調${ms.n}が必要です`); p.coop -= ms.n; }
-      else if (ms.pay === 'L') { if (p.L < ms.n) throw new Error(`2 人目には生命核${ms.n}が必要です`); p.L -= ms.n; investL(p, st, ms.n); }
-      st.shared.used[key + '#2'] = p.id; return { bypass: 'second' };
+      const pay = ms.pay === 'either' ? (opt.secondPay || (p.coop >= ms.coop ? 'coop' : 'L')) : ms.pay, n = ms.pay === 'either' ? ms[pay] : ms.n; // T31（O-44）：pay 'either'＝協調 ms.coop か生命核 ms.L を打つ人が選ぶ（secondPay）
+      if (ms.pay === 'either' && !['coop', 'L'].includes(pay)) throw new Error('2 人目の払いは協調か生命核です');
+      if (ms.pay === 'either' && p.coop < ms.coop && p.L < ms.L) throw new Error(`2 人目には協調${ms.coop}か生命核${ms.L}が必要です`);
+      if (pay === 'coop') { if (p.coop < n) throw new Error(`2 人目には協調${n}が必要です`); p.coop -= n; opt.secondPaid = `協調${n}`; }
+      else if (pay === 'L') { if (p.L < n) throw new Error(`2 人目には生命核${n}が必要です`); p.L -= n; investL(p, st, n); opt.secondPaid = `生命核${n}`; }
+      st.shared.used[key + '#2'] = p.id; return { bypass: 'second', paid: opt.secondPaid };
     }
     // 使用済み：突破手段
     if (opt.bodyMass && p.flags.strong['body5'] && RS(p).bodyAxis !== 'L') { if (RS(p).body5Once) { if (p.round.mbBypass) throw new Error('身体Lv5★の排他無視はこの数値セットでは1ラウンド1回です'); p.round.mbBypass = true; } return { bypass: 'body5' }; }
@@ -564,7 +567,7 @@
         if (lv === 3) { if (strong) p.nextTraitFree = true; else if (!temp) { if (IF) flipStart(st, p, 1, sc(p, 3), '3w'); else if (IK) p.G += IK.g3w; else p.nextTraitDisc = (p.nextTraitDisc || 0) + sc(p, 3); } }
         if (lv === 4 && !temp && (RS(p).intel4Mut || RS(p).intel4Re)) { if (RS(p).intel4Mut) { const mo = mutOpts(st, p); if (mo.give.length && mo.take.length) p.pending.push({ type: 'mutate', mode: RS(p).intel4Mut }); else log(st, p.id, `${p.name}：知性 Lv4 の変異で返せる・受け取れる形質が無い`); } if (RS(p).intel4Re) intel4Re(st, p); } // O-38 計測のみ：知性 Lv4 の替え（変異／再発動）
         if (lv === 4 && !temp && !RS(p).intel4NoVg) { p.intel4Vg = true; const ni = traitCountI(p); const k = Math.floor(ni / 3) - (p.intel4VgN || 0); if (k > 0) { p.gemsets += k; p.intel4VgN = (p.intel4VgN || 0) + k; log(st, p.id, `${p.name}：祝福+${k}（知性 Lv4：形質${ni}枚${ni !== p.traits.length ? 'ぶん・神経を含む' : ''}）→ 祝福 ${p.gemsets}`); } } // T19 #5：traitCountI＝神経 2 枚ぶんを含む（T18 以前は形質カードだけ）
-        if (lv === 5) { if (strong) { p.alwaysStrong = true; if (IK) p.G += IK.g5s; if (IF) flipStart(st, p, 99, 0, '5s'); } else if (IF) flipStart(st, p, 2, sc(p, 3), '5w'); else p.G += IK ? IK.g5w : sc(p, 6); }
+        if (lv === 5) { if (strong) { p.alwaysStrong = true; if (IK) p.G += IK.g5s; if (IF) flipStart(st, p, RS(p).flip5sMax || 99, 0, '5s'); /* T31（O-44）：flip5sMax＝Lv5★ 強の裏返しの上限 */ } else if (IF) flipStart(st, p, 2, sc(p, 3), '5w'); else p.G += IK ? IK.g5w : sc(p, 6); }
       } else {
       if (lv === 4) { if (RS(p).intel4 === 'traitDisc') { if (!temp) p.traitDisc += sc(p, 1); } else p.pending.push({ type: 'bonusAction' }); }
       if (lv === 5) { if (strong) { p.traitDisc = sc(p, 2); p.alwaysStrong = true; } else p.G += sc(p, 6); }
@@ -881,15 +884,15 @@
   // 大量消費： {kind:'MB'|'MI'|'MS'|'MM', traits:[2], free}
   ACTIONS.mass = (st, p, a) => {
     const c = a.free ? 0 : massCost(p, a.kind);
-    let byp = null;
+    let byp = null, bPaid = null; // bPaid：淘汰の 2 人目の払い（ログ用）
     const lm = (!a.free && a.kind === 'MB' && a.pay === 'L' && RS(p).massL) ? RS(p).massL : null; // 試作 massL：大量消費(身体)を生命核でも
-    if (lm !== null) { if (p.L < lm) throw new Error(`生命核が足りません（必要L${lm}）`); byp = claimSlot(st, p, a.kind, { bodyMass: true, useL: a.bypassL, useCoop: a.bypassCoop, second: a.second }).bypass; useToken(p, false); p.L -= lm; investL(p, st, lm); if (RS(p).bodyBulkLv4 && lm >= RS(p).bodyBulkLv4) p.lBulk = true; }
+    if (lm !== null) { if (p.L < lm) throw new Error(`生命核が足りません（必要L${lm}）`); { const cr = claimSlot(st, p, a.kind, { bodyMass: true, useL: a.bypassL, useCoop: a.bypassCoop, second: a.second, secondPay: a.secondPay }); byp = cr.bypass; bPaid = cr.paid; } useToken(p, false); p.L -= lm; investL(p, st, lm); if (RS(p).bodyBulkLv4 && lm >= RS(p).bodyBulkLv4) p.lBulk = true; }
     const nMM = a.kind === 'MM' && !a.free && lm === null ? (a.n || 1) : 1; let cAll = c; // O-34 計測のみ：淘汰（代謝）の口数（2 口目以降は消費軽減の強・一度きりの軽減なし）
     if (nMM > 1) { if (nMM > mmMax(p)) throw new Error(`淘汰（代謝）は ${mmMax(p)} 口までです`); const f0 = p.mcFree, n0 = p.next.mass; p.mcFree = 0; p.next.mass = 0; const cR = massCost(p, 'MM'); p.mcFree = f0; p.next.mass = n0; cAll = c + cR * (nMM - 1); }
-    if (lm === null && !a.free) { if (p.P < cAll) throw new Error(`個体数が足りません（必要P${cAll}・所持P${p.P}）`); byp = claimSlot(st, p, a.kind, { bodyMass: a.kind === 'MB', useL: a.bypassL, useCoop: a.bypassCoop, second: a.second }).bypass; useToken(p, false); p.P -= cAll; p.next.mass = 0; if (p.mcFree && RS(p).mcMode === 'freeOnce' && c === 0) p.mcFree -= 1; }
+    if (lm === null && !a.free) { if (p.P < cAll) throw new Error(`個体数が足りません（必要P${cAll}・所持P${p.P}）`); { const cr = claimSlot(st, p, a.kind, { bodyMass: a.kind === 'MB', useL: a.bypassL, useCoop: a.bypassCoop, second: a.second, secondPay: a.secondPay }); byp = cr.bypass; bPaid = cr.paid; } useToken(p, false); p.P -= cAll; p.next.mass = 0; if (p.mcFree && RS(p).mcMode === 'freeOnce' && c === 0) p.mcFree -= 1; }
     const ret = massRet(p); // O-36 計測のみ massRetMetab：淘汰 4 種を実行したあと P が（代謝 Lv−1）×massRetMetab 返る（実行した時点の Lv）
     const mmG = a.kind === 'MM' ? mmGainOf(p) : null; const mmX = !!(RS(p).mmLv || RS(p).mmMulti || RS(p).mmLvMetab); // 実行した時点の Lv
-    const desc = `${G.SLOT_BY_ID[a.kind].name}${nMM > 1 ? ` ${nMM} 口` : ''}（${a.free ? '無料・報酬' : lm !== null ? 'L' + lm : 'P' + cAll}${mmX && mmG ? `→E+${mmG.E * nMM} G+${mmG.G * nMM}` : ''}）${byp ? '・' + bypassDesc(byp) : ''}${ret > 0 ? `・P+${ret} が返る` : ''}`;
+    const desc = `${G.SLOT_BY_ID[a.kind].name}${nMM > 1 ? ` ${nMM} 口` : ''}（${a.free ? '無料・報酬' : lm !== null ? 'L' + lm : 'P' + cAll}${mmX && mmG ? `→E+${mmG.E * nMM} G+${mmG.G * nMM}` : ''}）${byp ? '・' + bypassDesc(byp) + (bPaid ? `（${bPaid}）` : '') : ''}${ret > 0 ? `・P+${ret} が返る` : ''}`;
     if (ret > 0) p.P += ret;
     afterAction(st, p, desc, !a.free);
     if (a.kind === 'MB') { if (RS(p).massBodyVirtual) { p.gemsets += 1; log(st, p.id, `${p.name}：淘汰(身体)→ 祝福 ${p.gemsets}`); } else addGem(st, p, 'body', 1, '淘汰'); } // massBodyVirtual：C2 の手当て(a)
@@ -1128,13 +1131,24 @@
   function altarCost(p, k) { const A = RS(p).altar; if (!A || A.cost[k] === undefined) return null; let c = A.cost[k]; if (k === 'L') c = Math.max(1, c - (p.crystalDiscL || 0)); if (k === 'coop') c = Math.max(1, c - (p.crystalDiscC || 0)); return c; }
   function altarNextVg(p) { const A = RS(p).altar; if (!A) return 0; const n = altarCount(p); return n < A.vg.length ? A.vg[n] : 0; }
   ACTIONS.altar = (st, p, a) => {
-    const A = RS(p).altar; if (!A) throw new Error('この数値セットに祭壇の払い口はありません'); const k = a.res; if (!ALTAR_KEYS.includes(k) || A.cost[k] === undefined) throw new Error('払い口を選んでください');
-    if (p.tribGame && p.tribGame[k]) throw new Error(`祭壇（${ALTAR_JP[k]}）は使用済みです（各払い口は 1 ゲームに 1 回）`);
-    if (k === 'L') { const unlock = RS(p).lCrystalLv || 4; if (p.lv.body < unlock) throw new Error(`祭壇（生命核）は身体Lv${unlock}で解放されます`); }
-    const c = altarCost(p, k); if (p[k] < c) throw new Error(`${ALTAR_JP[k]}が足りません（必要${c}）`);
-    useToken(p, false); p.tribGame = p.tribGame || {}; p.tribGame[k] = true; p[k] -= c; if (k === 'L' && p.crystalInvest) investL(p, st, c); // 結晶体質（強）：払った生命核を身体の素材に（今と同じ）
-    const nth = altarCount(p), vg = A.vg[nth - 1] || 0; p.gemsets += vg;
-    afterAction(st, p, `祭壇（${ALTAR_JP[k]}）祝福+${vg}（${nth} 個目）`, true); // O-40：T23 以降のログは「祭壇（E）祝福+2（1 個目）」 return true;
+    const A = RS(p).altar; if (!A) throw new Error('この数値セットに祭壇の払い口はありません');
+    const D = RS(p).altarDouble; const ks = [a.res].concat(a.res2 ? [a.res2] : []); // O-43 計測のみ altarDouble：1 手で払い口を 2 つまで（extraL＝2 個目に生命核／perRound＝祭壇の手は 1 人 1 R に 1 回）
+    if (ks.length > 1 && !D) throw new Error('この数値セットでは祭壇は 1 手に 1 個です');
+    if (ks.length > 1 && ks[0] === ks[1]) throw new Error('別々の払い口を選んでください');
+    if (D && D.perRound && p.round.altarDone) throw new Error('祭壇の手は 1 ラウンドに 1 回です');
+    const rL = D && D.repeatL && (p.round.altarN || 0) > 0 ? D.repeatL : 0; // T31（O-44）repeatL：同じ R の自分の 2 回目以降の祭壇の手は、手ごとに生命核を足す（投入に数える）
+    const need = {}; ks.forEach(k => {
+      if (!ALTAR_KEYS.includes(k) || A.cost[k] === undefined) throw new Error('払い口を選んでください');
+      if (p.tribGame && p.tribGame[k]) throw new Error(`祭壇（${ALTAR_JP[k]}）は使用済みです（各払い口は 1 ゲームに 1 回）`);
+      if (k === 'L') { const unlock = RS(p).lCrystalLv || 4; if (p.lv.body < unlock) throw new Error(`祭壇（生命核）は身体Lv${unlock}で解放されます`); }
+      need[k] = (need[k] || 0) + altarCost(p, k); });
+    const xL = (ks.length > 1 && D && D.extraL ? D.extraL : 0) + rL; if (xL) need.L = (need.L || 0) + xL;
+    Object.keys(need).forEach(k => { if (p[k] < need[k]) throw new Error(`${ALTAR_JP[k]}が足りません（必要${need[k]}）`); });
+    useToken(p, false); p.tribGame = p.tribGame || {}; const parts = [];
+    ks.forEach(k => { const c = altarCost(p, k); p.tribGame[k] = true; p[k] -= c; if (k === 'L' && p.crystalInvest) investL(p, st, c); // 結晶体質（強）：払った生命核を身体の素材に（今と同じ）
+      const nth = altarCount(p), vg = A.vg[nth - 1] || 0; p.gemsets += vg; parts.push(`祭壇（${ALTAR_JP[k]}）祝福+${vg}（${nth} 個目）`); });
+    if (xL) { p.L -= xL; investL(p, st, xL); } if (D && D.perRound) p.round.altarDone = true; if (D) p.round.altarN = (p.round.altarN || 0) + 1;
+    afterAction(st, p, parts.join('＋') + (rL ? `・このラウンド ${p.round.altarN} 回目で生命核${xL}` : xL ? `・2 個目に生命核${xL}` : ''), true); return true; // O-40：T23 以降のログは「祭壇（E）祝福+2（1 個目）」
   };
   // T24（O-20・第71部 §65）：試練＝いまの R の試練に、その R の額を払う（1 人 1 回・排他なし・解放条件なし・後払いなし）。報酬は R で決まる痕跡（trial.gem）。割引・代用・結晶体質なし。払った生命核・P は投入に数えない
   function trialKey(st, r) { return RS(st).trial && st.shared.trials ? st.shared.trials[(r || st.round) - 1] || null : null; }
@@ -1639,7 +1653,7 @@
     if (R.intel4 === 'traitDisc' && track === 'intel' && lv === 4) s = G.TRACK_REWARDS_T4.intel[4];
     if (R.intelRewards === 'learn' && track === 'intel' && G.TRACK_REWARDS_T7_INTEL[lv]) s = G.TRACK_REWARDS_T7_INTEL[lv];
     if (R.intelRewards === 'trait' && track === 'intel' && G.TRACK_REWARDS_T10_INTEL[lv]) s = G.TRACK_REWARDS_T10_INTEL[lv]; if (R.lv6IntelFull && track === 'intel' && lv === 4) s = '形質3枚ごとに祝福+1（即時。Lv6 の神の裁定でもこのぶんを引かずに数える）'; /* T19 #9 lv6IntelFull */ // T10
-    if (R.intelFlip && track === 'intel') s = { 2: R.flipKeepG2 ? s : '形質獲得の枠に、使用済みでも払いなしで入れる', 3: s && s.replace(/／弱：.*$/, '／弱：弱で持っている形質 1 枚を強に裏返す（裏返さなければ G+{3}）'), 5: '強：持っている弱の形質を好きなだけ強に裏返す＋以後の形質はすべて強／弱：弱の形質を 2 枚まで強に裏返す（裏返さない 1 枚につき G+{3}）' }[lv] || s; // O-36／T30（O-37）：群れ本能・長命・星渡は裏返せない
+    if (R.intelFlip && track === 'intel') s = { 2: R.flipKeepG2 ? s : '形質獲得の枠に、使用済みでも払いなしで入れる', 3: s && s.replace(/／弱：.*$/, '／弱：弱で持っている形質 1 枚を強に裏返す（裏返さなければ G+{3}）'), 5: `強：持っている弱の形質を${R.flip5sMax ? ` ${R.flip5sMax} 枚まで` : '好きなだけ'}強に裏返す＋以後の形質はすべて強／弱：弱の形質を 2 枚まで強に裏返す（裏返さない 1 枚につき G+{3}）` }[lv] || s; // T31（O-44）：flip5sMax // O-36／T30（O-37）：群れ本能・長命・星渡は裏返せない
     if (R.metab4 === 'organNoG' && track === 'metab' && lv === 4) s = G.TRACK_REWARDS_T10_METAB4; // T10
     if (R.metab4 === 'special' && track === 'metab' && lv === 4) s = G.TRACK_REWARDS_T15_METAB4; // T15
     if (R.bodyAxis === 'L' && track === 'body' && G.TRACK_REWARDS_T5_BODY[lv]) s = G.TRACK_REWARDS_T5_BODY[lv];

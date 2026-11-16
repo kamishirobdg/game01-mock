@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.120'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.121'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -327,9 +327,13 @@
   { const T30 = G.RULESETS.t30; G.RULESETS.t30v1 = Object.assign({}, T30, { name: 'T30V1（計測のみ・知性 Lv4＝変異〔同じ面〕）', intel4NoVg: true, intel4Mut: 'same' }); G.RULESETS.t30v2 = Object.assign({}, T30, { name: 'T30V2（計測のみ・知性 Lv4＝変異〔強で受け取る〕）', intel4NoVg: true, intel4Mut: 'strong' });
     G.RULESETS.t30v3 = Object.assign({}, T30, { name: 'T30V3（計測のみ・知性 Lv4＝祝福＋変異〔強〕）', intel4Mut: 'strong' }); G.RULESETS.t30v4 = Object.assign({}, T30, { name: 'T30V4（計測のみ・知性 Lv4＝再発動）', intel4NoVg: true, intel4Re: true });
     G.RULESETS.t30w1 = Object.assign({}, T30, { name: 'T30W1（計測のみ・淘汰の 2 人目＝協調 3）', massSecond: { pay: 'coop', n: 3 } }); G.RULESETS.t30w2 = Object.assign({}, T30, { name: 'T30W2（計測のみ・淘汰の 2 人目＝生命核 1）', massSecond: { pay: 'L', n: 1 } });
-    G.RULESETS.t30w3 = Object.assign({}, T30, { name: 'T30W3（計測のみ・淘汰は 1 R に 2 人まで）', massSecond: { pay: null, n: 0 } }); } // O-39（第71部 §101・計測のみ）
-  G.RULES_VISIBLE = ['t30']; // v3.117（O-37）：既定を T30 に（T25〜T29 は ?rules= で打てる）
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30'];
+    G.RULESETS.t30w3 = Object.assign({}, T30, { name: 'T30W3（計測のみ・淘汰は 1 R に 2 人まで）', massSecond: { pay: null, n: 0 } });
+    G.RULESETS.t30s0 = Object.assign({}, T30, { name: 'T30S0（計測のみ・祭壇は 1 手で 2 個まで）', altarDouble: { extraL: 0, perRound: false } }); G.RULESETS.t30s1 = Object.assign({}, T30, { name: 'T30S1（計測のみ・祭壇の 2 個目に生命核 1）', altarDouble: { extraL: 1, perRound: false } });
+    G.RULESETS.t30s2 = Object.assign({}, T30, { name: 'T30S2（計測のみ・祭壇は 1 手で 2 個まで・1 R に 1 回）', altarDouble: { extraL: 0, perRound: true } }); } // O-39（第71部 §101・計測のみ）・O-43（第71部 §105 の 2.・計測のみ）
+  // T31（2026-11-17・ORDERS O-44・ユーザー承認・第71部 §106）＝T30 ＋ A. 淘汰の 2 人目（協調 3 または生命核 1 個・打つ人が選ぶ）B. 知性 Lv5★ 強の裏返しは 3 枚まで C. 祭壇は 1 手に払い口 2 つまで・同じ R の自分の 2 回目以降の祭壇の手は手ごとに生命核 1 個を足す（投入に数える）
+  G.RULESETS.t31 = Object.assign({}, G.RULESETS.t30, { name: 'T31（T30＋淘汰の 2 人目・先駆の裏返し 3 枚まで・祭壇は 1 手 2 個まで）', massSecond: { pay: 'either', coop: 3, L: 1 }, flip5sMax: 3, altarDouble: { extraL: 0, perRound: false, repeatL: 1 } });
+  G.RULES_VISIBLE = ['t31']; // v3.121（O-44）：既定を T31 に（T30 以前は ?rules= で打てる）
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
