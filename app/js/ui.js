@@ -666,7 +666,7 @@
   }
   const restoreCands = (p) => G.traitPool(st).filter(t => st.shared.traitFirst[t] !== undefined && st.shared.traitFirst[t] !== p.id && !G.trait(p, t)); // T10 復元の候補
   const burstCands = (p) => { const B = G.RULESETS[st.rules || 'v1'].burst; if (!B) return []; const out = []; st.shared.lineages.forEach(lin => { const n = G.lineageCount(p, lin); const seq = [1, 2, 3].filter(t => t > n).map(t => lin + t).filter(id => st.shared.organField.includes(id)); for (let k = 2; k <= Math.min(seq.length, B.max || 3); k++) out.push(seq.slice(0, k)); }); return out; }; // T14 一気立ての候補（系統ごとに次の 2 枚・3 枚）
-  const burstCost = (p, seq) => { let e = 0, g = 0; const each = {}; const q = JSON.parse(JSON.stringify(p)); seq.forEach(id => { const c = G.organCost(st, q, id, true); if (c) { e += c.E; g += c.G; each[id] = `E${c.E}${c.G ? '+G' + c.G : ''}`; } q.organs.push({ id, strong: true }); }); return { e, g, each }; }; // 2026-11-10 v3.90（ユーザー指摘）：1 枚ごとの値段（追随の代償込み・T25 は代償なし）も出す
+  const burstCost = (p, seq) => { let e = 0, g = 0; const each = {}; const q = JSON.parse(JSON.stringify(p)); const fd = !!G.RULESETS[st.rules || 'v1'].burstFirstDiff; seq.forEach((id, i) => { const c = G.organCost(st, q, id, !(fd && !i)); /* O-62（T34）：1 枚目は通常どおり */ if (c) { e += c.E; g += c.G; each[id] = `E${c.E}${c.G ? '+G' + c.G : ''}`; } q.organs.push({ id, strong: true }); }); return { e, g, each }; }; // 2026-11-10 v3.90（ユーザー指摘）：1 枚ごとの値段（追随の代償込み・T25 は代償なし）も出す
   const burstTo = (p, id) => burstCands(p).find(q => q[q.length - 1] === id) || null; // そのカードで終わる急速形成の並び
   const amplifyCands = (p) => p.organs.filter(o => G.ampOk(st, o.id, true) && !o.amp).map(o => o.id); // T10 増幅の候補（v3.66：未建造は「建造と同時に増幅」で扱うので、ここは持っている器官だけ。v3.65 の予約は engine に残すが画面からは外す）
   function renderShared(p, can) {
@@ -748,7 +748,7 @@
   }
   function renderOrganField(p, can) {
     const oex = G.RULESETS[st.rules || 'v1'].organExcl;
-    const box = h('div', { class: 'panel' }, h('h3', null, `器官の場（${st.shared.lineages.map(l => G.LINEAGES[l]).join('・')}・${oex ? '各カード1ラウンド1人' : '排他なし'}）`, h('small', { class: 'sub' }, G.noLateTxt(st, G.RULESETS[st.rules || 'v1'].organCumulative ? `　系統内は形態の順。カードの値段は定価（追随は代償込み）。前の段まで形成済みなら 1 つ前の段の定価を引いた差額で、（）に定価（急速形成は定価）。同系統 3 枚で系統完成（成熟度+1 は ${(G.RULESETS[st.rules || 'v1'].lineageCoefAt || []).join('・')} 系統目）` : '　系統内は形態の順。先駆＝強・追随＝弱（G0）。同系統3枚で成熟度+1'))));
+    const box = h('div', { class: 'panel' }, h('h3', null, `器官の場（${st.shared.lineages.map(l => G.LINEAGES[l]).join('・')}・${oex ? '各カード1ラウンド1人' : '排他なし'}）`, h('small', { class: 'sub' }, G.noLateTxt(st, G.RULESETS[st.rules || 'v1'].organCumulative ? `　系統内は形態の順。カードの値段は定価（追随は代償込み）。前の段まで形成済みなら 1 つ前の段の定価を引いた差額で、（）に定価（${G.RULESETS[st.rules || 'v1'].burstFirstDiff ? '急速形成は 1 枚目だけ差額・2 枚目から定価' : '急速形成は定価'}）。同系統 3 枚で系統完成（成熟度+1 は ${(G.RULESETS[st.rules || 'v1'].lineageCoefAt || []).join('・')} 系統目）` : '　系統内は形態の順。先駆＝強・追随＝弱（G0）。同系統3枚で成熟度+1'))));
     const grid = h('div', { class: 'ogrid ofield' }); box.classList.add('ofieldp'); // O-52：1 行は 3 の倍数（9・6・3 枚）
     const sameEff = !!G.RULESETS[st.rules || 'v1'].organSameEffect;
     st.shared.organField.forEach(id => {
@@ -988,7 +988,7 @@
       const r = await ask('急速形成：同じ系統の器官を形態の順に続けて形成（ワーカー 1）', [{ type: 'select', name: 'seq', label: '形成する器官', value: pre ? (cs.find(q => q[q.length - 1] === pre) || []).join(',') : undefined, options: cs.map(seq => { const k = burstCost(p, seq); return { value: seq.join(','), label: `${G.LINEAGES[G.ORGANS[seq[0]].lin]}：${seq.map(id => `${id} ${G.ORGANS[id].name} ${k.each[id] || ''}`).join(' → ')}（計 E${k.e}+G${k.g}）`, disabled: p.E + p.L * (p.lValue || G.sc(st, 3)) < k.e || p.G < k.g }; }) }, { type: 'select', name: 'useL', label: '生命核をEの代わりに', options: lOpts(p) }, { type: 'select', name: 'liRes', label: '連結の資源（好きな資源の器官のとき）', options: ['E', 'G', 'P'].map(v => ({ value: v, label: v })) }], { note: G.slotTip(st, 'BST') + G.noLateTxt(st, '。各器官の値段と追随の代償を払い、形成時の効果はそれぞれ発動します') }); if (!r) return;
       { const seq = r.seq.split(','), k = burstCost(p, seq), lv = p.lValue || G.sc(st, 3); let uL = +(r.useL || 0); // 2026-11-09 ユーザー指摘：E が足りないとき 1 枚ぶんの不足が出ていた → 合計で判定し、生命核で足りるなら確認して使う（建造時に得る E も含めて試す）
         const tryL = (n) => { try { G.tryApply(st, { pid: p.id, type: 'burst', organs: seq, useL: n, liRes: r.liRes }); return true; } catch (e) { return false; } };
-        if (!tryL(uL)) { let n = uL + 1; while (n <= p.L && !tryL(n)) n++; if (n <= p.L) { if (!confirm(`急速形成は合計 E${k.e}+G${k.g}（定価）。E が足りないので、生命核を ${n} 個（=E${n * lv}）使います。よろしいですか？`)) return; uL = n; } }
+        if (!tryL(uL)) { let n = uL + 1; while (n <= p.L && !tryL(n)) n++; if (n <= p.L) { if (!confirm(`急速形成は合計 E${k.e}+G${k.g}${G.RULESETS[st.rules || 'v1'].burstFirstDiff ? '' : '（定価）'}。E が足りないので、生命核を ${n} 個（=E${n * lv}）使います。よろしいですか？`)) return; uL = n; } }
         return submit({ pid: p.id, type: 'burst', organs: seq, useL: uL, liRes: r.liRes }); }
   }
   async function onOrgan(p, id) {

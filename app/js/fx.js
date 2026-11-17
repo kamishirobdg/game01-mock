@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const G = globalThis.G1; if (!G) return;
-  const SETS = ['t33']; // O-51（v3.128）：T33 の数値で書く（T32 以前は文字の表示）
+  const SETS = ['t33', 't34']; // O-51（v3.128）：T33 の数値で書く（T32 以前は文字の表示）・O-62（v3.142）：T34 は T33 と同じ数値
   const ORGAN = {
     Mg1: '手 +E6', Mg2: '! +E6 ; 手 +E3 +G3', Mg3: '手 +all4 ; ∞ =organ1',
     Tl1: '! +G6 ; ∞ ↓trait:G:6', Tl2: '! +G9 ; ! @traitw! $0 … ; ∞ ↓trait:G:9', Tl3: '! @trait! $0 … ; ∞ ↓trait:G:12',
