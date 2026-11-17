@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>game01 カードの記号一覧</title>
+<link rel="stylesheet" href="../app/css/fx.css?v=3.126">
+<style>
+:root { --bg:#f4f5f7; --panel:#fff; --line:#d9dce3; --ink:#1f2430; --mute:#6b7280; --accent:#2f6fdd; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 system-ui, "Segoe UI", "Yu Gothic UI", "Hiragino Sans", sans-serif; }
+main { max-width:980px; margin:0 auto; padding:14px 16px 40px; }
+h1 { font-size:20px; margin:4px 0 2px; } h1 small { font-size:12px; font-weight:400; color:var(--mute); margin-left:8px; }
+h2 { font-size:15px; margin:22px 0 6px; padding-left:8px; border-left:4px solid var(--accent); }
+a { color:var(--accent); }
+.lead { color:var(--mute); font-size:12px; margin:2px 0 10px; }
+.box { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 12px; }
+table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+th, td { border-bottom:1px solid var(--line); padding:5px 8px; text-align:left; vertical-align:top; }
+th { background:#eef1f6; font-size:12px; font-weight:600; }
+td.nm { white-space:nowrap; font-weight:600; width:1%; } td.nm small { display:block; font-weight:400; color:var(--mute); font-size:11px; }
+td.sy { width:38%; } td.sy .fx { margin-top:0; }
+td.fu { font-size:12px; color:#3a4150; }
+@media (max-width: 640px) { th.fu, td.fu { display:block; border-bottom:0; padding-top:0; } tr { border-bottom:1px solid var(--line); } td.sy { width:auto; } }
+</style>
+</head>
+<body>
+<main>
+<h1>カードの記号一覧 <small id="ver"></small></h1>
+<p class="lead">アプリのアイコン表示で使う記号と、その全文。器官・特殊器官・形質（強・弱）・進化トラックの報酬・恩寵枠のすべて（1 行＝1 つ）。記号にマウスを当てても全文が出ます。<a href="./">遊び方に戻る</a></p>
+<h2>記号の読み方</h2>
+<div class="box" id="legend"></div>
+<div id="tables"></div>
+</main>
+<script src="../app/js/icons.js?v=3.126"></script>
+<script src="../app/js/data.js?v=3.126"></script>
+<script src="../app/js/engine.js?v=3.126"></script>
+<script src="../app/js/fx.js?v=3.126"></script>
+<script>
+(function () {
+  const G = window.G1, rules = (G.RULES_VISIBLE || ['t32'])[0], R = G.RULESETS[rules];
+  const st = G.newGame({ rules, ext: 'x1', slots: 'v7', players: [{ name: 'P1' }, { name: 'P2' }, { name: 'P3' }], mode: 'expert', seed: 1 });
+  document.getElementById('ver').textContent = 'v' + G.VERSION + '・' + rules.toUpperCase() + '・数値はすべて仮値';
+  document.getElementById('legend').appendChild(G.FX.legend());
+  const rows = G.FX.all(st); const box = document.getElementById('tables'); let cur = null, tb = null;
+  const td = (cls, ...k) => { const e = document.createElement('td'); e.className = cls; k.forEach(x => e.append(x)); return e; };
+  rows.forEach(r => {
+    const grp = r.group.replace(/（.+）$/, '');
+    if (grp !== cur) { cur = grp; const h = document.createElement('h2'); h.textContent = grp; box.appendChild(h); const t = document.createElement('table'); t.innerHTML = '<thead><tr><th>名前</th><th>記号</th><th class="fu">全文</th></tr></thead>'; tb = document.createElement('tbody'); t.appendChild(tb); box.appendChild(t); }
+    const nm = document.createElement('span'); nm.textContent = r.name + (r.label ? '（' + r.label + '）' : ''); const sub = document.createElement('small'); sub.textContent = r.group !== grp ? r.group.replace(/^.+（(.+)）$/, '$1') + '・' + r.id : r.id;
+    const tr = document.createElement('tr'); tr.append(td('nm', nm, sub), td('sy', G.FX.render(r.lines, r.full)), td('fu', r.full)); tb.appendChild(tr);
+  });
+})();
+</script>
+</body>
+</html>

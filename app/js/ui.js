@@ -35,7 +35,7 @@
   // 2026-11-05 画面の AI の読みの深さ：?depth=2（&beam=3）でビーム探索（R 内・自分の手だけ）。既定は 1 手読み＋ラウンド単位の計画（第53部：2 手で +10 点・1 手あたり約 0.3〜0.6 秒）
   { const q = new URLSearchParams(location.search); const d = parseInt(q.get('depth') || '', 10); if (G.Bot && d >= 1 && d <= 5) { G.Bot.BEAM.depth = d; G.Bot.BEAM.fromUrl = true; } const k = parseInt(q.get('beam') || '', 10); if (G.Bot && k >= 1 && k <= 8) G.Bot.BEAM.k = k; }
   const VIEW_KEY = 'g01_view';
-  let viewMode = (() => { const q = new URLSearchParams(location.search).get('view'); if (q === 'icon' || q === 'text') return q; try { return localStorage.getItem(VIEW_KEY) === 'icon' ? 'icon' : 'text'; } catch (e) { return 'text'; } })();
+  let viewMode = (() => { const q = new URLSearchParams(location.search).get('view'); if (q === 'icon' || q === 'text') return q; try { return localStorage.getItem(VIEW_KEY) === 'text' ? 'text' : 'icon'; } catch (e) { return 'icon'; } /* O-49：既定はアイコン */ })();
   let legendOpen = true;
   // 2026-11-04 ユーザー要望：テストプレイ時に画面の配色を白（ライト）／黒（ダーク）で選べるように。ヘッダ右端とセットアップ画面で切り替え・端末に記憶・URL の ?theme=light|dark でも指定可（index.html で CSS 読み込み前に data-theme を付けてちらつきを防ぐ）
   const THEME_KEY = 'g01_theme';
@@ -47,11 +47,14 @@
   applyTheme();
   const iconView = () => viewMode === 'icon';
   function setView(m) { viewMode = m; try { localStorage.setItem(VIEW_KEY, m); } catch (e) { } render(); }
-  const pc = (k, n, o) => h('span', { class: 'pc pk-' + k + (o && o.cost ? ' cost' : '') + (o && o.cls ? ' ' + o.cls : ''), title: (o && o.title) || ICO_JP[k] }, ic(k), n === undefined || n === null ? null : h('b', null, String(n)));
+  const pc = (k, n, o) => h('span', { class: 'pc pk-' + k + (o && o.cost ? ' cost' : '') + (o && o.cls ? ' ' + o.cls : '') + (!(o && (o.cost || o.cls)) && /^\+/.test(String(n === undefined || n === null ? '' : n)) ? ' gain' : ''), /* O-49：得る＝緑地 */ title: (o && o.title) || ICO_JP[k] }, ic(k), n === undefined || n === null ? null : h('b', null, String(n)));
   const po = (s) => h('span', { class: 'po' }, s);
   const pbad = (s, title) => h('span', { class: 'pbad', title: title || null }, s);
   const pcost = (k, n, base) => pc(k, n, { cost: true, cls: base !== undefined && n !== base ? 'disc' : '', title: base !== undefined && n !== base ? `${ICO_JP[k]}（軽減後・基準 ${base}）` : ICO_JP[k] + 'を払う' });
   const coopBonus = () => pc('coop', '+', { cls: 'bonus', title: '協調ボーナス：協調の数に応じて、この枠の資源が増える' });
+  const fxOn = () => iconView() && !!G.FX && G.FX.on(st); // O-49：効果の記号（T32 のアイコン表示）
+  // 星海開拓の段（O-49）：記号の組み立ては fx.js（ガイドの一覧と同じ）。先駆・先着が決まった段はその人の名前
+  function starFx(lv, fb, fTxt) { const x = G.FX.star(st, lv, true); return h('div', { class: 'fxstack' }, ...x.parts.map(pt => pt.first && fb !== undefined ? h('small', { class: 'first' }, fTxt) : G.FX.render(pt.lines, x.full, pt.label ? pt.label[0] : null))); }
   function picto(id, p) {
     const R = G.RULESETS[st.rules || 'v1']; const vp = viewP(p); const sc = (n) => G.sc(st, n); const T = R.tribute || {}; const TS = T.slots || {};
     const resB = G.RES_SLOTS.includes(id) && R.coopMode !== 'spend' && (!R.coopBonusSlots || R.coopBonusSlots.includes(id)) ? [coopBonus()] : [];
@@ -61,6 +64,7 @@
     const bless = (k) => { const kk = k || 'G'; const vg = G.tribVg ? G.tribVg(st, kk) : 1, tr = G.tribReal ? G.tribReal(st, kk) : 0; const a = []; if (tr) a.push(pc('gem', '+' + tr)); if (vg) a.push(pc('bless', '+' + vg)); return a; }; // v3.67 祭壇＝祝福+2／T14（§16 M-a）＝痕跡と祝福の組み合わせ（配列で返す）
     if (/^TRL_/.test(id) && R.trial) { const r = +id.slice(4); const k = st.shared.trials[r - 1]; return [pcost(k, G.trialCost(st, r)), po('→'), pc('gem', '+' + G.trialGem(st, r))]; } // T24（O-20）：試練
     if (/^ALT_/.test(id) && R.altar) { const k = id.slice(4); const c = G.altarCost(vp, k), nv = G.altarNextVg(vp); const done = vp.tribGame && vp.tribGame[k]; const rL = !done && R.altarDouble && R.altarDouble.repeatL && vp.round && (vp.round.altarN || 0) > 0 ? R.altarDouble.repeatL : 0; return [pcost(k, c, R.altar.cost[k]), ...(rL ? [po('＋'), pc('L', rL, { cost: true, title: `このラウンド 2 回目以降の祭壇の手は生命核${rL}を足す` })] : []), ...(done ? [] : [po('→'), pc('bless', '+' + nv)])]; } // O-44（T31）repeatL // T23（O-19）：祭壇の払い口
+    { const fl = G.FX && G.FX.lines(st, 'trib', id); if (fl) return [G.FX.render(fl, G.slotTip(st, id) || G.slotText(st, id))]; } // O-49：恩寵枠（T32）は効果の記号の並び
     switch (id) {
       case 'E5': return [pc('E', '+' + G.slotAmt(st, 'E5').E), ...resB]; // T19 #6：slotAmt
       case 'G3': return [pc('G', '+' + G.slotAmt(st, 'G3').G), ...resB];
@@ -68,7 +72,7 @@
       case 'ALL': { const a = G.slotAmt(st, 'ALL'); return [pc('E', '+' + a.E), pc('G', '+' + a.G), pc('P', '+' + a.P), ...resB]; }
       case 'EG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('E', '+' + G.slotAmt(st, 'EG').E), pc('coop', '+' + (R.herdCoop || 1)), ...resB] : null;
       case 'GG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('G', '+' + G.slotAmt(st, 'GG').G), pc('coop', '+' + (R.herdCoop || 1)), ...resB] : null;
-      case 'PB': if (R.pbG === 0) return [pc('P', '+' + G.pbGain(st)), ...(R.pbLaunch && R.launchFree ? [pbad(`緊急進出 P+${G.pbGain(st) * R.launchFree}`)] : [])]; return [pcost('G', G.pbCost(vp), sc(2)), po('→'), pc('P', '+' + G.pbGain(st)), ...(R.pbCoop ? [coopBonus()] : [])];
+      case 'PB': if (R.pbG === 0) return [pc('P', '+' + G.pbGain(st)), ...(R.pbLaunch && R.launchFree ? (G.FX && G.FX.on(st) ? [h('span', { class: 'fxact', title: `緊急進出（空き枠で生命核1を払う）なら P+${G.pbGain(st) * R.launchFree}` }, G.FX.ic('launch'), pc('P', '+' + G.pbGain(st) * R.launchFree))] : [pbad(`緊急進出 P+${G.pbGain(st) * R.launchFree}`)]) : [])]; return [pcost('G', G.pbCost(vp), sc(2)), po('→'), pc('P', '+' + G.pbGain(st)), ...(R.pbCoop ? [coopBonus()] : [])];
       case 'MB': return [massC('MB'), po('→'), pc('gem', '+1'), ...mret()];
       case 'MI': return R.miMaxCost ? [massC('MI'), po('→'), pc('trait', '×' + (R.miCount || 2), { title: `コストG${R.miMaxCost}以下の形質を異なる${R.miCount || 2}種` }), pbad('≤' + R.miMaxCost, `コストG${R.miMaxCost}以下`), ...mret()] : null;
       case 'MS': return [massC('MS'), po('→'), pc('coop', '+' + (R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2))), ...mret()];
@@ -112,7 +116,7 @@
     return [h('b', null, name), h('small', null, typeof text === 'string' ? icost(text) : text), gain ? h('small', { class: 'gain' }, `→ ${gain}`) : null];
   }
   function viewToggle() {
-    return h('span', { class: 'vtog', title: 'アクション（占有盤・共用盤）の表示を切り替える' }, h('button', { class: viewMode === 'text' ? 'on' : '', onclick: () => setView('text') }, '文字'), h('button', { class: viewMode === 'icon' ? 'on' : '', onclick: () => setView('icon') }, 'アイコン'));
+    return h('span', { class: 'vtog', title: 'アクション・カード・トラックの表示（文字／記号）を切り替える' }, h('button', { class: viewMode === 'text' ? 'on' : '', onclick: () => setView('text') }, '文字'), h('button', { class: viewMode === 'icon' ? 'on' : '', onclick: () => setView('icon') }, 'アイコン'));
   }
   function iconLegend() {
     const it = (k, n) => h('span', null, ic(k), n || ICO_JP[k]);
@@ -401,6 +405,8 @@
   }
   function markLastSlot(id) { document.querySelectorAll('.lastmove').forEach(x => x.classList.remove('lastmove')); if (id) document.querySelectorAll(`[data-slot="${id}"]`).forEach(x => x.classList.add('lastmove')); }
   // O-48：ほかの人の個人ボードを見るだけの形で開く
+  // O-49：記号の一覧（凡例）。カードごとの一覧はガイドの「カードの記号一覧」
+  function showLegend() { const back = $('#modal'); back.innerHTML = ''; const close = () => { back.classList.remove('open'); back.onclick = null; }; const box = h('div', { class: 'modal-box fxmodal' }, h('h3', null, '記号の一覧'), G.FX.legend(), h('p', { class: 'note' }, '記号にマウスを当てると全文。', h('a', { href: '../guide/symbols.html', target: '_blank', rel: 'noopener' }, 'カードの記号一覧'), '（全カード・報酬）'), h('div', { class: 'mbtns' }, h('button', { type: 'button', class: 'primary', onclick: close }, '閉じる'))); back.appendChild(box); back.classList.add('open'); back.onclick = (ev) => { if (ev.target === back) close(); }; }
   function showBoard(q) { const back = $('#modal'); back.innerHTML = ''; const box = h('div', { class: 'modal-box boardview' }, h('h3', null, `${q.name} の個人ボード（見るだけ）`), h('div', { class: 'preview' }, renderPlayer(q, false)), h('div', { class: 'mbtns' }, h('button', { type: 'button', class: 'primary', onclick: () => { back.classList.remove('open'); back.onclick = null; } }, '閉じる'))); back.appendChild(box); back.classList.add('open'); back.onclick = (ev) => { if (ev.target === back) { back.classList.remove('open'); back.onclick = null; } }; }
   function renderHeader() {
     const hd = $('#hdr'); hd.innerHTML = ''; if (!st || st.phase !== 'play') document.title = BASE_TITLE; // O-48：自分の番の印は対局中だけ
@@ -409,7 +415,7 @@
     hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`));
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
     // 版の小文字＋ボタン群の開閉「≡」は1行目の右端（2026-10-28 ユーザー要望：1行を占有させない）
-    hd.appendChild(h('span', { class: 'hmenuwrap' }, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), themeToggle(), h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
+    hd.appendChild(h('span', { class: 'hmenuwrap' }, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), G.FX && G.FX.on(st) ? h('button', { class: 'fxbtn', title: '効果の記号（いつ・得る・払う・軽減など）の見方', onclick: showLegend }, '記号の一覧') : null, themeToggle(), h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
     const to = h('span', { class: 'order' }, '手番順：');
     st.turnOrder.forEach((pid, i) => { const q = st.players[pid]; to.appendChild(h('span', { class: 'chip' + (i === st.cur ? ' now' : '') + (q.left.W + q.left.AT === 0 ? ' done' : '') }, h('span', { class: 'mk p' + q.id }, q.id + 1), `${q.name} ${leftTxt(q)}`)); });
     hd.appendChild(to);
@@ -516,15 +522,7 @@
   // 器官の効果文（倍化版の群心核は strongB/weakB を使う）
   const otxt = (o, strong) => { const R = G.RULESETS[st.rules || 'v1']; const sid = typeof o === 'string' ? o : Object.keys(G.ORGANS).find(k => G.ORGANS[k] === o || (o && G.ORGANS[k].name === o.name && G.ORGANS[k].lin === o.lin && G.ORGANS[k].tier === o.tier)); if (sid && G.ORGANS[sid].special) return rtxt(G.spText(R, sid)); /* O-46：特殊器官は数値セットの差し替え文（連絡腺・循環腔など） */ if (typeof o === 'string') o = G.organDef(st, o); const s = strong ? (R.hc3Bonus && o.strongB ? o.strongB : o.strong) : (R.hc3Bonus && o.weakB ? o.weakB : o.weak); return rtxt(s); }; // o＝定義 or 器官ID（T13 の第2版の効果文は organDef で差し替え）
   const chgBadge = () => null; // T13：変えた部分の目印（次の数値セットでは changed を外す）
-  function rtxt(s) {
-    if (!s) return s; const R = G.RULESETS[st.rules || 'v1']; s = G.txt(st, s);
-    s = String(s).replace(/(大量消費|淘汰)-5/g, (m, w) => w + '-' + R.massDiscLv).replace(/排他無視\+-5/g, '排他無視+-' + R.massDiscLv).replace(/-6P/g, '-' + R.mcDisc + 'P').replace(/-8P/g, '-' + R.mbDisc + 'P');
-    // 2026-11-04 ユーザー指摘：消費軽減（MC）は大量消費(代謝)には効かない（数値セットに mmCost があると代謝のコストは固定値＝軽減後の値より低い）。説明文に明記する
-    // 2026-11-04 v3.59：消費軽減（MC）の既定文は freeOnce（強＝1回無料・弱＝恒久）。mcMode の無い数値セット（T7 以前）は旧文（強 恒久 −mcDisc・弱 1回 −mcDisc）に戻す
-    if (R.mcMode !== 'freeOnce') { s = s.replace(/^淘汰コスト-\d+P（恒久）$/, `次の淘汰1回だけ-${R.mcDisc}P`).replace(/^次の淘汰1回を無料（コスト0）$/, `淘汰コスト-${R.mcDisc}P（恒久）`); } // 弱→強の順（強の変換結果を弱の正規表現が拾わないように）
-    if (R.mmCost && !R.mcAfterCap && /^(淘汰コスト|次の淘汰1回だけ)-/.test(s)) s += '（代謝は対象外）'; // 固定コストが先の数値セットでは代謝に効かない
-    return s;
-  }
+  function rtxt(s) { return G.FX ? G.FX.txt(st, s) : s; } // O-49：全文の差し替えは fx.js（ガイドの「カードの記号一覧」と同じ文）
   // O-37（T30）：身体・知性・代謝のトラックが淘汰に効く分（1 段ごとに E+5／G+5／P+5）
   function massTip(p, t) { const R = G.RULESETS[st.rules || 'v1'], vp = viewP(p), lv = vp.lv[t]; if (t === 'body' && R.mmLv) return `淘汰（代謝）の獲得 ${G.mmForm(st).E}（いま Lv${lv}＝E${G.mmGainOf(vp).E}）`; if (t === 'intel' && R.mmLv) return `淘汰（代謝）の獲得 ${G.mmForm(st).G}（いま Lv${lv}＝G${G.mmGainOf(vp).G}）`; if (t === 'metab' && R.massRetMetab) return `淘汰 4 種を実行したあと P が${G.retForm(st)} 返る（いま Lv${lv}＝P+${G.massRet(vp)}）`; return null; }
   function renderTracks(p, can) {
@@ -543,7 +541,9 @@
         const gq = G.RULESETS[st.rules || 'v1'].gates && l === nxt ? G.gateReq(p, t) : null;
         const node = h('div', { class: 'node' + (isNext ? ' next' : '') + (isNext && reason ? ' na' : '') + (l === 3 || l === 5 ? ' star' : ''), title: `Lv${l}：${rtxt(G.trackRewardText(st, t, l)) || '開始'}${isNext ? `\nコスト ${l === 6 && G.lv6CostText(st, t) ? G.lv6CostText(st, t) + '（そのトラックの資源で払う）' : 'E' + cost + (t === 'body' ? '／P' + cost * 3 : t === 'intel' ? '／G' + cost : '')}` : ''}${gq ? `\n${G.gateLabel(st, t)}が${gq.need}に達すると自動で上がる（現在${gq.have}）` : ''}${isNext && reason ? '\n× ' + reason : ''}`, onclick: isNext && can ? () => onTrack(p, t) : null });
         node.appendChild(h('div', { class: 'node-lv' }, `Lv${l}`, (l === 3 || l === 5 || l === 6) ? ic('gem') : null, l === 4 ? '↗' : ''));
-        if (Array.isArray(r)) node.appendChild(h('div', { class: 'node-rew' }, h('span', { class: 'rs' }, '先駆 ' + r[0]), h('span', { class: 'rw' }, '追随 ' + r[1])));
+        const fxl = fxOn() && l > 1 ? G.FX.lines(st, 'track', [t, l], 's') : null; const fxf = fxl ? rtxt(G.trackRewardText(st, t, l)) : null; // O-49：アイコン表示は効果の記号（先駆・追随は札）
+        if (fxl) node.appendChild(h('div', { class: 'node-rew fxrew' }, ...(G.FX.trackSplit(st, t, l) ? [G.FX.render(fxl, fxf, '先'), G.FX.render(G.FX.lines(st, 'track', [t, l], 'w'), fxf, '追')] : [G.FX.render(fxl, fxf)])));
+        else if (Array.isArray(r)) node.appendChild(h('div', { class: 'node-rew' }, h('span', { class: 'rs' }, '先駆 ' + r[0]), h('span', { class: 'rw' }, '追随 ' + r[1])));
         else if (r) node.appendChild(h('div', { class: 'node-rew' }, h('span', null, r)));
         else node.appendChild(h('div', { class: 'node-rew' }, h('span', null, 'START')));
         const mks = h('div', { class: 'node-mk' }); st.players.forEach(q => { if (q.lv[t] === l) mks.appendChild(h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1)); });
@@ -659,7 +659,7 @@
       const isNext = lv === my + 1; const top = G.starTop(st, lv); const reason = !isNext ? (lv <= my ? '到達済み' : `${LT(my + 1)}から順に`) : can ? check({ pid: p.id, type: 'track', track: 'star' }) : roMsg;
       const fTxt = top ? (fb !== undefined ? `先着：${st.players[fb].name}` : `先着 痕跡+${LG.first}＋祝福+1`) : F ? (fb !== undefined ? `先駆：${st.players[fb].name}` : `先駆 痕跡+${G.starFirstGem(st, lv)}${F.pros !== undefined ? `／痕跡+${F.pros}・繁栄度+1` : ''}`) : ''; const gT = top ? `後着 痕跡+${LG.later}` : `痕跡+${g}`; const jT = top && SJ ? `神の裁定 祝福+${SJ}` : ''; /* O-28：Lv6 の欄は 先着／後着／神の裁定 を別の行に（4 本の Lv6 と同じく先着が上・裁定は Lv6 の人みな） */
       const b = actBtn({ class: 'slot starstep' + (isNext ? ' now' : lv <= my ? ' past' : ' later') + (F || top ? ' star' : ''), title: `${G.STAR_NAME} ${LT(lv)}（${G.starCardName(st, k)}）：${ct}${top ? `\n${fTxt}\n${gT}${jT ? `\n${jT}（終了時・Lv6 の人みな）` : ''}` : ` → ${gT}${F ? '\n' + fTxt : ''}`}`, onclick: () => isNext && onStar(p) }, reason,
-        h('b', { class: 'pname' }, `${S.lv1 ? LT(lv) : lv}${F || top ? '★' : ''}`), h('small', null, ct), ...(top ? [h('small', { class: 'first' }, fTxt), h('small', null, gT), jT ? h('small', null, jT) : null] : [h('small', null, gT), F ? h('small', { class: 'first' }, fTxt) : null]));
+        h('b', { class: 'pname' }, `${S.lv1 ? LT(lv) : lv}${F || top ? '★' : ''}`), ...(fxOn() ? [starFx(lv, fb, fTxt)] : [h('small', null, ct), ...(top ? [h('small', { class: 'first' }, fTxt), h('small', null, gT), jT ? h('small', null, jT) : null] : [h('small', null, gT), F ? h('small', { class: 'first' }, fTxt) : null])]));
       const mk = st.players.filter(q => (q.star | 0) === lv); if (mk.length) b.appendChild(h('span', { class: 'tw' }, ...mk.map(q => h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1))));
       if (S.lv1) row.appendChild(h('div', { class: 'conn' })); row.appendChild(b); } // O-48：ほかの 4 本と同じ幅の矢印の列を置き、マスの列を縦にそろえる
     gt.appendChild(row); return gt;
@@ -724,11 +724,11 @@
       const cl = mine_ ? null : G.organCost(st, p, id, true, true); // 2026-11-09 v3.88（ユーザー指摘）：順番待ちの段も急速形成の値段（定価）を出す。2026-11-10 v3.90（ユーザー指摘）：形成できるカードも同じ「定価＋追随の代償」に揃える（従来は代償なしの定価で、急速形成の合計と合わなかった）
       const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, cl ? (c && c.diff ? [icost(`E${c.E}${c.G ? '+G' + c.G : ''}`), h('small', null, '（', icost(`E${cl.E}${cl.G ? '+G' + cl.G : ''}`), '）')] : icost(`E${cl.E}${cl.G ? '+G' + cl.G : ''}`)) : (mine_ ? '形成済' : (['Ⅰ', 'Ⅱ', 'Ⅲ'][o.tier - 1] || ''))), h('span', { class: 'sw ' + (c ? (c.strong ? 'strong' : 'weak') : '') }, c ? (G.RULESETS[st.rules || 'v1'].organSameEffect ? (noLate ? G.LINEAGES[o.lin] : c.first ? '先駆' : '代償') : (c.strong ? '強' : '弱')) : `${G.LINEAGES[o.lin]}`));
       grid.appendChild(actBtn({ class: 'ocard' + (mine_ ? ' mine' : locked ? ' locked' : ''), 'data-slot': 'OC_' + id, title: `${id} ${o.name}（${G.LINEAGES[o.lin]}系 第 ${o.tier} 形態）\n${sameEff ? '効果：' + otxt(o, true) + (noLate ? '' : '\n追随の代償は +' + G.sc(st, G.RULESETS[st.rules || 'v1'].organLateFee || 1) + 'E') : '強：' + otxt(o, true) + '\n弱：' + otxt(o, false)}`, onclick: () => onOrgan(p, id) }, reason,
-        hd, art(id), h('b', null, `${id} ${o.name}`, chgBadge(id)), h('small', null, sameEff ? otxt(o, true) : `強：${otxt(o, true)}`), sameEff ? null : h('small', null, `弱：${otxt(o, false)}`),
+        hd, art(id), h('b', null, `${id} ${o.name}`, chgBadge(id)), ...(fxOn() && G.FX.lines(st, 'organ', id) && sameEff ? [G.FX.render(G.FX.lines(st, 'organ', id), otxt(o, true))] : [h('small', null, sameEff ? otxt(o, true) : `強：${otxt(o, true)}`), sameEff ? null : h('small', null, `弱：${otxt(o, false)}`)]), // O-49：アイコン表示は効果の記号
         ownersRow(p, id, 'organ'), statusLine(mine_ ? 'ok' : locked ? 'lock' : reason && can ? 'no' : null, mine_ ? '形成済み' : locked ? '前の形態が必要' : reason)));
     });
     box.appendChild(grid);
-    if (st.shared.special) box.appendChild(h('div', { class: 'owned' }, h('b', null, `特殊器官（代謝 Lv4 に達した順に 1 枚）残り ${st.shared.special.length}：`), ...st.shared.special.map(id => h('span', { class: 'tag', title: G.spText(G.RULESETS[st.rules || 'v1'], id) }, `${G.ORGANS[id].name}（${G.spText(G.RULESETS[st.rules || 'v1'], id)}）`)))); // T15
+    if (st.shared.special) box.appendChild(h('div', { class: 'owned' }, h('b', null, `特殊器官（代謝 Lv4 に達した順に 1 枚）残り ${st.shared.special.length}：`), ...st.shared.special.map(id => fxOn() && G.FX.lines(st, 'organ', id) ? h('span', { class: 'tag fxtag', title: G.spText(G.RULESETS[st.rules || 'v1'], id) }, G.ORGANS[id].name, G.FX.render(G.FX.lines(st, 'organ', id), G.spText(G.RULESETS[st.rules || 'v1'], id))) : h('span', { class: 'tag', title: G.spText(G.RULESETS[st.rules || 'v1'], id) }, `${G.ORGANS[id].name}（${G.spText(G.RULESETS[st.rules || 'v1'], id)}）`)))); // T15
     return box;
   }
   // 所有トークン置き場：全プレイヤーぶんの枠を並べ、所有者の枠にマーカー（★＝強）。自分の枠は太枠
@@ -750,7 +750,7 @@
       const pl = traitPlan(p) || {}; const reason = !can ? '他プレイヤーの手番' : mine_ ? null : check(Object.assign({ pid: p.id, type: 'trait', trait: id, useL: Math.min(Math.max(0, p.L - (pl.bypassL ? 1 : 0)), 3), res: 'E', track: 'body' }, pl));
       const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, mine_ ? (noUp ? '取得済' : `取得済→交換`) : [ic('G'), `${c.G}`, h('small', null, `（表示${G.baseTraitCost(st, id)}/${G.baseTraitCost(st, id, false)}）`)]), h('span', { class: 'sw ' + ((mine_ ? mine_.strong : c.strong) ? 'strong' : 'weak') }, mine_ ? (mine_.strong ? '強' : '弱') : G.RULESETS[st.rules || 'v1'].traitChoice ? (c.strong ? '強あり' : '弱のみ') : (c.strong ? '強' : '弱')));
       grid.appendChild(actBtn({ class: 'tcard' + (mine_ ? ' mine' : ''), 'data-slot': 'TC_' + id, title: `${id} ${t.name}\n強：${rtxt(G.traitText(st, id, true))}\n弱：${rtxt(G.traitText(st, id, false))}`, onclick: () => onTrait(p, id) }, reason,
-        hd, art(id), h('b', null, `${id} ${t.name}`, chgBadge(id)), h('small', null, `強：${rtxt(G.traitText(st, id, true))}`), h('small', null, `弱：${rtxt(G.traitText(st, id, false))}`),
+        hd, art(id), h('b', null, `${id} ${t.name}`, chgBadge(id)), ...(fxOn() && G.FX.lines(st, 'trait', id, 's') ? [G.FX.render(G.FX.lines(st, 'trait', id, 's'), rtxt(G.traitText(st, id, true)), '強'), G.FX.render(G.FX.lines(st, 'trait', id, 'w'), rtxt(G.traitText(st, id, false)), '弱')] : [h('small', null, `強：${rtxt(G.traitText(st, id, true))}`), h('small', null, `弱：${rtxt(G.traitText(st, id, false))}`)]), // O-49
         ownersRow(p, id, 'trait'), statusLine(mine_ ? 'ok' : reason && can ? 'no' : null, mine_ ? (noUp ? '取得済み' : '取得済み（クリックで上位へ交換）') : reason)));
     });
     box.appendChild(grid); return box;

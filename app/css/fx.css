@@ -1,0 +1,79 @@
+/* O-49（v3.126）効果の記号。アプリ（index.html）とガイド（symbols.html・cheatsheet.html）で共用 */
+.fx { display:flex; flex-direction:column; gap:3px; margin-top:3px; text-align:left; width:100%; }
+.fxl { display:flex; align-items:flex-start; gap:4px; font-size:13px; line-height:1.3; cursor:default; }
+.fxw { flex:0 0 auto; width:19px; height:19px; border-radius:50%; background:#283044; display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; font-style:normal; line-height:1; margin-top:1px; }
+.fxw.w-now { color:#ffe060; } .fxw.w-perm { color:#80b4ff; font-size:16px; } .fxw.w-inc { color:#68d890; } .fxw.w-end { color:#ffb070; } .fxw.w-none { background:transparent; }
+.fxw svg.wi { width:13px; height:12px; } .fxw.w-end svg.wi { width:12px; height:12px; }
+.fxt { display:flex; flex-wrap:wrap; align-items:center; gap:2px 3px; min-width:0; }
+.fxl .pc { font-size:13px; line-height:1.15; border-radius:5px; display:inline-flex; align-items:center; gap:1px; white-space:nowrap; }
+.fxl .pc b { font-weight:700; }
+.fxl .pc svg.ic, .fxt > svg.ic, .fxl .fxact svg.ic, .fxl .fxper svg.ic, .fxl .fxeq svg.ic, .fxl .fxcond svg.ic { width:16px; height:16px; margin:0; vertical-align:middle; }
+.pc.gain { background:#e2f4e6; padding:1px 4px 1px 2px; } .pc.gain b { color:#137a3a; }
+.fxl .pc.cost { background:#fde8e6; padding:1px 4px 1px 2px; }
+.pc.ptag { border-radius:3px 10px 10px 3px; padding:1px 7px 1px 3px !important; box-shadow:inset 0 0 0 1px #f2b8b2; }
+.pc.ptag .dn { font-weight:800; color:#c0392b; margin:0 1px; }
+.fxl .pc.bonus { border:1px dashed #999; padding:0 3px; color:#555; }
+.fxword { font-size:11px; color:#3a4560; font-weight:600; white-space:nowrap; }
+.fxmul { font-weight:800; font-size:13px; color:#3a4560; }
+.fxact { display:inline-flex; align-items:center; gap:2px; border:1.5px solid #8a93a6; border-radius:5px; padding:0 3px; background:#fff; }
+.fxfree { font-size:9px; background:#3a4560; color:#fff; border-radius:6px; padding:0 4px; white-space:nowrap; line-height:1.5; }
+.fxper, .fxeq, .fxcond { display:inline-flex; align-items:center; gap:1px; font-weight:700; color:#3a4560; white-space:nowrap; }
+.fxeq b { font-weight:700; } .fxper small { font-size:10px; font-weight:600; }
+.fxmore { font-weight:900; color:#888; padding:0 2px; cursor:help; }
+.fxl .pbad { font-size:10px; background:#eef1f8; color:#3a4560; border-radius:8px; padding:0 5px; white-space:nowrap; }
+.fxlab { flex:0 0 auto; font-size:9px; background:#eef1f8; color:#3a4560; border-radius:4px; padding:1px 2px; margin-top:3px; min-width:24px; text-align:center; line-height:1.4; }
+.fxlab.blank { visibility:hidden; }
+.fxstack { display:flex; flex-direction:column; gap:2px; width:100%; }
+.fxstack .fx { margin-top:0; }
+/* 置き場所ごと */
+.ocard .fx, .tcard .fx { margin-top:4px; }
+.tcard .fx + .fx { margin-top:3px; padding-top:3px; border-top:1px dashed #d9dce3; }
+.lane .node-rew.fxrew { gap:3px; }
+.lane .node-rew.fxrew .fx, .slot.starstep .fxstack .fx { margin-top:1px; gap:2px; }
+.lane .fxl, .slot.starstep .fxl { font-size:11px; gap:2px; }
+.lane .fxt, .slot.starstep .fxt { gap:1px 2px; }
+.lane .fxl .pc, .slot.starstep .fxl .pc { font-size:11px; padding:0 3px 0 1px; }
+.lane .fxl .pc svg.ic, .lane .fxt > svg.ic, .lane .fxact svg.ic, .lane .fxper svg.ic, .lane .fxeq svg.ic, .lane .fxcond svg.ic,
+.slot.starstep .fxl .pc svg.ic, .slot.starstep .fxt > svg.ic { width:13px; height:13px; }
+.lane .fxw, .slot.starstep .fxw { width:15px; height:15px; font-size:11px; } .lane .fxw.w-perm { font-size:13px; } .lane .fxw svg.wi { width:11px; height:10px; }
+.lane .fxlab, .slot.starstep .fxlab { min-width:13px; font-size:9px; padding:0 1px; margin-top:2px; }
+.lane .fxword, .lane .fxl .pbad { font-size:10px; } .lane .fxfree { font-size:8px; padding:0 2px; }
+.slot.starstep .fxstack { margin-top:2px; }
+.picto > .fx { margin-top:0; }
+.tag.fxtag { display:inline-flex; align-items:center; gap:4px; }
+.tag.fxtag .fx { width:auto; margin:0; }
+/* 記号の一覧（凡例） */
+.fxlegend h4 { margin:10px 0 3px; font-size:12px; }
+.fxlegend .fxlr { display:flex; align-items:center; gap:10px; margin:3px 0; }
+.fxlegend .fxls { flex:0 0 170px; display:flex; }
+.fxlegend .fxls .fxl { margin:0; }
+.fxlegend .fxld { font-size:12px; color:var(--mute, #5f6672); }
+.fxlegend .fxlicons { display:flex; flex-wrap:wrap; }
+.fxlegend .fxlicons > span { display:inline-flex; align-items:center; gap:3px; margin:2px 12px 2px 0; font-size:12px; }
+.fxlegend .fxlicons svg.ic { width:16px; height:16px; }
+.modal-box.fxmodal { max-width:560px; }
+#hdr .fxbtn { font-size:11px; padding:1px 7px; }
+@media (max-width: 640px) { .fxlegend .fxls { flex-basis:140px; } }
+/* ダーク */
+[data-theme="dark"] .fxw { box-shadow:0 0 0 1px #5a6378; }
+[data-theme="dark"] .pc.gain { background:#1d3a28; } [data-theme="dark"] .pc.gain b { color:#7fe0a0; }
+[data-theme="dark"] .fxl .pc.cost { background:#4a2320; } [data-theme="dark"] .pc.ptag { box-shadow:inset 0 0 0 1px #7a3a33; } [data-theme="dark"] .pc.ptag .dn { color:#ff8a7a; }
+[data-theme="dark"] .fxword, [data-theme="dark"] .fxmul, [data-theme="dark"] .fxper, [data-theme="dark"] .fxeq, [data-theme="dark"] .fxcond { color:#c7cede; }
+[data-theme="dark"] .fxact { background:transparent; border-color:#7a8296; } [data-theme="dark"] .fxfree { background:#c7cede; color:#1f2430; }
+[data-theme="dark"] .fxl .pbad, [data-theme="dark"] .fxlab { background:#2a303c; color:#c7cede; }
+[data-theme="dark"] .tcard .fx + .fx { border-top-color:#444b58; }
+[data-theme="dark"] .fxl .pc.bonus { border-color:#777; color:#bbb; }
+.picto.pgain .pc.gain { background:none; padding:0; } .picto.pgain .pc.gain b { color:inherit; } /* 「今実行すると」の行は従来どおり */
+svg.ic.star { color:#7d55c7; } svg.ic.join { color:#4a6fa8; } svg.ic.launch { color:#e0663c; } svg.ic.any { color:#8a6d3b; }
+[data-theme="dark"] svg.ic.star { color:#b597f0; } [data-theme="dark"] svg.ic.join { color:#8fb4ff; } [data-theme="dark"] svg.ic.launch { color:#ff9a6a; } [data-theme="dark"] svg.ic.any { color:#d8b878; }
+/* ガイド（style.css の無いページ）でも同じ大きさ・色に */
+.fxl svg.ic, .fxlicons svg.ic { display:inline-block; width:16px; height:16px; vertical-align:middle; flex:0 0 auto; }
+.fxl svg.ic.E, .fxlicons svg.ic.E { color:#d99a00; } .fxl svg.ic.G, .fxlicons svg.ic.G { color:#1f9c86; } .fxl svg.ic.P, .fxlicons svg.ic.P { color:#d9534f; } .fxl svg.ic.L, .fxlicons svg.ic.L { color:#2a95d3; }
+.fxl svg.ic.coop, .fxlicons svg.ic.coop { color:#666; } .fxl svg.ic.gem, .fxlicons svg.ic.gem { color:#777; } .fxl svg.ic.bless, .fxlicons svg.ic.bless { color:#d4a017; } .fxl svg.ic.trait, .fxlicons svg.ic.trait { color:#3b7ddd; }
+.fxl svg.ic.organ, .fxlicons svg.ic.organ { color:#3c9d5d; } .fxl svg.ic.breed, .fxlicons svg.ic.breed { color:#c0392b; } .fxl svg.ic.up, .fxlicons svg.ic.up { color:#555; } .fxl svg.ic.rslot, .fxlicons svg.ic.rslot { color:#8a6d3b; }
+.fxw svg.wi { display:block; }
+[data-theme="dark"] .fxl svg.ic.E, [data-theme="dark"] .fxlicons svg.ic.E { color:#f5c518; } [data-theme="dark"] .fxl svg.ic.G, [data-theme="dark"] .fxlicons svg.ic.G { color:#4fc1a6; } [data-theme="dark"] .fxl svg.ic.P, [data-theme="dark"] .fxlicons svg.ic.P { color:#ff7b7b; } [data-theme="dark"] .fxl svg.ic.L, [data-theme="dark"] .fxlicons svg.ic.L { color:#5bb8e8; }
+[data-theme="dark"] .fxl svg.ic.coop, [data-theme="dark"] .fxl svg.ic.gem, [data-theme="dark"] .fxl svg.ic.up, [data-theme="dark"] .fxlicons svg.ic.coop, [data-theme="dark"] .fxlicons svg.ic.gem, [data-theme="dark"] .fxlicons svg.ic.up { color:#bbb; }
+[data-theme="dark"] .fxl svg.ic.trait, [data-theme="dark"] .fxlicons svg.ic.trait { color:#8fb4ff; } [data-theme="dark"] .fxl svg.ic.organ, [data-theme="dark"] .fxlicons svg.ic.organ { color:#6fcf8f; } [data-theme="dark"] .fxl svg.ic.breed, [data-theme="dark"] .fxlicons svg.ic.breed { color:#ff8a7a; }
+/* 記号の行と枠の絵は丸い地を敷かない（ダーク表示で絵と地が同じ色になって消えていた・ガイドと同じ見た目に） */
+.pc svg.ic, .fxl svg.ic, .fxlicons svg.ic { background:none !important; border:0 !important; border-radius:0; padding:0; min-width:0; }
