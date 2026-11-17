@@ -374,6 +374,7 @@ div.art.noart.small { aspect-ratio:2/1; }
   .ocard .hd .cost, .tcard .hd .cost { flex:1 1 auto; min-width:0; }
   .ocard .hd .cost small, .tcard .hd .cost small { font-size:9px; letter-spacing:-.4px; }
   .hd .sw { flex-shrink:0; margin-left:auto; padding:0 3px; white-space:nowrap; }
+  .ogrid, .tgrid { grid-auto-rows:auto; align-items:stretch; } .ogrid > .ocard, .tgrid > .tcard { height:auto; } /* O-54：高さは横に並ぶ行ごとにそろえる（一覧全体ではなく） */
 }
 /* O-52：黒の地で丸の地の上に載る資源の絵（ヘッダの資源の行・カードの値段など）は絵を濃い色に（地と同じ色で見えなくなっていた） */
 [data-theme="dark"] svg.ic.E:not(:is(.pc, .fxl, .fxlicons) svg) { color:#6b4f00; } [data-theme="dark"] svg.ic.G:not(:is(.pc, .fxl, .fxlicons) svg) { color:#0b5244; }
