@@ -5,21 +5,20 @@
    <head> で css より先に読み、<html data-board="1"> を付ける（一覧のときは属性なし＝board.css は何も当たらない）。 */
 (function () {
   'use strict';
-  var KEY = 'g01_board', W = 1872, H = 960, MINW = 1100, on = false;
+  var KEY = 'g01_board', W = 1872, H = 960, MINZ = .6, on = false; // O-59：どの幅でも盤を出す。狭い画面では MINZ（字が読める倍率）より縮めず、盤の中を横に送る
   try {
     var q = new URLSearchParams(location.search).get('board');
     if (q === '1' || q === '0') { on = q === '1'; localStorage.setItem(KEY, q); }
     else on = localStorage.getItem(KEY) === '1';
   } catch (e) { }
   var root = document.documentElement, skinWas = null;
-  function wide() { return window.innerWidth >= MINW; } // 盤は PC 幅だけ（携帯幅は一覧のまま）
-  function active() { return on && wide(); }
+  function active() { return on; }
   // 盤は 1872×960 で設計してあり、画面に合わせて全体を拡大・縮小する（幅に合わせ、縦に収まらなければ 9 割まで縮める）
   function fit() {
     if (!active()) return;
     var app = document.getElementById('app'); var w = (app && app.clientWidth) || window.innerWidth;
     var hd = document.getElementById('hdr'); var wf = (w - 24) / W, hf = (window.innerHeight - Math.min((hd && hd.offsetHeight) || 0, 170) - 34) / H; // ヘッダが伸びても（AI の手の一覧など）盤の大きさは変えない
-    root.style.setProperty('--bz', String(Math.max(.5, Math.max(Math.min(wf, hf), wf * .9)).toFixed(4)));
+    root.style.setProperty('--bz', String(Math.max(MINZ, Math.max(Math.min(wf, hf), wf * .9)).toFixed(4)));
   }
   function apply() {
     if (active()) {
@@ -36,7 +35,7 @@
   function toggle(after) {
     var wrap = document.createElement('span'); wrap.className = 'skintog boardtog'; wrap.appendChild(document.createTextNode('表示'));
     var box = document.createElement('span'); box.className = 'vtog';
-    [[false, '一覧', '今の一覧の画面'], [true, '盤', '共用の場を 1 枚の盤の形に並べる（PC 幅）']].forEach(function (k) {
+    [[false, '一覧', '今の一覧の画面'], [true, '盤', '共用の場を 1 枚の盤の形に並べる（狭い画面では横に送って見る）']].forEach(function (k) {
       var b = document.createElement('button'); b.type = 'button'; b.textContent = k[1]; b.title = k[2]; if (k[0] === on) b.className = 'on';
       b.addEventListener('click', function () { set(k[0]); if (typeof after === 'function') after(); });
       box.appendChild(b);
@@ -45,8 +44,7 @@
     if (active()) (window.requestAnimationFrame || setTimeout)(fit); // ヘッダの高さが決まってから合わせ直す
     return wrap;
   }
-  var wasWide = wide();
-  window.addEventListener('resize', function () { var w = wide(); if (w !== wasWide) { wasWide = w; apply(); if (on && typeof window.G1Board.rerender === 'function') window.G1Board.rerender(); } else fit(); });
+  window.addEventListener('resize', fit);
   document.addEventListener('DOMContentLoaded', fit);
   apply();
   // on()＝盤で描くか（ui.js が器官の場と形質プールを両方出す・記号の表示にそろえるために見る）

@@ -379,3 +379,12 @@ div.art.noart.small { aspect-ratio:2/1; }
 /* O-52：黒の地で丸の地の上に載る資源の絵（ヘッダの資源の行・カードの値段など）は絵を濃い色に（地と同じ色で見えなくなっていた） */
 [data-theme="dark"] svg.ic.E:not(:is(.pc, .fxl, .fxlicons) svg) { color:#6b4f00; } [data-theme="dark"] svg.ic.G:not(:is(.pc, .fxl, .fxlicons) svg) { color:#0b5244; }
 [data-theme="dark"] svg.ic.P:not(:is(.pc, .fxl, .fxlicons) svg) { color:#6e1d1a; } [data-theme="dark"] svg.ic.L:not(:is(.pc, .fxl, .fxlicons) svg) { color:#0b4467; }
+/* O-59：表示の切り替えのまとまり（見た目・表示・文字／アイコン・白／黒）と開閉の「画面」ボタン。携帯幅では開くとヘッダの下の行に並ぶ */
+#hdr .dispgrp { display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px 6px; }
+#hdr .dispgrp .vtog { margin-left:0; }
+#hdr .dispbtn { padding:2px 8px; font-size:12px; line-height:1.3; }
+#hdr .dispbtn.on { font-weight:700; }
+@media (max-width: 600px) {
+  #hdr .hmenuwrap { flex-wrap:wrap; justify-content:flex-end; row-gap:4px; }
+  #hdr .hmenuwrap .dispgrp { order:9; flex-basis:100%; justify-content:flex-end; }
+}

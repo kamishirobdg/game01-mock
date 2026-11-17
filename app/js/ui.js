@@ -118,7 +118,14 @@
     return [h('b', null, name), h('small', null, typeof text === 'string' ? icost(text) : text), gain ? h('small', { class: 'gain' }, `→ ${gain}`) : null];
   }
   function viewToggle() {
-    return h('span', { class: 'vtog', title: 'アクション・カード・トラックの表示（文字／記号）を切り替える' }, h('button', { class: viewMode === 'text' ? 'on' : '', onclick: () => setView('text') }, '文字'), h('button', { class: viewMode === 'icon' ? 'on' : '', onclick: () => setView('icon') }, 'アイコン'));
+    return h('span', { class: 'skintog viewtog' }, h('span', { class: 'vtog', title: 'アクション・カード・トラックの表示（文字／記号）を切り替える' }, h('button', { class: viewMode === 'text' ? 'on' : '', onclick: () => setView('text') }, '文字'), h('button', { class: viewMode === 'icon' ? 'on' : '', onclick: () => setView('icon') }, 'アイコン')));
+  }
+  // O-59：表示の切り替え（見た目・表示・文字／アイコン・白／黒）をまとめ、「画面」のボタン 1 つで出す／隠す（開閉は端末に記憶・既定＝携帯幅は隠す／PC 幅は出す）
+  const DISP_KEY = 'g01_disp'; let dispOpen = (() => { try { const v = localStorage.getItem(DISP_KEY); if (v === '1' || v === '0') return v === '1'; } catch (e) { } return window.innerWidth > 600; })();
+  function dispGroup(play) {
+    const btn = h('button', { class: 'dispbtn' + (dispOpen ? ' on' : ''), title: '表示の切り替え（見た目・表示・文字／アイコン・白／黒）を出す／隠す', onclick: () => { dispOpen = !dispOpen; try { localStorage.setItem(DISP_KEY, dispOpen ? '1' : '0'); } catch (e) { } render(); } }, '画面');
+    if (!dispOpen) return [btn];
+    return [h('span', { class: 'dispgrp' }, window.G1Skin ? window.G1Skin.toggle(render) : null, play && window.G1Board ? window.G1Board.toggle(render) : null, play ? viewToggle() : null, themeToggle()), btn];
   }
   function iconLegend() {
     const it = (k, n) => h('span', null, ic(k), n || ICO_JP[k]);
@@ -261,7 +268,7 @@
   function renderEntry() {
     const box = h('div', { class: 'setup' }, h('h2', null, 'game01 デジタルモック'));
     box.appendChild(h('p', { class: 'note' }, '1台で遊ぶ（パス＆プレイ・1人で複数人を回す検証も可）か、各自の端末から同じ卓に参加する（オンライン）かを選びます。'));
-    box.appendChild(h('p', { class: 'note' }, '画面の配色：', themeToggle(), '　白（ライト）／黒（ダーク）。この端末に記憶され、ゲーム中もヘッダ右端で切り替えられます。'));
+    box.appendChild(h('p', { class: 'note' }, '画面の配色：', themeToggle(), '　白（ライト）／黒（ダーク）。この端末に記憶され、ゲーム中もヘッダの「画面」から切り替えられます。'));
     box.appendChild(metaForm('ローカル（この端末だけ・パス＆プレイ）', '開始', async (meta) => { meta = Object.assign({}, meta, { startedAt: Date.now() }); game = { kind: 'local', meta, entries: [] }; rebuildState(); autosave(); render(); }));
     const on = h('div', { class: 'sec' }, h('h3', null, 'オンライン（各自の端末から参加）'));
     if (!Net.init()) on.appendChild(h('p', { class: 'warn' }, Net.error + '。手順は README を参照。'));
@@ -377,7 +384,7 @@
     const un = renderUndoNotice(); if (un) { root.appendChild(un); if (renderUndoNotice._toasted !== st.undoInfo.key) { renderUndoNotice._toasted = st.undoInfo.key; toast('あなたの行動が巻き戻されました', true); } }
     const grid = h('div', { class: 'grid' + (can ? '' : ' ro') });
     const tabs = h('div', { class: 'tabs' }, h('button', { class: tab === 'organ' ? 'on' : '', onclick: () => { tab = 'organ'; render(); } }, '器官の場'), h('button', { class: tab === 'trait' ? 'on' : '', onclick: () => { tab = 'trait'; render(); } }, '形質プール'));
-    grid.appendChild(h('div', { class: 'col shared' }, renderTracks(p, can), renderExcl(p, can), renderShared(p, can), tabs, (tab === 'organ' || boardOn()) ? renderOrganField(p, can) : null, (tab !== 'organ' || boardOn()) ? renderTraitPool(p, can) : null)); // O-57：盤では器官の場と形質プールを両方出す
+    { const colS = h('div', { class: 'col shared' }, renderTracks(p, can), renderExcl(p, can), renderShared(p, can), tabs, (tab === 'organ' || boardOn()) ? renderOrganField(p, can) : null, (tab !== 'organ' || boardOn()) ? renderTraitPool(p, can) : null); grid.appendChild(boardOn() ? h('div', { class: 'bdscroll' }, colS) : colS); } // O-57：盤では器官の場と形質プールを両方出す // O-59：盤は横に送れる枠に入れる
     grid.appendChild(h('div', { class: 'col me' }, renderPlayer(p, can), isOnline() ? renderSeatsMini() : null, renderOthers(p), renderLog()));
     root.appendChild(grid);
     const pend = p.pending[0];
@@ -431,11 +438,11 @@
   function renderHeader() {
     const hd = $('#hdr'); hd.innerHTML = ''; if (!st || st.phase !== 'play') document.title = BASE_TITLE; // O-48：自分の番の印は対局中だけ
     hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール')); // 2026-10-28：「game01 モック」の表記は不要（1行に収める）
-    if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (st && st.phase === 'end') hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: exportJson }, '保存(JSON)'), h('button', { onclick: exportCsv }, 'ログCSV'))); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); hd.appendChild(h('span', { class: 'hmenuwrap' }, window.G1Skin ? window.G1Skin.toggle(render) : null, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), themeToggle())); return; }
+    if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (st && st.phase === 'end') hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: exportJson }, '保存(JSON)'), h('button', { onclick: exportCsv }, 'ログCSV'))); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); hd.appendChild(h('span', { class: 'hmenuwrap' }, ...dispGroup(false), h('small', { class: 'ver' }, 'v' + (G.VERSION || '')))); return; }
     hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`));
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
     // 版の小文字＋ボタン群の開閉「≡」は1行目の右端（2026-10-28 ユーザー要望：1行を占有させない）
-    hd.appendChild(h('span', { class: 'hmenuwrap' }, window.G1Board ? window.G1Board.toggle(render) : null, window.G1Skin ? window.G1Skin.toggle(render) : null, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), G.FX && G.FX.on(st) ? h('button', { class: 'fxbtn', title: '効果の記号（いつ・得る・払う・軽減など）の見方', onclick: showLegend }, '記号の一覧') : null, themeToggle(), h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
+    hd.appendChild(h('span', { class: 'hmenuwrap' }, ...dispGroup(true), h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), G.FX && G.FX.on(st) ? h('button', { class: 'fxbtn', title: '効果の記号（いつ・得る・払う・軽減など）の見方', onclick: showLegend }, '記号の一覧') : null, h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
     const to = h('span', { class: 'order' }, '手番順：');
     { const hp0 = headerPids(); if (peekPid !== null && (!st.players[peekPid] || hp0.includes(peekPid))) peekPid = null;
       st.turnOrder.forEach((pid, i) => { const q = st.players[pid]; const other = !hp0.includes(pid); to.appendChild(h('span', { class: 'chip' + (i === st.cur ? ' now' : '') + (q.left.W + q.left.AT === 0 ? ' done' : '') + (other ? ' tap' : '') + (peekPid === pid ? ' peek' : ''), title: other ? (peekPid === pid ? 'もう一度押すと資源の行を閉じる' : '押すとこの人の資源を自分の資源の上に出す') : null, onclick: other ? () => { peekPid = peekPid === pid ? null : pid; render(); } : null }, h('span', { class: 'mk p' + q.id }, q.id + 1), `${q.name} ${leftTxt(q)}`)); }); } // O-52：ほかの人の札を押すとその人の資源の行
@@ -639,7 +646,7 @@
     const m4 = st.slotSet === 'm4';
     const x1 = st.ext === 'x1';
     const box = h('div', { class: 'panel excl' + (iconView() ? ' picmode' : '') }, h('h3', null, '占有盤', h('small', { class: 'sub' }, (m4 ? '　資源獲得は4枠（E系／G系／P系／全資源）・各枠1ラウンドに1人、枠内のどちらかを選ぶ。使用済み枠は生命核1の「緊急進出」で突破可（自己複製は不可）' : (G.RULESETS[st.rules || 'v1'].launchFree ? `　各スロットは1ラウンドに1人だけ。空いている資源枠は生命核1の「緊急進出」で獲得量${G.RULESETS[st.rules || 'v1'].launchFree}倍` : '　各スロットは1ラウンドに1人だけ。使用済みは生命核1の「緊急進出」で資源獲得スロットのみ突破可')) + (G.RULESETS[st.rules || 'v1'].traitShared ? '　【形質共用】形質獲得は排他なし（割増枠なし）。' + (G.RULESETS[st.rules || 'v1'].launchFree ? '使用済みの資源枠は協調進出（協調）で突破可。' : '使用済みの資源枠は緊急進出（L1）か協調進出（協調）で突破可。') + '群体同期／群体融合はPを払って資源＋協調+1' + (G.RULESETS[st.rules || 'v1'].bodyAxis === 'L' ? '　【生命核軸】収入時に保有L1個につきE+1。身体はLを投入した回数で上がる' : '') : x1 ? '　【拡張x1】形質獲得は2枠（割増枠＝ラウンド数ぶんのE追加）。使用済みの資源／形質枠は緊急進出（L1）か協調進出（協調）で突破可' : ''))));
-    box.firstChild.appendChild(viewToggle()); if (iconView()) box.appendChild(iconLegend());
+    if (iconView()) box.appendChild(iconLegend()); // O-59：文字／アイコンの切り替えはヘッダの表示のまとまりへ
     const fv = G.RULESETS[st.rules || 'v1'].finalSlotVg, RNf = G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS, finalR = fv && st.round === RNf; // v3.55 祝福枠：最終ラウンドの資源枠
     const g1 = h('div', { class: 'sgroup' + (finalR ? ' god' : '') }, h('h4', null, (m4 ? '資源獲得（統合4・試作）' : '資源獲得') + (!fv ? '' : finalR ? `（最終ラウンド＝祝福枠：空いている枠にワーカーを置くと資源に加えて祝福+${fv.vg || 1}）` : `（最終ラウンド${RNf}は祝福枠＝空いている枠にワーカーを置くと祝福+${fv.vg || 1} も）`)));
     const bypassHint = () => { const w = [p.mimic && !(p.round && p.round.mimicUsed) ? (p.mimic === 'free' ? '擬態可（無償）' : `擬態可（E${G.sc(st, 3)}）`) : null, p.L > 0 && !G.RULESETS[st.rules || 'v1'].launchFree ? '緊急進出可（L1）' : null, x1 && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) ? `協調進出可（協調${G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2}）` : null].filter(Boolean); /* 2026-10-30：擬態が使えるときは選択前の枠にも表示 */ return w.length ? h('small', { class: 'bypass' }, w.join('・')) : null; };

@@ -2,9 +2,9 @@
    今の画面の部品をそのまま使い、共用の場を 1 枚の盤（案 A「生命の樹」）の形に並べる。盤は 1872×960 で設計し、--bz（board.js）で画面の幅に合わせる。
    作り：0 切り替え／1 盤の枠組み／2 進化トラック（縦に続く帯）／3 中央（生命核を囲む六角の枠・恩寵・淘汰）／4 何人でもの台／5 器官の場／6 形質／7 盤の下 */
 
-/* 0. 切り替え（標準でも出る）。携帯幅では出さない。盤の間は見た目の切り替えを隠す（盤は B の上に作ってある） */
-@media (max-width: 1099px) { .boardtog { display:none; } }
+/* 0. 切り替え（標準でも出る・O-59 からどの幅でも）。盤の間は見た目と文字／アイコンの切り替えを隠す（盤は B・記号の表示の上に作ってある） */
 html[data-board] .skintog:not(.boardtog) { display:none; }
+html[data-board] #app .bdscroll { overflow-x:auto; max-width:100%; -webkit-overflow-scrolling:touch; } /* O-59：盤が画面より広いときは盤の中を横に送る（ページは横にはみ出さない） */
 
 html[data-board] #app .grid {
   display:block; padding:12px;
@@ -229,3 +229,5 @@ html[data-board] #app .grid {
   .col.me { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:start; }
   .col.me > .panel { margin:0; }
 }
+/* O-59：狭い画面（1099px 以下）では盤の下の 3 列（個人ボード・他プレイヤー・ログ）を縦に積む */
+@media (max-width: 1099px) { html[data-board] #app .grid .col.me { display:block; } html[data-board] #app .grid .col.me > .panel { margin:0 0 12px; } }
