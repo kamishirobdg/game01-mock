@@ -112,10 +112,13 @@
   const gainStr = (d, pay) => { if (!pay) return G.gainText(d); const d2 = Object.assign({}, d); const back = (d.P || 0) + pay.P; delete d2.P; return [`P-${pay.P}${back ? (back > 0 ? '+' : '') + back : ''}`, G.gainText(d2)].filter(Boolean).join(' '); };
   function gainChips(d, pay) { const out = []; if (pay) { out.push(pc('P', '-' + pay.P, { cls: 'neg' })); const back = (d.P || 0) + pay.P; if (back) out.push(pc('P', (back > 0 ? '+' : '') + back, back < 0 ? { cls: 'neg' } : null)); } ['E', 'G', 'P', 'L', 'coop'].forEach(k => { if (pay && k === 'P') return; if (d[k]) out.push(pc(k, (d[k] > 0 ? '+' : '') + d[k], d[k] < 0 ? { cls: 'neg' } : null)); }); const gs = G.TRACKS.reduce((a, t) => a + (d['gem_' + t] || 0), 0); if (gs) out.push(pc('gem', '+' + gs)); if (d.gemsets) out.push(pc('bless', '+' + d.gemsets)); return out; }
   // 枠の中身：アイコン表示なら「名前（小）＋絵」、文字表示なら従来どおり。pid＝picto の識別子（slot id 以外の共用盤の枠は擬似 id）
+  // O-61（§114）：一覧の画面の実物に効果の記号と同じ絵を小さく添える（淘汰の枠＝そのトラックの色・群体同期／融合の枠・祭壇・特殊器官の見出し・投入）。盤では .pname の中は出ない（盤の記号は board.css）
+  const OBJ_IC = { MB: 'cull.body', MI: 'cull.intel', MS: 'cull.social', MM: 'cull.metab', EG: 'herd', GG: 'herd' };
+  const objIc = (k) => { if (!k || !G.FX || !G.FX.ic) return null; const s = G.FX.ic(k); s.classList.add('objic'); return s; };
   function slotBody(p, pid, name, text, d, pay) {
     const pic = iconView() ? picto(pid, p) : null; const gain = d ? gainStr(d, pay) : null;
-    if (pic) return [h('span', { class: 'pname' }, name), h('span', { class: 'picto' }, pic), d && gain ? h('span', { class: 'picto pgain', title: '今実行すると：' + gain }, po('⇒'), gainChips(d, pay)) : null];
-    return [h('b', null, name), h('small', null, typeof text === 'string' ? icost(text) : text), gain ? h('small', { class: 'gain' }, `→ ${gain}`) : null];
+    if (pic) return [h('span', { class: 'pname' }, objIc(OBJ_IC[pid]), name), h('span', { class: 'picto' }, pic), d && gain ? h('span', { class: 'picto pgain', title: '今実行すると：' + gain }, po('⇒'), gainChips(d, pay)) : null];
+    return [h('b', null, objIc(OBJ_IC[pid]), name), h('small', null, typeof text === 'string' ? icost(text) : text), gain ? h('small', { class: 'gain' }, `→ ${gain}`) : null];
   }
   function viewToggle() {
     return h('span', { class: 'skintog viewtog' }, h('span', { class: 'vtog', title: 'アクション・カード・トラックの表示（文字／記号）を切り替える' }, h('button', { class: viewMode === 'text' ? 'on' : '', onclick: () => setView('text') }, '文字'), h('button', { class: viewMode === 'icon' ? 'on' : '', onclick: () => setView('icon') }, 'アイコン')));
@@ -458,7 +461,7 @@
         items.forEach(([track, icon, n, label]) => { const gr = R.gates ? G.gateReq(q, track) : null; const gap = gr ? Math.max(0, gr.need - gr.have) : null; const nextLv = q.lv[track] + 1;
           const tip = `${label}（${G.TRACK_INFO[track].name}の素材）` + (gr ? `　次の Lv${nextLv} まで あと${gap}（必要${gr.need}・数えた分${gr.have}）` : `　Lv5 まで到達済み（臨界なし）`);
           if (track === 'social') { const el = row.querySelector('.hrb.rcoop'); if (el && gr) el.appendChild(h('small', { class: 'gap', title: tip }, `あと${gap}`)); return; }
-          row.appendChild(h('span', { class: 'hrb rcol', title: tip }, icon ? ic(icon) : null, icon === 'L' || icon === 'P' ? h('small', null, '投入') : null, h('b', null, String(n)), (() => { const ex = (track === 'metab' || track === 'intel') ? G.gateCount(q, track) - n : 0; return ex > 0 ? h('small', { title: '代謝核・神経など「1 枚ぶんとして数える」分' }, `(+${ex})`) : null; })(), gr ? h('small', { class: 'gap' }, `あと${gap}`) : h('small', null, '到達'))); }); }
+          row.appendChild(h('span', { class: 'hrb rcol', title: tip }, icon ? ic(icon) : null, icon === 'L' || icon === 'P' ? h('small', null, objIc('invest'), '投入') : null, h('b', null, String(n)), (() => { const ex = (track === 'metab' || track === 'intel') ? G.gateCount(q, track) - n : 0; return ex > 0 ? h('small', { title: '代謝核・神経など「1 枚ぶんとして数える」分' }, `(+${ex})`) : null; })(), gr ? h('small', { class: 'gap' }, `あと${gap}`) : h('small', null, '到達'))); }); }
       { const n6 = G.lv6Preview(st, q); if (q.lv && G.TRACKS.some(t => q.lv[t] >= 6)) row.appendChild(h('span', { class: 'hrb rconv', title: '神の裁定の見込み：Lv6 に達したトラックの素材3個につき祝福+1（身体＝払ったL・知性＝形質・社会＝協調・代謝＝器官）' }, h('small', null, '終了時'), h('b', null, '祝福+' + n6))); } // 案B：Lv6 の終了時換算を見える化
       hres.appendChild(row); }); }
     if (hres.childNodes.length) hd.appendChild(hres);
@@ -725,7 +728,7 @@
   function tributeButtons(p, can, altar) {
     const R6 = G.RULESETS[st.rules || 'v1']; const out = []; const place = R6.tributeOnceGame ? G.tribLimitText(st) : '共用' + (R6.tribute ? '・' + G.tribLimitText(st) : '');
     const usedAt = (key) => !!(p.tribGame && p.tribGame[key]);
-    const fin = (key, b) => { if (altar) { b.classList.add('altar'); const nm = b.querySelector('b, .pname'); if (nm) nm.textContent = nm.textContent.replace('献上', '祭壇'); if (usedAt(key)) { b.classList.add('used'); b.appendChild(h('span', { class: 'aw', title: '使用済み：この祭壇にはあなたのワーカーが乗っています（各祭壇は 1 ゲームに 1 回）' }, h('span', { class: 'mk p' + p.id }, p.id + 1), ic('W'), '使用済み')); } else b.appendChild(h('span', { class: 'aw empty', title: R6.altar ? 'まだ使っていない祭壇（ワーカーを 1 つ置いて捧げる）' : 'まだ使っていない祭壇（ワーカーを 1 つ置いて献上）' }, h('span', { class: 'mk empty' }, ''), '空')); } out.push(b); };
+    const fin = (key, b) => { if (altar) { b.classList.add('altar'); const nm = b.querySelector('b, .pname'); if (nm) { nm.textContent = nm.textContent.replace('献上', '祭壇'); const ai = objIc('altar'); if (ai) nm.insertBefore(ai, nm.firstChild); } if (usedAt(key)) { b.classList.add('used'); b.appendChild(h('span', { class: 'aw', title: '使用済み：この祭壇にはあなたのワーカーが乗っています（各祭壇は 1 ゲームに 1 回）' }, h('span', { class: 'mk p' + p.id }, p.id + 1), ic('W'), '使用済み')); } else b.appendChild(h('span', { class: 'aw empty', title: R6.altar ? 'まだ使っていない祭壇（ワーカーを 1 つ置いて捧げる）' : 'まだ使っていない祭壇（ワーカーを 1 つ置いて献上）' }, h('span', { class: 'mk empty' }, ''), '空')); } out.push(b); };
     if (R6.altar) { const vp = viewP(p); const nv = G.altarNextVg(vp); G.ALTAR_KEYS.forEach(k => { const a = { pid: p.id, type: 'altar', res: k }; const reason = can ? check(a) : roMsg; const c = G.altarCost(vp, k); const jp = G.ALTAR_JP[k]; const ct = (k === 'coop' ? '協調' : k) + c + (c !== R6.altar.cost[k] ? '（結晶体質）' : ''); const nm = `祭壇（${jp}）`; const done = usedAt(k); const rL = !done && R6.altarDouble && R6.altarDouble.repeatL && vp.round && (vp.round.altarN || 0) > 0 ? R6.altarDouble.repeatL : 0; const ctx = ct + (rL ? `＋生命核${rL}` : ''); // O-40／O-44（T31）
         fin(k, actBtn({ class: 'slot' + (iconView() ? ' pic' : ''), 'data-slot': 'ALT_' + k, title: `${nm}：${ct}${k === 'L' && (R6.lCrystalLv || 4) > 1 ? `・身体Lv${R6.lCrystalLv || 4}で解放` : ''}`, onclick: () => altarClick(p, k, a, nm, ct, nv) }, reason, ...slotBody(p, 'ALT_' + k, nm, done ? ct : `${ctx} → 祝福+${nv}`, null))); }); return out; } // T23（O-19）：祭壇＝払い口 5 つ（報酬は何個目かで決まる）
     if (R6.gemsetShared) fin('G', slotButton(p, can, G.SLOT_BY_ID.GEM, () => onSlot(p, 'GEM')));
@@ -757,7 +760,7 @@
         ownersRow(p, id, 'organ'), statusLine(mine_ ? 'ok' : locked ? 'lock' : reason && can ? 'no' : null, mine_ ? '形成済み' : locked ? '前の形態が必要' : reason)));
     });
     box.appendChild(grid);
-    if (st.shared.special) box.appendChild(h('div', { class: 'owned' }, h('b', null, `特殊器官（代謝 Lv4 に達した順に 1 枚）残り ${st.shared.special.length}：`), ...st.shared.special.map(id => fxOn() && G.FX.lines(st, 'organ', id) ? h('span', { class: 'tag fxtag', title: G.spText(G.RULESETS[st.rules || 'v1'], id) }, G.ORGANS[id].name, G.FX.render(G.FX.lines(st, 'organ', id), G.spText(G.RULESETS[st.rules || 'v1'], id))) : h('span', { class: 'tag', title: G.spText(G.RULESETS[st.rules || 'v1'], id) }, `${G.ORGANS[id].name}（${G.spText(G.RULESETS[st.rules || 'v1'], id)}）`)))); // T15
+    if (st.shared.special) box.appendChild(h('div', { class: 'owned' }, h('b', null, objIc('sporgan'), `特殊器官（代謝 Lv4 に達した順に 1 枚）残り ${st.shared.special.length}：`), ...st.shared.special.map(id => fxOn() && G.FX.lines(st, 'organ', id) ? h('span', { class: 'tag fxtag', title: G.spText(G.RULESETS[st.rules || 'v1'], id) }, G.ORGANS[id].name, G.FX.render(G.FX.lines(st, 'organ', id), G.spText(G.RULESETS[st.rules || 'v1'], id))) : h('span', { class: 'tag', title: G.spText(G.RULESETS[st.rules || 'v1'], id) }, `${G.ORGANS[id].name}（${G.spText(G.RULESETS[st.rules || 'v1'], id)}）`)))); // T15
     return box;
   }
   // 所有トークン置き場：全プレイヤーぶんの枠を並べ、所有者の枠にマーカー（★＝強）。自分の枠は太枠

@@ -93,3 +93,16 @@ svg.ic.star { color:#7d55c7; } svg.ic.join { color:#4a6fa8; } svg.ic.launch { co
 }
 @media (min-width: 1500px) { .lane .fx, .slot.starstep .fxstack { zoom:var(--fxz-lane, 1.3); } }
 .slot.starstep .fxstack .fx { zoom:1 !important; } /* 星海開拓の段は外の .fxstack だけで拡大（中の .fx に .lane .fx が重なって 1.69 倍になっていた） */
+/* O-61（2026-11-18・§114）：字の札の代わりの記号（絵はデザイン・icons.js）。色は今の記号に合わせる：淘汰＝灰（色つきはそのトラックの色）／祭壇＝祝福の金／特殊器官・完成した系統＝器官の緑／弱・強の形質・裏返す＝形質の青／投入＝生命核の青／群体の枠・使用済みの枠＝資源枠の色／ラウンド・回数＝灰／繁栄度＝繁殖の赤 */
+svg.ic.cull, svg.ic.round, svg.ic.roundend { color:#666; } svg.ic.cull.trk-body { color:var(--t-red, #d04a58); } svg.ic.cull.trk-intel { color:var(--t-blue, #2f6fdd); } svg.ic.cull.trk-social { color:var(--t-white, #7d8aa3); } svg.ic.cull.trk-metab { color:var(--t-green, #1f9e68); }
+svg.ic.altar { color:#d4a017; } svg.ic:is(.sporgan, .lineage) { color:#3c9d5d; } svg.ic:is(.traitw, .traits, .flip) { color:#3b7ddd; } svg.ic.invest { color:#2a95d3; } svg.ic:is(.herd, .usedslot) { color:#8a6d3b; } svg.ic.pros { color:#c0392b; }
+[data-theme="dark"] svg.ic:is(.cull, .round, .roundend) { color:#bbb; } [data-theme="dark"] svg.ic.cull.trk-body { color:var(--t-red, #ff6b78); } [data-theme="dark"] svg.ic.cull.trk-intel { color:var(--t-blue, #5a9bff); } [data-theme="dark"] svg.ic.cull.trk-social { color:var(--t-white, #c4cee0); } [data-theme="dark"] svg.ic.cull.trk-metab { color:var(--t-green, #3fd08f); }
+[data-theme="dark"] svg.ic.altar { color:#e8c547; } [data-theme="dark"] svg.ic:is(.sporgan, .lineage) { color:#6fcf8f; } [data-theme="dark"] svg.ic:is(.traitw, .traits, .flip) { color:#8fb4ff; } [data-theme="dark"] svg.ic.invest { color:#5bb8e8; } [data-theme="dark"] svg.ic:is(.herd, .usedslot) { color:#d8b878; } [data-theme="dark"] svg.ic.pros { color:#ff8a7a; }
+html[data-board] .col.shared svg.ic:is(.cull, .round, .roundend) { color:#bbb; } html[data-board] .col.shared svg.ic.altar { color:#e8c547; } html[data-board] .col.shared svg.ic:is(.sporgan, .lineage) { color:#6fcf8f; } html[data-board] .col.shared svg.ic:is(.traitw, .traits, .flip) { color:#8fb4ff; } html[data-board] .col.shared svg.ic.invest { color:#5bb8e8; } html[data-board] .col.shared svg.ic:is(.herd, .usedslot) { color:#d8b878; } html[data-board] .col.shared svg.ic.pros { color:#ff8a7a; } /* 盤は暗い地 */
+/* 回数＝切符（20×16）の上に数字／値札 0＝軽減の赤い値札に 0 */
+.fxtk { position:relative; display:inline-flex; align-items:center; justify-content:center; width:20px; height:16px; flex:0 0 auto; color:#666; vertical-align:middle; } .fxtk svg.tk { position:absolute; inset:0; width:20px; height:16px; } .fxtk b { position:relative; font-size:10px; font-weight:800; line-height:1; color:#3a4560; }
+[data-theme="dark"] .fxtk, html[data-board] .col.shared .fxtk { color:#bbb; } [data-theme="dark"] .fxtk b, html[data-board] .col.shared .fxtk b { color:#e6ebf5; }
+.lane .fxtk { width:16px; height:13px; } .lane .fxtk svg.tk { width:16px; height:13px; } .lane .fxtk b { font-size:9px; }
+.pc.ptag.fxzero { padding:1px 6px 1px 4px !important; } .fxround { gap:0; } .fxle { gap:1px; }
+/* 一覧の画面の実物に添える小さな記号（淘汰の枠・群体同期／融合の枠・祭壇・特殊器官の見出し・投入） */
+svg.ic.objic { display:inline-block; width:13px; height:13px; vertical-align:-2px; margin-right:3px; flex:0 0 auto; background:none !important; border:0 !important; padding:0; min-width:0; }
