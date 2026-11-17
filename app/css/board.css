@@ -10,7 +10,7 @@ html[data-board] #app .grid {
   display:block; padding:12px;
 
   /* 1. 盤の枠組み */
-  .col.shared { position:relative; width:1872px; height:960px; zoom:var(--bz, 1); margin:10px auto 22px; color:#e8f2ea; --ink:#e8f2ea; --mute:#a2b9ae; --bd-edge:#7fd8b0; --bd-gold:#e8cf7a; --fxz-card:1; --fxz-lane:1.15; }
+  .col.shared { position:relative; width:1872px; height:960px; zoom:var(--bz, 1); margin:10px auto 22px; color:#e8f2ea; --ink:#e8f2ea; --mute:#a2b9ae; --bd-edge:#7fd8b0; --bd-gold:#e8cf7a; --fxz-card:1; --fxz-lane:1; }
   /* 盤の中は白の表示でも暗い配色に固定する（見た目 B・黒の変数を写したもの。skin.css の B・黒を変えたらここも合わせる） */
   .col.shared { --bg:#15181f; --panel:#1e222b; --line:#3a404d; --p1:#d0d4dc; --hl:#4a3d10; color-scheme:dark;
     --bg:#0b1a22; --panel:#13262b; --line:#2f5650; --ink:#e8f2ea; --mute:#a2b9ae; --hl:#3f3a12;
@@ -160,17 +160,17 @@ html[data-board] #app .grid {
 
   /* 5. 器官の場：系統ごとの列（下が第 1 形態）。帯に値段・絵の枠に紋・名前・効果の記号 */
   .panel.ofieldp, .panel:has(> .tgrid) { left:1412px; width:460px; padding:30px 10px 8px; background:rgba(8,22,26,.45); border:1px solid rgba(127,216,176,.25); border-radius:26px; }
-  .panel.ofieldp { top:0; height:640px; }
+  .panel.ofieldp { top:0; height:590px; }
   .panel.ofieldp > h3, .panel:has(> .tgrid) > h3 { position:absolute; left:20px; top:8px; margin:0; font-size:14px; font-weight:600; letter-spacing:3px; white-space:nowrap; }
   .panel.ofieldp > h3 { color:#6fd47c; }
-  .ogrid.ofield { display:grid; grid-template-columns:repeat(4, 105px) !important; grid-template-rows:repeat(3, 150px); grid-auto-rows:150px; grid-auto-flow:column dense; gap:6px 0; justify-content:space-between; margin:26px 0 0; }
+  .ogrid.ofield { display:grid; grid-template-columns:repeat(4, 105px) !important; grid-template-rows:repeat(3, 138px); grid-auto-rows:138px; grid-auto-flow:column dense; gap:6px 0; justify-content:space-between; margin:26px 0 0; }
   .ogrid.ofield > .ocard[data-slot$="1"] { grid-row:3; } .ogrid.ofield > .ocard[data-slot$="2"] { grid-row:2; } .ogrid.ofield > .ocard[data-slot$="3"] { grid-row:1; }
-  .ogrid.ofield > .ocard { width:105px; height:150px; min-height:0; box-sizing:border-box; padding:28px 2px 3px; align-items:center; text-align:center; overflow:visible; border-radius:13px;
+  .ogrid.ofield > .ocard { width:105px; height:138px; min-height:0; box-sizing:border-box; padding:28px 2px 2px; align-items:center; text-align:center; overflow:visible; border-radius:13px;
     background:linear-gradient(180deg, color-mix(in srgb, var(--lin) 44%, #000), color-mix(in srgb, var(--lin) 34%, #000)); border:1.800px solid color-mix(in srgb, var(--lin) 62%, #000); box-shadow:0 3px 7px rgba(0,0,0,.5); }
   .ogrid.ofield > .ocard .hd { justify-content:center; min-height:26px; padding:2px 4px; border-radius:11px 11px 0 0; background:color-mix(in srgb, var(--lin) 45%, #000); box-shadow:none; }
   .ogrid.ofield > .ocard .hd .sw { display:none; }
   .ogrid.ofield > .ocard .hd .cost { font-size:13px; white-space:nowrap; }
-  .ogrid.ofield > .ocard :is(img.art, div.art) { width:50px; height:50px; min-height:0; flex:none; margin:3px 0 3px; border-radius:9px; }
+  .ogrid.ofield > .ocard :is(img.art, div.art) { width:44px; height:44px; min-height:0; flex:none; margin:2px 0 2px; border-radius:9px; }
   .ogrid.ofield > .ocard > b { font-size:12px; line-height:1.15; white-space:nowrap; color:color-mix(in srgb, var(--lin) 40%, #fff); }
   .ogrid.ofield > .ocard > .fx { background:none; border:0; padding:0; margin:2px 0 0; width:100%; }
   .ogrid.ofield > .ocard > .fx .fxl { justify-content:center; flex-wrap:wrap; gap:1px 2px; }
@@ -198,10 +198,10 @@ html[data-board] #app .grid {
   .panel.ofieldp > .owned > .tag.fxtag .pc svg.ic, .panel.ofieldp > .owned > .tag.fxtag .fxper svg.ic { width:13px; height:13px; }
 
   /* 6. 形質：値段の安い順の細い板。1 行目＝値段と名前、2 行目＝分類の紋と効果の記号 */
-  .panel:has(> .tgrid) { top:650px; height:310px; padding-top:28px; }
+  .panel:has(> .tgrid) { top:600px; height:360px; padding-top:28px; }
   .panel:has(> .tgrid) > h3 { color:#6aa8f0; }
-  .tgrid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)) !important; grid-template-rows:repeat(7, 36px); grid-auto-rows:36px; grid-auto-flow:column; gap:3px 6px; }
-  .tgrid > .tcard { width:auto; height:36px; min-height:0; box-sizing:border-box; padding:1px 4px 1px 10px; display:grid; grid-template-columns:19px auto minmax(0, 1fr); grid-template-rows:15px 18px; column-gap:4px; align-items:center; justify-items:start; text-align:left; overflow:hidden; border-radius:10px;
+  .tgrid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)) !important; grid-template-rows:repeat(7, 44px); grid-auto-rows:44px; grid-auto-flow:column; gap:3px 6px; }
+  .tgrid > .tcard { width:auto; height:44px; min-height:0; box-sizing:border-box; padding:2px 5px 2px 11px; display:grid; grid-template-columns:22px auto minmax(0, 1fr); grid-template-rows:18px 22px; column-gap:4px; align-items:center; justify-items:start; text-align:left; overflow:hidden; border-radius:10px;
     background:linear-gradient(180deg, color-mix(in srgb, var(--lin) 42%, #000), color-mix(in srgb, var(--lin) 32%, #000)); border:1.500px solid color-mix(in srgb, var(--lin) 62%, #000); box-shadow:inset 5px 0 0 color-mix(in srgb, var(--lin) 85%, #000), 0 2px 5px rgba(0,0,0,.5); }
   .tgrid > .tcard .hd { position:static; grid-row:1; grid-column:1 / 3; min-height:0; padding:0; gap:3px; background:none; border-radius:0; box-shadow:none; justify-content:flex-start; }
   .tgrid > .tcard .hd .cost { font-size:12px; line-height:15px; padding:0 6px 0 2px; border-radius:8px; background:#4a1f1c; box-shadow:inset 0 0 0 1px rgba(216,106,96,.7); color:#ffc9c2; white-space:nowrap; overflow:visible; text-shadow:none; }
@@ -224,6 +224,52 @@ html[data-board] #app .grid {
   .tgrid > .tcard > small.status, .tgrid > .tcard > em { display:none; }
   .tgrid > .tcard.mine { border-color:var(--sk-ok, #5fd39a); }
   .tgrid > .tcard.na { opacity:1; }
+
+  /* 6b. 形質の板を縦に広げたぶん、字と記号を大きく（2026-11-18） */
+  .tgrid > .tcard .hd .cost { font-size:13px; line-height:17px; }
+  .tgrid > .tcard .hd .cost svg.ic { width:13px; height:13px; }
+  .tgrid > .tcard .hd .sw { font-size:10px; line-height:13px; top:4px; }
+  .tgrid > .tcard :is(img.art, div.art) { width:21px; height:21px; }
+  .tgrid > .tcard > b { font-size:14px; line-height:18px; }
+  .tgrid > .tcard > .fx { height:21px; max-width:calc(100% - 58px); }
+  .tgrid > .tcard > .fx .fxl, .tgrid > .tcard > .fx .fxl .pc { font-size:13px; }
+  .tgrid > .tcard > .fx :is(.pc, .fxper, .fxact) svg.ic, .tgrid > .tcard > .fx .fxt > svg.ic { width:16px; height:16px; }
+  .tgrid > .tcard > .fx .fxw { width:17px; height:17px; font-size:12px; }
+  .tgrid > .tcard > .fx :is(.fxword, .pbad, .fxmul) { font-size:11.500px; }
+  .tgrid > .tcard > .owners { bottom:4px; gap:3px; }
+  .tgrid > .tcard > .owners .mk { width:12px; height:12px; line-height:12px; }
+
+  /* 8. 進化トラックの記号の大きさ（2026-11-18・拡大〔zoom〕をやめて大きさを直に決める＝星海開拓の段のはみ出しを直す）。1 行だけの段は大きく */
+  .lane :is(.node-rew, .fxstack) .fxl, .lane :is(.node-rew, .fxstack) .fxl .pc { font-size:14px; }
+  .lane :is(.node-rew, .fxstack) .fxl .pc { padding:0 4px 0 2px; }
+  .lane :is(.node-rew, .fxstack) .fxw { width:18px; height:18px; font-size:13px; } .lane :is(.node-rew, .fxstack) .fxw.w-perm { font-size:15px; } .lane :is(.node-rew, .fxstack) .fxw svg.wi { width:13px; height:12px; }
+  .lane :is(.node-rew, .fxstack) .fxl :is(.pc, .fxact, .fxper, .fxeq, .fxcond) svg.ic, .lane :is(.node-rew, .fxstack) .fxt > svg.ic { width:17px; height:17px; }
+  .lane :is(.node-rew, .fxstack) :is(.fxword, .pbad) { font-size:11.500px; } .lane :is(.node-rew, .fxstack) .fxmul { font-size:14px; } .lane :is(.node-rew, .fxstack) .fxlab { font-size:10px; }
+  .lane :is(.node-rew, .fxstack):not(:has(.fxl ~ .fxl, .fx ~ .fx)) { --one:1; }
+  .lane :is(.node-rew, .fxstack):not(:has(.fxl ~ .fxl, .fx ~ .fx)) .fxl, .lane :is(.node-rew, .fxstack):not(:has(.fxl ~ .fxl, .fx ~ .fx)) .fxl .pc { font-size:18px; line-height:1.5; }
+  .lane :is(.node-rew, .fxstack):not(:has(.fxl ~ .fxl, .fx ~ .fx)) .fxw { width:22px; height:22px; font-size:15px; } .lane :is(.node-rew, .fxstack):not(:has(.fxl ~ .fxl, .fx ~ .fx)) .fxw svg.wi { width:15px; height:14px; }
+  .lane :is(.node-rew, .fxstack):not(:has(.fxl ~ .fxl, .fx ~ .fx)) .fxl :is(.pc, .fxact, .fxper, .fxeq, .fxcond) svg.ic, .lane :is(.node-rew, .fxstack):not(:has(.fxl ~ .fxl, .fx ~ .fx)) .fxt > svg.ic { width:22px; height:22px; }
+  .lane :is(.node-rew, .fxstack):not(:has(.fxl ~ .fxl, .fx ~ .fx)) :is(.fxword, .pbad) { font-size:13px; } .lane :is(.node-rew, .fxstack):not(:has(.fxl ~ .fxl, .fx ~ .fx)) .fxmul { font-size:17px; }
+  .lane :is(.node-rew, .fxstack):has(.fxl ~ .fxl ~ .fxl, .fx ~ .fx ~ .fx) .fxl { line-height:1.36; } /* 3 行の段（Lv6 など）は行の間を詰める */
+  .lane :is(.node-rew, .starstep > .fxstack) { overflow:hidden; }
+
+  /* 9. ヒント（2026-11-18）：記号 1 つずつの説明ではなく、その段・枠・カードの効果の全文をまとめて出す（中の記号はマウスを素通りさせ、外側の title を出す） */
+  .lane :is(.node-rew, .starstep > .fxstack, .node-lv, .starstep > .pname), .col.shared .sgroup > .slot > :is(.picto, .pname), .col.shared :is(.ocard, .tcard) > :is(.fx, .hd, b, .art), .panel.ofieldp > .owned > .tag.fxtag > .fx { pointer-events:none; }
+
+  /* 10. いま選べないものは暗く（2026-11-18）。人が操作できない番（.ro）は全部が「選べない」になるので、自分が操作できる番だけ暗くする。持っているカードは暗くしない */
+  &:not(.ro) .panel.excl .sgroup > .slot.na:not(.used):not(.locked) { filter:drop-shadow(0 3px 4px rgba(0,0,0,.5)) brightness(.5) saturate(.55); }
+  &:not(.ro) .panel.shared2 .sgroup > .slot.na { filter:brightness(.5) saturate(.55); }
+  &:not(.ro) .col.shared :is(.ocard, .tcard).na:not(.mine) { filter:brightness(.58) saturate(.6); opacity:1; }
+  &:not(.ro) .col.shared .ocard.locked { filter:brightness(.4) saturate(.35); opacity:1; }
+  &:not(.ro) .lane .lane-body > :is(.node.next.na, .slot.starstep.now.na) > :is(.node-rew, .fxstack) { opacity:.55; }
+  /* まだ開いていない恩寵枠：点線の囲み＋灰色＋くぼみに止まれの印 */
+  .panel.excl .sgroup:has(> .slot.locked) > .glabel { left:38px; top:4px; width:468px; height:148px; box-sizing:border-box; padding:3px 14px; border:1.500px dashed rgba(232,207,122,.5); border-radius:24px; background:rgba(0,0,0,.3); font-size:12px; letter-spacing:1px; color:rgba(232,207,122,.85); }
+  .panel.excl .sgroup > .slot.locked { opacity:1; filter:drop-shadow(0 3px 4px rgba(0,0,0,.5)) grayscale(.85) brightness(.62); cursor:not-allowed; }
+  .panel.excl .sgroup > .slot.locked::after { background:linear-gradient(45deg, transparent 44%, #ff6a5a 44% 56%, transparent 56%) 50% 9px / 20px 20px no-repeat, radial-gradient(circle at 50% 19px, #1a0e0e 0 7px, #ff6a5a 7px 10px, transparent 10.500px), linear-gradient(180deg, var(--hf), color-mix(in srgb, var(--hf) 82%, #000)); }
+
+  /* 11. こまかい直し（2026-11-18）：直前の手の印は六角の縁を光らせる（四角い枠を出さない）／値引きのときの定価（かっこ書き）は帯に出さない（マウスで全文） */
+  .panel.excl .sgroup > .slot.lastmove { outline:0 !important; box-shadow:none; --he:#ffc850; filter:drop-shadow(0 0 7px rgba(255,190,60,.9)); }
+  .ogrid.ofield > .ocard .hd { overflow:hidden; } .ogrid.ofield > .ocard .hd .cost small { display:none; }
 
   /* 7. 盤の下：個人ボード・他の人・ログを横に並べる */
   .col.me { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:start; }
