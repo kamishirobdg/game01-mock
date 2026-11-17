@@ -45,7 +45,8 @@
   function setTheme(m) { themeMode = m; try { localStorage.setItem(THEME_KEY, m); } catch (e) { } applyTheme(); render(); }
   function themeToggle() { return h('span', { class: 'vtog ttog', title: '画面の配色（白／黒）を切り替える（この端末に記憶）' }, h('button', { class: themeMode === 'light' ? 'on' : '', onclick: () => setTheme('light') }, '白'), h('button', { class: themeMode === 'dark' ? 'on' : '', onclick: () => setTheme('dark') }, '黒')); }
   applyTheme();
-  const iconView = () => viewMode === 'icon';
+  const boardOn = () => !!(window.G1Board && window.G1Board.on()); // O-57：盤の表示（js/board.js）
+  const iconView = () => viewMode === 'icon' || boardOn(); // 盤は記号の表示で描く
   function setView(m) { viewMode = m; try { localStorage.setItem(VIEW_KEY, m); } catch (e) { } render(); }
   const pc = (k, n, o) => h('span', { class: 'pc pk-' + k + (o && o.cost ? ' cost' : '') + (o && o.cls ? ' ' + o.cls : '') + (!(o && (o.cost || o.cls)) && /^\+/.test(String(n === undefined || n === null ? '' : n)) ? ' gain' : ''), /* O-49：得る＝緑地 */ title: (o && o.title) || ICO_JP[k] }, ic(k), n === undefined || n === null ? null : h('b', null, String(n)));
   const po = (s) => h('span', { class: 'po' }, s);
@@ -376,7 +377,7 @@
     const un = renderUndoNotice(); if (un) { root.appendChild(un); if (renderUndoNotice._toasted !== st.undoInfo.key) { renderUndoNotice._toasted = st.undoInfo.key; toast('あなたの行動が巻き戻されました', true); } }
     const grid = h('div', { class: 'grid' + (can ? '' : ' ro') });
     const tabs = h('div', { class: 'tabs' }, h('button', { class: tab === 'organ' ? 'on' : '', onclick: () => { tab = 'organ'; render(); } }, '器官の場'), h('button', { class: tab === 'trait' ? 'on' : '', onclick: () => { tab = 'trait'; render(); } }, '形質プール'));
-    grid.appendChild(h('div', { class: 'col shared' }, renderTracks(p, can), renderExcl(p, can), renderShared(p, can), tabs, tab === 'organ' ? renderOrganField(p, can) : renderTraitPool(p, can)));
+    grid.appendChild(h('div', { class: 'col shared' }, renderTracks(p, can), renderExcl(p, can), renderShared(p, can), tabs, (tab === 'organ' || boardOn()) ? renderOrganField(p, can) : null, (tab !== 'organ' || boardOn()) ? renderTraitPool(p, can) : null)); // O-57：盤では器官の場と形質プールを両方出す
     grid.appendChild(h('div', { class: 'col me' }, renderPlayer(p, can), isOnline() ? renderSeatsMini() : null, renderOthers(p), renderLog()));
     root.appendChild(grid);
     const pend = p.pending[0];
@@ -434,7 +435,7 @@
     hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`));
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
     // 版の小文字＋ボタン群の開閉「≡」は1行目の右端（2026-10-28 ユーザー要望：1行を占有させない）
-    hd.appendChild(h('span', { class: 'hmenuwrap' }, window.G1Skin ? window.G1Skin.toggle(render) : null, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), G.FX && G.FX.on(st) ? h('button', { class: 'fxbtn', title: '効果の記号（いつ・得る・払う・軽減など）の見方', onclick: showLegend }, '記号の一覧') : null, themeToggle(), h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
+    hd.appendChild(h('span', { class: 'hmenuwrap' }, window.G1Board ? window.G1Board.toggle(render) : null, window.G1Skin ? window.G1Skin.toggle(render) : null, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), G.FX && G.FX.on(st) ? h('button', { class: 'fxbtn', title: '効果の記号（いつ・得る・払う・軽減など）の見方', onclick: showLegend }, '記号の一覧') : null, themeToggle(), h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
     const to = h('span', { class: 'order' }, '手番順：');
     { const hp0 = headerPids(); if (peekPid !== null && (!st.players[peekPid] || hp0.includes(peekPid))) peekPid = null;
       st.turnOrder.forEach((pid, i) => { const q = st.players[pid]; const other = !hp0.includes(pid); to.appendChild(h('span', { class: 'chip' + (i === st.cur ? ' now' : '') + (q.left.W + q.left.AT === 0 ? ' done' : '') + (other ? ' tap' : '') + (peekPid === pid ? ' peek' : ''), title: other ? (peekPid === pid ? 'もう一度押すと資源の行を閉じる' : '押すとこの人の資源を自分の資源の上に出す') : null, onclick: other ? () => { peekPid = peekPid === pid ? null : pid; render(); } : null }, h('span', { class: 'mk p' + q.id }, q.id + 1), `${q.name} ${leftTxt(q)}`)); }); } // O-52：ほかの人の札を押すとその人の資源の行
