@@ -289,9 +289,8 @@ html[data-board] #app .grid {
   .panel.shared2 .sgroup > :is([data-slot="ORG"], [data-slot="TRT"], [data-slot="TRT2"]) { display:none; }
   .panel.shared2 .sgroup > [data-slot="BRD"] { left:56px; top:612px; }
   .panel.shared2 .sgroup > [data-slot="GTH"] { left:488px; top:612px; }
-  .panel.shared2 .sgroup > [data-slot="BST"] { left:912px; top:5px; margin:0; width:102px !important; height:24px; padding:0 6px; border-radius:12px; border-width:1.500px; outline:0; box-shadow:none; flex-direction:row; }
-  .panel.shared2 .sgroup > [data-slot="BST"] > b { font-size:11.500px; white-space:nowrap; }
-  .panel.ofieldp > h3 { letter-spacing:1px; max-width:330px; overflow:hidden; text-overflow:ellipsis; }
+  .panel.shared2 .sgroup > [data-slot="BST"] { display:none; } /* O-57（2026-11-18 ユーザー）：急速形成は器官のカードから（開発が替えた） */
+  .panel.ofieldp > h3 { letter-spacing:1px; overflow:hidden; text-overflow:ellipsis; }
   .panel.ofieldp { height:496px; }
   .panel.ofieldp > .owned { position:absolute; left:-569px; top:842px; width:544px; height:118px; box-sizing:border-box; margin:0; padding:5px 12px 6px; gap:3px 6px; align-content:flex-start; border-radius:22px; background:rgba(46,36,12,.5); border:1px solid rgba(201,162,74,.45); }
   .panel.ofieldp > .owned > b { font-size:13px; letter-spacing:2px; }
