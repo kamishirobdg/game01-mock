@@ -54,7 +54,7 @@
   const coopBonus = () => pc('coop', '+', { cls: 'bonus', title: '協調ボーナス：協調の数に応じて、この枠の資源が増える' });
   const fxOn = () => iconView() && !!G.FX && G.FX.on(st); // O-49：効果の記号（T32 のアイコン表示）
   // 星海開拓の段（O-49）：記号の組み立ては fx.js（ガイドの一覧と同じ）。先駆・先着が決まった段はその人の名前
-  function starFx(lv, fb, fTxt) { const x = G.FX.star(st, lv, true); return h('div', { class: 'fxstack' }, ...x.parts.map(pt => pt.first && fb !== undefined ? h('small', { class: 'first' }, fTxt) : G.FX.render(pt.lines, x.full, pt.label ? pt.label[0] : null))); }
+  function starFx(lv, fb, fTxt) { const x = G.FX.star(st, lv, true); return h('div', { class: 'fxstack' }, ...x.parts.flatMap(pt => pt.first && fb !== undefined ? (x.top ? [G.FX.render(pt.lines, x.full, null), h('small', { class: 'first' }, fTxt)] : [h('small', { class: 'first' }, fTxt)]) : [G.FX.render(pt.lines, x.full, pt.label ? pt.label[0] : null)])); }
   function picto(id, p) {
     const R = G.RULESETS[st.rules || 'v1']; const vp = viewP(p); const sc = (n) => G.sc(st, n); const T = R.tribute || {}; const TS = T.slots || {};
     const CBK = { E5: 'E', G3: 'G', P8: 'P', ALL: 'any', EG: 'E', GG: 'G' }; const cbNew = !!(G.FX && G.FX.on(st)); // O-51（T33）：協調ボーナス＝［資源 +1／協調］
@@ -385,7 +385,7 @@
   // O-48：ヘッダの資源＝オンラインは自分の席だけ／ローカルで人が複数いるときは手番の人だけ
   function headerPids() { const hs = myHumanPids(); if (isOnline() || hs.length <= 1 || !st || st.phase !== 'play') return hs; const c = G.cur(st).id; return hs.includes(c) ? [c] : []; }
   // O-48：自分の番の知らせ（消えない帯・タブの題の印）と直前の手（ほかの人・AI の最後の 1 手）
-  const BASE_TITLE = document.title;
+  const BASE_TITLE = document.title; let peekPid = null; // O-52：手番順の札で選んだほかの人（資源の行を出す・1 度に 1 人）
   function myTurnNow() { return !!(st && st.phase === 'play' && !st.ended && mine(G.cur(st).id)); }
   function lastOtherMove() {
     if (!st || st.phase !== 'play') return null; const me = isOnline() ? myHumanPids() : [G.cur(st).id];
@@ -436,12 +436,13 @@
     // 版の小文字＋ボタン群の開閉「≡」は1行目の右端（2026-10-28 ユーザー要望：1行を占有させない）
     hd.appendChild(h('span', { class: 'hmenuwrap' }, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), G.FX && G.FX.on(st) ? h('button', { class: 'fxbtn', title: '効果の記号（いつ・得る・払う・軽減など）の見方', onclick: showLegend }, '記号の一覧') : null, themeToggle(), h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
     const to = h('span', { class: 'order' }, '手番順：');
-    st.turnOrder.forEach((pid, i) => { const q = st.players[pid]; to.appendChild(h('span', { class: 'chip' + (i === st.cur ? ' now' : '') + (q.left.W + q.left.AT === 0 ? ' done' : '') }, h('span', { class: 'mk p' + q.id }, q.id + 1), `${q.name} ${leftTxt(q)}`)); });
+    { const hp0 = headerPids(); if (peekPid !== null && (!st.players[peekPid] || hp0.includes(peekPid))) peekPid = null;
+      st.turnOrder.forEach((pid, i) => { const q = st.players[pid]; const other = !hp0.includes(pid); to.appendChild(h('span', { class: 'chip' + (i === st.cur ? ' now' : '') + (q.left.W + q.left.AT === 0 ? ' done' : '') + (other ? ' tap' : '') + (peekPid === pid ? ' peek' : ''), title: other ? (peekPid === pid ? 'もう一度押すと資源の行を閉じる' : '押すとこの人の資源を自分の資源の上に出す') : null, onclick: other ? () => { peekPid = peekPid === pid ? null : pid; render(); } : null }, h('span', { class: 'mk p' + q.id }, q.id + 1), `${q.name} ${leftTxt(q)}`)); }); } // O-52：ほかの人の札を押すとその人の資源の行
     hd.appendChild(to);
     { const tb = turnBar(); if (tb) hd.appendChild(tb); } // O-48：自分の番の帯・直前の手
     // 自分の資源（毎手番見るのでヘッダに常時表示）：この端末の人間席ごとに E/G/P/L/協調＋次の収入
     const hres = h('span', { class: 'hres' });
-    headerPids().forEach(pid => { const q = st.players[pid]; const inc = G.income(q); const row = h('span', { class: 'hresp' }, h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1));
+    { const hp = headerPids(); (peekPid !== null ? [peekPid] : []).concat(hp).forEach(pid => { const q = st.players[pid]; const inc = G.income(q); const isPeek = !hp.includes(pid); const row = h('span', { class: 'hresp' + (isPeek ? ' peek' : '') }, h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1), isPeek ? h('b', { class: 'pkname' }, q.name) : null);
       ['E', 'G', 'P', 'L', 'coop'].forEach(k => row.appendChild(h('span', { class: 'hrb r' + k, title: k === 'coop' ? '協調' : RES_JP[k] + (k !== 'L' ? '　次の収入 +' + inc[k] : '　毎ラウンド+1') }, ic(k), h('b', null, String(q[k])), (k === 'L' || k === 'coop') ? null : h('small', null, `+${inc[k]}`))));
       // 2026-11-04 ユーザー要望：収集物（器官・形質・協調・L投入）の数と、次のゲート（Lv）までの不足数をヘッダに常時表示
       { const R = G.RULESETS[st.rules || 'v1']; const bodyL = R.bodyAxis === 'L';
@@ -451,7 +452,7 @@
           if (track === 'social') { const el = row.querySelector('.hrb.rcoop'); if (el && gr) el.appendChild(h('small', { class: 'gap', title: tip }, `あと${gap}`)); return; }
           row.appendChild(h('span', { class: 'hrb rcol', title: tip }, icon ? ic(icon) : null, icon === 'L' || icon === 'P' ? h('small', null, '投入') : null, h('b', null, String(n)), (() => { const ex = (track === 'metab' || track === 'intel') ? G.gateCount(q, track) - n : 0; return ex > 0 ? h('small', { title: '代謝核・神経など「1 枚ぶんとして数える」分' }, `(+${ex})`) : null; })(), gr ? h('small', { class: 'gap' }, `あと${gap}`) : h('small', null, '到達'))); }); }
       { const n6 = G.lv6Preview(st, q); if (q.lv && G.TRACKS.some(t => q.lv[t] >= 6)) row.appendChild(h('span', { class: 'hrb rconv', title: '神の裁定の見込み：Lv6 に達したトラックの素材3個につき祝福+1（身体＝払ったL・知性＝形質・社会＝協調・代謝＝器官）' }, h('small', null, '終了時'), h('b', null, '祝福+' + n6))); } // 案B：Lv6 の終了時換算を見える化
-      hres.appendChild(row); });
+      hres.appendChild(row); }); }
     if (hres.childNodes.length) hd.appendChild(hres);
     const btns = h('span', { class: 'hbtns menu' + (menuOpen ? '' : ' hidden') });
     btns.appendChild(h('button', { title: '自分の直前の行動まで戻す（間にあるAI・他プレイヤーの行動も取り消される）', onclick: () => submit(undoEntry()) }, '1手戻す'));
@@ -648,8 +649,8 @@
     G.SLOTS.filter(s => s.group === 'mass').forEach(s => g2.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     { const T = G.RULESETS[st.rules || 'v1'].tribute; if (T) { const open = st.round >= (T.openRound || 6); const gt = h('div', { class: 'sgroup' + (open ? ' god' : '') }, h('b', { class: 'glabel' }, open ? '神の到来：恩寵枠（占有）' : `恩寵枠（ラウンド${T.openRound || 6}から・神の到来）`)); G.tribSlots(st).map(id => G.SLOT_BY_ID[id]).forEach(s => { if (open) gt.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))); else { const b = slotBody(p, s.id, s.name, G.slotText(st, s.id), null); gt.appendChild(h('button', { class: 'slot locked' + (b[0].className === 'pname' ? ' pic' : ''), disabled: true, title: G.slotTip(st, s.id) }, ...b)); } }); box.appendChild(gt); } }
     const g3 = h('div', { class: 'sgroup' }, h('h4', null, 'その他'));
-    G.SLOTS.filter(s => s.group === 'oth' && (!s.ext || s.ext === st.ext) && (!s.rs || G.RULESETS[st.rules || 'v1'][s.rs]) && !(s.id === 'TRT2' && G.RULESETS[st.rules || 'v1'].traitShared) && !(s.id === 'GEM' && G.RULESETS[st.rules || 'v1'].gemsetShared)).forEach(s => g3.appendChild(slotButton(p, can, s, () => onSlot(p, s.id), G.slotUsedBy(st, s.id) !== undefined && G.bypassable(st, s.id) ? bypassHint() : null)));
-    box.appendChild(g1); box.appendChild(g2); box.appendChild(g3); return box;
+    G.SLOTS.filter(s => s.group === 'oth' && (!s.ext || s.ext === st.ext) && (!s.rs || G.RULESETS[st.rules || 'v1'][s.rs]) && !(s.id === 'TRT2' && G.RULESETS[st.rules || 'v1'].traitShared) && !(s.id === 'TRT' && G.RULESETS[st.rules || 'v1'].traitShared) && !(s.id === 'GEM' && G.RULESETS[st.rules || 'v1'].gemsetShared)).forEach(s => g3.appendChild(slotButton(p, can, s, () => onSlot(p, s.id), G.slotUsedBy(st, s.id) !== undefined && G.bypassable(st, s.id) ? bypassHint() : null)));
+    box.appendChild(g1); box.appendChild(g2); if (g3.childNodes.length > 1) box.appendChild(g3); return box; // O-52：中身が無ければ「その他」ごと消す
   }
   const restoreCands = (p) => G.traitPool(st).filter(t => st.shared.traitFirst[t] !== undefined && st.shared.traitFirst[t] !== p.id && !G.trait(p, t)); // T10 復元の候補
   const burstCands = (p) => { const B = G.RULESETS[st.rules || 'v1'].burst; if (!B) return []; const out = []; st.shared.lineages.forEach(lin => { const n = G.lineageCount(p, lin); const seq = [1, 2, 3].filter(t => t > n).map(t => lin + t).filter(id => st.shared.organField.includes(id)); for (let k = 2; k <= Math.min(seq.length, B.max || 3); k++) out.push(seq.slice(0, k)); }); return out; }; // T14 一気立ての候補（系統ごとに次の 2 枚・3 枚）
@@ -660,7 +661,7 @@
     const gTop = h('div', { class: 'sgroup' }, h('h4', null, '献上（共用・各自各品目1ラウンド1回）')); // 2026-10-28：早取りでない献上は共用盤の先頭にまとめる（ユーザー要望）
     if (!R6.tributeOnceGame) tributeButtons(p, can, false).forEach(b => gTop.appendChild(b)); // v3.68：祭壇（1 ゲーム 1 回・T10）は個人ボードの祭壇 3 マスへ移した（renderAltars）。旧数値セット（1R1回）だけ共用盤に残す
     const g = h('div', { class: 'sgroup' });
-    { const Rc = G.RULESETS[st.rules || 'v1']; G.SLOTS.filter(s => ['trk', 'org', 'cu'].includes(s.group) && s.id !== 'TRK' && !(s.id === 'ADP' && Rc.noAdapt) && !(s.id === 'SCAN' && Rc.noScan) && !(s.id === 'CNV' && Rc.noConvert) && !(s.id === 'RSV' && Rc.noReserve) && (!s.rs || Rc[s.rs])).forEach(s => g.appendChild(slotButton(p, can, s, () => onSlot(p, s.id)))); } // T10：資源変換・予備動員は撤去、復元・増幅・パスは rs で表示
+    { const Rc = G.RULESETS[st.rules || 'v1']; G.SLOTS.filter(s => ['trk', 'org', 'cu'].includes(s.group) && s.id !== 'TRK' && !(s.id === 'ADP' && Rc.noAdapt) && !(s.id === 'SCAN' && Rc.noScan) && !(s.id === 'CNV' && Rc.noConvert) && !(s.id === 'RSV' && Rc.noReserve) && (!s.rs || Rc[s.rs])).forEach(s => g.appendChild(slotButton(p, can, s, () => onSlot(p, s.id)))); if (Rc.traitShared) { const s = G.SLOT_BY_ID.TRT; g.insertBefore(slotButton(p, can, s, () => onSlot(p, s.id)), g.children[1] || null); } } // O-52：形質獲得（共用＝T29 から）は共用盤へ // T10：資源変換・予備動員は撤去、復元・増幅・パスは rs で表示
     // v3.55：献上（エネルギー／個体数）は T8 では廃止（数値セットに shared が無ければ表示しない）
     if (R6.tribute && R6.tribute.shared) { const T = R6.tribute; const open = st.round >= (T.openRound || 6); ['E', 'P'].forEach(res => { const a = { pid: p.id, type: 'tribute', res }; const c = G.sc(st, T.shared[res]); const reason = !open ? `ラウンド${T.openRound || 6}から（神の到来）` : can ? check(a) : roMsg; gTop.appendChild(actBtn({ class: 'slot' + (open ? ' god' : ' locked') + (iconView() ? ' pic' : ''), title: `献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}を払って祝福+1。ラウンド${T.openRound || 6}から・共用・各自1ラウンド1回・ワーカー`, onclick: () => open && confirm(`献上（${res === 'E' ? 'エネルギー' : '個体数'}）：${res}${c}→祝福+1。実行しますか？`) && submit(a) }, reason, ...slotBody(p, 'TRIB_' + res, `献上（${res === 'E' ? 'エネルギー' : '個体数'}）`, `${res}${c} → 祝福+1`, null))); }); }
     if (R6.trial && st.shared.trials) box.appendChild(renderTrials(p, can)); // T24（O-20）：試練（?rules=t24）
@@ -734,7 +735,7 @@
   function renderOrganField(p, can) {
     const oex = G.RULESETS[st.rules || 'v1'].organExcl;
     const box = h('div', { class: 'panel' }, h('h3', null, `器官の場（${st.shared.lineages.map(l => G.LINEAGES[l]).join('・')}・${oex ? '各カード1ラウンド1人' : '排他なし'}）`, h('small', { class: 'sub' }, G.noLateTxt(st, G.RULESETS[st.rules || 'v1'].organCumulative ? `　系統内は形態の順。カードの値段は定価（追随は代償込み）。前の段まで形成済みなら 1 つ前の段の定価を引いた差額で、（）に定価（急速形成は定価）。同系統 3 枚で系統完成（成熟度+1 は ${(G.RULESETS[st.rules || 'v1'].lineageCoefAt || []).join('・')} 系統目）` : '　系統内は形態の順。先駆＝強・追随＝弱（G0）。同系統3枚で成熟度+1'))));
-    const grid = h('div', { class: 'ogrid' });
+    const grid = h('div', { class: 'ogrid ofield' }); box.classList.add('ofieldp'); // O-52：1 行は 3 の倍数（9・6・3 枚）
     const sameEff = !!G.RULESETS[st.rules || 'v1'].organSameEffect;
     st.shared.organField.forEach(id => {
       const o = G.organDef(st, id); const c = G.organCost(st, p, id); const mine_ = G.organ(p, id); const first = st.shared.organFirst[id]; const noLate = G.RULESETS[st.rules || 'v1'].organLateFee === 0; // T25（O-23）：後追い料なし＝先駆／代償の札を出さない

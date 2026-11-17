@@ -31,12 +31,12 @@
     JB: ['! +~投入:3 … ; ! +gem1', '! +~投入:2 …'], NP: ['∞ #R終了 -E1 > +P3 #≤E10', '∞ #R終了 -E1 > +P2 #≤E10'],
     JS: ['! @star! ~1.5倍 … ; ! +gem1', '! @star! ~1.5倍 …'],
   };
-  const L6 = (x) => ['! +gem3 +bless1 ; 旗 ' + x, '! +gem2 ; 旗 ' + x];
+  const L6 = (x) => '! +gem2 (先 +gem1 +bless1 ) ; 旗 ' + x; // O-52：先駆と追随を 1 行に（基本＝追随・（先 …）＝先駆ならさらに得るぶん）
   const TRACK = { // Lv → 文字列（先駆・追随で同じ）か [強（先駆）, 弱（追随）]
-    body: { 2: '! +L1', 3: ['! +L1 +P30', '! +L1'], 4: '! +gem1 ; 手 i:L ~産出 x2', 5: ['! +L1 +P60', '! +L1 +P20'], 6: L6('+bless1 /L3') },
-    intel: { 2: '! +G9', 3: ['! @trait! #弱は無料 …', '! i:trait ~弱→強 #1枚 …'], 4: '! +bless1 /trait3', 5: ['! i:trait ~弱→強 #3枚 ; ∞ i:trait ~常に強', '! i:trait ~弱→強 #2枚 …'], 6: L6('+bless1 /trait3 …') },
-    social: { 2: '! +P18', 3: ['! @join!', '! +P30'], 4: '! @join!', 5: ['! @join! x2', '! @join!'], 6: L6('+bless3') },
-    metab: { 2: '手 +E3', 3: ['手 +E4 +G4', '! +E24'], 4: '! @organ! ~特殊', 5: ['手 +all10', '手 +all5'], 6: L6('+bless1 /organ3') },
+    body: { 2: '! +L1', 3: '! +L1 (先 +P30 )', 4: '! +gem1 ; 手 i:L ~産出 x2', 5: '! +L1 +P20 (先 +P40 )', 6: L6('+bless1 /L3') },
+    intel: { 2: '! +G9', 3: ['! @trait! #弱は無料 …', '! i:trait ~弱→強 #1枚 …'], 4: '! +bless1 /trait3', 5: '! i:trait ~弱→強 #2枚 … (先 #+1枚 ∞ i:trait ~常に強 )', 6: L6('+bless1 /trait3 …') },
+    social: { 2: '! +P18', 3: ['! @join!', '! +P30'], 4: '! @join!', 5: '! @join! (先 x2 )', 6: L6('+bless3') },
+    metab: { 2: '手 +E3', 3: ['手 +E4 +G4', '! +E24'], 4: '! @organ! ~特殊', 5: '手 +all5 (先 +all5 )', 6: L6('+bless1 /organ3') },
   };
   const TRIB = {
     TO: '! -organ:定価Ⅰ > +organ:×3 …', TB: '! @rslot #使用済みOK … ; ∞ i:rslot x2 #このR', TJ: '! i:up x2 ↓:E:24',
@@ -93,10 +93,17 @@
     if (tk[0] === '?') { const m = tk.slice(1).match(/^(~[^↑]+|[a-zA-Z]+)(.*)$/); const f = el('span', 'fxcond'); f.appendChild(target(m[1])); if (m[2]) f.appendChild(document.createTextNode(m[2])); f.appendChild(document.createTextNode('：')); return f; }
     if (tk[0] === '/') { const m = tk.slice(1).match(/^(~.+|[a-zA-Z]+)(\d*)(?::(.+))?$/); const f = el('span', 'fxper', '／'); f.appendChild(target(m[1])); if (m[2]) f.appendChild(document.createTextNode(m[2])); if (m[3]) f.appendChild(el('small', null, m[3])); f.title = 'ごと'; return f; }
     if (tk[0] === '=') { const m = tk.slice(1).match(/^([a-zA-Z]+)(\d*)$/); const f = el('span', 'fxeq', '＝'); f.appendChild(ic(m[1])); if (m[2]) f.appendChild(el('b', null, m[2])); f.title = '～として数える'; return f; }
-    if (tk[0] === '@') { const free = tk.endsWith('!'); const k = tk.slice(1).replace(/!$/, ''); const f = el('span', 'fxact'); f.title = JP[k] + (free ? '（手番なし）' : ''); f.appendChild(ic(k)); if (free) f.appendChild(el('span', 'fxfree', '手番なし')); return f; }
+    if (tk[0] === '@') { const free = tk.endsWith('!'); const k = tk.slice(1).replace(/!$/, ''); const f = el('span', 'fxact'); f.title = JP[k] + (free ? '（手番なし＝コマを使わない）' : ''); f.appendChild(ic(k)); if (free) f.appendChild(noTurn()); return f; }
+    if (WHEN[tk]) return whenBadge(tk);
     return document.createTextNode(tk);
   }
-  function line(s, full) { const tks = s.split(/\s+/).filter(Boolean); const d = el('div', 'fxl'); if (full) d.title = full; let i = 0; if (WHEN[tks[0]]) { d.appendChild(whenBadge(tks[0])); i = 1; } else d.appendChild(el('span', 'fxw w-none')); const b = el('span', 'fxt'); for (; i < tks.length; i++) b.appendChild(token(tks[i])); d.appendChild(b); return d; }
+  // O-52：「手番なし」＝コマ（ワーカー）の絵に赤い斜線の丸（字なし）
+  function noTurn() { const w = el('span', 'fxnoturn'); w.title = '手番なし（コマを使わない）'; w.appendChild(ic('W')); const s = document.createElementNS(NS, 'svg'); s.setAttribute('class', 'nt'); s.setAttribute('viewBox', '0 0 16 16'); s.innerHTML = '<circle cx="8" cy="8" r="6.6" fill="none" stroke="#d63b2f" stroke-width="1.8"/><line x1="3.4" y1="12.6" x2="12.6" y2="3.4" stroke="#d63b2f" stroke-width="1.8"/>'; w.appendChild(s); return w; }
+  function closeFirst(g) { /* O-52：かっこは中身の最初と最後の記号にくっつけて折り返す（かっこだけが 1 行に残らない） */
+    const it = g.items, nw = () => el('span', 'fxnw'); if (!it.length) return; const a = nw(); a.appendChild(el('span', 'fxpar', '(先')); a.appendChild(it[0]); g.appendChild(a);
+    for (let k = 1; k < it.length - 1; k++) g.appendChild(it[k]);
+    const z = it.length > 1 ? nw() : a; if (it.length > 1) { z.appendChild(it[it.length - 1]); g.appendChild(z); } z.appendChild(el('span', 'fxpar', ')')); }
+  function line(s, full) { const tks = s.split(/\s+/).filter(Boolean); const d = el('div', 'fxl'); if (full) d.title = full; let i = 0; if (WHEN[tks[0]]) { d.appendChild(whenBadge(tks[0])); i = 1; } else d.appendChild(el('span', 'fxw w-none')); const b = el('span', 'fxt'); let grp = null; for (; i < tks.length; i++) { if (tks[i] === '(先') { grp = el('span', 'fxfirst'); grp.title = '先駆なら、さらに得るぶん'; grp.items = []; b.appendChild(grp); continue; } if (tks[i] === ')' && grp) { closeFirst(grp); grp = null; continue; } if (grp) grp.items.push(token(tks[i])); else b.appendChild(token(tks[i])); } if (grp) closeFirst(grp); d.appendChild(b); return d; } // O-52：(先 … ) ＝先駆の上乗せ
   // lines → 要素。label＝行頭の札（強・弱・先駆・追随）
   function render(ls, full, label) { const d = el('div', 'fx'); ls.forEach((s, i) => { const l = line(s, full); if (label && i === 0) l.insertBefore(el('span', 'fxlab', label), l.firstChild); else if (label) l.insertBefore(el('span', 'fxlab blank'), l.firstChild); d.appendChild(l); }); return d; }
 
@@ -111,7 +118,7 @@
     d.appendChild(el('h4', null, 'いつ'));
     Object.keys(WHEN).forEach(w => d.appendChild(row(whenBadge(w), WHEN[w][1] + (w === '∞' ? '。ラウンド終了時の効果は「R 終了」の札' : ''))));
     d.appendChild(el('h4', null, '並び'));
-    [['手 +E6', '得る（緑地・いつも ＋）'], ['! -P20 > +gem1', '払う（赤地）→ 得る'], ['∞ ↓trait:G:6', '軽減：対象の後に赤い値札（G が 6 安い）'], ['∞ ?star↑ +E6', '条件：記号＋「：」（星海開拓を 1 段上げるたび E+6）'], ['手 +E4 /organ', 'ごと：スラッシュ（器官 1 枚につき）'], ['∞ =trait1', '～として数える（形質 1 枚）'], ['! @join!', '手番なしで行う行動・無料で取る'], ['∞ #1/R', '使う権利（1/R＝1 ラウンド 1 回・×3・次の 1 回 など）'], ['∞ i:launch x4', '倍'], ['∞ =trait4 …', '書ききれない：マウスを当てると全文']].forEach(([s, t]) => d.appendChild(row(L(s), t)));
+    [['手 +E6', '得る（緑地・いつも ＋）'], ['! -P20 > +gem1', '払う（赤地）→ 得る'], ['∞ ↓trait:G:6', '軽減：対象の後に赤い値札（G が 6 安い）'], ['∞ ?star↑ +E6', '条件：記号＋「：」（星海開拓を 1 段上げるたび E+6）'], ['手 +E4 /organ', 'ごと：スラッシュ（器官 1 枚につき）'], ['∞ =trait1', '～として数える（形質 1 枚）'], ['! @join!', '手番なし（コマに赤い斜線）で行う行動・無料で取る'], ['∞ #1/R', '使う権利（1/R＝1 ラウンド 1 回・×3・次の 1 回 など）'], ['∞ i:launch x4', '倍'], ['∞ =trait4 …', '書ききれない：マウスを当てると全文'], ['! +L1 (先 +P30 )', '（先 …）＝先駆ならさらに得るぶん（★の段・Lv6）']].forEach(([s, t]) => d.appendChild(row(L(s), t)));
     d.appendChild(el('h4', null, '記号'));
     const g = el('div', 'fxlicons'); ['E', 'G', 'P', 'L', 'coop', 'gem', 'bless', 'trait', 'organ', 'breed', 'up', 'rslot', 'star', 'join', 'launch', 'any'].forEach(k => g.appendChild(el('span', null, ic(k), JP[k]))); g.appendChild(el('span', null, chip('gain', 'all', '+4'), '全種')); g.appendChild(el('span', null, cbPer('E'), '協調ボーナス（協調 1 つにつき +1）')); g.appendChild(el('span', null, chip('gain', 'cb', '+3'), '協調ボーナスに +3（群心核）')); d.appendChild(g);
     return d;
@@ -123,7 +130,7 @@
     const pay = c ? Object.keys(c).filter(k => c[k]).map(k => '-' + k + c[k]).join(' ') : '~額'; const ct = c ? G.starCostText(c) : `額（${G.STAR_CARD_NAME}の 2 種）`;
     const top = G.starTop(st, lv), LG = R.lv6Gems || { first: 1, later: 1 }, SJ = S.top && S.top.judge, g = G.starGem(st, lv), F = G.starFirstDef(st, lv), fg = F ? G.starFirstGem(st, lv) : 0;
     const full = `${ct}を払う` + (top ? `。先着 痕跡+${LG.first}＋祝福+1／後着 痕跡+${LG.later}${SJ ? `。終了時 祝福+${SJ}（神の裁定・Lv6 の人みな）` : ''}` : ` → 痕跡+${g}${F ? `。先駆は 痕跡+${fg}${F.pros !== undefined ? ` か 痕跡+${F.pros}・繁栄度+1` : ''}` : ''}`);
-    const parts = top ? [{ lines: ['! ' + pay] }, { label: '先着', first: true, lines: ['! +gem' + LG.first + ' +bless1'] }, { label: '後着', lines: ['! +gem' + LG.later] }].concat(SJ ? [{ lines: ['旗 +bless' + SJ] }] : [])
+    const parts = top ? [{ lines: ['! ' + pay] }, { first: true, lines: ['! +gem' + LG.later + ' (先 ' + (LG.first - LG.later > 0 ? '+gem' + (LG.first - LG.later) + ' ' : '') + '+bless1 )'] }].concat(SJ ? [{ lines: ['旗 +bless' + SJ] }] : []) // O-52：Lv6 は 4 本と同じ形（後着が基本・（先 …）＝先着の上乗せ）
       : [{ lines: ['! ' + pay + ' > +gem' + g] }].concat(F ? [{ label: '先駆', first: true, lines: ['! +gem' + fg + (F.pros !== undefined ? ' ~か ' + (F.pros ? '+gem' + F.pros + ' ' : '') + '+breed1' : '')] }] : []);
     return { parts, full, top: !!top, star: !!(F || top) };
   }

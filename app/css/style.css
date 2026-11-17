@@ -358,3 +358,23 @@ div.art.noart.small { aspect-ratio:2/1; }
 .turnbar .since .sv.sub { padding-left:20px; opacity:.8; } .turnbar .since .sv.me { opacity:.65; } .turnbar .since .sv.rd { font-weight:bold; opacity:.7; border-top:1px dashed currentColor; margin-top:2px; }
 @media (max-width: 600px) { .turnbar .since { max-height:38px; overflow-y:auto; } .turnbar .since .sv { white-space:nowrap; } }
 .turnbar .waitmv { display:inline-flex; align-items:center; gap:4px; } .turnbar .waitmv .mk { width:16px; height:16px; line-height:16px; font-size:10px; }
+/* O-52：器官の場は 1 行 3 の倍数（9・6・3 枚）＝同じ系統の 3 枚が行の途中で切れない（パネルの幅で決める） */
+.panel.ofieldp { container-type:inline-size; }
+.ogrid.ofield { grid-template-columns:repeat(3, 172px) !important; }
+@container (min-width: 1062px) { .ogrid.ofield { grid-template-columns:repeat(6, 172px) !important; } }
+@container (min-width: 1596px) { .ogrid.ofield { grid-template-columns:repeat(9, 172px) !important; } }
+@media (max-width: 600px) { .ogrid.ofield { grid-template-columns:repeat(3, minmax(0, 1fr)) !important; } }
+/* O-52：手番順のほかの人の札（押すと資源の行）・選んだ人の印・その人の資源の行 */
+.order .chip.tap { cursor:pointer; } .order .chip.tap:hover { filter:brightness(.96); } .order .chip.peek { box-shadow:0 0 0 2px #2f6fdd inset; }
+#hdr .hres .hresp.peek { flex-basis:100%; background:#eef3ff; border-radius:6px; padding:1px 4px; } #hdr .hres .hresp.peek .pkname { font-size:12px; margin-right:2px; }
+[data-theme="dark"] #hdr .hres .hresp.peek { background:#1f2a40; } [data-theme="dark"] .order .chip.peek { box-shadow:0 0 0 2px #8fb4ff inset; }
+@media (max-width: 600px) { /* O-52 の 7：携帯幅の値段の行は枠の中で流す（折り返しても名前に重ならない・札は 1 行） */
+  .ocard, .tcard { padding-top:4px; }
+  .ocard .hd, .tcard .hd { position:static; align-self:stretch; flex-wrap:wrap; align-items:flex-start; gap:0 3px; margin:0 -2px 4px; }
+  .ocard .hd .cost, .tcard .hd .cost { flex:1 1 auto; min-width:0; }
+  .ocard .hd .cost small, .tcard .hd .cost small { font-size:9px; letter-spacing:-.4px; }
+  .hd .sw { flex-shrink:0; margin-left:auto; padding:0 3px; white-space:nowrap; }
+}
+/* O-52：黒の地で丸の地の上に載る資源の絵（ヘッダの資源の行・カードの値段など）は絵を濃い色に（地と同じ色で見えなくなっていた） */
+[data-theme="dark"] svg.ic.E:not(:is(.pc, .fxl, .fxlicons) svg) { color:#6b4f00; } [data-theme="dark"] svg.ic.G:not(:is(.pc, .fxl, .fxlicons) svg) { color:#0b5244; }
+[data-theme="dark"] svg.ic.P:not(:is(.pc, .fxl, .fxlicons) svg) { color:#6e1d1a; } [data-theme="dark"] svg.ic.L:not(:is(.pc, .fxl, .fxlicons) svg) { color:#0b4467; }
