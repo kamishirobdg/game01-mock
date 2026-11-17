@@ -77,3 +77,8 @@ svg.ic.star { color:#7d55c7; } svg.ic.join { color:#4a6fa8; } svg.ic.launch { co
 [data-theme="dark"] .fxl svg.ic.trait, [data-theme="dark"] .fxlicons svg.ic.trait { color:#8fb4ff; } [data-theme="dark"] .fxl svg.ic.organ, [data-theme="dark"] .fxlicons svg.ic.organ { color:#6fcf8f; } [data-theme="dark"] .fxl svg.ic.breed, [data-theme="dark"] .fxlicons svg.ic.breed { color:#ff8a7a; }
 /* 記号の行と枠の絵は丸い地を敷かない（ダーク表示で絵と地が同じ色になって消えていた・ガイドと同じ見た目に） */
 .pc svg.ic, .fxl svg.ic, .fxlicons svg.ic { background:none !important; border:0 !important; border-radius:0; padding:0; min-width:0; }
+/* O-51（v3.128・T33）：協調ボーナス＝［資源 +1／協調］・自己複製の［P +5／身体 Lv］＝点線・地なし・ほかの札より小さめ。資源獲得の枠の協調 +1（群体同期・群体融合）は一回り大きく */
+.pc.bonus.cbper { background:none !important; border:1px dashed #999; border-radius:5px; padding:0 3px 0 2px; font-size:11px; color:#555; gap:1px; }
+.pc.cbper svg.ic { width:13px !important; height:13px !important; } .pc.cbper b { color:inherit !important; font-weight:700; } .pc.cbper .fxper { gap:1px; font-weight:600; color:inherit; } .pc.cbper .fxword { font-size:10px; }
+.picto .pc.big { font-size:15px; } .picto .pc.big svg.ic { width:19px; height:19px; }
+[data-theme="dark"] .pc.bonus.cbper { border-color:#777; color:#bbb; }

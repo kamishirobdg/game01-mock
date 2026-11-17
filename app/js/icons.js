@@ -15,7 +15,7 @@
     <circle cx="17" cy="4" r="3" fill="currentColor" opacity=".6"/><path d="M11 18 Q11 11 17 11 Q23 11 23 18" fill="currentColor" opacity=".6"/>
   </symbol>
   <symbol id="ico-life" viewBox="0 0 16 20"><path d="M8 1 C8 1 2 9 2 13 A6 6 0 0 0 14 13 C14 9 8 1 8 1Z" fill="currentColor"/></symbol>
-  <symbol id="ico-coord" viewBox="0 0 15 15"><rect x=".8" y=".8" width="13.4" height="13.4" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+  <symbol id="ico-coord" viewBox="0 0 15 15"><rect x="1.2" y="1.2" width="12.6" height="12.6" rx="2" stroke="currentColor" stroke-width="2.4" fill="#fff"/></symbol>
   <symbol id="ico-gem" viewBox="0 0 16 16"><polygon points="8,0 16,6 12.5,16 3.5,16 0,6" fill="currentColor"/></symbol>
   <symbol id="ico-w" viewBox="0 0 16 16"><circle cx="8" cy="5" r="3.2" fill="currentColor"/><path d="M2 16 Q2 9 8 9 Q14 9 14 16Z" fill="currentColor"/></symbol>
   <!-- 2026-11-01 アイコン表示（モック）用：祝福・形質・器官・繁栄度・トラック進行・資源枠・他者の最高Lv・模倣 -->

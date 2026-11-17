@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.127'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.128'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -336,8 +336,10 @@
   { const T31 = G.RULESETS.t31; G.RULESETS.t32 = Object.assign({}, T31, { name: 'T32（T31＋探索・復元を削除・恩寵 6 種から 3 つ・自己複製 P40・特殊器官と発光の値上げ）', noScan: true, restore: null,
       tribute: Object.assign({}, T31.tribute, { slots: Object.assign({}, T31.tribute.slots, { TAL: { kind: 'altarHalf' }, TLF: { kind: 'life', L: 3 }, TBR: { kind: 'breedHalf' } }), pool: ['TO', 'TB', 'TJ', 'TAL', 'TLF', 'TBR'] }),
       pbG: 0, pbGain: 40, pbLaunch: true, spInc: Object.assign({}, T31.spInc, { SpE: { E: 4 }, SpG: { G: 3 }, SpP: { P: 8 } }), spText: Object.assign({}, T31.spText, { SpE: '収入 器官 1 枚につき E+4', SpG: '収入 器官 1 枚につき G+3', SpP: '収入 器官 1 枚につき P+8' }), lm2Vg: 2, lm3Vg: 2 }); }
-  G.RULES_VISIBLE = ['t32']; // v3.124（O-47）：既定を T32 に（T31 以前は ?rules= で打てる）
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31', 't32'];
+  // T33（2026-11-17・ORDERS O-51・ユーザー承認・第71部 §110）＝T32 ＋ 身体 Lv2 の祭壇の解放を削る（祭壇の生命核の口は最初から）／自己複製 P+25＋身体 Lv×5（倍率は基礎の 25 だけ）／自己複製にも協調進出（基礎 2 倍）
+  G.RULESETS.t33 = Object.assign({}, G.RULESETS.t32, { name: 'T33（T32＋身体 Lv2 の祭壇の解放を削る・自己複製 P25＋身体 Lv×5・自己複製にも協調進出）', lCrystalLv: 1, pbGain: 25, pbBodyLv: 5, pbCoopBypass: true });
+  G.RULES_VISIBLE = ['t33']; // v3.128（O-51）：既定を T33 に（T32 以前は ?rules= で打てる）
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31', 't32', 't33'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };

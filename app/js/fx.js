@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const G = globalThis.G1; if (!G) return;
-  const SETS = ['t32'];
+  const SETS = ['t33']; // O-51（v3.128）：T33 の数値で書く（T32 以前は文字の表示）
   const ORGAN = {
     Mg1: '手 +E6', Mg2: '! +E6 ; 手 +E3 +G3', Mg3: '手 +all4 ; ∞ =organ1',
     Tl1: '! +G6 ; ∞ ↓trait:G:6', Tl2: '! +G9 ; ! @trait! #弱 #無料 … ; ∞ ↓trait:G:9', Tl3: '! @trait! #無料 … ; ∞ ↓trait:G:12',
@@ -33,7 +33,7 @@
   };
   const L6 = (x) => ['! +gem3 +bless1 ; 旗 ' + x, '! +gem2 ; 旗 ' + x];
   const TRACK = { // Lv → 文字列（先駆・追随で同じ）か [強（先駆）, 弱（追随）]
-    body: { 2: '! +L1 ; ∞ ~祭壇 i:L ~解放', 3: ['! +L1 +P30', '! +L1'], 4: '! +gem1 ; 手 i:L ~産出 x2', 5: ['! +L1 +P60', '! +L1 +P20'], 6: L6('+bless1 /L3') },
+    body: { 2: '! +L1', 3: ['! +L1 +P30', '! +L1'], 4: '! +gem1 ; 手 i:L ~産出 x2', 5: ['! +L1 +P60', '! +L1 +P20'], 6: L6('+bless1 /L3') },
     intel: { 2: '! +G9', 3: ['! @trait! #弱は無料 …', '! i:trait ~弱→強 #1枚 …'], 4: '! +bless1 /trait3', 5: ['! i:trait ~弱→強 #3枚 ; ∞ i:trait ~常に強', '! i:trait ~弱→強 #2枚 …'], 6: L6('+bless1 /trait3 …') },
     social: { 2: '! +P18', 3: ['! @join!', '! +P30'], 4: '! @join!', 5: ['! @join! x2', '! @join!'], 6: L6('+bless3') },
     metab: { 2: '手 +E3', 3: ['手 +E4 +G4', '! +E24'], 4: '! @organ! ~特殊', 5: ['手 +all10', '手 +all5'], 6: L6('+bless1 /organ3') },
@@ -79,7 +79,7 @@
   const target = (k) => k.startsWith('~') ? el('span', 'fxword', k.slice(1)) : isKey(k) ? ic(k) : null;
   function whenBadge(w) { const [c, t] = WHEN[w]; const b = el('span', 'fxw w-' + c); b.title = t; if (w === '手') { const s = document.createElementNS(NS, 'svg'); s.setAttribute('class', 'wi'); const u = document.createElementNS(NS, 'use'); u.setAttribute('href', '#ico-income'); s.appendChild(u); b.appendChild(s); } else if (w === '旗') { const s = document.createElementNS(NS, 'svg'); s.setAttribute('class', 'wi'); const u = document.createElementNS(NS, 'use'); u.setAttribute('href', '#ico-flag'); s.appendChild(u); b.appendChild(s); } else b.appendChild(document.createTextNode(w)); return b; }
   function chip(cls, k, n) { // k＝記号キー or ~語
-    const c = el('span', 'pc ' + cls); if (k === 'all') { c.title = JP.all; ['E', 'G', 'P'].forEach(x => c.appendChild(ic(x))); } else if (k === 'cb') { c.classList.add('bonus'); c.title = JP.cb; c.appendChild(ic('coop')); } else if (k.startsWith('~')) c.appendChild(el('span', 'fxword', k.slice(1))); else { c.title = JP[k] || k; c.appendChild(ic(k)); }
+    const c = el('span', 'pc ' + cls); if (k === 'all') { c.title = JP.all; ['E', 'G', 'P'].forEach(x => c.appendChild(ic(x))); } else if (k === 'cb') { c.className = 'pc bonus cbper'; c.title = JP.cb; c.appendChild(ic('coop')); } /* O-51：協調ボーナスは点線・地なし */ else if (k.startsWith('~')) c.appendChild(el('span', 'fxword', k.slice(1))); else { c.title = JP[k] || k; c.appendChild(ic(k)); }
     if (n !== '') c.appendChild(el('b', null, n)); return c; }
   function token(tk) {
     if (tk === '>') return el('span', 'po', '→');
@@ -100,6 +100,9 @@
   // lines → 要素。label＝行頭の札（強・弱・先駆・追随）
   function render(ls, full, label) { const d = el('div', 'fx'); ls.forEach((s, i) => { const l = line(s, full); if (label && i === 0) l.insertBefore(el('span', 'fxlab', label), l.firstChild); else if (label) l.insertBefore(el('span', 'fxlab blank'), l.firstChild); d.appendChild(l); }); return d; }
 
+  // O-51：協調ボーナス＝［資源 +1／協調］（点線・地なし・小さめ）／自己複製の［P +5／身体 Lv］
+  function cbPer(k, title) { const c = el('span', 'pc bonus cbper'); c.title = title || '協調ボーナス：協調 1 つにつき、この枠の資源 +1'; c.appendChild(ic(k)); c.appendChild(el('b', null, '+1')); const f = el('span', 'fxper', '／'); f.appendChild(ic('coop')); c.appendChild(f); return c; }
+  function perChip(k, n, word, title) { const c = el('span', 'pc bonus cbper'); if (title) c.title = title; c.appendChild(ic(k)); c.appendChild(el('b', null, n)); c.appendChild(el('span', 'fxper', '／', el('span', 'fxword', word))); return c; }
   // 記号の一覧（凡例）
   function legend() {
     const d = el('div', 'fxlegend');
@@ -110,7 +113,7 @@
     d.appendChild(el('h4', null, '並び'));
     [['手 +E6', '得る（緑地・いつも ＋）'], ['! -P20 > +gem1', '払う（赤地）→ 得る'], ['∞ ↓trait:G:6', '軽減：対象の後に赤い値札（G が 6 安い）'], ['∞ ?star↑ +E6', '条件：記号＋「：」（星海開拓を 1 段上げるたび E+6）'], ['手 +E4 /organ', 'ごと：スラッシュ（器官 1 枚につき）'], ['∞ =trait1', '～として数える（形質 1 枚）'], ['! @join!', '手番なしで行う行動・無料で取る'], ['∞ #1/R', '使う権利（1/R＝1 ラウンド 1 回・×3・次の 1 回 など）'], ['∞ i:launch x4', '倍'], ['∞ =trait4 …', '書ききれない：マウスを当てると全文']].forEach(([s, t]) => d.appendChild(row(L(s), t)));
     d.appendChild(el('h4', null, '記号'));
-    const g = el('div', 'fxlicons'); ['E', 'G', 'P', 'L', 'coop', 'gem', 'bless', 'trait', 'organ', 'breed', 'up', 'rslot', 'star', 'join', 'launch', 'any'].forEach(k => g.appendChild(el('span', null, ic(k), JP[k]))); g.appendChild(el('span', null, chip('gain', 'all', '+4'), '全種')); g.appendChild(el('span', null, chip('gain', 'cb', '+3'), '協調ボーナス')); d.appendChild(g);
+    const g = el('div', 'fxlicons'); ['E', 'G', 'P', 'L', 'coop', 'gem', 'bless', 'trait', 'organ', 'breed', 'up', 'rslot', 'star', 'join', 'launch', 'any'].forEach(k => g.appendChild(el('span', null, ic(k), JP[k]))); g.appendChild(el('span', null, chip('gain', 'all', '+4'), '全種')); g.appendChild(el('span', null, cbPer('E'), '協調ボーナス（協調 1 つにつき +1）')); g.appendChild(el('span', null, chip('gain', 'cb', '+3'), '協調ボーナスに +3（群心核）')); d.appendChild(g);
     return d;
   }
 
@@ -135,5 +138,5 @@
     ((R.tribute && R.tribute.pool) || []).forEach(id => out.push({ group: '恩寵枠', id, name: G.SLOT_BY_ID[id].name, lines: lines(st, 'trib', id), full: G.slotText(st, id) }));
     return out;
   }
-  G.FX = { SETS, ORGAN, TRAIT, TRACK, TRIB, on, txt, organFull, traitFull, trackFull, lines, trackSplit, star, render, line, legend, all, ic, WHEN };
+  G.FX = { SETS, ORGAN, TRAIT, TRACK, TRIB, on, txt, organFull, traitFull, trackFull, lines, trackSplit, star, render, line, legend, all, ic, WHEN, cbPer, perChip };
 })();
