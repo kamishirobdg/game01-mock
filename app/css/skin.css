@@ -1,0 +1,266 @@
+/* O-53（2026-11-17）見た目の見本：html[data-skin="a"]＝案 A「星海」／html[data-skin="b"]＝案 B「生命」。
+   属性が無いとき（標準）はこのファイルの決まりは 1 つも当たらない（メニューの切り替えの並びだけ例外）。
+   見た目だけ＝規則・数値・記号の文法・並びは変えない。画像ファイルは使わない（CSS と data: の SVG だけ）。
+   範囲：ページの地／ヘッダ／進化トラック 5 本／占有盤の枠／器官の場のカード。ほかは地の色と線を合わせるだけ。
+   作り：1 色と地（案×白黒）→ 2 共通の部品 → 3 案 A の形 → 4 案 B の形 → 5 携帯幅。 */
+
+/* メニューの切り替え（標準でも出る） */
+.skintog { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--mute); }
+.skintog .vtog { margin-left:0; }
+
+/* ================= 1. 色と地 ================= */
+html[data-skin="a"][data-theme="dark"] {
+  --bg:#070b1a; --panel:#111a36; --line:#2c3d6b; --ink:#e9eefc; --mute:#a3b1cf; --hl:#4a3d10;
+  --p0:#f2c230; --p1:#d7dce6; --p2:#b574e6; --p3:#ff8c3a;
+  --sk-edge:#58d6e0; --sk-edge2:rgba(88,214,224,.36); --sk-gold:#f0c95a; --sk-gold2:rgba(240,201,90,.42); --sk-gold-ink:#ffe9a8;
+  --sk-glass:linear-gradient(180deg, rgba(36,54,104,.52), rgba(13,20,46,.68));
+  --sk-plate:linear-gradient(180deg, #1c2a55, #111a38); --sk-plate-star:linear-gradient(180deg, #3a3216, #1f1c14);
+  --sk-plate-next:linear-gradient(180deg, #1d3d6e, #12284e); --sk-plate-used:linear-gradient(180deg, #0e142b, #0a0f22);
+  --sk-plate-mine:linear-gradient(180deg, #17402f, #102a24);
+  --sk-well:#050814; --sk-bar:rgba(7,11,26,.86); --sk-tag:#0a1026; --sk-fx:rgba(4,8,22,.42); --sk-next:#8fd0ff; --sk-ok:#4fd08a;
+  --sk-excl:linear-gradient(180deg, rgba(74,44,36,.50), rgba(20,16,34,.66)); --sk-excl-e:rgba(255,160,110,.40);
+  --sk-shared:linear-gradient(180deg, rgba(24,70,62,.50), rgba(12,22,40,.66)); --sk-shared-e:rgba(90,220,170,.38);
+  --t-red:#ff6b78; --t-blue:#5a9bff; --t-white:#c4cee0; --t-green:#3fd08f; --t-star:#a68bff;
+  --sk-shadow:rgba(0,0,0,.5);
+  --sk-ground:radial-gradient(1200px 800px at 72% -12%, rgba(52,82,170,.55) 0%, rgba(52,82,170,0) 62%), radial-gradient(900px 700px at -5% 105%, rgba(34,52,120,.6) 0%, rgba(34,52,120,0) 60%), radial-gradient(700px 500px at 100% 100%, rgba(28,110,130,.22) 0%, rgba(28,110,130,0) 65%), #070b1a;
+}
+html[data-skin="a"]:not([data-theme="dark"]) {
+  --bg:#dde6f3; --panel:#f8fbff; --line:#b9c7dc; --ink:#131d3a; --mute:#4c5a78; --hl:#fff1bf;
+  --sk-edge:#1a8f9e; --sk-edge2:rgba(26,143,158,.42); --sk-gold:#b07c00; --sk-gold2:rgba(176,124,0,.42); --sk-gold-ink:#5a4300;
+  --sk-glass:linear-gradient(180deg, rgba(255,255,255,.88), rgba(240,246,255,.82));
+  --sk-plate:linear-gradient(180deg, #ffffff, #eaf1fb); --sk-plate-star:linear-gradient(180deg, #fff8e0, #f8ebc0);
+  --sk-plate-next:linear-gradient(180deg, #eef6ff, #d6e7ff); --sk-plate-used:linear-gradient(180deg, #dfe6f1, #d5ddea);
+  --sk-plate-mine:linear-gradient(180deg, #eefbf0, #d9f1de);
+  --sk-well:#c2cfe3; --sk-bar:rgba(244,248,255,.92); --sk-tag:#ffffff; --sk-fx:rgba(40,70,120,.07); --sk-next:#2f6fdd; --sk-ok:#1f8a4c;
+  --sk-excl:linear-gradient(180deg, rgba(255,244,236,.92), rgba(250,236,228,.86)); --sk-excl-e:rgba(200,110,70,.45);
+  --sk-shared:linear-gradient(180deg, rgba(238,250,244,.92), rgba(226,244,236,.86)); --sk-shared-e:rgba(40,150,110,.45);
+  --t-red:#d04a58; --t-blue:#2f6fdd; --t-white:#7d8aa3; --t-green:#1f9e68; --t-star:#6a4fd0;
+  --sk-shadow:rgba(30,50,90,.22); --sk-lbl1:80%; --sk-lbl2:54%;
+  --sk-ground:radial-gradient(1200px 800px at 72% -12%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 62%), radial-gradient(900px 700px at -5% 105%, rgba(170,200,240,.55) 0%, rgba(170,200,240,0) 60%), #dde6f3;
+}
+html[data-skin="b"][data-theme="dark"] {
+  --bg:#0b1a22; --panel:#13262b; --line:#2f5650; --ink:#e8f2ea; --mute:#a2b9ae; --hl:#3f3a12;
+  --p0:#f0c84a; --p1:#e2e4da; --p2:#bb7ee4; --p3:#f08a48;
+  --sk-edge:#7fd8b0; --sk-edge2:rgba(127,216,176,.36); --sk-gold:#e8cf7a; --sk-gold2:rgba(232,207,122,.42); --sk-gold-ink:#fbe9ad;
+  --sk-glass:linear-gradient(180deg, rgba(28,58,66,.60), rgba(12,30,30,.72));
+  --sk-plate:linear-gradient(180deg, #1c3c42, #12292b); --sk-plate-star:linear-gradient(180deg, #3b3618, #23220f);
+  --sk-plate-next:linear-gradient(180deg, #1f4c5c, #143642); --sk-plate-used:linear-gradient(180deg, #0e1f22, #0a1719);
+  --sk-plate-mine:linear-gradient(180deg, #1d4a2c, #133220);
+  --sk-well:#061214; --sk-bar:rgba(9,22,28,.88); --sk-tag:#0c1c20; --sk-fx:rgba(2,12,12,.40); --sk-next:#9fdcff; --sk-ok:#7fdc8a;
+  --sk-excl:linear-gradient(180deg, rgba(72,48,36,.52), rgba(22,28,26,.68)); --sk-excl-e:rgba(240,170,120,.38);
+  --sk-shared:linear-gradient(180deg, rgba(30,78,52,.52), rgba(12,30,28,.68)); --sk-shared-e:rgba(130,220,140,.38);
+  --t-red:#ee8a74; --t-blue:#72b4ec; --t-white:#d6dac4; --t-green:#82d478; --t-star:#b9a0f2;
+  --sk-shadow:rgba(0,0,0,.45);
+  --sk-ground:radial-gradient(900px 620px at 14% -4%, rgba(52,70,160,.60) 0%, rgba(52,70,160,0) 66%), radial-gradient(1000px 800px at 92% 104%, rgba(22,120,84,.50) 0%, rgba(22,120,84,0) 62%), radial-gradient(520px 420px at 68% 30%, rgba(110,220,170,.09) 0%, rgba(110,220,170,0) 70%), radial-gradient(420px 360px at 22% 72%, rgba(120,170,240,.08) 0%, rgba(120,170,240,0) 70%), linear-gradient(160deg, #101a40 0%, #0b2029 48%, #0a2a1e 100%);
+}
+html[data-skin="b"]:not([data-theme="dark"]) {
+  --bg:#e9f1e6; --panel:#fbfdf8; --line:#b7ccb9; --ink:#15281f; --mute:#4b6154; --hl:#fff3c4;
+  --sk-edge:#2f8f6a; --sk-edge2:rgba(47,143,106,.42); --sk-gold:#a67c00; --sk-gold2:rgba(166,124,0,.42); --sk-gold-ink:#574200;
+  --sk-glass:linear-gradient(180deg, rgba(255,255,255,.88), rgba(244,250,240,.82));
+  --sk-plate:linear-gradient(180deg, #ffffff, #edf5ea); --sk-plate-star:linear-gradient(180deg, #fff7dc, #f3e7b8);
+  --sk-plate-next:linear-gradient(180deg, #ecf7ff, #d6ebf5); --sk-plate-used:linear-gradient(180deg, #dfe8dc, #d4dfd1);
+  --sk-plate-mine:linear-gradient(180deg, #ecfbe8, #d6f0d2);
+  --sk-well:#c2d4c4; --sk-bar:rgba(246,251,243,.93); --sk-tag:#ffffff; --sk-fx:rgba(40,90,60,.07); --sk-next:#2a78c0; --sk-ok:#2a8a3c;
+  --sk-excl:linear-gradient(180deg, rgba(255,245,236,.92), rgba(248,238,226,.86)); --sk-excl-e:rgba(190,120,70,.45);
+  --sk-shared:linear-gradient(180deg, rgba(238,250,236,.92), rgba(226,244,224,.86)); --sk-shared-e:rgba(60,150,80,.45);
+  --t-red:#c95a48; --t-blue:#3d7fc0; --t-white:#8b917a; --t-green:#3f9a45; --t-star:#7a5cc4;
+  --sk-shadow:rgba(40,70,50,.22); --sk-lbl1:80%; --sk-lbl2:54%;
+  --sk-ground:radial-gradient(900px 620px at 14% -4%, rgba(210,225,250,.85) 0%, rgba(210,225,250,0) 66%), radial-gradient(1000px 800px at 92% 104%, rgba(190,230,200,.8) 0%, rgba(190,230,200,0) 62%), #e9f1e6;
+}
+
+/* ページの地（固定の 1 枚・動かさない） */
+html[data-skin] { background:var(--bg); }
+html[data-skin] body { background:transparent; }
+html[data-skin] body::before { content:''; position:fixed; inset:0; z-index:-2; pointer-events:none; background:var(--sk-ground); }
+/* 案 A の黒：細かい星（大きさの違うタイルを 2 枚重ねて、繰り返しを目立たせない） */
+html[data-skin="a"][data-theme="dark"] body::after { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.85;
+  background-image:
+    radial-gradient(1px 1px at 23px 31px, #fff 0, transparent 100%), radial-gradient(1px 1px at 151px 77px, rgba(255,255,255,.75) 0, transparent 100%),
+    radial-gradient(1.4px 1.4px at 97px 189px, #cfe6ff 0, transparent 100%), radial-gradient(1px 1px at 241px 139px, rgba(255,255,255,.6) 0, transparent 100%),
+    radial-gradient(1px 1px at 199px 263px, rgba(255,244,214,.8) 0, transparent 100%), radial-gradient(1px 1px at 61px 251px, rgba(255,255,255,.45) 0, transparent 100%),
+    radial-gradient(1.6px 1.6px at 67px 113px, rgba(190,240,255,.9) 0, transparent 100%), radial-gradient(1px 1px at 311px 43px, rgba(255,255,255,.7) 0, transparent 100%),
+    radial-gradient(1px 1px at 359px 301px, rgba(255,255,255,.5) 0, transparent 100%), radial-gradient(1.2px 1.2px at 173px 397px, rgba(255,236,190,.75) 0, transparent 100%),
+    radial-gradient(1px 1px at 409px 211px, rgba(255,255,255,.55) 0, transparent 100%);
+  background-size:290px 290px, 290px 290px, 290px 290px, 290px 290px, 290px 290px, 290px 290px, 430px 430px, 430px 430px, 430px 430px, 430px 430px, 430px 430px; }
+
+/* ================= 2. 共通の部品 ================= */
+/* 範囲の外：地と線を合わせるだけ（白の表示で固定の白になっている所を板の色に） */
+:where(html[data-skin]) button { background:var(--panel); color:var(--ink); }
+:where(html[data-skin]) .vtog button, :where(html[data-skin]) .tokc, :where(html[data-skin]) .setup, :where(html[data-skin]) .modal-box, :where(html[data-skin]) .chart { background:var(--panel); }
+html[data-skin] .panel:not(.player) { background:var(--sk-glass); border-color:var(--sk-edge2); box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 6px 22px var(--sk-shadow); }
+html[data-skin] .panel.excl { background:var(--sk-excl); border-color:var(--sk-excl-e); }
+html[data-skin] .panel.shared2 { background:var(--sk-shared); border-color:var(--sk-shared-e); }
+html[data-skin] .player { box-shadow:0 6px 22px var(--sk-shadow); }
+
+/* コマ：丸い駒を立体に（色と数字は今のまま） */
+html[data-skin] .mk:not(.empty) { background-image:radial-gradient(circle at 34% 26%, rgba(255,255,255,.62) 0, rgba(255,255,255,0) 46%), radial-gradient(circle at 58% 112%, rgba(0,0,0,.34) 0, rgba(0,0,0,0) 62%);
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.38), inset 0 -2px 3px rgba(0,0,0,.32), 0 1px 2px rgba(0,0,0,.6); text-shadow:0 1px 0 rgba(255,255,255,.25); }
+html[data-skin] .mk.p2:not(.empty), html[data-skin] .mk.p3:not(.empty) { text-shadow:0 1px 1px rgba(0,0,0,.45); }
+html[data-skin] .owners .mk.empty { background:var(--sk-well); border:1px solid var(--sk-edge2); box-shadow:inset 0 1px 2px rgba(0,0,0,.45); }
+html[data-skin] .owners .mk.me { box-shadow:0 0 0 2px var(--sk-next), inset 0 1px 2px rgba(0,0,0,.45); }
+html[data-skin] .owners .mk.me:not(.empty) { box-shadow:0 0 0 2px var(--sk-next), inset 0 0 0 1.5px rgba(255,255,255,.38), inset 0 -2px 3px rgba(0,0,0,.32); }
+/* 資源のトークン：丸い地のある絵（ヘッダ・カードの値段など）に光と縁と影。絵の形と色は今のまま */
+html[data-skin] svg.ic:is(.E, .G, .P, .L, .coop):not(:is(.pc, .fxl, .fxlicons) svg) { background-image:radial-gradient(circle at 34% 26%, rgba(255,255,255,.66) 0, rgba(255,255,255,0) 48%), radial-gradient(circle at 60% 112%, rgba(0,0,0,.30) 0, rgba(0,0,0,0) 62%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.4), inset 0 -1.5px 2px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.55); }
+html[data-skin]:not([data-theme="dark"]) svg.ic.E:not(:is(.pc, .fxl, .fxlicons) svg) { color:#6b4f00; } html[data-skin]:not([data-theme="dark"]) svg.ic.G:not(:is(.pc, .fxl, .fxlicons) svg) { color:#0b5244; }
+html[data-skin]:not([data-theme="dark"]) svg.ic.P:not(:is(.pc, .fxl, .fxlicons) svg) { color:#6e1d1a; } html[data-skin]:not([data-theme="dark"]) svg.ic.L:not(:is(.pc, .fxl, .fxlicons) svg) { color:#0b4467; } /* 白の表示：丸い地の上の絵を濃い色に（黒は O-52 と同じ色） */
+/* 記号の行の絵（地のない絵）：下に薄い影を落として浮かせる */
+html[data-skin] :is(.pc, .fxl) svg.ic { filter:drop-shadow(0 1px 0 rgba(0,0,0,.28)); }
+html[data-skin][data-theme="dark"] :is(.pc, .fxl) svg.ic { filter:drop-shadow(0 1px 0 rgba(0,0,0,.6)) drop-shadow(0 0 2.5px color-mix(in srgb, currentColor 45%, transparent)); }
+
+/* ---- ヘッダ ---- */
+html[data-skin] #hdr { background:var(--sk-bar); border-bottom:1px solid var(--sk-edge2); box-shadow:0 1px 0 var(--sk-gold2), 0 8px 22px var(--sk-shadow); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+html[data-skin] #hdr .pill { background:var(--sk-plate-star); color:var(--sk-gold-ink); box-shadow:inset 0 0 0 1px var(--sk-gold2); padding:2px 10px; }
+html[data-skin] #hdr .order .chip { position:relative; background:var(--sk-plate); color:var(--ink); border:1px solid var(--sk-e); --sk-e:var(--sk-edge2); padding:3px 10px 3px 7px; }
+html[data-skin] #hdr .order .chip.now { background:var(--sk-plate-star); color:var(--sk-gold-ink); --sk-e:var(--sk-gold); outline:0; box-shadow:inset 0 0 0 1px var(--sk-gold2), inset 0 0 10px rgba(240,201,90,.18); }
+html[data-skin] #hdr .order .chip.peek { box-shadow:inset 0 0 0 2px var(--sk-next); }
+html[data-skin] .turnbar { position:relative; background:var(--sk-plate); color:var(--ink); border:1px solid var(--sk-e); --sk-e:var(--sk-edge2); padding:5px 14px; }
+html[data-skin] .turnbar.mine { background:var(--sk-plate-star); color:var(--sk-gold-ink); --sk-e:var(--sk-gold); box-shadow:inset 0 0 0 1px var(--sk-gold2), inset 0 0 18px rgba(240,201,90,.12); }
+html[data-skin] #hdr .hres .hrb { background:var(--sk-plate); border-color:var(--sk-edge2); padding:2px 8px 2px 4px; box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 1px 2px var(--sk-shadow); }
+html[data-skin] #hdr .hres .hresp.peek { background:color-mix(in srgb, var(--sk-next) 16%, transparent); }
+
+/* ---- 進化トラック：マスを道でつなぐ・矢印の列は道の上下の札・★は金の縁・トラック名は色の板 ---- */
+html[data-skin] .lane-red { --trk:var(--t-red); } html[data-skin] .lane-blue { --trk:var(--t-blue); } html[data-skin] .lane-white { --trk:var(--t-white); } html[data-skin] .lane-green { --trk:var(--t-green); } html[data-skin] .lane-star { --trk:var(--t-star); }
+html[data-skin] .lane { background:color-mix(in srgb, var(--trk) 7%, transparent); border-color:color-mix(in srgb, var(--trk) 34%, var(--line)); margin:6px 0; }
+html[data-skin] .lane .lane-lbl { background:linear-gradient(160deg, color-mix(in srgb, var(--trk) var(--sk-lbl1, 52%), #000), color-mix(in srgb, var(--trk) var(--sk-lbl2, 24%), #000)); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6);
+  box-shadow:inset 4px 0 0 var(--trk), inset 0 1px 0 rgba(255,255,255,.2), inset 0 -1px 0 rgba(0,0,0,.35); }
+html[data-skin] .lane .lane-lbl b { font-size:14px; letter-spacing:.08em; } html[data-skin] .lane .lane-lbl small { opacity:.9; }
+html[data-skin] .lane .node { background:var(--sk-plate); border-color:var(--sk-e); --sk-e:color-mix(in srgb, var(--trk) 46%, var(--line)); box-shadow:inset 0 1px 0 rgba(255,255,255,.07); }
+html[data-skin] .lane .node.star { background:var(--sk-plate-star); --sk-e:var(--sk-gold); box-shadow:inset 0 0 0 1px var(--sk-gold2), inset 0 0 14px rgba(240,201,90,.14); }
+html[data-skin] .lane .node.next { background:var(--sk-plate-next); outline:2px dashed var(--sk-next); outline-offset:-4px; }
+html[data-skin] .lane .node.next.na { background:var(--sk-plate); outline-color:var(--mute); }
+html[data-skin] .lane .node.star.next { background:var(--sk-plate-star); }
+html[data-skin] .lane .node-lv { color:color-mix(in srgb, var(--trk) 55%, var(--ink)); letter-spacing:.04em; }
+/* 星海開拓の段（ボタン）もほかの 4 本のマスと同じ板に。幅は変えない（枠 1px＋余白 5px のまま） */
+html[data-skin] .lane .starrow > .slot.starstep { background:var(--sk-plate); color:var(--ink); border:1px solid var(--sk-e); --sk-e:color-mix(in srgb, var(--trk) 46%, var(--line)); box-shadow:inset 0 1px 0 rgba(255,255,255,.07); position:relative; }
+html[data-skin] .lane .starrow > .slot.starstep.star { background:var(--sk-plate-star); --sk-e:var(--sk-gold); box-shadow:inset 0 0 0 1px var(--sk-gold2), inset 0 0 14px rgba(240,201,90,.14); }
+html[data-skin] .lane .starrow > .slot.starstep.now { box-shadow:inset 0 0 0 2px var(--sk-next); }
+html[data-skin] .lane .starrow > .slot.starstep.past { background:var(--sk-plate-used); }
+html[data-skin] .lane .starrow > .slot.starstep .pname { color:color-mix(in srgb, var(--trk) 55%, var(--ink)); font-size:11px; font-weight:700; }
+/* 道：矢印（▶）の行を道に置きかえ、値段を道の上・条件を道の下の札にする。道はマスの中央の高さでそろう */
+html[data-skin] .lane .conn { position:relative; z-index:1; display:grid; grid-template-rows:1fr 12px 1fr; grid-template-columns:100%; justify-items:center; align-items:center; row-gap:2px; color:var(--mute); }
+html[data-skin] .lane .conn > span:first-child, html[data-skin] .lane .conn:empty::before { content:''; grid-row:2; grid-column:1; justify-self:stretch; height:12px; margin:0 -3px; font-size:0; }
+html[data-skin] .lane .conn > small { grid-row:1; align-self:end; max-width:calc(100% + 4px); margin:0 -2px; padding:0 2px; text-align:center; font-size:10px; line-height:1.25; background:var(--sk-tag); color:var(--ink); border:1px solid color-mix(in srgb, var(--trk) 50%, transparent); font-weight:600; }
+html[data-skin] .lane .conn > small.gate { grid-row:3; align-self:start; color:var(--sk-gold-ink); border-color:var(--sk-gold2); font-weight:400; }
+
+/* ---- 占有盤・共用盤の枠：板＋コマを置くくぼみ（占有盤だけ）。置かれたらその人のコマがくぼみにはまる ---- */
+html[data-skin] :is(.panel.excl, .panel.shared2) .sgroup > .slot { position:relative; background:var(--sk-plate); color:var(--ink); border-color:var(--sk-e); --sk-e:var(--sk-edge2); box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 1px 3px var(--sk-shadow); }
+html[data-skin] .panel.excl .sgroup > .slot { --sk-e:var(--sk-excl-e); } html[data-skin] .panel.shared2 .sgroup > .slot { --sk-e:var(--sk-shared-e); }
+html[data-skin] :is(.panel.excl, .panel.shared2) .sgroup > .slot:not(.na):not(.used):hover { filter:brightness(1.1); }
+html[data-skin] .panel.excl .sgroup > .slot.god { background:var(--sk-plate-star); --sk-e:var(--sk-gold); }
+html[data-skin] .panel.excl .sgroup > .slot.used { background:var(--sk-plate-used); border-style:solid; box-shadow:inset 0 2px 6px rgba(0,0,0,.28); opacity:1; } /* 枠ごと薄くせず、中身だけ沈めてコマをはっきり見せる */
+html[data-skin] .panel.excl .sgroup > .slot.used > .picto, html[data-skin] .panel.excl .sgroup > .slot.used > .pname { opacity:.55; }
+html[data-skin] .panel.excl .sgroup > .slot:not(.launchbtn)::after { content:''; position:absolute; top:3px; right:5px; width:22px; height:22px; pointer-events:none; background:var(--sk-well-img) center / contain no-repeat; }
+html[data-skin] .panel.excl .sgroup > .slot:not(.launchbtn) > .pname { padding-right:26px; }
+html[data-skin] .panel.excl .sgroup > .slot.used .sfoot em .mk { position:absolute; top:6px; right:8px; z-index:1; width:16px; height:16px; line-height:16px; font-size:9px; margin:0; }
+
+/* ---- 器官のカード：上に系統の色の帯（値段と系統名）・絵の枠・下に効果の欄。絵の無いカードは系統の紋 ---- */
+html[data-skin] .ocard { --lin:#6f7fa3; position:relative; overflow:hidden; background:var(--sk-plate); color:var(--ink); border-color:var(--sk-e); --sk-e:color-mix(in srgb, var(--lin) 52%, var(--line)); padding:30px 8px 7px; box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 2px 5px var(--sk-shadow); }
+html[data-skin] .ocard:not(.na):hover { filter:brightness(1.08); }
+html[data-skin] .ocard.mine { background:var(--sk-plate-mine); --sk-e:var(--sk-ok); box-shadow:inset 0 0 0 1px var(--sk-ok), 0 2px 5px var(--sk-shadow); }
+html[data-skin] .ocard.locked { background:var(--sk-plate); opacity:.62; filter:saturate(.55); }
+html[data-skin] .ocard .hd { left:0; right:0; top:0; min-height:24px; padding:3px 7px; align-items:center; gap:4px; color:#fff;
+  background:linear-gradient(90deg, color-mix(in srgb, var(--lin) 70%, #000), color-mix(in srgb, var(--lin) 36%, #000)); border-bottom:1px solid color-mix(in srgb, var(--lin) 85%, #fff); box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
+html[data-skin] .ocard .hd .cost { color:#fff; font-weight:700; font-size:12px; text-shadow:0 1px 1px rgba(0,0,0,.5); }
+html[data-skin] .ocard .hd .cost small { color:rgba(255,255,255,.85); }
+html[data-skin] .ocard .hd .sw { background:rgba(0,0,0,.30); color:#fff; border:1px solid rgba(255,255,255,.45); border-radius:3px; padding:0 6px; font-weight:700; letter-spacing:.06em; white-space:nowrap; }
+html[data-skin] .ocard .hd .sw.weak { background:rgba(0,0,0,.42); color:rgba(255,255,255,.78); border-style:dashed; }
+html[data-skin] .ocard :is(img.art, div.art) { border:1px solid color-mix(in srgb, var(--lin) 60%, #000); box-shadow:0 0 0 2px rgba(0,0,0,.22), inset 0 0 12px rgba(0,0,0,.4); margin:4px 0 6px; }
+html[data-skin] .ocard div.art.noart { position:relative; background:radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--lin) 42%, #0b1024) 0, #0b1024 78%); }
+html[data-skin] .ocard div.art.noart::before { content:''; position:absolute; inset:17%; background:color-mix(in srgb, var(--lin) 72%, #fff); opacity:.92;
+  -webkit-mask:var(--emb) center / contain no-repeat; mask:var(--emb) center / contain no-repeat; }
+html[data-skin] .ocard > b { font-size:13px; letter-spacing:.02em; }
+html[data-skin] .ocard > .fx { background:var(--sk-fx); border-top:1px solid color-mix(in srgb, var(--lin) 45%, transparent); border-radius:0 0 4px 4px; padding:3px 4px; margin-top:4px; }
+/* 系統の色（--lin）と紋（--emb）。カードの data-slot（OC_＋系統の 2 文字＋段）で決める */
+html[data-skin] .ocard { --emb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='2.6' stroke-linejoin='round'%3E%3Cpolygon points='24,4 41,14 41,34 24,44 7,34 7,14'/%3E%3Ccircle cx='24' cy='24' r='7'/%3E%3C/svg%3E"); }
+html[data-skin] .ocard[data-slot^="OC_Li"] { --lin:#3d9be0; } html[data-skin] .ocard[data-slot^="OC_Tr"] { --lin:#8f6fe8; } html[data-skin] .ocard[data-slot^="OC_Fl"] { --lin:#2fb5a0; }
+html[data-skin] .ocard[data-slot^="OC_Rh"] { --lin:#d861b8; } html[data-skin] .ocard[data-slot^="OC_Ca"] { --lin:#e8823a; } html[data-skin] .ocard[data-slot^="OC_Cv"] { --lin:#d6a520; }
+html[data-skin] .ocard[data-slot^="OC_Re"] { --lin:#b06be0; } html[data-skin] .ocard[data-slot^="OC_St"] { --lin:#e0555a; } html[data-skin] .ocard[data-slot^="OC_Mg"] { --lin:#a9b82e; }
+html[data-skin] .ocard[data-slot^="OC_Tl"] { --lin:#4f7fe8; } html[data-skin] .ocard[data-slot^="OC_Hc"] { --lin:#35b8cf; } html[data-skin] .ocard[data-slot^="OC_Pu"] { --lin:#e85f8a; }
+html[data-skin] .ocard[data-slot^="OC_Cx"] { --lin:#f06a42; } html[data-skin] .ocard[data-slot^="OC_Fk"] { --lin:#c9b03a; } html[data-skin] .ocard[data-slot^="OC_Nv"] { --lin:#6a78f0; }
+html[data-skin] .ocard[data-slot^="OC_Lm"] { --lin:#6cc43c; } html[data-skin] .ocard[data-slot^="OC_Pr"] { --lin:#2fbf86; } html[data-skin] .ocard[data-slot^="OC_Sp"] { --lin:#c9a24a; }
+/* 絵の無い系統の紋：孵化＝卵とひび／神経＝結び目の網／推進＝矢羽／発光＝光芒 */
+html[data-skin] .ocard[data-slot^="OC_Fk"] { --emb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='2.6' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M24 4C34 4 41 20 41 29C41 38 33 44 24 44C15 44 7 38 7 29C7 20 14 4 24 4Z'/%3E%3Cpath d='M9 27L16 23L21 28L27 22L32 27L39 24'/%3E%3C/svg%3E"); }
+html[data-skin] .ocard[data-slot^="OC_Nv"] { --emb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M24 24L24 8M24 24L40 18M24 24L35 40M24 24L13 40M24 24L8 18M24 8L40 18M13 40L35 40'/%3E%3Cg fill='black'%3E%3Ccircle cx='24' cy='24' r='4.5'/%3E%3Ccircle cx='24' cy='8' r='3'/%3E%3Ccircle cx='40' cy='18' r='3'/%3E%3Ccircle cx='35' cy='40' r='3'/%3E%3Ccircle cx='13' cy='40' r='3'/%3E%3Ccircle cx='8' cy='18' r='3'/%3E%3C/g%3E%3C/svg%3E"); }
+html[data-skin] .ocard[data-slot^="OC_Pr"] { --emb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M6 38L18 24L6 10'/%3E%3Cpath d='M19 38L31 24L19 10'/%3E%3Cpath d='M32 38L44 24L32 10'/%3E%3C/svg%3E"); }
+html[data-skin] .ocard[data-slot^="OC_Lm"] { --emb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Ccircle cx='24' cy='24' r='7.5'/%3E%3Cpath d='M24 4V11M24 37V44M4 24H11M37 24H44M10 10L15 15M33 33L38 38M38 10L33 15M15 33L10 38'/%3E%3C/svg%3E"); }
+
+/* ================= 3. 案 A「星海」の形：角を斜めに落とした板・細く光る縁・六角のくぼみ・まっすぐな道 ================= */
+html[data-skin="a"] .panel:not(.player) { border-radius:3px; }
+html[data-skin="a"][data-theme="dark"] .panel:not(.player) { box-shadow:inset 0 1px 0 rgba(140,230,240,.16), 0 0 0 1px rgba(88,214,224,.05), 0 6px 22px var(--sk-shadow); }
+/* 角を落とす：clip-path で左上と右下を切り、切り口の線は ::before の斜めの帯で描く（--sk-e＝その板の縁の色） */
+html[data-skin="a"] #hdr .order .chip, html[data-skin="a"] .turnbar, html[data-skin="a"] .lane .node, html[data-skin="a"] .lane .starrow > .slot.starstep,
+html[data-skin="a"] :is(.panel.excl, .panel.shared2) .sgroup > .slot, html[data-skin="a"] .ocard {
+  border-radius:0; clip-path:polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c)); }
+html[data-skin="a"] #hdr .order .chip::before, html[data-skin="a"] .turnbar::before, html[data-skin="a"] .lane .node::before, html[data-skin="a"] .lane .starrow > .slot.starstep::before,
+html[data-skin="a"] :is(.panel.excl, .panel.shared2) .sgroup > .slot::before, html[data-skin="a"] .ocard::before {
+  content:''; position:absolute; inset:-1px; z-index:2; pointer-events:none;
+  background:linear-gradient(135deg, var(--sk-e) 0, var(--sk-e) calc(var(--c) * .7071 + 1.2px), transparent calc(var(--c) * .7071 + 1.2px)), linear-gradient(-45deg, var(--sk-e) 0, var(--sk-e) calc(var(--c) * .7071 + 1.2px), transparent calc(var(--c) * .7071 + 1.2px)); }
+html[data-skin="a"] #hdr .order .chip { --c:5px; } html[data-skin="a"] .turnbar { --c:8px; } html[data-skin="a"] .lane .node, html[data-skin="a"] .lane .starrow > .slot.starstep { --c:6px; }
+html[data-skin="a"] :is(.panel.excl, .panel.shared2) .sgroup > .slot { --c:7px; } html[data-skin="a"] .ocard { --c:9px; }
+html[data-skin="a"] #hdr .pill { border-radius:2px; } html[data-skin="a"] #hdr .hres .hrb { border-radius:3px; }
+/* 切った板の外に出る印（直前の手・次に進める段・キーボードの焦点）は内側に描く */
+html[data-skin="a"] .lastmove { outline-offset:-3px !important; box-shadow:inset 0 0 0 6px rgba(240,160,32,.28) !important; }
+html[data-skin="a"] button:focus-visible { outline-offset:-3px; }
+html[data-skin="a"][data-theme="dark"] .lane .node { box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 0 12px color-mix(in srgb, var(--trk) 10%, transparent); }
+/* トラック名の板：右を矢じりにして道の向きを示す */
+html[data-skin="a"] .lane { border-radius:3px; }
+html[data-skin="a"] .lane .lane-lbl { border-radius:0; }
+/* まっすぐな道と矢じり */
+html[data-skin="a"] .lane .conn > span:first-child, html[data-skin="a"] .lane .conn:empty::before {
+  background:linear-gradient(to top right, var(--trk) 50%, transparent 50%) calc(50% + 1px) 1px / 7px 5px no-repeat, linear-gradient(to bottom right, var(--trk) 50%, transparent 50%) calc(50% + 1px) 6px / 7px 5px no-repeat, linear-gradient(var(--trk), var(--trk)) center / 100% 2px no-repeat; }
+html[data-skin="a"][data-theme="dark"] .lane .conn > span:first-child, html[data-skin="a"][data-theme="dark"] .lane .conn:empty::before { filter:drop-shadow(0 0 3px var(--trk)); }
+html[data-skin="a"] .lane .conn > small { border-radius:1px; }
+/* 六角のくぼみ */
+html[data-skin="a"][data-theme="dark"] { --sk-well-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpolygon points='11,1 19.7,6 19.7,16 11,21 2.3,16 2.3,6' fill='%23050814' stroke='%2358d6e0' stroke-opacity='.6' stroke-width='1'/%3E%3Cpath d='M2.8 6.3L11 1.6L19.2 6.3' fill='none' stroke='%23000' stroke-opacity='.7' stroke-width='1.6'/%3E%3C/svg%3E"); }
+html[data-skin="a"]:not([data-theme="dark"]) { --sk-well-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpolygon points='11,1 19.7,6 19.7,16 11,21 2.3,16 2.3,6' fill='%23c2cfe3' stroke='%231a8f9e' stroke-opacity='.7' stroke-width='1'/%3E%3Cpath d='M2.8 6.3L11 1.6L19.2 6.3' fill='none' stroke='%23364a6e' stroke-opacity='.45' stroke-width='1.6'/%3E%3C/svg%3E"); }
+html[data-skin="a"] .ocard :is(img.art, div.art) { border-radius:1px; }
+
+/* ================= 4. 案 B「生命」の形：丸い枠と二重の縁（膜）・丸いくぼみ・曲線の道・やわらかい光 ================= */
+html[data-skin="b"] .panel:not(.player) { border-radius:18px; padding:12px 14px; }
+html[data-skin="b"] .player { border-radius:18px; }
+/* 二重の縁：外の線＋細い暗い帯＋内の淡い線 */
+html[data-skin="b"] .lane .node, html[data-skin="b"] .lane .starrow > .slot.starstep { border-radius:13px; box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.16), inset 0 0 0 2.5px color-mix(in srgb, var(--trk) 26%, transparent), 0 0 10px color-mix(in srgb, var(--trk) 12%, transparent); }
+html[data-skin="b"] .lane .node.star, html[data-skin="b"] .lane .starrow > .slot.starstep.star { box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.16), inset 0 0 0 2.5px var(--sk-gold2), inset 0 0 14px rgba(240,201,90,.14), 0 0 10px rgba(232,207,122,.16); }
+html[data-skin="b"] .lane .starrow > .slot.starstep.now { box-shadow:inset 0 0 0 2px var(--sk-next), 0 0 10px color-mix(in srgb, var(--sk-next) 30%, transparent); }
+html[data-skin="b"] .lane .node.next { outline-offset:-5px; }
+html[data-skin="b"] .lane { border-radius:20px; padding:2px; }
+html[data-skin="b"] .lane .lane-lbl { border-radius:18px 10px 10px 18px; box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.2), inset 0 0 0 2.5px color-mix(in srgb, var(--trk) 70%, transparent), inset 0 8px 14px rgba(255,255,255,.10); padding-left:12px; }
+html[data-skin="b"] #hdr .order .chip { border-radius:999px; box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.14), inset 0 0 0 2.5px color-mix(in srgb, var(--sk-edge) 18%, transparent); }
+html[data-skin="b"] #hdr .order .chip.now { box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.14), inset 0 0 0 2.5px var(--sk-gold2), 0 0 10px rgba(232,207,122,.3); }
+html[data-skin="b"] #hdr .order .chip.peek { box-shadow:inset 0 0 0 2px var(--sk-next); }
+html[data-skin="b"] .turnbar { border-radius:16px; }
+html[data-skin="b"] .turnbar.mine { box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.14), inset 0 0 0 2.5px var(--sk-gold2), inset 0 0 18px rgba(240,201,90,.12), 0 0 12px rgba(232,207,122,.18); }
+html[data-skin="b"] #hdr .pill { border-radius:999px; } html[data-skin="b"] #hdr .hres .hrb { border-radius:999px; padding:2px 10px 2px 4px; }
+html[data-skin="b"] :is(.panel.excl, .panel.shared2) .sgroup > .slot { border-radius:15px; padding:7px 10px; box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.14), inset 0 0 0 2.5px color-mix(in srgb, var(--sk-edge) 16%, transparent), 0 1px 4px var(--sk-shadow); }
+html[data-skin="b"] .panel.excl .sgroup > .slot.used { box-shadow:inset 0 2px 7px rgba(0,0,0,.3); }
+html[data-skin="b"] .panel.excl .sgroup > .slot:not(.launchbtn)::after { top:4px; right:7px; }
+html[data-skin="b"] .panel.excl .sgroup > .slot.used .sfoot em .mk { top:7px; right:10px; }
+html[data-skin="b"] .ocard { border-radius:15px; box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.14), inset 0 0 0 2.5px color-mix(in srgb, var(--lin) 22%, transparent), 0 2px 6px var(--sk-shadow); }
+html[data-skin="b"] .ocard.mine { box-shadow:inset 0 0 0 1.5px var(--sk-ok), 0 0 10px color-mix(in srgb, var(--sk-ok) 30%, transparent); }
+html[data-skin="b"] .ocard .hd { padding:3px 10px; border-radius:14px 14px 50% 50% / 14px 14px 5px 5px; }
+html[data-skin="b"] .ocard .hd .sw { border-radius:999px; }
+html[data-skin="b"] .ocard :is(img.art, div.art) { border-radius:12px; }
+html[data-skin="b"] .ocard > .fx { border-radius:9px; border-top:0; padding:3px 6px; }
+/* 曲線の道：芽のように波打つ線（mask で形・色はトラックの色） */
+html[data-skin="b"] .lane .conn > span:first-child, html[data-skin="b"] .lane .conn:empty::before { background:var(--trk); grid-column:1;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 12' preserveAspectRatio='none' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 6C5 0 9 0 13 6S21 12 25 6'/%3E%3Cpath d='M24 2.5L29 6L24 9.5'/%3E%3Cpath d='M25 6H32' stroke-width='1.6'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 12' preserveAspectRatio='none' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 6C5 0 9 0 13 6S21 12 25 6'/%3E%3Cpath d='M24 2.5L29 6L24 9.5'/%3E%3Cpath d='M25 6H32' stroke-width='1.6'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+html[data-skin="b"] .lane .conn > small { border-radius:7px; }
+/* 丸いくぼみ（二重の輪） */
+html[data-skin="b"][data-theme="dark"] { --sk-well-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Ccircle cx='11' cy='11' r='10' fill='none' stroke='%237fd8b0' stroke-opacity='.35' stroke-width='1'/%3E%3Ccircle cx='11' cy='11' r='8.2' fill='%23061214' stroke='%237fd8b0' stroke-opacity='.65' stroke-width='1'/%3E%3Cpath d='M4 8.5A7.6 7.6 0 0 1 18 8.5' fill='none' stroke='%23000' stroke-opacity='.6' stroke-width='1.6'/%3E%3C/svg%3E"); }
+html[data-skin="b"]:not([data-theme="dark"]) { --sk-well-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Ccircle cx='11' cy='11' r='10' fill='none' stroke='%232f8f6a' stroke-opacity='.4' stroke-width='1'/%3E%3Ccircle cx='11' cy='11' r='8.2' fill='%23c2d4c4' stroke='%232f8f6a' stroke-opacity='.7' stroke-width='1'/%3E%3Cpath d='M4 8.5A7.6 7.6 0 0 1 18 8.5' fill='none' stroke='%2334503c' stroke-opacity='.4' stroke-width='1.6'/%3E%3C/svg%3E"); }
+
+/* ================= 5. 幅ごと ================= */
+@media (min-width: 601px) {
+  html[data-skin="a"] .lane .lane-lbl { clip-path:polygon(0 0, calc(100% - 9px) 0, 100% 50%, calc(100% - 9px) 100%, 0 100%); padding-right:14px; padding-left:11px; }
+}
+@media (max-width: 600px) { /* 携帯幅はおまけ：崩れず読めること。値段の帯は枠の中で流す（O-52 の 7 と同じ並び） */
+  html[data-skin] #hdr { -webkit-backdrop-filter:none; backdrop-filter:none; }
+  html[data-skin] .ocard { padding:0 6px 6px; }
+  html[data-skin] .ocard .hd { margin:0 -6px 4px; padding:3px 6px; }
+  html[data-skin="b"] .ocard .hd { border-radius:0; }
+  html[data-skin] .lane .lane-lbl b { font-size:12px; letter-spacing:1px; }
+  html[data-skin="b"] .lane .lane-lbl { border-radius:10px 4px 4px 10px; padding-left:2px; }
+  html[data-skin="b"] .panel:not(.player) { border-radius:12px; padding:10px 12px; }
+}

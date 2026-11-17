@@ -455,6 +455,7 @@
       hres.appendChild(row); }); }
     if (hres.childNodes.length) hd.appendChild(hres);
     const btns = h('span', { class: 'hbtns menu' + (menuOpen ? '' : ' hidden') });
+    if (window.G1Skin) btns.appendChild(window.G1Skin.toggle(render)); // O-53：見た目の見本（標準／A／B）。中身は skin.js・skin.css
     btns.appendChild(h('button', { title: '自分の直前の行動まで戻す（間にあるAI・他プレイヤーの行動も取り消される）', onclick: () => submit(undoEntry()) }, '1手戻す'));
     btns.appendChild(h('button', { title: 'このラウンドの頭（収入直後）まで戻す', onclick: () => { if (confirm('ラウンドの頭まで戻しますか？')) submit({ type: 'undoRound' }); } }, 'ラウンド頭へ'));
     btns.appendChild(h('button', { onclick: () => { logOpen = !logOpen; render(); } }, logOpen ? 'ログを隠す' : 'ログ'));

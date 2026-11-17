@@ -92,3 +92,4 @@ svg.ic.star { color:#7d55c7; } svg.ic.join { color:#4a6fa8; } svg.ic.launch { co
   .lane .fx, .slot.starstep .fxstack { zoom:var(--fxz-lane, 1); } /* 進化トラックは 2 列表示でマスが細い（1366 幅で 80px）ので 1.0 倍（1.05 倍で社会・代謝 Lv3★ がはみ出す） */
 }
 @media (min-width: 1500px) { .lane .fx, .slot.starstep .fxstack { zoom:var(--fxz-lane, 1.3); } }
+.slot.starstep .fxstack .fx { zoom:1 !important; } /* 星海開拓の段は外の .fxstack だけで拡大（中の .fx に .lane .fx が重なって 1.69 倍になっていた） */
