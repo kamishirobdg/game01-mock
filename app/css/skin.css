@@ -4,9 +4,11 @@
    範囲：ページの地／ヘッダ／進化トラック 5 本／占有盤の枠／器官の場のカード。ほかは地の色と線を合わせるだけ。
    作り：1 色と地（案×白黒）→ 2 共通の部品 → 3 案 A の形 → 4 案 B の形 → 5 携帯幅。 */
 
-/* メニューの切り替え（標準でも出る） */
+/* ヘッダ右上の切り替え（標準でも出る） */
 .skintog { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--mute); }
 .skintog .vtog { margin-left:0; }
+.hmenuwrap .skintog { margin-right:6px; vertical-align:middle; }
+@media (max-width: 600px) { .hmenuwrap .skintog { font-size:0; gap:0; margin-right:2px; } } /* 携帯幅は「見た目」の字を省く */
 
 /* ================= 1. 色と地 ================= */
 html[data-skin="a"][data-theme="dark"] {
