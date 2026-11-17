@@ -4,7 +4,7 @@
 <circle cx="272" cy="400" r="250" fill="none" stroke="#7fd8b0" stroke-opacity=".12" stroke-width="40"/>
 <circle cx="272" cy="400" r="182" fill="none" stroke="#7fd8b0" stroke-opacity=".3" stroke-dasharray="2 9" stroke-width="3"/>
 <path d="M272 400L200.800 228.200M272 400L343.200 228.200M272 400L443.800 328.800M272 400L443.800 471.200M272 400L343.200 571.800M272 400L200.800 571.800M272 400L100.200 471.200M272 400L100.200 328.800" fill="none" stroke="#7fd8b0" stroke-opacity=".3" stroke-width="2.500" stroke-linecap="round"/>
-<path d="M272 150V68M122 68H422" fill="none" stroke="#e8cf7a" stroke-opacity=".5" stroke-width="2.500" stroke-linecap="round"/>
+<path d="M272 150V42" fill="none" stroke="#e8cf7a" stroke-opacity=".5" stroke-width="2.500" stroke-linecap="round"/>
 <path d="M272 650V712M57 712H487" fill="none" stroke="#f0a080" stroke-opacity=".5" stroke-width="2.500" stroke-linecap="round"/>
 <g fill="#08161a" stroke="#f0a080" stroke-width="2"><circle cx="57" cy="712" r="5"/><circle cx="200.300" cy="712" r="5"/><circle cx="343.600" cy="712" r="5"/><circle cx="487" cy="712" r="5"/></g>
 <circle cx="272" cy="400" r="92" fill="url(#c)"/>

@@ -12,6 +12,11 @@
     else on = localStorage.getItem(KEY) === '1';
   } catch (e) { }
   var root = document.documentElement, skinWas = null;
+  // 恩寵枠（開く前）は小さくたたんでおく。見出しを押すと広げる／たたむ（端末に記憶 g01_grace＝1 で広げたまま）
+  var GKEY = 'g01_grace', graceOpen = false; try { graceOpen = localStorage.getItem(GKEY) === '1'; } catch (e) { }
+  function applyGrace() { if (graceOpen) root.setAttribute('data-grace', 'open'); else root.removeAttribute('data-grace'); }
+  document.addEventListener('click', function (ev) { var t = ev.target; if (!on || !t || !t.closest || !t.closest('.panel.excl .glabel')) return; graceOpen = !graceOpen; try { localStorage.setItem(GKEY, graceOpen ? '1' : '0'); } catch (e) { } applyGrace(); });
+  applyGrace();
   function active() { return on; }
   // 盤は 1872×960 で設計してあり、画面に合わせて全体を拡大・縮小する（幅に合わせ、縦に収まらなければ 9 割まで縮める）
   function fit() {
