@@ -1596,7 +1596,7 @@
       E5: `熱源吸収：E+${slotAmt(st, 'E5').E}。${cb}。${byp}`, G3: `配列解析：G+${slotAmt(st, 'G3').G}。${cb}。${byp}`, P8: `個体培養：P+${R.p8 || 8}。${cb}。${byp}`,
       EG: R.herd ? `群体同期：P${R.herdCost || 6}を払って E+${slotAmt(st, 'EG').E}＋協調+${R.herdCoop || 1}。${cb}。${byp}` : `群体同期：E+${sc(st, 2)}＋P${sc(st, 10)}ごとに+${sc(st, 1)}E。${cb}。${byp}`,
       GG: R.herd ? `群体融合：P${R.herdCost || 6}を払って G+${slotAmt(st, 'GG').G}＋協調+${R.herdCoop || 1}。${cb}。${byp}` : `群体融合：G+${sc(st, 1)}＋P${sc(st, 10)}ごとに+${sc(st, 1)}G。${cb}。${byp}`,
-      ALL: `資源合成：E+${slotAmt(st, 'ALL').E} G+${slotAmt(st, 'ALL').G} P+${slotAmt(st, 'ALL').P}。${cb}（資源を選ぶ）。${byp}`, PB: R.pbG === 0 ? `自己複製：P+${pbGain(st)}（払いなし・協調ボーナスなし）。${R.pbLaunch ? `空いている枠なら緊急進出（生命核1）で P+${pbGain(st) * (R.launchFree || 3)}。` : ''}${byp0}${R.joinNow ? '（合流進出でも使える）' : '（自由行動は対象外）'}` : `自己複製：G${sc(st, 2)}→P+${pbGain(st)}（全翻訳で割引）${R.pbCoop ? '。' + cb : ''}。${byp0}${R.joinNow ? '（合流進出でも使える）' : '（自由行動は対象外）'}`, // 2026-11-05 Pブーストも緊急発進・協調発進の対象に
+      ALL: `資源合成：E+${slotAmt(st, 'ALL').E} G+${slotAmt(st, 'ALL').G} P+${slotAmt(st, 'ALL').P}。${cb}（資源を選ぶ）。${byp}`, PB: R.pbG === 0 ? `自己複製：P+${pbGain(st)}（払いなし・協調ボーナスなし）。${R.pbLaunch ? byp : byp0}${R.joinNow ? '（合流進出でも使える）' : '（自由行動は対象外）'}` : `自己複製：G${sc(st, 2)}→P+${pbGain(st)}（全翻訳で割引）${R.pbCoop ? '。' + cb : ''}。${byp0}${R.joinNow ? '（合流進出でも使える）' : '（自由行動は対象外）'}`, // 2026-11-05 Pブーストも緊急発進・協調発進の対象に
       MB: `淘汰(身体)：P${R.massCost}（下限${R.massMin.body}）→痕跡+1。${R.bodyAxis === 'L' ? '誰でもP→痕跡の出口' : '身体Lv4/5で軽減'}${bypM}`,
       MI: `淘汰(知性)：P${R.massCost}→G${R.miMaxCost || 4}以下の形質${R.miMaxCost ? (R.miCount || 1) + '種' : 'を異なる2種'}（無料）${bypM}`, MS: `淘汰(社会)：P${R.msCost || R.massCost}→協調+${R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)}${bypM}`, MM: `淘汰(代謝)：P${R.mmCost || R.massCost}→${R.mmLv ? mmForm(st).E + ' ' + mmForm(st).G : `E+${R.mmGain || sc(st, 10)} G+${R.mmGain || sc(st, 10)}`}${bypM}`, // O-37：mmLv の式
       MIM: `模倣：G${R.mimicCost || 4}を払い、自分を含む誰かが到達済みの Lv2／Lv3★ の !即時効果（G+${sc(st, 3)}／P+${sc(st, 6)}／P+${sc(st, 10)}／E+${sc(st, 8)}／自由行動+1）を1つ受け取る。◆生命核の L+1 と ∞恒久・手収入は対象外。1ラウンド1人`,
@@ -1655,7 +1655,7 @@
     if (id === 'P8' && R.p8) return `+${R.p8}P`;
     if (id === 'TRT' && R.traitShared) return 'Gを払い形質を取得（共用・排他なし）';
     if (id === 'ORG') { const oc = R.organCost || G.ORGAN_COST; return oc.map(([e, g]) => `${e}E+${g}G`).join(' / ') + (R.organSameEffect ? (R.organLateFee !== 0 ? `（代償 +${sc(st, R.organLateFee || 1)}E）` : '') : '（弱はG0' + (R.organEscalate ? `・所持${R.organEscalate}枚ごとに+1E` : '') + '）'); }
-    if (id === 'E5') return `+${slotAmt(st, 'E5').E}E`; if (id === 'G3') return `+${slotAmt(st, 'G3').G}G`; if (id === 'ALL') { const a = slotAmt(st, 'ALL'); return `+${a.E}E +${a.G}G +${a.P}P`; } if (id === 'PB') return R.pbG === 0 ? `P+${pbGain(st)}${R.pbLaunch ? `（緊急進出 P+${pbGain(st) * (R.launchFree || 3)}）` : ''}` : `G${eff(sc(st, 2), p ? pbCost(p) : null)} → P+${pbGain(st)}`;
+    if (id === 'E5') return `+${slotAmt(st, 'E5').E}E`; if (id === 'G3') return `+${slotAmt(st, 'G3').G}G`; if (id === 'ALL') { const a = slotAmt(st, 'ALL'); return `+${a.E}E +${a.G}G +${a.P}P`; } if (id === 'PB') return R.pbG === 0 ? `P+${pbGain(st)}` : `G${eff(sc(st, 2), p ? pbCost(p) : null)} → P+${pbGain(st)}`;
     if (id === 'SCAN') return `E${sc(st, 5)} → 他者の最高Lv×${sc(st, 2)}の資源`; if (id === 'CNV') return `E${sc(st, 2)}→G${sc(st, 1)} / G${sc(st, 2)}→E${sc(st, 1)} / P${sc(st, 8)}→E${sc(st, 3)} / P${sc(st, 8)}→G${sc(st, 2)}`;
     return txt(st, s.text);
   }

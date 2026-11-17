@@ -192,8 +192,10 @@ img.art.portrait { width:56px; height:56px; aspect-ratio:1/1; border-radius:50%;
 @media (max-width: 600px) {
   body { overflow-x:hidden; }                                   /* ページ全体は横にはみ出させない */
   .panel.tracksp .lanes { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -12px; padding:0 8px; } /* 進化トラックはレーンだけ横スクロール（見出し・コンボ注記は固定） */
-  .lane { min-width:680px; }                    /* 6段＋矢印が読める幅を確保（画面幅では各段が縦長に潰れる） */
-  .lane-lbl { position:sticky; left:0; z-index:2; width:72px; padding:6px 6px; box-shadow:2px 0 4px rgba(0,0,0,.12); } /* 色の見出しは固定表示 */
+  .lane { min-width:820px; }                    /* 6段＋矢印が読める幅を確保（画面幅では各段が縦長に潰れる）。O-50：記号がマスに収まる幅（いちばん広い記号＝全種+10） */
+  .lane-lbl { position:sticky; left:0; z-index:2; width:28px; padding:4px 2px; align-items:center; box-shadow:2px 0 4px rgba(0,0,0,.12); } /* 色の見出しは固定表示。O-50：細い縦書きにして Lv1 のマスに重ねない（素材は矢印の札に出ている） */
+  .lane-lbl b { writing-mode:vertical-rl; letter-spacing:1px; } .lane-lbl small { display:none; }
+  .lane .conn { width:22px; }
   .lane .node { font-size:11px; }
   .ocard img.art, .tcard img.art, .cardbtn img.art:not(.portrait) { display:none; } /* 器官・形質のイラストは携帯では非表示（必須でない） */
   .ocard, .tcard { min-height:0; }
@@ -323,6 +325,10 @@ button.slot.na { opacity:.6; }
 .pbrow.altars > .slot.altar { width:auto; min-width:0; flex:none; box-sizing:border-box; }
 /* 星海開拓のマス：ほかの 4 本と同じ列幅 */
 .lane .starrow > .slot { width:auto; min-width:0; flex:1; box-sizing:border-box; margin:0; }
+/* O-50：中身の最小幅で本体が伸びて列がずれないように。星海開拓も隙間・横の余白と枠線をほかの 4 本と同じに */
+.lane-body { min-width:0; } .lane-star .starrow { gap:2px; }
+.lane .fxact { flex-wrap:wrap; justify-content:center; } .lane .fxl .pbad { white-space:normal; } /* 「手番なし」の札は記号の下に・「弱は無料」などの札は折り返してよい（マスの外に出さない） */
+@media (min-width: 601px) { .lane .fxl:has(.pc[title^="全種"]) { flex-wrap:wrap; } .lane .fxl:has(.pc[title^="全種"]) > .fxt { flex-basis:100%; } } /* PC の 2 列表示ではマスが細い：全種（3 つの記号＋数）は次の行へ */ .lane .starrow > .slot.starstep { padding-left:5px; padding-right:5px; border-left:1px solid transparent; border-right:1px solid transparent; }
 /* 器官・形質の一覧：カードの幅を固定し、同じ一覧の中で高さをそろえる */
 .ogrid, .tgrid { grid-template-columns:repeat(auto-fill, 172px) !important; grid-auto-rows:1fr; justify-content:start; }
 .ogrid > .ocard, .tgrid > .tcard { width:172px; box-sizing:border-box; height:100%; }
@@ -346,4 +352,9 @@ div.art.noart.small { aspect-ratio:2/1; }
 [data-theme="dark"] .turnbar { background:#262b36; color:var(--ink); } [data-theme="dark"] .turnbar.mine { background:#4a3d10; color:#ffe9a8; } [data-theme="dark"] .others .orow:hover { background:#262b36; }
 .seats .frow input.invite { flex:1; min-width:220px; font-size:12px; }
 .seatsmini .orow { cursor:default; } .seatsmini .orow:hover { background:none; }
+/* O-50：経過（自分の前回の手番から今まで）。PC は全行・携帯は 2 行ぶんで中をスクロール */
+.turnbar .since { flex-basis:100%; min-width:0; max-width:100%; display:flex; flex-direction:column; gap:1px; }
+.turnbar .since .sv { display:flex; align-items:center; gap:4px; line-height:18px; } .turnbar .since .sv .mk { flex:none; width:16px; height:16px; line-height:16px; font-size:10px; }
+.turnbar .since .sv.sub { padding-left:20px; opacity:.8; } .turnbar .since .sv.me { opacity:.65; } .turnbar .since .sv.rd { font-weight:bold; opacity:.7; border-top:1px dashed currentColor; margin-top:2px; }
+@media (max-width: 600px) { .turnbar .since { max-height:38px; overflow-y:auto; } .turnbar .since .sv { white-space:nowrap; } }
 .turnbar .waitmv { display:inline-flex; align-items:center; gap:4px; } .turnbar .waitmv .mk { width:16px; height:16px; line-height:16px; font-size:10px; }

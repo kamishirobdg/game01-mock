@@ -52,8 +52,9 @@
   function fire() { if (Net.onChange) Net.onChange(); }
   async function claimSeat(i, name) {
     const cur = Net.seats[i]; if (cur && cur.uid !== Net.uid) throw new Error('その席は使用中です');
-    await ref('seats/' + i).set({ uid: Net.uid, name: name || ('P' + (i + 1)) });
+    await ref('seats/' + i).set({ uid: Net.uid, name: name || '' }); // O-50：未入力は空（表示は P1〜P4）
   }
+  async function setSeatName(i, name) { const cur = Net.seats[i]; if (cur && cur.uid === Net.uid) await ref('seats/' + i + '/name').set(name || ''); } // O-50：あとから名前を変える
   async function releaseSeat(i) { const cur = Net.seats[i]; if (cur && cur.uid === Net.uid) await ref('seats/' + i).remove(); }
   function mySeats() { return Object.entries(Net.seats || {}).filter(([, v]) => v && v.uid === Net.uid).map(([k]) => +k); }
   function seatUids() { return Array.from(new Set(Object.values(Net.seats || {}).filter(Boolean).map(v => v.uid))); }
@@ -64,11 +65,13 @@
   // 承認モードの補助：undo要求に対する承認uid一覧
   function oksFor(entryId) { return Net.entries.filter(e => e.type === 'undoOk' && e.target === entryId).map(e => e.uid); }
   function otherUids(uid) { return seatUids().filter(u => u !== uid); }
+  // O-50：席の名前（着席した人が入れた名前）を各席の表示名に。AI の席と未入力は meta のまま（P1〜P4）
+  function metaNamed() { const m = Net.meta; if (!m || !Array.isArray(m.players)) return m; const bots = m.bots || []; return Object.assign({}, m, { players: m.players.map((p, i) => { const s = Net.seats && Net.seats[i]; return s && s.name && !bots.includes(i) ? Object.assign({}, p, { name: s.name }) : p; }) }); }
   function rebuild() {
     if (!Net.meta) return null;
-    return G.rebuild(Net.meta, Net.entries, { otherUids, oks: oksFor });
+    return G.rebuild(metaNamed(), Net.entries, { otherUids, oks: oksFor });
   }
 
-  Object.assign(Net, { init, createRoom, join, leave, claimSeat, releaseSeat, mySeats, seatUids, push, setMeta, rebuild, oksFor, otherUids });
+  Object.assign(Net, { init, createRoom, join, leave, claimSeat, setSeatName, metaNamed, releaseSeat, mySeats, seatUids, push, setMeta, rebuild, oksFor, otherUids });
   G.Net = Net;
 })(window.G1);

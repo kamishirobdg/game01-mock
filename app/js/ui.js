@@ -72,7 +72,7 @@
       case 'ALL': { const a = G.slotAmt(st, 'ALL'); return [pc('E', '+' + a.E), pc('G', '+' + a.G), pc('P', '+' + a.P), ...resB]; }
       case 'EG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('E', '+' + G.slotAmt(st, 'EG').E), pc('coop', '+' + (R.herdCoop || 1)), ...resB] : null;
       case 'GG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('G', '+' + G.slotAmt(st, 'GG').G), pc('coop', '+' + (R.herdCoop || 1)), ...resB] : null;
-      case 'PB': if (R.pbG === 0) return [pc('P', '+' + G.pbGain(st)), ...(R.pbLaunch && R.launchFree ? (G.FX && G.FX.on(st) ? [h('span', { class: 'fxact', title: `緊急進出（空き枠で生命核1を払う）なら P+${G.pbGain(st) * R.launchFree}` }, G.FX.ic('launch'), pc('P', '+' + G.pbGain(st) * R.launchFree))] : [pbad(`緊急進出 P+${G.pbGain(st) * R.launchFree}`)]) : [])]; return [pcost('G', G.pbCost(vp), sc(2)), po('→'), pc('P', '+' + G.pbGain(st)), ...(R.pbCoop ? [coopBonus()] : [])];
+      case 'PB': if (R.pbG === 0) return [pc('P', '+' + G.pbGain(st))]; return [pcost('G', G.pbCost(vp), sc(2)), po('→'), pc('P', '+' + G.pbGain(st)), ...(R.pbCoop ? [coopBonus()] : [])]; // O-50：緊急進出の特記（P+120）は消す（T32 で自己複製もほかの資源枠と同じく対象）
       case 'MB': return [massC('MB'), po('→'), pc('gem', '+1'), ...mret()];
       case 'MI': return R.miMaxCost ? [massC('MI'), po('→'), pc('trait', '×' + (R.miCount || 2), { title: `コストG${R.miMaxCost}以下の形質を異なる${R.miCount || 2}種` }), pbad('≤' + R.miMaxCost, `コストG${R.miMaxCost}以下`), ...mret()] : null;
       case 'MS': return [massC('MS'), po('→'), pc('coop', '+' + (R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2))), ...mret()];
@@ -285,9 +285,9 @@
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'アンドゥ'), h('select', { name: 'undoMode' }, h('option', { value: 'free' }, '自由（誰でも即時）'), h('option', { value: 'approve' }, '承認（他の参加者全員のOK）'))));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'シード'), h('input', { type: 'number', name: 'seed', value: Math.floor(Math.random() * 100000) })));
     form.appendChild(h('label', { class: 'frow' }, h('span', null, 'AI の読み'), h('select', { name: 'aiDepth' }, h('option', { value: '1' }, '標準（1手読み＋ラウンドの計画・速い）'), h('option', { value: '2' }, '強い（2手のビーム探索・+10点程度・AI の手番が数秒かかる）')))); // 2026-11-05 v3.64：第53部の 2 手読みを画面で選べるように（URL の ?depth= があればそちらを優先）
-    for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1) }), h('small', null, h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
+    for (let i = 0; i < 4; i++) form.appendChild(h('label', { class: 'frow' }, h('span', null, `P${i + 1} 名前`), h('input', { type: 'text', name: 'name' + i, value: 'P' + (i + 1), maxlength: NAME_MAX }), h('small', null, h('label', { title: '簡易AIが操作（ソロ検証用）' }, h('input', { type: 'checkbox', name: 'bot' + i }), 'AI'))));
     form.appendChild(h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, okLabel)));
-    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); rememberForm(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: fd.get('name' + i) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || (G.RULES_VISIBLE || ['v1'])[0], ext: fd.get('ext') || 'none', undoMode: fd.get('undoMode'), players, bots, aiDepth: +(fd.get('aiDepth') || 1) }); });
+    form.addEventListener('submit', ev => { ev.preventDefault(); const fd = new FormData(form); rememberForm(form); const n = +fd.get('n'); const players = []; for (let i = 0; i < n; i++) players.push({ name: cleanName(fd.get('name' + i)) || 'P' + (i + 1), passive: true }); const bots = []; for (let i = 0; i < n; i++) if (fd.get('bot' + i) === 'on') bots.push(i); onOk({ seed: +fd.get('seed'), mode: fd.get('mode'), slots: fd.get('slots') || 'v7', rules: fd.get('rules') || (G.RULES_VISIBLE || ['v1'])[0], ext: fd.get('ext') || 'none', undoMode: fd.get('undoMode'), players, bots, aiDepth: +(fd.get('aiDepth') || 1) }); });
     restoreForm(form);
     { const qr = new URLSearchParams(location.search).get('rules'), rs = form.elements.rules; if (qr && G.RULESETS[qr] && rs) { if (![...rs.options].some(o => o.value === qr)) rs.appendChild(h('option', { value: qr }, G.RULESETS[qr].name)); rs.value = qr; } } // O-20：隠しセット（T24 など）は ?rules= のときだけ選択肢に足す
     return form;
@@ -356,10 +356,11 @@
   }
   function renderSeats() {
     const box = h('div', { class: 'sec seats' }, h('h3', null, `ルーム ${game.code}　参加端末：${Net.seatUids().length}`));
+    box.appendChild(nameRow()); // O-50：部屋に入るときの名前（着席の前に入れる・あとから変えられる）
     st.players.forEach((p, i) => {
       const s = Net.seats[i]; const isMe = s && s.uid === Net.uid;
       box.appendChild(h('div', { class: 'seat' }, h('span', { class: 'mk p' + i }, i + 1), ` ${p.name}：`, isBot(i) ? 'AI' : s ? (isMe ? '自分' : `他端末`) : '空席', ' ',
-        isBot(i) ? null : !s ? h('button', { onclick: async () => { try { await Net.claimSeat(i, p.name); } catch (e) { toast(e.message, true); } } }, '着席') : isMe ? h('button', { onclick: () => Net.releaseSeat(i) }, '離席') : null));
+        isBot(i) ? null : !s ? h('button', { onclick: async () => { try { await Net.claimSeat(i, myName()); } catch (e) { toast(e.message, true); } } }, '着席') : isMe ? h('button', { onclick: () => Net.releaseSeat(i) }, '離席') : null));
     });
     { const url = inviteUrl(); const inp = h('input', { type: 'text', readonly: true, value: url, class: 'invite', onclick: (ev) => ev.target.select() }); // O-48：友人に送る URL
       box.appendChild(h('div', { class: 'frow' }, h('span', null, '招待 URL'), inp, h('button', { type: 'button', onclick: async () => { try { await navigator.clipboard.writeText(url); toast('URL をコピーしました'); } catch (e) { inp.select(); toast('URL を選択しました（コピーしてください）'); } } }, 'コピー'))); }
@@ -390,6 +391,22 @@
     for (let i = st.log.length - 1; i >= 0; i--) { const l = st.log[i]; if (l.kind === 'act' && l.p !== null && l.p !== undefined && !me.includes(l.p)) return Object.assign({ i }, l); if (l.kind === 'round') break; }
     return null;
   }
+  // O-50：経過＝自分の前回の手（行動）から今までの手。行動・手番を使わない行動・自動で上がった進化・ラウンドの区切り。収入などは載せない
+  function sinceRows() {
+    if (!st || st.phase !== 'play') return null; const c = G.cur(st).id;
+    const me = isOnline() ? myHumanPids() : (mine(c) ? [c] : myHumanPids());
+    let start = -1; for (let i = st.log.length - 1; i >= 0 && me.length; i--) { const l = st.log[i]; if (l.kind === 'act' && me.includes(l.p)) { start = i; break; } }
+    if (start < 0) { for (let i = st.log.length - 1; i >= 0; i--) if (st.log[i].kind === 'round') { start = i; if (me.length) { const f = st.log.findIndex(l => l.kind === 'round'); if (f >= 0) start = f; } break; } } // まだ自分の手がない＝対局の最初から（見ているだけの人は今のラウンドから）
+    if (start < 0) return null; const rows = [];
+    for (let i = start; i < st.log.length; i++) {
+      const l = st.log[i]; if (l.kind === 'round') { rows.push({ round: l.r }); continue; } if (l.p === null || l.p === undefined) continue;
+      const nm = st.players[l.p].name + '：'; if (!l.msg.startsWith(nm)) continue; const body = l.msg.slice(nm.length);
+      if (l.kind === 'act') rows.push({ p: l.p, msg: body, mine: i === start });
+      else if (l.kind === 'info' && /^(身体|知性|社会|代謝|星海開拓) Lv\d+（.*自動進化）/.test(body)) rows.push({ p: l.p, msg: body.replace(/（.*で自動進化）/, '（自動進化）'), sub: true });
+      else if (l.kind === 'info' && /合流進出|手番なし/.test(body)) rows.push({ p: l.p, msg: body, sub: true });
+    }
+    return rows;
+  }
   function entrySlot(e) { if (!e) return null; if (e.type === 'res' || e.type === 'tributeSlot') return e.slot; if (e.type === 'mass') return e.kind; if (e.type === 'organ') return 'OC_' + e.organ; if (e.type === 'trait') return 'TC_' + e.trait; const m = { breed: 'BRD', burst: 'BST', gather: 'GTH' }; if (e.type === 'track') return 'TRK_' + (e.track || 'body'); if (e.type === 'altar') return 'ALT_' + e.res; return m[e.type] || null; }
   let lastSeen = { key: null, t: 0 };
   function turnBar() {
@@ -397,7 +414,8 @@
     const lm = lastOtherMove(); const out = h('div', { class: 'turnbar' + (mt ? ' mine' : '') });
     if (mt) { const q = G.cur(st); const hs = myHumanPids(); out.appendChild(h('b', null, hs.length > 1 && !isOnline() ? `${q.name} の番です` : 'あなたの番です')); }
     else if (st && st.phase === 'play' && !st.ended && isOnline()) { const q = G.cur(st); const s = Net.seats[q.id]; out.appendChild(h('span', { class: 'waitmv' }, h('span', { class: 'mk p' + q.id }, q.id + 1), ` ${q.name} の番${isBot(q.id) ? '（AI）' : s ? '' : '（空席）'}を待っています`)); } // O-48：ほかの人の番の間も誰を待っているかを出す
-    if (lm) { const q = st.players[lm.p]; out.appendChild(h('span', { class: 'lastmv' }, '直前：', h('span', { class: 'mk p' + q.id }, q.id + 1), ` ${lm.msg.replace(new RegExp('^' + q.name + '：'), '')}`));
+    { const rows = sinceRows(); if (rows && rows.some(r => !r.round)) { const box = h('div', { class: 'since' }); rows.forEach(r => box.appendChild(r.round ? h('div', { class: 'sv rd' }, `ラウンド ${r.round}`) : h('div', { class: 'sv' + (r.sub ? ' sub' : '') + (r.mine ? ' me' : '') }, h('span', { class: 'mk p' + r.p }, r.p + 1), h('b', null, st.players[r.p].name), ' ' + r.msg))); out.appendChild(box); setTimeout(() => { box.scrollTop = box.scrollHeight; }, 0); } } // O-50：自分の前回の手番から今までの手（「直前：」の 1 行を置き換え）
+    if (lm) {
       const key = lm.i + ':' + st.log.length; if (lastSeen.key !== lm.i) { lastSeen = { key: lm.i, t: Date.now() }; setTimeout(() => { if (lastSeen.key === lm.i) markLastSlot(null); }, 4000); }
       const ents = isOnline() ? (Net.entries || []) : (game.entries || []); let e = null; for (let i = ents.length - 1; i >= 0; i--) { const x = ents[i]; if (x.pid === lm.p && !['undo', 'undoRound', 'undoOk', 'undoCancel', 'resolve'].includes(x.type)) { e = x; break; } }
       if (Date.now() - lastSeen.t < 4000) setTimeout(() => markLastSlot(entrySlot(e)), 0); }
@@ -815,7 +833,17 @@
   function pendingText(pd) {
     return { specialOrgan: '代謝 Lv4：特殊器官を 1 枚選んでください', fkBreed: '孵化核：繁殖を 1 回（手番なし）行えます', starJump: `${G.STAR_JUMP_NAME}：${G.STAR_NAME}を 1 段進められます（片方を 1.5 倍払い）`, prStar: `推進核：${G.STAR_NAME}の進化を 1 回（手番なし）行えます`, lYield: '生命核の産出：受け取る資源を選んでください', cvIncome: '収斂膜：収入時の追加資源を選んでください', wildColor: '共鳴膜：ワイルド色を選んでください', reMilestone: '感応系：再発動する到達済み報酬を選んでください', freeMass: '身体Lv3★先駆：淘汰を1回無料で実行してください', rewardTrait: pd.freeMax ? (pd.weakOnly ? `転写体：弱の値段が G${pd.freeMax} 以下の形質1枚を弱で無料で取れます` : `全転写：G${pd.freeMax} 以下の形質1枚を無料で取れます`) : '知性Lv3★先駆：形質1枚を割引で獲得できます', bonusAction: '知性Lv4↗：追加アクションを今すぐ実行してください（排他なしアクション／Eコスト半額／ワーカー不要）。対象以外はグレー表示', flSwap: '収入時の転流：E↔Gを振替できます', dgBuy: 'ラウンド開始時：遺伝子図書館で形質1枚を割引で獲得できます（手番は消費しません）', join: `合流進出：資源枠を 1 つ使えます（残り ${pd.n} 回・見送ると消えます）` }[pd.type] || pd.type;
   }
-  function renderSeatsMini() { const box = h('div', { class: 'panel others seatsmini' }, h('h3', null, `ルーム ${game.code}`)); st.players.forEach((p, i) => { const s = Net.seats[i]; box.appendChild(h('div', { class: 'orow' }, h('span', { class: 'mk p' + i }, i + 1), ` ${p.name}：${isBot(i) ? 'AI' : s ? (s.uid === Net.uid ? '自分' : '他端末') : '空席'} `, isBot(i) ? null : !s ? h('button', { onclick: () => Net.claimSeat(i, p.name).catch(e => toast(e.message, true)) }, '着席') : s.uid === Net.uid ? h('button', { onclick: () => Net.releaseSeat(i) }, '離席') : null)); }); return box; }
+  function renderSeatsMini() { const box = h('div', { class: 'panel others seatsmini' }, h('h3', null, `ルーム ${game.code}`)); st.players.forEach((p, i) => { const s = Net.seats[i]; box.appendChild(h('div', { class: 'orow' }, h('span', { class: 'mk p' + i }, i + 1), ` ${p.name}：${isBot(i) ? 'AI' : s ? (s.uid === Net.uid ? '自分' : '他端末') : '空席'} `, isBot(i) ? null : !s ? h('button', { onclick: () => Net.claimSeat(i, p.name).catch(e => toast(e.message, true)) }, '着席') : s.uid === Net.uid ? h('button', { onclick: () => Net.releaseSeat(i) }, '離席') : null)); }); box.appendChild(nameRow()); return box; }
+  // O-50：名前（ネット対戦）。この端末に記憶し、着席中の自分の席にも反映する（あとから変えられる）
+  const NAME_MAX = 8, NAME_KEY = 'g01_name';
+  function cleanName(s) { return Array.from(String(s || '').replace(/\s+/g, ' ').trim()).slice(0, NAME_MAX).join(''); }
+  function myName() { try { return cleanName(localStorage.getItem(NAME_KEY)); } catch (e) { return ''; } }
+  function nameRow() {
+    const inp = h('input', { type: 'text', maxlength: NAME_MAX, value: myName(), placeholder: 'P1〜P4' });
+    const save = async () => { const v = cleanName(inp.value); try { localStorage.setItem(NAME_KEY, v); } catch (e) { } try { await Promise.all(Net.mySeats().map(i => Net.setSeatName(i, v))); toast(v ? `名前：${v}` : '名前を消しました'); } catch (e) { toast(e.message, true); } };
+    inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); save(); } });
+    return h('div', { class: 'frow namerow' }, h('span', null, '名前'), inp, h('button', { type: 'button', onclick: save }, '変更'));
+  }
   const altarTxt = (q) => { if (G.RULESETS[st.rules || 'v1'].altar) { const u = G.ALTAR_KEYS.filter(k => q.tribGame && q.tribGame[k]).map(k => G.ALTAR_JP[k]); return `｜祭壇 ${u.length}/${G.ALTAR_KEYS.length}${u.length ? '（' + u.join('・') + '）' : ''}`; } if (!G.RULESETS[st.rules || 'v1'].tributeOnceGame) return ''; const u = [['G', '遺伝子'], ['L', '生命核'], ['coop', '協調']].filter(([k]) => q.tribGame && q.tribGame[k]).map(([, n]) => n); return `｜祭壇 ${u.length}/3${u.length ? '（' + u.join('・') + '）' : ''}`; }; // v3.68：他プレイヤーの祭壇の使用状況（ワーカーが乗っている祭壇）
   function renderOthers(p) {
     const box = h('div', { class: 'panel others' }, h('h3', null, '他プレイヤー'));
@@ -1088,7 +1116,7 @@
   function autosave() { if (!game || isOnline()) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(game)); } catch (e) { } }
   function loadSave() { try { const s = localStorage.getItem(SAVE_KEY); if (!s) return toast('保存データがありません', true); game = JSON.parse(s); rebuildState(); render(); } catch (e) { toast('読み込み失敗：' + e.message, true); } }
   function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); }
-  function exportJson() { if (!game) return; const data = isOnline() ? { kind: 'local', meta: Net.meta, entries: Net.entries } : game; download(`game01_${data.meta.seed}.json`, JSON.stringify(data, null, 1), 'application/json'); }
+  function exportJson() { if (!game) return; const data = isOnline() ? { kind: 'local', meta: Net.metaNamed(), entries: Net.entries } : game; /* O-50：席の名前を入れた meta */ download(`game01_${data.meta.seed}.json`, JSON.stringify(data, null, 1), 'application/json'); }
   function importJson() { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = () => { const f = i.files[0]; if (!f) return; f.text().then(t => { const d = JSON.parse(t); if (!d.meta || !d.entries) throw new Error('形式が違います'); game = { kind: 'local', meta: d.meta, entries: d.entries }; rebuildState(); autosave(); render(); }).catch(e => toast(e.message, true)); }; i.click(); }
   function exportCsv() {
     if (!st) return;
