@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.122'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.124'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -332,8 +332,12 @@
     G.RULESETS.t30s2 = Object.assign({}, T30, { name: 'T30S2（計測のみ・祭壇は 1 手で 2 個まで・1 R に 1 回）', altarDouble: { extraL: 0, perRound: true } }); } // O-39（第71部 §101・計測のみ）・O-43（第71部 §105 の 2.・計測のみ）
   // T31（2026-11-17・ORDERS O-44・ユーザー承認・第71部 §106）＝T30 ＋ A. 淘汰の 2 人目（協調 3 または生命核 1 個・打つ人が選ぶ）B. 知性 Lv5★ 強の裏返しは 3 枚まで C. 祭壇は 1 手に払い口 2 つまで・同じ R の自分の 2 回目以降の祭壇の手は手ごとに生命核 1 個を足す（投入に数える）
   G.RULESETS.t31 = Object.assign({}, G.RULESETS.t30, { name: 'T31（T30＋淘汰の 2 人目・先駆の裏返し 3 枚まで・祭壇は 1 手 2 個まで）', massSecond: { pay: 'either', coop: 3, L: 1 }, flip5sMax: 3, altarDouble: { extraL: 0, perRound: false, repeatL: 1 } });
-  G.RULES_VISIBLE = ['t31']; // v3.121（O-44）：既定を T31 に（T30 以前は ?rules= で打てる）
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31'];
+  // T32（2026-11-17・ORDERS O-47・ユーザー承認・第71部 §108）＝T31 ＋ 探索・復元を削除／恩寵枠の候補＝器官の恩寵・神の加護・跳躍・祭壇の恩寵・命の恩寵・繁殖の恩寵（形質の恩寵を外す）／自己複製 手番→P40（払いなし・緊急進出の対象）／特殊器官 蓄電嚢 E4・蓄積腺 G3・貯蔵腔 P8／発光腺 祝福+2・発光核 痕跡+1＋祝福+2
+  { const T31 = G.RULESETS.t31; G.RULESETS.t32 = Object.assign({}, T31, { name: 'T32（T31＋探索・復元を削除・恩寵 6 種から 3 つ・自己複製 P40・特殊器官と発光の値上げ）', noScan: true, restore: null,
+      tribute: Object.assign({}, T31.tribute, { slots: Object.assign({}, T31.tribute.slots, { TAL: { kind: 'altarHalf' }, TLF: { kind: 'life', L: 3 }, TBR: { kind: 'breedHalf' } }), pool: ['TO', 'TB', 'TJ', 'TAL', 'TLF', 'TBR'] }),
+      pbG: 0, pbGain: 40, pbLaunch: true, spInc: Object.assign({}, T31.spInc, { SpE: { E: 4 }, SpG: { G: 3 }, SpP: { P: 8 } }), spText: Object.assign({}, T31.spText, { SpE: '収入 器官 1 枚につき E+4', SpG: '収入 器官 1 枚につき G+3', SpP: '収入 器官 1 枚につき P+8' }), lm2Vg: 2, lm3Vg: 2 }); }
+  G.RULES_VISIBLE = ['t32']; // v3.124（O-47）：既定を T32 に（T31 以前は ?rules= で打てる）
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31', 't32'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
@@ -536,7 +540,7 @@
     Pu2: { strong: '収入 P+25', weak: '同' },
     Pu3: { strong: '緊急進出の獲得量 4 倍（協調の上乗せは別）', weak: '同' },
   };
-  G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); if (R && R.liMode === 'lineage' && G.ORGANS_V4[id]) o = Object.assign({}, o, G.ORGANS_V4[id]); if (R && R.nvTrait === 2 && G.ORGANS_V5[id]) o = Object.assign({}, o, G.ORGANS_V5[id]); if (R && R.nvW && G.ORGANS_V6[id]) o = Object.assign({}, o, G.ORGANS_V6[id]); if (R && R.pulseInc && G.ORGANS_V7[id]) o = Object.assign({}, o, G.ORGANS_V7[id]); if (R && R.hc2Herd && id === 'Hc2') o = Object.assign({}, o, { strong: `形成時 協調+${R.hc2Coop} ＋ 群体同期・群体融合で協調+${R.hc2Herd}`, weak: '同' }); /* T28（O-29） */ return o; }; // x＝ゲーム状態 or 数値セット
+  G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); if (R && R.liMode === 'lineage' && G.ORGANS_V4[id]) o = Object.assign({}, o, G.ORGANS_V4[id]); if (R && R.nvTrait === 2 && G.ORGANS_V5[id]) o = Object.assign({}, o, G.ORGANS_V5[id]); if (R && R.nvW && G.ORGANS_V6[id]) o = Object.assign({}, o, G.ORGANS_V6[id]); if (R && R.pulseInc && G.ORGANS_V7[id]) o = Object.assign({}, o, G.ORGANS_V7[id]); if (R && R.hc2Herd && id === 'Hc2') o = Object.assign({}, o, { strong: `形成時 協調+${R.hc2Coop} ＋ 群体同期・群体融合で協調+${R.hc2Herd}`, weak: '同' }); /* T28（O-29） */ if (R && R.joinNow && ['strong', 'weak', 'strongB', 'weakB'].some(k => o[k] && o[k].includes('形成時 自由行動+1'))) { const fx = (t) => t && t.replace('形成時 自由行動+1', '形成時 合流進出 1 回（その場で使う）'); o = Object.assign({}, o, { strong: fx(o.strong), weak: fx(o.weak), strongB: fx(o.strongB), weakB: fx(o.weakB) }); } /* O-46：群心核 Hc3 は joinNow（T19 以降）なら合流進出（engine の addShield） */ if (R && ((id === 'Lm2' && R.lm2Vg > 1) || (id === 'Lm3' && R.lm3Vg > 1))) { const v = id === 'Lm2' ? R.lm2Vg : R.lm3Vg; const fx = (t) => t && t.replace('祝福+1', '祝福+' + v); o = Object.assign({}, o, { strong: fx(o.strong), weak: fx(o.weak) }); } /* T32（O-47）：発光腺・発光核の祝福+2 */ return o; }; // x＝ゲーム状態 or 数値セット
   G.isChanged = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); return !!(R && R.changed && R.changed.includes(id)); }; // 画面の「改」バッジ
   G.ORGAN_FIELD = ['Li1', 'Li2', 'Li3', 'Tr1', 'Tr2', 'Tr3', 'Fl1', 'Fl2', 'Fl3', 'Rh1', 'Rh2', 'Rh3']; // 初心者固定
   G.LINEAGES = { Li: '連結', Tr: '翻訳', Fl: '転流', Rh: '律動', Ca: '触媒', Cv: '収斂', Re: '感応', St: '応力', Mg: '代謝', Tl: '転写', Hc: '群心', Pu: '脈動', Cx: '促進', Fk: '孵化', Nv: '神経', Lm: '発光', Pr: '推進', Sp: '特殊' };
@@ -610,6 +614,9 @@
     { id: 'TA',   group: 'trib', excl: true,  name: '錬金', text: '（廃止・色の廃止により未使用）', rs: 'tribute' },
     { id: 'TB',   group: 'trib', excl: true,  name: '神の加護', text: '資源枠1つを今すぐ（使用済みでも）＋残りの手番は資源枠が倍', rs: 'tribute' },
     { id: 'TJ',   group: 'trib', excl: true,  name: '跳躍', text: '進化2回・E の支払い −E', rs: 'tribute' },
+    { id: 'TAL',  group: 'trib', excl: true,  name: '祭壇の恩寵', text: '祭壇の払い口 1 つを半額で', rs: 'tribute' }, // T32（O-47）
+    { id: 'TLF',  group: 'trib', excl: true,  name: '命の恩寵', text: '生命核+3', rs: 'tribute' },
+    { id: 'TBR',  group: 'trib', excl: true,  name: '繁殖の恩寵', text: '繁殖 1 段を半額で', rs: 'tribute' },
     { id: 'SCAN', group: 'cu',   excl: false, name: '探索', text: 'E5 → 他者の最高Lv×2の資源' },
     { id: 'ADP',  group: 'cu',   excl: false, name: '適応進化',  text: 'L1 → Lv1のトラックを+1（ワーカー必須）', worker: true },
     { id: 'CNV',  group: 'cu',   excl: false, name: '資源変換',  text: 'E2→G1 / G2→E1 / P8→E3 / P8→G2' },

@@ -49,11 +49,11 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 
 <div class="blk"><h2><i>3</i>占有盤（各枠1ラウンドに1人）</h2>
 <ul>
-<li><b>資源</b>：<span id="res"></span>（＋協調数ぶん増える）。空き枠で生命核1を払うと<b>獲得量3倍</b>（緊急進出・脈動核で4倍）。生命核は E・G の代わりに払えない。使用済みは協調進出（協調3）で突破＝<b>獲得量2倍</b></li>
+<li><b>資源</b>：<span id="res"></span>（＋協調数ぶん増える）。空き枠で生命核1を払うと<b>獲得量3倍</b>（緊急進出・脈動核で4倍）。<span id="pbl"></span>生命核は E・G の代わりに払えない。<b>協調進出</b>＝使用済みの場所に協調3で入る（資源枠は<b>獲得量2倍</b>・淘汰は生命核1でも）</li>
 <li><b>合流進出</b>（社会 Lv4・Lv5★）：得たその場で資源枠を1つ（使用済み・自己複製も可・ワーカー不要・使わなければ消える）</li>
 <li><b>淘汰</b>：<span id="mass"></span></li>
 <li><b>形質獲得</b>（強は1枚だけ早い者勝ち・弱は何枚でも・弱にも固有の効果）</li>
-<li><b>恩寵枠</b>（R<span id="tribR"></span>〜・4種から3種）：<span id="tribpool"></span></li>
+<li><b>恩寵枠</b>（R<span id="tribR"></span>〜・<span id="tribn">4</span>種から3種）：<span id="tribpool"></span></li>
 </ul></div>
 
 <div class="blk"><h2><i>4</i>共用盤（何人でも・何回でも）</h2>
@@ -63,23 +63,24 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 <li><b>最終R＝祝福枠</b>：空いている資源枠にワーカーを置くと資源に加えて祝福+1（緊急進出も対象・協調進出・合流進出は対象外）</li>
 <li><b>繁殖</b>：P<span id="breed"></span> の段と L<span id="breedL"></span> の段を<b>同時に行ってよい</b>（それぞれ 1 段・増殖暴走の強で 2 段）→ 繁栄度+1ずつ（4段まで<span id="breedcap"></span>・ワーカー必須）</li>
 <li><b>器官形成</b>：定価 <span id="ocost"></span>。1 枚ずつは 1 つ前の形態の定価を引いた差額。効果は先駆も追随も同じ<span id="latex">、追随は代償 +<span id="late"></span>E</span>。同じ系統3枚＝系統完成で成熟度+1（1・3 系統目）</li>
-<li><b>復元</b> <span id="rst"></span>／<b>急速形成</b> <span id="bst"></span></li>
-<li>探索 <span id="scan"></span>／<b>採集</b> <span id="gth"></span>。資源どうしの変換はなし</li>
+<li id="rstli"><b>復元</b> <span id="rst"></span></li>
+<li><b>急速形成</b> <span id="bst"></span></li>
+<li><span id="scanw">探索 <span id="scan"></span>／</span><b>採集</b> <span id="gth"></span>。資源どうしの変換はなし</li>
 </ul></div>
 
 <div class="two">
 <div class="blk"><h2><i>5</i>資源</h2>
-<p><b>E</b> 進化・器官・復元・祭壇・<span class="x2">試練</span>／<b>G</b> 形質・復元・祭壇・<span class="x2">試練</span>／<b>P</b> 淘汰・繁殖・群体の枠・祭壇・<span class="x2">試練</span>／<b>L</b> 持てば P を生む。緊急進出・繁殖・祭壇・<span class="x2">試練</span>・身体 Lv6 に払う（E・G の代わりには払えない・払った個数が身体の素材）／<b>協調</b> 資源枠の取り分+協調数（上限<span id="coopmax"></span>）</p></div>
+<p><b>E</b> 進化・器官・祭壇・<span class="x2">試練</span>／<b>G</b> 形質・祭壇・<span class="x2">試練</span>／<b>P</b> 淘汰・繁殖・群体の枠・祭壇・<span class="x2">試練</span>／<b>L</b> 持てば P を生む。緊急進出・繁殖・祭壇・<span class="x2">試練</span>・身体 Lv6 に払う（E・G の代わりには払えない・払った個数が身体の素材）／<b>協調</b> 資源枠の取り分+協調数（上限<span id="coopmax"></span>）</p></div>
 <div class="blk"><h2><i>6</i>終了時</h2>
 <p>Lv6：先駆 痕跡+3＋祝福+1／追随 痕跡+2。終了時、素材3個につき祝福+1（社会は祝福+3 固定・知性は神経（神経点・神経網 1 枚・神経核 2 枚）を含み Lv4 のぶんを引かない）。<br>得点＝痕跡×繁栄度＋祝福×成熟度</p></div>
 </div>
 
 <div class="blk"><h2><i>7</i>種族（初期資源 E/G/P）</h2><p id="sp"></p></div>
-<div class="foot">数値はアプリと同じ data.js／engine.js（T31・5ラウンド）から表示・2026-11-17 改訂（星海開拓は 4 本の下の 5 段目／T31＝T30＋淘汰の 2 人目〔協調 3 か生命核 1〕・Lv5★ 強の裏返し 3 枚まで・祭壇は 1 手 2 個まで〔同じ R の 2 回目以降は生命核 1〕／T30＝T29＋知性 Lv3★ 弱・Lv5★ 弱／強を「弱の形質を強に裏返す」能力に（Lv3★ 弱 1 枚・Lv5★ 弱 2 枚まで・裏返さない 1 枚につき G+9／Lv5★ 強 好きなだけ）・淘汰(代謝) E15＋身体 Lv×5／G15＋知性 Lv×5・淘汰 4 種のあと P が代謝 Lv×5 返る／T29＝T28＋祭壇 祝福 +2／+3／+4／+5／+6・星海開拓の先駆 Lv3 痕跡 5／Lv5 6・代謝の素材 3／6／9／12（Lv3★ 強 E・G 収入 +4・Lv5★ +10／+5）・知性の素材 2／4／7／10・知的跳躍＝形質 4／3 枚として数える・身体覚醒＝生命核の投入 +3／+2・身体 Lv4 のまとめ払いの条件なし／T28＝T27＋群心網 形成時 協調+1・群体同期／融合で協調+1・星海開拓で払った生命核を投入に数える／T27＝T26＋器官の系統「推進」・星渡〔着く Lv の条件の 2 種のうち 1 種を 1.5 倍払って +1 段〕・先駆を Lv3／Lv5 に／T26＝T25＋星海開拓を Lv1〜Lv6〔Lv5／Lv6 の値上げ・Lv6 は 4 本の Lv6 と同じ先着／後着・神の裁定 祝福 +2〕・代謝 Lv6 E100・星渡／T25＝T24−試練＋星海開拓〔進化で進める 5 本目のトラック・痕跡 +2／+3／+4／+4／+5・3／5 段目の先駆は痕跡 +1 か繁栄度 +1〕−器官の追随の代償／T24＝T23＋試練〔R1〜R5 に 1 種ずつ・いまのラウンドだけ・痕跡 +2／+2／+2／+3／+3〕／T23＝T22＋祭壇を払い口 5 つに〔各 1 ゲーム 1 回・何個目かで祝福 +2／+2／+3／+3／+4〕／T22＝T21＋生命核の代用払いなし・身体★ L＋P・脈動 P 収入／脈動核 緊急進出 4 倍・身体 Lv6 L3・最果ての痕跡の廃止／T21＝T20＋献上（遺伝子）は生命核で払えない・Lv6 知性 G84・代謝 E150／T20＝T19−収入の即時（代謝・器官とも）・★は自動進化の追随なら弱・神経 1・1・2 枚ぶん・身体 Lv6 L4／T19＝T18＋合流進出・収入は得たときにも 1 回・神経 2 枚ぶん・資源枠の強化・Lv6 のコストと得点・知性の神の裁定／T18＝T17＋緊急進出 3 倍・生命核→資源の廃止・連結・連絡腺・淘汰(代謝) E20+G20・社会 Lv6 の神の裁定 祝福+3／T17＝T16＋光翼 P21・九腕 E15／T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化）</div>
+<div class="foot">数値はアプリと同じ data.js／engine.js（T32・5ラウンド）から表示・2026-11-17 改訂（星海開拓は 4 本の下の 5 段目／T32＝T31−探索・復元＋恩寵 6 種から 3 つ〔祭壇・命・繁殖の恩寵を追加・形質の恩寵を外す〕・自己複製 P40〔緊急進出の対象〕・特殊器官 E4／G3／P8・発光 祝福+2／T31＝T30＋淘汰の 2 人目〔協調 3 か生命核 1〕・Lv5★ 強の裏返し 3 枚まで・祭壇は 1 手 2 個まで〔同じ R の 2 回目以降は生命核 1〕／T30＝T29＋知性 Lv3★ 弱・Lv5★ 弱／強を「弱の形質を強に裏返す」能力に（Lv3★ 弱 1 枚・Lv5★ 弱 2 枚まで・裏返さない 1 枚につき G+9／Lv5★ 強 好きなだけ）・淘汰(代謝) E15＋身体 Lv×5／G15＋知性 Lv×5・淘汰 4 種のあと P が代謝 Lv×5 返る／T29＝T28＋祭壇 祝福 +2／+3／+4／+5／+6・星海開拓の先駆 Lv3 痕跡 5／Lv5 6・代謝の素材 3／6／9／12（Lv3★ 強 E・G 収入 +4・Lv5★ +10／+5）・知性の素材 2／4／7／10・知的跳躍＝形質 4／3 枚として数える・身体覚醒＝生命核の投入 +3／+2・身体 Lv4 のまとめ払いの条件なし／T28＝T27＋群心網 形成時 協調+1・群体同期／融合で協調+1・星海開拓で払った生命核を投入に数える／T27＝T26＋器官の系統「推進」・星渡〔着く Lv の条件の 2 種のうち 1 種を 1.5 倍払って +1 段〕・先駆を Lv3／Lv5 に／T26＝T25＋星海開拓を Lv1〜Lv6〔Lv5／Lv6 の値上げ・Lv6 は 4 本の Lv6 と同じ先着／後着・神の裁定 祝福 +2〕・代謝 Lv6 E100・星渡／T25＝T24−試練＋星海開拓〔進化で進める 5 本目のトラック・痕跡 +2／+3／+4／+4／+5・3／5 段目の先駆は痕跡 +1 か繁栄度 +1〕−器官の追随の代償／T24＝T23＋試練〔R1〜R5 に 1 種ずつ・いまのラウンドだけ・痕跡 +2／+2／+2／+3／+3〕／T23＝T22＋祭壇を払い口 5 つに〔各 1 ゲーム 1 回・何個目かで祝福 +2／+2／+3／+3／+4〕／T22＝T21＋生命核の代用払いなし・身体★ L＋P・脈動 P 収入／脈動核 緊急進出 4 倍・身体 Lv6 L3・最果ての痕跡の廃止／T21＝T20＋献上（遺伝子）は生命核で払えない・Lv6 知性 G84・代謝 E150／T20＝T19−収入の即時（代謝・器官とも）・★は自動進化の追随なら弱・神経 1・1・2 枚ぶん・身体 Lv6 L4／T19＝T18＋合流進出・収入は得たときにも 1 回・神経 2 枚ぶん・資源枠の強化・Lv6 のコストと得点・知性の神の裁定／T18＝T17＋緊急進出 3 倍・生命核→資源の廃止・連結・連絡腺・淘汰(代謝) E20+G20・社会 Lv6 の神の裁定 祝福+3／T17＝T16＋光翼 P21・九腕 E15／T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化）</div>
 
 <script src="../app/js/icons.js"></script>
-<script src="../app/js/data.js?v=3.122"></script>
-<script src="../app/js/engine.js?v=3.122"></script>
+<script src="../app/js/data.js?v=3.124"></script>
+<script src="../app/js/engine.js?v=3.124"></script>
 <script>
 (function () {
   const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS[(G.RULES_VISIBLE || ['t15'])[0]]; // 2026-11-05 既定 t8→t10／2026-11-07 t12→t13／2026-11-08 RULES_VISIBLE の先頭（T14）
@@ -94,7 +95,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
   set('res', ['E5', 'EG', 'G3', 'GG', 'P8', 'ALL', 'PB'].map(id => `${G.SLOT_BY_ID[id].name} ${sl(id)}`).join('／'));
   { const rt = /・P が.+ 返る$/; const ms = ['MB', 'MI', 'MS', 'MM'].map(id => sl(id)); set('mass', ['MB', 'MI', 'MS', 'MM'].map((id, i) => `${G.SLOT_BY_ID[id].name.replace(/^(大量消費|淘汰)/, '')} ${ms[i].replace(rt, '')}`).join('／') + (R.massRetMetab ? `（どれも実行したあと P が${G.retForm(st)} 返る）` : '') + (R.massSecond && R.massSecond.pay === 'either' ? `。使用済みでも協調 ${R.massSecond.coop} か生命核 ${R.massSecond.L} で 2 人目に入れる（1 R に 2 人まで）` : '')); } // T30（O-37）：P のリターンは 1 回だけ書く
   set('rst', sl('RST')); set('bst', sl('BST')); set('gth', sl('GTH').replace(/（.*$/, ''));
-  set('tribR', T.openRound || 6); set('tribpool', T.pool.map(id => `${G.SLOT_BY_ID[id].name}＝${sl(id)}`).join('／'));
+  set('tribR', T.openRound || 6); set('tribn', T.pool.length); if (!R.restore) document.getElementById('rstli').hidden = true; if (R.noScan) document.getElementById('scanw').hidden = true; if (R.pbLaunch) set('pbl', '自己複製も緊急進出の対象。'); set('tribpool', T.pool.map(id => `${G.SLOT_BY_ID[id].name}＝${sl(id)}`).join('／'));
   set('flatG', G.sc(st, T.flatG)); set('lcry', R.lCrystal); set('ccry', R.coopCrystal); set('toutG', G.tribOutText(st, 'G')); set('toutL', G.tribOutText(st, 'L')); set('toutC', G.tribOutText(st, 'coop')); set('tlim', R.tributeOnceGame ? '各祭壇は1ゲームに1回' : '各品目各自1R1回');
   const X = (n) => { document.querySelectorAll('.x2').forEach(e => { e.textContent = n; }); }; X(R.trial ? '試練' : R.star ? G.STAR_NAME : ''); if (!R.trial && !R.star) document.querySelectorAll('.x2').forEach(e => { e.previousSibling && (e.previousSibling.textContent = e.previousSibling.textContent.replace(/・$/, '')); });
   if (R.organLateFee === 0) document.getElementById('latex').hidden = true; // T25（O-23）：追随の代償なし
