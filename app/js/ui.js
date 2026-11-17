@@ -16,7 +16,7 @@
   function art(id, cls) {
     id = (G.ART_ALIAS && G.ART_ALIAS[id]) || id;
     const img = h('img', { class: 'art ' + (cls || ''), alt: '', loading: 'lazy', src: ART_REAL + id + '.png' });
-    img.addEventListener('error', () => { if (img.dataset.ph) { img.remove(); return; } img.dataset.ph = '1'; img.src = ART_PH + id + '.svg'; });
+    img.addEventListener('error', () => { if (img.dataset.ph) { if (img.closest('.ocard, .tcard')) img.replaceWith(h('div', { class: 'art noart ' + (cls || '') })); else img.remove(); return; } /* O-48：器官・形質のカードは絵が無くても同じ枠を残し、カードの高さをそろえる */ img.dataset.ph = '1'; img.src = ART_PH + id + '.svg'; });
     return img;
   }
   const SPECIES_ART = { wing: 'species_wing', arm: 'species_arm', ant: 'species_ant', manta: 'species_manta' };
@@ -172,7 +172,7 @@
     }, fast ? 0 : 500);
   }
   async function submit(entry) {
-    entry = noSub(entry);
+    entry = noSub(entry); if (entry && entry.at === undefined) entry = Object.assign({}, entry, { at: Date.now() }); // O-48：各手の時刻（CSV・JSON に残す）
     try {
       if (st && st.phase === 'play' && !['undo', 'undoRound', 'undoOk', 'undoCancel'].includes(entry.type)) G.tryApply(st, entry);
       else if (st && st.phase === 'setup' && !['undo', 'undoRound'].includes(entry.type)) { const s = G.clone(st); s.history = []; G.applyEntry(s, entry); }
@@ -256,7 +256,7 @@
     const box = h('div', { class: 'setup' }, h('h2', null, 'game01 デジタルモック'));
     box.appendChild(h('p', { class: 'note' }, '1台で遊ぶ（パス＆プレイ・1人で複数人を回す検証も可）か、各自の端末から同じ卓に参加する（オンライン）かを選びます。'));
     box.appendChild(h('p', { class: 'note' }, '画面の配色：', themeToggle(), '　白（ライト）／黒（ダーク）。この端末に記憶され、ゲーム中もヘッダ右端で切り替えられます。'));
-    box.appendChild(metaForm('ローカル（この端末だけ・パス＆プレイ）', '開始', async (meta) => { game = { kind: 'local', meta, entries: [] }; rebuildState(); autosave(); render(); }));
+    box.appendChild(metaForm('ローカル（この端末だけ・パス＆プレイ）', '開始', async (meta) => { meta = Object.assign({}, meta, { startedAt: Date.now() }); game = { kind: 'local', meta, entries: [] }; rebuildState(); autosave(); render(); }));
     const on = h('div', { class: 'sec' }, h('h3', null, 'オンライン（各自の端末から参加）'));
     if (!Net.init()) on.appendChild(h('p', { class: 'warn' }, Net.error + '。手順は README を参照。'));
     else {
@@ -297,7 +297,8 @@
     Array.from(form.elements).forEach(el => { if (!el.name || !(el.name in saved)) return; if (el.type === 'checkbox') el.checked = !!saved[el.name]; else el.value = saved[el.name]; });
     if (form.elements.rules && !form.elements.rules.value && G.RULES_VISIBLE) form.elements.rules.value = G.RULES_VISIBLE[0]; // 保存値が隠したセット（T10 など）なら T12 に
   }
-  function bindNet() { Net.onChange = () => { rebuildState(); render(); }; rebuildState(); render(); }
+  function inviteUrl() { return location.origin + location.pathname + '?room=' + (game && game.code || ''); }
+  function bindNet() { Net.onChange = () => { rebuildState(); render(); }; try { const q = new URLSearchParams(location.search); if (q.get('room') !== game.code) { q.set('room', game.code); history.replaceState(null, '', location.pathname + '?' + q.toString()); } } catch (e) { } rebuildState(); render(); } // O-48：アドレスに ?room= を付ける（再読み込みでそのまま戻れる）
 
   // ---------- 画面：セットアップ ----------
   function renderSetup() {
@@ -353,10 +354,12 @@
     const box = h('div', { class: 'sec seats' }, h('h3', null, `ルーム ${game.code}　参加端末：${Net.seatUids().length}`));
     st.players.forEach((p, i) => {
       const s = Net.seats[i]; const isMe = s && s.uid === Net.uid;
-      box.appendChild(h('div', { class: 'seat' }, h('span', { class: 'mk p' + i }, i + 1), ` ${p.name}：`, s ? (isMe ? '自分' : `他端末`) : '空席', ' ',
-        !s ? h('button', { onclick: async () => { try { await Net.claimSeat(i, p.name); } catch (e) { toast(e.message, true); } } }, '着席') : isMe ? h('button', { onclick: () => Net.releaseSeat(i) }, '離席') : null));
+      box.appendChild(h('div', { class: 'seat' }, h('span', { class: 'mk p' + i }, i + 1), ` ${p.name}：`, isBot(i) ? 'AI' : s ? (isMe ? '自分' : `他端末`) : '空席', ' ',
+        isBot(i) ? null : !s ? h('button', { onclick: async () => { try { await Net.claimSeat(i, p.name); } catch (e) { toast(e.message, true); } } }, '着席') : isMe ? h('button', { onclick: () => Net.releaseSeat(i) }, '離席') : null));
     });
-    box.appendChild(h('p', { class: 'note' }, '1人で複数席に着席すれば、1台で複数人分を回せます（検証用）。URLに ?room=コード を付けると直接参加できます。'));
+    { const url = inviteUrl(); const inp = h('input', { type: 'text', readonly: true, value: url, class: 'invite', onclick: (ev) => ev.target.select() }); // O-48：友人に送る URL
+      box.appendChild(h('div', { class: 'frow' }, h('span', null, '招待 URL'), inp, h('button', { type: 'button', onclick: async () => { try { await navigator.clipboard.writeText(url); toast('URL をコピーしました'); } catch (e) { inp.select(); toast('URL を選択しました（コピーしてください）'); } } }, 'コピー'))); }
+    box.appendChild(h('p', { class: 'note' }, 'この URL を送ると、相手はそのまま参加できます。各自が自分の席に「着席」してください（1 人で複数席に着けば 1 台で複数人分も回せます）。'));
     return box;
   }
 
@@ -373,8 +376,34 @@
     const pend = p.pending[0];
     if (pend && can) handlePending(p, pend);
   }
+  // O-48：ヘッダの資源＝オンラインは自分の席だけ／ローカルで人が複数いるときは手番の人だけ
+  function headerPids() { const hs = myHumanPids(); if (isOnline() || hs.length <= 1 || !st || st.phase !== 'play') return hs; const c = G.cur(st).id; return hs.includes(c) ? [c] : []; }
+  // O-48：自分の番の知らせ（消えない帯・タブの題の印）と直前の手（ほかの人・AI の最後の 1 手）
+  const BASE_TITLE = document.title;
+  function myTurnNow() { return !!(st && st.phase === 'play' && !st.ended && mine(G.cur(st).id)); }
+  function lastOtherMove() {
+    if (!st || st.phase !== 'play') return null; const me = isOnline() ? myHumanPids() : [G.cur(st).id];
+    for (let i = st.log.length - 1; i >= 0; i--) { const l = st.log[i]; if (l.kind === 'act' && l.p !== null && l.p !== undefined && !me.includes(l.p)) return Object.assign({ i }, l); if (l.kind === 'round') break; }
+    return null;
+  }
+  function entrySlot(e) { if (!e) return null; if (e.type === 'res' || e.type === 'tributeSlot') return e.slot; if (e.type === 'mass') return e.kind; if (e.type === 'organ') return 'OC_' + e.organ; if (e.type === 'trait') return 'TC_' + e.trait; const m = { breed: 'BRD', burst: 'BST', gather: 'GTH' }; if (e.type === 'track') return 'TRK_' + (e.track || 'body'); if (e.type === 'altar') return 'ALT_' + e.res; return m[e.type] || null; }
+  let lastSeen = { key: null, t: 0 };
+  function turnBar() {
+    const mt = myTurnNow(); document.title = (mt ? '● ' : '') + BASE_TITLE;
+    const lm = lastOtherMove(); const out = h('div', { class: 'turnbar' + (mt ? ' mine' : '') });
+    if (mt) { const q = G.cur(st); const hs = myHumanPids(); out.appendChild(h('b', null, hs.length > 1 && !isOnline() ? `${q.name} の番です` : 'あなたの番です')); }
+    else if (st && st.phase === 'play' && !st.ended && isOnline()) { const q = G.cur(st); const s = Net.seats[q.id]; out.appendChild(h('span', { class: 'waitmv' }, h('span', { class: 'mk p' + q.id }, q.id + 1), ` ${q.name} の番${isBot(q.id) ? '（AI）' : s ? '' : '（空席）'}を待っています`)); } // O-48：ほかの人の番の間も誰を待っているかを出す
+    if (lm) { const q = st.players[lm.p]; out.appendChild(h('span', { class: 'lastmv' }, '直前：', h('span', { class: 'mk p' + q.id }, q.id + 1), ` ${lm.msg.replace(new RegExp('^' + q.name + '：'), '')}`));
+      const key = lm.i + ':' + st.log.length; if (lastSeen.key !== lm.i) { lastSeen = { key: lm.i, t: Date.now() }; setTimeout(() => { if (lastSeen.key === lm.i) markLastSlot(null); }, 4000); }
+      const ents = isOnline() ? (Net.entries || []) : (game.entries || []); let e = null; for (let i = ents.length - 1; i >= 0; i--) { const x = ents[i]; if (x.pid === lm.p && !['undo', 'undoRound', 'undoOk', 'undoCancel', 'resolve'].includes(x.type)) { e = x; break; } }
+      if (Date.now() - lastSeen.t < 4000) setTimeout(() => markLastSlot(entrySlot(e)), 0); }
+    return out.childNodes.length ? out : null;
+  }
+  function markLastSlot(id) { document.querySelectorAll('.lastmove').forEach(x => x.classList.remove('lastmove')); if (id) document.querySelectorAll(`[data-slot="${id}"]`).forEach(x => x.classList.add('lastmove')); }
+  // O-48：ほかの人の個人ボードを見るだけの形で開く
+  function showBoard(q) { const back = $('#modal'); back.innerHTML = ''; const box = h('div', { class: 'modal-box boardview' }, h('h3', null, `${q.name} の個人ボード（見るだけ）`), h('div', { class: 'preview' }, renderPlayer(q, false)), h('div', { class: 'mbtns' }, h('button', { type: 'button', class: 'primary', onclick: () => { back.classList.remove('open'); back.onclick = null; } }, '閉じる'))); back.appendChild(box); back.classList.add('open'); back.onclick = (ev) => { if (ev.target === back) { back.classList.remove('open'); back.onclick = null; } }; }
   function renderHeader() {
-    const hd = $('#hdr'); hd.innerHTML = '';
+    const hd = $('#hdr'); hd.innerHTML = ''; if (!st || st.phase !== 'play') document.title = BASE_TITLE; // O-48：自分の番の印は対局中だけ
     hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール')); // 2026-10-28：「game01 モック」の表記は不要（1行に収める）
     if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (st && st.phase === 'end') hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: exportJson }, '保存(JSON)'), h('button', { onclick: exportCsv }, 'ログCSV'))); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); hd.appendChild(h('span', { class: 'hmenuwrap' }, h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), themeToggle())); return; }
     hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`));
@@ -384,9 +413,10 @@
     const to = h('span', { class: 'order' }, '手番順：');
     st.turnOrder.forEach((pid, i) => { const q = st.players[pid]; to.appendChild(h('span', { class: 'chip' + (i === st.cur ? ' now' : '') + (q.left.W + q.left.AT === 0 ? ' done' : '') }, h('span', { class: 'mk p' + q.id }, q.id + 1), `${q.name} ${leftTxt(q)}`)); });
     hd.appendChild(to);
+    { const tb = turnBar(); if (tb) hd.appendChild(tb); } // O-48：自分の番の帯・直前の手
     // 自分の資源（毎手番見るのでヘッダに常時表示）：この端末の人間席ごとに E/G/P/L/協調＋次の収入
     const hres = h('span', { class: 'hres' });
-    myHumanPids().forEach(pid => { const q = st.players[pid]; const inc = G.income(q); const row = h('span', { class: 'hresp' }, h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1));
+    headerPids().forEach(pid => { const q = st.players[pid]; const inc = G.income(q); const row = h('span', { class: 'hresp' }, h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1));
       ['E', 'G', 'P', 'L', 'coop'].forEach(k => row.appendChild(h('span', { class: 'hrb r' + k, title: k === 'coop' ? '協調' : RES_JP[k] + (k !== 'L' ? '　次の収入 +' + inc[k] : '　毎ラウンド+1') }, ic(k), h('b', null, String(q[k])), (k === 'L' || k === 'coop') ? null : h('small', null, `+${inc[k]}`))));
       // 2026-11-04 ユーザー要望：収集物（器官・形質・協調・L投入）の数と、次のゲート（Lv）までの不足数をヘッダに常時表示
       { const R = G.RULESETS[st.rules || 'v1']; const bodyL = R.bodyAxis === 'L';
@@ -417,7 +447,7 @@
     const r = await ask(`デバッグ：${p.name} の資源を設定`, [{ type: 'number', name: 'E', label: 'E', value: p.E, min: 0, max: 999 }, { type: 'number', name: 'G', label: 'G', value: p.G, min: 0, max: 999 }, { type: 'number', name: 'P', label: 'P', value: p.P, min: 0, max: 999 }, { type: 'number', name: 'L', label: 'L', value: p.L, min: 0, max: 7 }, { type: 'number', name: 'coop', label: '協調', value: p.coop, min: 0, max: 8 }], { note: 'テスト専用。ログに「[DEBUG]」として記録されます。' }); if (!r) return;
     submit({ pid: p.id, type: 'cheat', E: r.E, G: r.G, P: r.P, L: r.L, coop: r.coop });
   }
-  function quit() { if (!confirm('この画面を閉じて入口に戻りますか？（ローカルの進行は自動保存されています）')) return; if (isOnline()) Net.leave(); game = null; st = null; render(); }
+  function quit() { if (!confirm('この画面を閉じて入口に戻りますか？（ローカルの進行は自動保存されています）')) return; if (isOnline()) { Net.leave(); try { const q = new URLSearchParams(location.search); q.delete('room'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '')); } catch (e) { } } game = null; st = null; render(); }
   async function deleteThisRoom() { if (!isOnline() || !confirm(`ルーム ${game.code} を削除しますか？（全員の進行が消えます・元に戻せません）`)) return; try { await Net.deleteRoom(game.code); game = null; st = null; toast('ルームを削除しました'); render(); } catch (e) { toast(e.message, true); } }
   function renderUndoBanner() {
     const u = st.pendingUndo; const isMine = u.uid === Net.uid; const oks = Net.oksFor(u.id);
@@ -503,7 +533,7 @@
     G.TRACKS.forEach(t => {
       const info = G.TRACK_INFO[t]; const nxt = p.lv[t] + 1;
       const reason = can ? check({ pid: p.id, type: 'track', track: t, pay: 'E', useL: Math.min(p.L, 3) }) : roMsg;
-      const lane = h('div', { class: 'lane lane-' + info.color });
+      const lane = h('div', { class: 'lane lane-' + info.color, 'data-slot': 'TRK_' + t });
       lane.appendChild(h('div', { class: 'lane-lbl', title: massTip(p, t) }, h('b', null, info.name), h('small', null, `素材：${G.gateLabel(st, t)}`)));
       const body = h('div', { class: 'lane-body' });
       const RS0 = G.RULESETS[st.rules || 'v1']; const maxLv = RS0.maxLv || 5;
@@ -547,7 +577,7 @@
     if (['MB', 'MI', 'MS', 'MM'].includes(s.id) && G.massRet(vq)) mine += `\nいま返る P：+${G.massRet(vq)}（代謝 Lv${vq.lv.metab}）`;
     const tip = (G.slotTip(st, s.id) || txt) + mine + (gain ? `\n今実行すると：${gain}` : '');
     const body = slotBody(p, s.id, slotName(s), txt, d, pay);
-    return actBtn({ class: 'slot' + (iconView() && body[0].className === 'pname' ? ' pic' : '') + (used !== undefined ? ' used' : ''), title: tip, onclick }, reason, ...body, used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`, ...(st.shared.used[s.id + '#2'] !== undefined ? [' ', h('span', { class: 'mk p' + st.shared.used[s.id + '#2'] }, st.shared.used[s.id + '#2'] + 1), ` ${st.players[st.shared.used[s.id + '#2']].name} 2 人目`] : [])) : null, extra || null); // O-44（T31）：淘汰の 2 人目
+    return actBtn({ class: 'slot' + (iconView() && body[0].className === 'pname' ? ' pic' : '') + (used !== undefined ? ' used' : ''), title: tip, onclick, 'data-slot': s.id }, reason, body[0], body[1], h('span', { class: 'sfoot' }, body[2] || null, used !== undefined ? h('em', null, h('span', { class: 'mk p' + used }, used + 1), ` ${st.players[used].name} 使用`, ...(st.shared.used[s.id + '#2'] !== undefined ? [' ', h('span', { class: 'mk p' + st.shared.used[s.id + '#2'] }, st.shared.used[s.id + '#2'] + 1), ` ${st.players[st.shared.used[s.id + '#2']].name} 2 人目`] : [])) : null, extra || null)); // O-44（T31）：淘汰の 2 人目／O-48：3 行目（結果・使用済み・補足）を 1 つの段にまとめて行の位置をそろえる
   }
   // O-44（T31）：淘汰の 2 人目。ふつうに打てない使用済みの淘汰で、2 人目に入れるときだけ second を付ける（払いは協調を優先・払えなければ生命核）
   function massSecondOk(p, id) { const ms = G.RULESETS[st.rules || 'v1'].massSecond; const u = G.slotUsedBy(st, id); return !!ms && u !== undefined && u !== p.id && st.shared.used[id + '#2'] === undefined; }
@@ -593,8 +623,8 @@
     const bypassHint = () => { const w = [p.mimic && !(p.round && p.round.mimicUsed) ? (p.mimic === 'free' ? '擬態可（無償）' : `擬態可（E${G.sc(st, 3)}）`) : null, p.L > 0 && !G.RULESETS[st.rules || 'v1'].launchFree ? '緊急進出可（L1）' : null, x1 && p.coop >= (G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2) ? `協調進出可（協調${G.RULESETS[st.rules || 'v1'].bypassCoopCost || 2}）` : null].filter(Boolean); /* 2026-10-30：擬態が使えるときは選択前の枠にも表示 */ return w.length ? h('small', { class: 'bypass' }, w.join('・')) : null; };
     const resBtn = (s, used) => slotButton(p, can, s, () => onSlot(p, s.id), used !== undefined && G.RES_SLOTS.includes(s.id) ? bypassHint() : null);
     if (m4) Object.entries(G.RES_GROUPS).forEach(([gid, grp]) => { const used = st.shared.used[gid]; const gb = h('div', { class: 'merged' + (used !== undefined ? ' used' : '') }, h('h5', null, grp.name)); grp.slots.forEach(id => gb.appendChild(resBtn(G.SLOT_BY_ID[id], used))); g1.appendChild(gb); });
-    else G.SLOTS.filter(s => s.group === 'res').forEach(s => g1.appendChild(resBtn(s, st.shared.used[s.id])));
-    { const LF = G.RULESETS[st.rules || 'v1'].launchFree; if (LF) { const cands = launchCands(p); const reason = !can ? '他プレイヤーの手番' : p.L <= 0 ? '生命核がありません' : !cands.some(c => !c.ng) ? '緊急進出できる空き枠がありません' : null; g1.appendChild(actBtn({ class: 'launchbtn', onclick: () => onLaunch(p) }, reason, `緊急進出（生命核-1・空き枠の獲得量${LF}倍）`)); } } // 2026-11-10 ユーザー要望：枠ごとに置き方を聞かず、専用ボタンから空き枠を選ぶ
+    else { const RO = ['E5', 'G3', 'P8', 'ALL', 'EG', 'GG', 'PB']; G.SLOTS.filter(s => s.group === 'res').sort((a, b) => (RO.indexOf(a.id) + 1 || 99) - (RO.indexOf(b.id) + 1 || 99)).forEach(s => g1.appendChild(resBtn(s, st.shared.used[s.id]))); } // O-48：上段＝熱源吸収・配列解析・個体培養・資源合成／下段＝群体同期・群体融合・自己複製・緊急進出
+    { const LF = G.RULESETS[st.rules || 'v1'].launchFree; if (LF) { const cands = launchCands(p); const reason = !can ? '他プレイヤーの手番' : p.L <= 0 ? '生命核がありません' : !cands.some(c => !c.ng) ? '緊急進出できる空き枠がありません' : null; g1.appendChild(actBtn({ class: 'slot launchbtn' + (iconView() ? ' pic' : ''), title: `緊急進出：空いている資源枠にワーカーを置くとき、生命核1個を払って獲得量${LF}倍`, onclick: () => onLaunch(p) }, reason, iconView() ? h('span', { class: 'pname' }, '緊急進出') : h('b', null, '緊急進出'), iconView() ? h('span', { class: 'picto' }, pcost('L', 1), po('→'), pc('rslot', '×' + LF, { title: `空き枠の獲得量${LF}倍` })) : h('small', null, `生命核1 → 空き枠の獲得量${LF}倍`), h('span', { class: 'sfoot' }))); } } // 2026-11-10 ユーザー要望：枠ごとに置き方を聞かず、専用ボタンから空き枠を選ぶ
     const g2 = h('div', { class: 'sgroup' }, h('h4', null, (() => { const base = G.RULESETS[st.rules || 'v1'].massCost, mine = G.massCost(viewP(p), 'MI'); return `淘汰（P${mine !== base ? mine + '・軽減後' : base}）`; })()));
     G.SLOTS.filter(s => s.group === 'mass').forEach(s => g2.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))));
     { const T = G.RULESETS[st.rules || 'v1'].tribute; if (T) { const open = st.round >= (T.openRound || 6); const gt = h('div', { class: 'sgroup' + (open ? ' god' : '') }, h('b', { class: 'glabel' }, open ? '神の到来：恩寵枠（占有）' : `恩寵枠（ラウンド${T.openRound || 6}から・神の到来）`)); G.tribSlots(st).map(id => G.SLOT_BY_ID[id]).forEach(s => { if (open) gt.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))); else { const b = slotBody(p, s.id, s.name, G.slotText(st, s.id), null); gt.appendChild(h('button', { class: 'slot locked' + (b[0].className === 'pname' ? ' pic' : ''), disabled: true, title: G.slotTip(st, s.id) }, ...b)); } }); box.appendChild(gt); } }
@@ -622,7 +652,7 @@
   function renderStar(p, can) {
     const R = G.RULESETS[st.rules || 'v1']; const S = R.star; const my = p.star | 0;
     const LT = lv => G.starLvText(st, lv), LG = R.lv6Gems || { first: 1, later: 1 }, SJ = S.top && S.top.judge;
-    const gt = h('div', { class: 'lane lane-star' }, h('div', { class: 'lane-lbl', title: S.lv1 ? `進化で進める 5 本目のトラック（Lv1〜Lv6・全員 Lv1 から）。1 段＝着く Lv の${G.STAR_CARD_NAME}の額（2 種とも払う・割引なし）。二段進化・三段進化は Lv5 まで（Lv6 は 1 段の進化か恩寵枠の跳躍で）。${Object.keys(S.first || {}).map(l => LT(+l)).join('・')} に最初に着いた人は痕跡 +1 か繁栄度 +1 を選ぶ。Lv6 は先着 痕跡+${LG.first}＋祝福+1・後着 痕跡+${LG.later}${SJ ? `・終了時に祝福+${SJ}（神の裁定）` : ''}` : `進化で進める 5 本目のトラック。1 段＝着く段の${G.STAR_CARD_NAME}の額（2 種とも払う・割引なし）。二段進化・三段進化・跳躍も使える。3・5 段目に最初に着いた人は痕跡 +1 か繁栄度 +1 を選ぶ` }, h('b', null, G.STAR_NAME), h('small', null, '額を払う・自動進化なし')));
+    const gt = h('div', { class: 'lane lane-star', 'data-slot': 'TRK_star' }, h('div', { class: 'lane-lbl', title: S.lv1 ? `進化で進める 5 本目のトラック（Lv1〜Lv6・全員 Lv1 から）。1 段＝着く Lv の${G.STAR_CARD_NAME}の額（2 種とも払う・割引なし）。二段進化・三段進化は Lv5 まで（Lv6 は 1 段の進化か恩寵枠の跳躍で）。${Object.keys(S.first || {}).map(l => LT(+l)).join('・')} に最初に着いた人は痕跡 +1 か繁栄度 +1 を選ぶ。Lv6 は先着 痕跡+${LG.first}＋祝福+1・後着 痕跡+${LG.later}${SJ ? `・終了時に祝福+${SJ}（神の裁定）` : ''}` : `進化で進める 5 本目のトラック。1 段＝着く段の${G.STAR_CARD_NAME}の額（2 種とも払う・割引なし）。二段進化・三段進化・跳躍も使える。3・5 段目に最初に着いた人は痕跡 +1 か繁栄度 +1 を選ぶ` }, h('b', null, G.STAR_NAME), h('small', null, '額を払う・自動進化なし')));
     const row = h('div', { class: 'lane-body starrow' });
     if (S.lv1) { const mk0 = st.players.filter(q => (q.star | 0) === 0); const b0 = h('div', { class: 'slot starstep' + (my > 0 ? ' past' : ''), title: `${G.STAR_NAME} Lv1：開始` }, h('b', { class: 'pname' }, 'Lv1'), h('small', null, 'START')); if (mk0.length) b0.appendChild(h('span', { class: 'tw' }, ...mk0.map(q => h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1)))); row.appendChild(b0); } // T26（O-26）：Lv1 の開始マス
     for (let lv = 1; lv <= G.STAR_MAX; lv++) { const k = st.shared.starCards[lv - 1]; const c = G.starCost(st, lv); const ct = G.starCostText(c); const g = G.starGem(st, lv); const F = G.starFirstDef(st, lv); const fb = st.shared.starFirst[lv];
@@ -631,7 +661,7 @@
       const b = actBtn({ class: 'slot starstep' + (isNext ? ' now' : lv <= my ? ' past' : ' later') + (F || top ? ' star' : ''), title: `${G.STAR_NAME} ${LT(lv)}（${G.starCardName(st, k)}）：${ct}${top ? `\n${fTxt}\n${gT}${jT ? `\n${jT}（終了時・Lv6 の人みな）` : ''}` : ` → ${gT}${F ? '\n' + fTxt : ''}`}`, onclick: () => isNext && onStar(p) }, reason,
         h('b', { class: 'pname' }, `${S.lv1 ? LT(lv) : lv}${F || top ? '★' : ''}`), h('small', null, ct), ...(top ? [h('small', { class: 'first' }, fTxt), h('small', null, gT), jT ? h('small', null, jT) : null] : [h('small', null, gT), F ? h('small', { class: 'first' }, fTxt) : null]));
       const mk = st.players.filter(q => (q.star | 0) === lv); if (mk.length) b.appendChild(h('span', { class: 'tw' }, ...mk.map(q => h('span', { class: 'mk p' + q.id, title: q.name }, q.id + 1))));
-      row.appendChild(b); }
+      if (S.lv1) row.appendChild(h('div', { class: 'conn' })); row.appendChild(b); } // O-48：ほかの 4 本と同じ幅の矢印の列を置き、マスの列を縦にそろえる
     gt.appendChild(row); return gt;
   }
   // 星海開拓の進化ダイアログ：1 段／二段／三段・先駆の段では痕跡か繁栄度かを選ぶ
@@ -668,7 +698,7 @@
     const usedAt = (key) => !!(p.tribGame && p.tribGame[key]);
     const fin = (key, b) => { if (altar) { b.classList.add('altar'); const nm = b.querySelector('b, .pname'); if (nm) nm.textContent = nm.textContent.replace('献上', '祭壇'); if (usedAt(key)) { b.classList.add('used'); b.appendChild(h('span', { class: 'aw', title: '使用済み：この祭壇にはあなたのワーカーが乗っています（各祭壇は 1 ゲームに 1 回）' }, h('span', { class: 'mk p' + p.id }, p.id + 1), ic('W'), '使用済み')); } else b.appendChild(h('span', { class: 'aw empty', title: R6.altar ? 'まだ使っていない祭壇（ワーカーを 1 つ置いて捧げる）' : 'まだ使っていない祭壇（ワーカーを 1 つ置いて献上）' }, h('span', { class: 'mk empty' }, ''), '空')); } out.push(b); };
     if (R6.altar) { const vp = viewP(p); const nv = G.altarNextVg(vp); G.ALTAR_KEYS.forEach(k => { const a = { pid: p.id, type: 'altar', res: k }; const reason = can ? check(a) : roMsg; const c = G.altarCost(vp, k); const jp = G.ALTAR_JP[k]; const ct = (k === 'coop' ? '協調' : k) + c + (c !== R6.altar.cost[k] ? '（結晶体質）' : ''); const nm = `祭壇（${jp}）`; const done = usedAt(k); const rL = !done && R6.altarDouble && R6.altarDouble.repeatL && vp.round && (vp.round.altarN || 0) > 0 ? R6.altarDouble.repeatL : 0; const ctx = ct + (rL ? `＋生命核${rL}` : ''); // O-40／O-44（T31）
-        fin(k, actBtn({ class: 'slot' + (iconView() ? ' pic' : ''), title: `${nm}：${ct}${k === 'L' ? `・身体Lv${R6.lCrystalLv || 4}で解放` : ''}`, onclick: () => altarClick(p, k, a, nm, ct, nv) }, reason, ...slotBody(p, 'ALT_' + k, nm, done ? ct : `${ctx} → 祝福+${nv}`, null))); }); return out; } // T23（O-19）：祭壇＝払い口 5 つ（報酬は何個目かで決まる）
+        fin(k, actBtn({ class: 'slot' + (iconView() ? ' pic' : ''), 'data-slot': 'ALT_' + k, title: `${nm}：${ct}${k === 'L' ? `・身体Lv${R6.lCrystalLv || 4}で解放` : ''}`, onclick: () => altarClick(p, k, a, nm, ct, nv) }, reason, ...slotBody(p, 'ALT_' + k, nm, done ? ct : `${ctx} → 祝福+${nv}`, null))); }); return out; } // T23（O-19）：祭壇＝払い口 5 つ（報酬は何個目かで決まる）
     if (R6.gemsetShared) fin('G', slotButton(p, can, G.SLOT_BY_ID.GEM, () => onSlot(p, 'GEM')));
     if (R6.lCrystal) { const a = { pid: p.id, type: 'lCrystal' }; const reason = can ? check(a) : roMsg; const nL = Math.max(1, R6.lCrystal - (viewP(p).crystalDiscL || 0)); const nLt = nL !== R6.lCrystal ? `${nL}（結晶体質）` : String(nL); const vg = G.tribOutText(st, 'L'); fin('L', actBtn({ class: 'slot' + (iconView() ? ' pic' : ''), title: `献上（生命核）：生命核L${nLt}を払って${vg}。身体Lv${R6.lCrystalLv || 4}で解放・${place}・ワーカー。投入回数には数えない`, onclick: () => confirm(`献上（生命核）：L${Math.max(1, R6.lCrystal - (p.crystalDiscL || 0))}→${vg}。実行しますか？`) && submit(a) }, reason, ...slotBody(p, 'LCR', '献上（生命核）', `L${nLt} → ${vg}`, null))); }
     if (R6.coopCrystal) { const a = { pid: p.id, type: 'coopCrystal' }; const reason = can ? check(a) : roMsg; const nC = Math.max(1, R6.coopCrystal - (viewP(p).crystalDiscC || 0)); const nCt = nC !== R6.coopCrystal ? `${nC}（結晶体質）` : String(nC); const vg = G.tribOutText(st, 'coop'); fin('coop', actBtn({ class: 'slot' + (iconView() ? ' pic' : ''), title: `献上（協調）：協調${nCt}を払って${vg}。${place}・ワーカー`, onclick: () => confirm(`献上（協調）：協調${Math.max(1, R6.coopCrystal - (p.crystalDiscC || 0))}→${vg}。実行しますか？`) && submit(a) }, reason, ...slotBody(p, 'CCR', '献上（協調）', `協調${nCt} → ${vg}`, null))); }
@@ -693,7 +723,7 @@
       const reason = !can ? '他プレイヤーの手番' : mine_ ? null : locked ? '前の形態が必要' : check({ pid: p.id, type: 'organ', organ: id, useL: Math.min(p.L, 2), li2Res: 'E', li3Res: 'E', regimeRes: 'E' });
       const cl = mine_ ? null : G.organCost(st, p, id, true, true); // 2026-11-09 v3.88（ユーザー指摘）：順番待ちの段も急速形成の値段（定価）を出す。2026-11-10 v3.90（ユーザー指摘）：形成できるカードも同じ「定価＋追随の代償」に揃える（従来は代償なしの定価で、急速形成の合計と合わなかった）
       const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, cl ? (c && c.diff ? [icost(`E${c.E}${c.G ? '+G' + c.G : ''}`), h('small', null, '（', icost(`E${cl.E}${cl.G ? '+G' + cl.G : ''}`), '）')] : icost(`E${cl.E}${cl.G ? '+G' + cl.G : ''}`)) : (mine_ ? '形成済' : (['Ⅰ', 'Ⅱ', 'Ⅲ'][o.tier - 1] || ''))), h('span', { class: 'sw ' + (c ? (c.strong ? 'strong' : 'weak') : '') }, c ? (G.RULESETS[st.rules || 'v1'].organSameEffect ? (noLate ? G.LINEAGES[o.lin] : c.first ? '先駆' : '代償') : (c.strong ? '強' : '弱')) : `${G.LINEAGES[o.lin]}`));
-      grid.appendChild(actBtn({ class: 'ocard' + (mine_ ? ' mine' : locked ? ' locked' : ''), title: `${id} ${o.name}（${G.LINEAGES[o.lin]}系 第 ${o.tier} 形態）\n${sameEff ? '効果：' + otxt(o, true) + (noLate ? '' : '\n追随の代償は +' + G.sc(st, G.RULESETS[st.rules || 'v1'].organLateFee || 1) + 'E') : '強：' + otxt(o, true) + '\n弱：' + otxt(o, false)}`, onclick: () => onOrgan(p, id) }, reason,
+      grid.appendChild(actBtn({ class: 'ocard' + (mine_ ? ' mine' : locked ? ' locked' : ''), 'data-slot': 'OC_' + id, title: `${id} ${o.name}（${G.LINEAGES[o.lin]}系 第 ${o.tier} 形態）\n${sameEff ? '効果：' + otxt(o, true) + (noLate ? '' : '\n追随の代償は +' + G.sc(st, G.RULESETS[st.rules || 'v1'].organLateFee || 1) + 'E') : '強：' + otxt(o, true) + '\n弱：' + otxt(o, false)}`, onclick: () => onOrgan(p, id) }, reason,
         hd, art(id), h('b', null, `${id} ${o.name}`, chgBadge(id)), h('small', null, sameEff ? otxt(o, true) : `強：${otxt(o, true)}`), sameEff ? null : h('small', null, `弱：${otxt(o, false)}`),
         ownersRow(p, id, 'organ'), statusLine(mine_ ? 'ok' : locked ? 'lock' : reason && can ? 'no' : null, mine_ ? '形成済み' : locked ? '前の形態が必要' : reason)));
     });
@@ -719,7 +749,7 @@
       const t = G.TRAITS[id]; const c = G.traitCost(st, p, id); const mine_ = G.trait(p, id); const first = st.shared.traitFirst[id];
       const pl = traitPlan(p) || {}; const reason = !can ? '他プレイヤーの手番' : mine_ ? null : check(Object.assign({ pid: p.id, type: 'trait', trait: id, useL: Math.min(Math.max(0, p.L - (pl.bypassL ? 1 : 0)), 3), res: 'E', track: 'body' }, pl));
       const hd = h('div', { class: 'hd' }, h('span', { class: 'cost' }, mine_ ? (noUp ? '取得済' : `取得済→交換`) : [ic('G'), `${c.G}`, h('small', null, `（表示${G.baseTraitCost(st, id)}/${G.baseTraitCost(st, id, false)}）`)]), h('span', { class: 'sw ' + ((mine_ ? mine_.strong : c.strong) ? 'strong' : 'weak') }, mine_ ? (mine_.strong ? '強' : '弱') : G.RULESETS[st.rules || 'v1'].traitChoice ? (c.strong ? '強あり' : '弱のみ') : (c.strong ? '強' : '弱')));
-      grid.appendChild(actBtn({ class: 'tcard' + (mine_ ? ' mine' : ''), title: `${id} ${t.name}\n強：${rtxt(G.traitText(st, id, true))}\n弱：${rtxt(G.traitText(st, id, false))}`, onclick: () => onTrait(p, id) }, reason,
+      grid.appendChild(actBtn({ class: 'tcard' + (mine_ ? ' mine' : ''), 'data-slot': 'TC_' + id, title: `${id} ${t.name}\n強：${rtxt(G.traitText(st, id, true))}\n弱：${rtxt(G.traitText(st, id, false))}`, onclick: () => onTrait(p, id) }, reason,
         hd, art(id), h('b', null, `${id} ${t.name}`, chgBadge(id)), h('small', null, `強：${rtxt(G.traitText(st, id, true))}`), h('small', null, `弱：${rtxt(G.traitText(st, id, false))}`),
         ownersRow(p, id, 'trait'), statusLine(mine_ ? 'ok' : reason && can ? 'no' : null, mine_ ? (noUp ? '取得済み' : '取得済み（クリックで上位へ交換）') : reason)));
     });
@@ -728,7 +758,7 @@
 
   function renderPlayer(p, can) {
     const sp = G.SPECIES[p.species]; const sc = G.score(st, p); const inc = G.income(p);
-    const box = h('div', { class: 'panel player p' + p.id }, h('div', { class: 'phead' }, art(SPECIES_ART[p.species] || 'species_wing', 'portrait'), h('h3', null, h('span', { class: 'mk p' + p.id }, p.id + 1), ` ${can ? '手番' : isBot(p.id) ? '手番（AI）' : '手番（他端末）'}：${p.name}（${sp.name}）`, h('small', { class: 'sub' }, `　残り ${p.lRemain} ラウンド`))));
+    const box = h('div', { class: 'panel player p' + p.id }, h('div', { class: 'phead' }, art(SPECIES_ART[p.species] || 'species_wing', 'portrait'), h('h3', null, h('span', { class: 'mk p' + p.id }, p.id + 1), ` ${p.id !== G.cur(st).id ? '' : (can ? '手番' : isBot(p.id) ? '手番（AI）' : '手番（他端末）') + '：'}${p.name}（${sp.name}）`, h('small', { class: 'sub' }, `　残り ${p.lRemain} ラウンド`))));
     // ① 資源トラック（E/G/P）＋生命核
     box.appendChild(h('div', { class: 'res' }, ...['E', 'G', 'P', 'L'].map(k => h('span', { class: 'rbox r' + k, title: `${RES_JP[k]}${k !== 'L' ? '　次の収入 +' + inc[k] : (G.RULESETS[st.rules || 'v1'].lYield ? `　毎ラウンド+1・収入時に保有1個につき${G.RULESETS[st.rules || 'v1'].yieldRes === 'P' ? 'P' : 'E'}+${(G.RULESETS[st.rules || 'v1'].yieldByRound ? G.RULESETS[st.rules || 'v1'].yieldByRound[Math.min(7, st.round + 1)] : G.RULESETS[st.rules || 'v1'].lYield) + (p.yieldAdd || 0)}${p.yieldMul > 1 ? '×' + p.yieldMul : ''}（${G.RULESETS[st.rules || 'v1'].noLSub ? '' : `${p.lValue || 3}E/G代用・`}${G.RULESETS[st.rules || 'v1'].noAdapt ? '' : '適応進化・'}緊急進出${G.RULESETS[st.rules || 'v1'].breedL ? '・L繁殖' : ''}）` : '　毎ラウンド+1（E3/G3代用・適応進化・緊急進出）')}` }, ic(k), h('b', null, String(p[k])), k !== 'L' ? h('small', null, `+${inc[k]}/R`) : null))));
     box.appendChild(h('div', { class: 'note', title: inc.parts.join('\n') }, `次の収入 E+${inc.E} G+${inc.G} P+${inc.P} L+1（内訳はマウスで）`));
@@ -785,11 +815,11 @@
   function pendingText(pd) {
     return { specialOrgan: '代謝 Lv4：特殊器官を 1 枚選んでください', fkBreed: '孵化核：繁殖を 1 回（手番なし）行えます', starJump: `${G.STAR_JUMP_NAME}：${G.STAR_NAME}を 1 段進められます（片方を 1.5 倍払い）`, prStar: `推進核：${G.STAR_NAME}の進化を 1 回（手番なし）行えます`, lYield: '生命核の産出：受け取る資源を選んでください', cvIncome: '収斂膜：収入時の追加資源を選んでください', wildColor: '共鳴膜：ワイルド色を選んでください', reMilestone: '感応系：再発動する到達済み報酬を選んでください', freeMass: '身体Lv3★先駆：淘汰を1回無料で実行してください', rewardTrait: pd.freeMax ? (pd.weakOnly ? `転写体：弱の値段が G${pd.freeMax} 以下の形質1枚を弱で無料で取れます` : `全転写：G${pd.freeMax} 以下の形質1枚を無料で取れます`) : '知性Lv3★先駆：形質1枚を割引で獲得できます', bonusAction: '知性Lv4↗：追加アクションを今すぐ実行してください（排他なしアクション／Eコスト半額／ワーカー不要）。対象以外はグレー表示', flSwap: '収入時の転流：E↔Gを振替できます', dgBuy: 'ラウンド開始時：遺伝子図書館で形質1枚を割引で獲得できます（手番は消費しません）', join: `合流進出：資源枠を 1 つ使えます（残り ${pd.n} 回・見送ると消えます）` }[pd.type] || pd.type;
   }
-  function renderSeatsMini() { const box = h('div', { class: 'panel others' }, h('h3', null, `ルーム ${game.code}`)); st.players.forEach((p, i) => { const s = Net.seats[i]; box.appendChild(h('div', { class: 'orow' }, h('span', { class: 'mk p' + i }, i + 1), ` ${p.name}：${s ? (s.uid === Net.uid ? '自分' : '他端末') : '空席'} `, !s ? h('button', { onclick: () => Net.claimSeat(i, p.name).catch(e => toast(e.message, true)) }, '着席') : s.uid === Net.uid ? h('button', { onclick: () => Net.releaseSeat(i) }, '離席') : null)); }); return box; }
+  function renderSeatsMini() { const box = h('div', { class: 'panel others seatsmini' }, h('h3', null, `ルーム ${game.code}`)); st.players.forEach((p, i) => { const s = Net.seats[i]; box.appendChild(h('div', { class: 'orow' }, h('span', { class: 'mk p' + i }, i + 1), ` ${p.name}：${isBot(i) ? 'AI' : s ? (s.uid === Net.uid ? '自分' : '他端末') : '空席'} `, isBot(i) ? null : !s ? h('button', { onclick: () => Net.claimSeat(i, p.name).catch(e => toast(e.message, true)) }, '着席') : s.uid === Net.uid ? h('button', { onclick: () => Net.releaseSeat(i) }, '離席') : null)); }); return box; }
   const altarTxt = (q) => { if (G.RULESETS[st.rules || 'v1'].altar) { const u = G.ALTAR_KEYS.filter(k => q.tribGame && q.tribGame[k]).map(k => G.ALTAR_JP[k]); return `｜祭壇 ${u.length}/${G.ALTAR_KEYS.length}${u.length ? '（' + u.join('・') + '）' : ''}`; } if (!G.RULESETS[st.rules || 'v1'].tributeOnceGame) return ''; const u = [['G', '遺伝子'], ['L', '生命核'], ['coop', '協調']].filter(([k]) => q.tribGame && q.tribGame[k]).map(([, n]) => n); return `｜祭壇 ${u.length}/3${u.length ? '（' + u.join('・') + '）' : ''}`; }; // v3.68：他プレイヤーの祭壇の使用状況（ワーカーが乗っている祭壇）
   function renderOthers(p) {
     const box = h('div', { class: 'panel others' }, h('h3', null, '他プレイヤー'));
-    st.players.filter(q => q.id !== p.id).forEach(q => box.appendChild(h('div', { class: 'orow' }, h('span', { class: 'mk p' + q.id }, q.id + 1), ' ', h('b', null, `${q.name}（${G.SPECIES[q.species].name}${isBot(q.id) ? '・AI' : ''}）`), ` ${G.score(st, q).total}点｜E${q.E} G${q.G} P${q.P} L${q.L}｜Lv ${G.TRACKS.map(t => q.lv[t]).join('/')}｜痕跡${G.realGems(q)}＋祝福${G.virtualGems(st, q)}｜×${G.coef(q)}｜形質${q.traits.length} 器官${q.organs.length} 協調${q.coop}｜${leftTxt(q)}${altarTxt(q)}`)));
+    st.players.filter(q => q.id !== p.id).forEach(q => box.appendChild(h('div', { class: 'orow', title: '押すとこの人の個人ボードを開く', onclick: () => showBoard(q) }, h('span', { class: 'mk p' + q.id }, q.id + 1), ' ', h('b', null, `${q.name}（${G.SPECIES[q.species].name}${isBot(q.id) ? '・AI' : ''}）`), ` ${G.score(st, q).total}点｜E${q.E} G${q.G} P${q.P} L${q.L}｜Lv ${G.TRACKS.map(t => q.lv[t]).join('/')}｜痕跡${G.realGems(q)}＋祝福${G.virtualGems(st, q)}｜×${G.coef(q)}｜形質${q.traits.length} 器官${q.organs.length} 協調${q.coop}｜${leftTxt(q)}${altarTxt(q)}`)));
     return box;
   }
   function renderLog() {
@@ -1062,7 +1092,9 @@
   function importJson() { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = () => { const f = i.files[0]; if (!f) return; f.text().then(t => { const d = JSON.parse(t); if (!d.meta || !d.entries) throw new Error('形式が違います'); game = { kind: 'local', meta: d.meta, entries: d.entries }; rebuildState(); autosave(); render(); }).catch(e => toast(e.message, true)); }; i.click(); }
   function exportCsv() {
     if (!st) return;
-    const rows = [['round', 'player', 'msg']].concat(st.log.map(l => [l.r, l.p !== null && l.p !== undefined ? st.players[l.p].name : '', l.msg]));
+    const tf = (t) => { if (!t) return ''; const d = new Date(t), z = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`; }; // O-48：時刻の列（各手の時刻）・開始と終了の行
+    const ents = isOnline() ? (Net.entries || []) : (game.entries || []); const ts = ents.map(e => e.at).filter(Boolean); const t0 = (game.meta && game.meta.startedAt) || (isOnline() && Net.meta && (Net.meta.startedAt || Net.meta.createdAt)) || ts[0], t1 = st.ended ? ts[ts.length - 1] : null;
+    const rows = [['round', 'player', 'msg', 'time'], ['', '', 'ゲーム開始', tf(t0)]].concat(st.log.map(l => [l.r, l.p !== null && l.p !== undefined ? st.players[l.p].name : '', l.msg, tf(l.t)]), st.ended ? [['', '', 'ゲーム終了', tf(t1)]] : []);
     download(`game01_log_${st.seed}.csv`, '﻿' + rows.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n'), 'text/csv');
   }
 

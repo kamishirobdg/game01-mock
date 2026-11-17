@@ -305,3 +305,45 @@ button.slot.na { opacity:.6; }
 .slot.starstep .tw { display:inline-flex; gap:2px; margin-top:3px; }
 [data-theme="dark"] .slot.starstep.past { background:#262b35; }
 .lane-star .lane-lbl { background:#6a4fb3; } .lane-star .starrow { flex-wrap:nowrap; } .lane-star .slot.starstep { margin:0; } /* v3.114：星海開拓＝進化トラックの 5 段目 */
+
+/* ---- O-48（2026-11-17）画面の整列：群の見出しは独立した行・枠は 4 列の格子・枠の中の 3 行（名前／効果／結果）の位置をそろえる ---- */
+.sgroup { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); grid-auto-rows:auto; gap:6px; align-items:stretch; margin-bottom:10px; }
+.sgroup > h4, .sgroup > .glabel { grid-column:1 / -1; margin:2px 0 0; width:auto; }
+.sgroup > .slot, .sgroup > .merged { width:auto !important; min-width:0 !important; box-sizing:border-box; margin:0; }
+.sgroup > .slot { display:grid; grid-row:span 3; grid-template-rows:subgrid; row-gap:2px; align-content:start; align-items:start; justify-items:start; }
+.sgroup > .slot > b, .sgroup > .slot > .pname { min-height:16px; line-height:16px; }
+.sgroup > .slot > small, .sgroup > .slot > .picto { margin-top:0; line-height:1.35; }
+.sgroup > .slot > .sfoot { display:flex; flex-direction:column; align-items:flex-start; gap:1px; min-height:16px; }
+.sgroup > .slot > .sfoot > .gain, .sgroup > .slot > .sfoot > .picto { margin-top:0; }
+.slot .sfoot:empty { display:block; }
+.picto .pbad { font-size:12px; padding:0 6px; } /* 効果の行の補足は字の大きさをそろえる */
+.sgroup > .slot.launchbtn { font-weight:400; }
+/* 祭壇の 5 口：折り返さず 1 行に 5 等分 */
+.pbrow.altars { display:grid; grid-template-columns:auto repeat(5, minmax(0, 1fr)); gap:6px; align-items:stretch; }
+.pbrow.altars > .slot.altar { width:auto; min-width:0; flex:none; box-sizing:border-box; }
+/* 星海開拓のマス：ほかの 4 本と同じ列幅 */
+.lane .starrow > .slot { width:auto; min-width:0; flex:1; box-sizing:border-box; margin:0; }
+/* 器官・形質の一覧：カードの幅を固定し、同じ一覧の中で高さをそろえる */
+.ogrid, .tgrid { grid-template-columns:repeat(auto-fill, 172px) !important; grid-auto-rows:1fr; justify-content:start; }
+.ogrid > .ocard, .tgrid > .tcard { width:172px; box-sizing:border-box; height:100%; }
+@media (max-width: 600px) {
+  .sgroup { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .pbrow.altars { grid-template-columns:repeat(5, minmax(0, 1fr)); } .pbrow.altars > b { grid-column:1 / -1; }
+  .ogrid, .tgrid { grid-template-columns:repeat(2, minmax(0, 1fr)) !important; } .ogrid > .ocard, .tgrid > .tcard { width:auto; }
+}
+div.art.noart { width:100%; aspect-ratio:1/1; border-radius:5px; margin:2px 0 4px; background:repeating-linear-gradient(45deg,#eef0f5,#eef0f5 6px,#e4e7ee 6px,#e4e7ee 12px); }
+div.art.noart.small { aspect-ratio:2/1; }
+[data-theme="dark"] div.art.noart { background:repeating-linear-gradient(45deg,#232833,#232833 6px,#2a303c 6px,#2a303c 12px); }
+@media (max-width: 600px) { .ocard div.art.noart, .tcard div.art.noart { display:none; } }
+/* O-48：自分の番の帯・直前の手・ほかの人のボード */
+.turnbar { flex-basis:100%; display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:-2px 0 0; padding:4px 10px; border-radius:6px; background:#f2f4f8; font-size:12px; color:#3a4560; }
+.turnbar.mine { background:#ffe9a8; border:1px solid #e0b000; color:#5a4300; }
+.turnbar.mine > b { font-size:14px; }
+.turnbar .lastmv { display:inline-flex; align-items:center; gap:4px; } .turnbar .lastmv .mk { width:16px; height:16px; line-height:16px; font-size:10px; }
+.lastmove { outline:3px solid #f0a020 !important; outline-offset:1px; box-shadow:0 0 0 6px rgba(240,160,32,.25); transition:outline-color .3s; }
+.others .orow { cursor:pointer; } .others .orow:hover { background:#f3f7ff; }
+.modal-box.boardview { max-width:760px; width:min(760px, calc(100vw - 24px)); }
+[data-theme="dark"] .turnbar { background:#262b36; color:var(--ink); } [data-theme="dark"] .turnbar.mine { background:#4a3d10; color:#ffe9a8; } [data-theme="dark"] .others .orow:hover { background:#262b36; }
+.seats .frow input.invite { flex:1; min-width:220px; font-size:12px; }
+.seatsmini .orow { cursor:default; } .seatsmini .orow:hover { background:none; }
+.turnbar .waitmv { display:inline-flex; align-items:center; gap:4px; } .turnbar .waitmv .mk { width:16px; height:16px; line-height:16px; font-size:10px; }

@@ -9,6 +9,7 @@
   const Net = { ready: false, uid: null, room: null, code: null, meta: null, seats: {}, entries: [], onChange: null, error: null };
   try { Net.uid = localStorage.getItem('g01_uid'); if (!Net.uid) { Net.uid = 'u' + Math.random().toString(36).slice(2, 10); localStorage.setItem('g01_uid', Net.uid); } } catch (e) { Net.uid = 'u' + Math.random().toString(36).slice(2, 10); }
 
+  try { const qu = new URLSearchParams(location.search).get('uid'); if (qu && /^[A-Za-z0-9_-]{2,20}$/.test(qu)) Net.uid = 'u_' + qu; } catch (e) { } // O-48：検証用（同じブラウザの複数の窓を別の参加者として扱う ?uid=a ／ 保存はしない）
   function init() {
     const cfg = window.G1_FIREBASE;
     if (!cfg || !cfg.databaseURL || !window.firebase) { Net.ready = false; Net.error = 'Firebase未設定（js/config.js を作成してください）'; return false; }

@@ -83,7 +83,7 @@
     return st.shared.combos.two.map(i => G.COMBOS2[i].map(n).join('+')).concat(st.shared.combos.three.map(i => G.COMBOS3[i].map(n).join('+')));
   }
 
-  function log(st, pid, msg, kind) { st.log.push({ r: st.round, p: pid, msg, kind: kind || 'info' }); }
+  function log(st, pid, msg, kind) { const o = { r: st.round, p: pid, msg, kind: kind || 'info' }; if (st._at) o.t = st._at; st.log.push(o); } // O-48：その手の時刻（entry.at）
   function P(st, pid) { return st.players[pid]; }
   function cur(st) { return st.players[st.turnOrder[st.cur]]; }
 
@@ -1487,6 +1487,7 @@
 
   // ---------- エントリ列（セットアップ＋アクション＋アンドゥ）からの再構築 ----------
   function applyEntry(st, e) {
+    st._at = e && e.at; // O-48：ログに時刻を付ける
     switch (e.type) {
       case 'species': chooseSpecies(st, e.pid, e.species); return;
       case 'startTrait': chooseStartTrait(st, e.pid, e.trait); return;
