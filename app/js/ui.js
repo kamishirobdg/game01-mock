@@ -92,7 +92,7 @@
       case 'TB': return TS.TB ? [pc('rslot', '1', { title: '資源枠1つを今すぐ実行（使用済みでも）' }), pbad('使用済みOK'), po('+'), pc('rslot', '×' + (TS.TB.mul || 2), { title: 'このラウンドの残りの手番、資源枠の獲得量が倍' })] : null;
       case 'TAL': return TS.TAL ? [pc('bless', '½', { title: G.slotText(st, 'TAL') })] : null; // T32（O-47）
       case 'TLF': return TS.TLF ? [pc('L', '+' + (TS.TLF.L || 3), { title: '生命核+' + (TS.TLF.L || 3) })] : null;
-      case 'TBR': return TS.TBR ? [pc('breed', '½', { title: G.slotText(st, 'TBR') })] : null;
+      case 'TBR': { if (!TS.TBR) return null; const b = R.breedTrib || { num: 1, den: 2 }; return b.both ? [pcost('P', G.breedTribCost(R, 'P', 0)), po('/'), pcost('L', G.breedTribCost(R, 'L')), po('→'), pc('breed', '+2', { title: G.slotText(st, 'TBR') })] : [pc('breed', '½', { title: G.slotText(st, 'TBR') })]; } // T37（O-65）：両方払えるときは額と 2 段
       case 'TJ': return TS.TJ ? [pc('up', '×' + (TS.TJ.n || 2), { title: `進化を${TS.TJ.n || 2}回（同じでも別でも）` }), pc('E', '−' + sc(TS.TJ.disc || 0), { cls: 'minus', title: `E で払う分から E${sc(TS.TJ.disc || 0)} 引く` })] : null;
       case 'BRD': { if (!R.coef2 || !R.breed.every(c => c === R.breed[0])) return null; const c = G.breedCost(vp); return [...w, pcost('P', c === null ? R.breed[0] : c, R.breed[0]), ...(R.breedL ? [po('/'), pcost('L', R.breedL)] : []), po('→'), pc('breed', '+1', { title: `繁栄度+1（全${R.breed.length}段）` })]; }
       case 'ORG': { const oc = R.organCost || G.ORGAN_COST; const es = oc.map(x => x[0]), gs = oc.map(x => x[1]); const rg = (a) => Math.min(...a) === Math.max(...a) ? String(a[0]) : `${Math.min(...a)}〜${Math.max(...a)}`; return [pcost('E', rg(es)), pcost('G', rg(gs)), po('→'), pc('organ', '+1'), ...(R.organSameEffect && R.organLateFee !== 0 ? [pbad('代償+E' + sc(R.organLateFee || 1), '先駆より後に形成すると +E')] : [])]; } // T25（O-23）：後追い料なし（`|| 1` では 0 が 1 に戻る）
@@ -631,6 +631,7 @@
     if (id === 'TB') return { pid, type: 'tributeSlot', slot: id, res: 'E5', coopRes: 'E' };
     if (id === 'TAL') return { pid, type: 'tributeSlot', slot: id, res: G.ALTAR_KEYS.find(k => G.altarHalfCost(p, k) !== null && p[k] >= G.altarHalfCost(p, k)) || G.ALTAR_KEYS.find(k => G.altarHalfCost(p, k) !== null) || 'E' }; // T32（O-47）
     if (id === 'TLF') return { pid, type: 'tributeSlot', slot: id };
+    if (id === 'TBR' && (G.RULESETS[st.rules || 'v1'].breedTrib || {}).both) { const cP = G.breedHalfCost(p, 'P'), cL = G.breedHalfCost(p, 'L'); const nP = cP !== null && p.P >= cP ? 1 : 0; const nL = cL !== null && p.L >= cL && (!nP || G.breedLeft(p) >= 2) ? 1 : 0; return { pid, type: 'tributeSlot', slot: id, nP: nP || (nL ? 0 : 1), nL }; } // T37（O-65）
     if (id === 'TBR') return { pid, type: 'tributeSlot', slot: id, pay: G.breedHalfCost(p, 'P') !== null && p.P >= G.breedHalfCost(p, 'P') ? 'P' : 'L' };
     if (id === 'TJ') { const ok = G.TRACKS.filter(t => G.stepCost(p, t) !== null); return { pid, type: 'tributeSlot', slot: id, tracks: [ok[0] || 'body', ok[1] || ok[0] || 'body'], useL: 0 }; }
     if (id === 'EXP') return { pid, type: 'express', track: 'body', useL: 0 };
@@ -961,6 +962,9 @@
       const r = await ask('祭壇の恩寵：払い口 1 つを半額で', [{ type: 'select', name: 'res', label: '払い口', value: ks.find(k => p[k] >= G.altarHalfCost(p, k)) || ks[0], options: ks.map(k => ({ value: k, label: `${G.ALTAR_JP[k]} ${G.altarHalfCost(p, k)}${p[k] < G.altarHalfCost(p, k) ? '（足りません）' : ''}`, disabled: p[k] < G.altarHalfCost(p, k) })) }], { note: `${nth} 個目の祝福+${vg}` }); if (!r) return;
       return submit({ pid: p.id, type: 'tributeSlot', slot: id, res: r.res }); }
     if (id === 'TLF') return confirm(`命の恩寵：${G.slotText(st, id)}。実行しますか？`) && submit({ pid: p.id, type: 'tributeSlot', slot: id });
+    if (id === 'TBR' && (G.RULESETS[st.rules || 'v1'].breedTrib || {}).both) { const R0 = G.RULESETS[st.rules || 'v1']; const cP = G.breedHalfCost(p, 'P'), cL = G.breedHalfCost(p, 'L'); if (cP === null) return toast('繁殖は上限です', true); const left = G.breedLeft(p); // T37（O-65）：通常の繁殖と同じ形（P の段・生命核の段を別々に）
+      const r = await ask(`繁殖の恩寵：繁殖を${G.breedTribJp(R0)}${/\d$/.test(G.breedTribJp(R0)) ? ' ' : ''}で（あと ${left} 段）`, [{ type: 'select', name: 'nP', label: '個体数で', value: p.P >= cP ? '1' : '0', options: [{ value: '0', label: 'なし' }, { value: '1', label: `1 段（P${cP}）`, disabled: p.P < cP }] }].concat(cL !== null ? [{ type: 'select', name: 'nL', label: '生命核で（身体の投入回数に数える）', value: p.L >= cL && (p.P < cP || left >= 2) ? '1' : '0', options: [{ value: '0', label: 'なし' }, { value: '1', label: `1 段（生命核${cL}）`, disabled: p.L < cL }] }] : []), { note: `${G.slotTip(st, id)}${left < 2 ? '（あと 1 段なので片方だけ）' : ''}` }); if (!r) return;
+      return submit({ pid: p.id, type: 'tributeSlot', slot: id, nP: +r.nP, nL: +(r.nL || 0) }); }
     if (id === 'TBR') { const cP = G.breedHalfCost(p, 'P'), cL = G.breedHalfCost(p, 'L'); if (cP === null) return toast('繁殖は上限です', true); const opts = [{ value: 'P', label: `P${cP}`, disabled: p.P < cP }].concat(cL !== null ? [{ value: 'L', label: `生命核${cL}`, disabled: p.L < cL }] : []);
       const r = await ask('繁殖の恩寵：繁殖 1 段を半額で', [{ type: 'select', name: 'pay', label: '払い', value: (opts.find(o => !o.disabled) || opts[0]).value, options: opts }], { note: G.slotTip(st, id) }); if (!r) return;
       return submit({ pid: p.id, type: 'tributeSlot', slot: id, pay: r.pay }); }
