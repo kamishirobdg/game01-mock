@@ -353,6 +353,13 @@ html[data-board] #app .grid {
   .lane.lane-white { background-image:var(--lgr), url(board/lane_social.webp); }
   .lane.lane-green { background-image:var(--lgr), url(board/lane_metab.webp); }
   .lane.lane-star { background-image:var(--lgr), url(board/lane_star.webp); }
+  /* 素材（2026-11-18）：灰色 1 色のつなぎ目なしの絵を、今の色の上に soft-light で重ねる（色はそのまま・明暗の模様だけ足す）。六角＝甲殻／カード・形質の板・丸い台＝膜 */
+  .panel.excl .sgroup > .slot::after { background-image:radial-gradient(circle at 50% 19px, #061214 0 10px, color-mix(in srgb, var(--he) 70%, transparent) 10px 11.500px, transparent 12px), url(board/tex_chitin.webp), linear-gradient(180deg, var(--hf), color-mix(in srgb, var(--hf) 82%, #000));
+    background-size:auto, 150px 150px, auto; background-blend-mode:normal, soft-light, normal; }
+  .panel.excl .sgroup > .slot.launchbtn::after { background-image:url(board/tex_chitin.webp), linear-gradient(180deg, var(--hf), color-mix(in srgb, var(--hf) 82%, #000)); background-size:150px 150px, auto; background-blend-mode:soft-light, normal; }
+  .ogrid.ofield > .ocard { background-image:url(board/tex_membrane.webp), linear-gradient(180deg, color-mix(in srgb, var(--lin) 44%, #000), color-mix(in srgb, var(--lin) 34%, #000)); background-size:180px 180px, auto; background-blend-mode:soft-light, normal; }
+  .tgrid > .tcard { background-image:url(board/tex_membrane.webp), linear-gradient(180deg, color-mix(in srgb, var(--lin) 42%, #000), color-mix(in srgb, var(--lin) 32%, #000)); background-size:180px 180px, auto; background-blend-mode:soft-light, normal; }
+  .panel.shared2 .sgroup > .slot { background-image:url(board/tex_membrane.webp), linear-gradient(180deg, #37593a, #2c4a30); background-size:140px 140px, auto; background-blend-mode:soft-light, normal; }
 
   /* 7. 盤の下：個人ボード・他の人・ログを横に並べる */
   .col.me { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:start; }
