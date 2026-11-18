@@ -324,6 +324,20 @@ html[data-board] #app .grid {
   html:not([data-grace="open"]) & .panel.excl .sgroup:has(> .slot.locked) > .slot.locked:nth-of-type(2) { left:438px; }
   html:not([data-grace="open"]) & .panel.excl .sgroup:has(> .slot.locked) > .slot.locked:nth-of-type(3) { left:476px; }
 
+  /* 17. 特殊器官（2026-11-18・ユーザー「常時表示でなくてよい・器官の場の右上のボタンで切り替え」）：ふだんは出さず、器官の場の右上の「特殊器官」ボタン（board.js が置く）で器官の場の上に重ねて出す（端末に記憶 g01_sporgan）。下の帯が空いたので、中央（輪・淘汰・繁殖・採集）を 60px 下げて上下の中ほどに置く */
+  .panel.excl { top:60px; }
+  .panel.shared2 .sgroup > [data-slot="BRD"], .panel.shared2 .sgroup > [data-slot="GTH"] { top:672px; }
+  .panel.ofieldp > h3 { max-width:316px; }
+  .panel.ofieldp > .sptog { position:absolute; right:14px; top:6px; z-index:7; height:22px; box-sizing:border-box; margin:0; padding:0 10px; display:inline-flex; align-items:center; gap:5px; border-radius:11px; border:1px solid rgba(201,162,74,.6); background:rgba(46,36,12,.7); color:#e0c070; font:600 11.500px/1 inherit; letter-spacing:1px; white-space:nowrap; cursor:pointer; }
+  .panel.ofieldp > .sptog:hover { background:rgba(80,62,20,.85); }
+  .panel.ofieldp > .sptog > i { font-style:normal; min-width:16px; height:16px; padding:0 4px; box-sizing:border-box; border-radius:8px; background:rgba(201,162,74,.3); color:#fff1c4; font-size:10.500px; line-height:16px; text-align:center; letter-spacing:0; }
+  .panel.ofieldp > .sptog::after { content:'▾'; opacity:.8; }
+  html[data-sporgan="open"] & .panel.ofieldp > .sptog { background:rgba(120,92,28,.9); color:#fff1c4; }
+  html[data-sporgan="open"] & .panel.ofieldp > .sptog::after { content:'▴'; }
+  html:not([data-sporgan="open"]) & .panel.ofieldp > .owned { display:none; }
+  .panel.ofieldp > .owned { left:auto; right:8px; top:34px; z-index:6; width:444px; height:auto; padding:8px 10px 10px; gap:6px; background:rgba(34,27,9,.97); border-color:rgba(201,162,74,.7); box-shadow:0 12px 32px rgba(0,0,0,.65); }
+  .panel.ofieldp > .owned > .tag.fxtag { flex:0 0 calc((100% - 12px) / 3); height:84px; }
+
   /* 7. 盤の下：個人ボード・他の人・ログを横に並べる */
   .col.me { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:start; }
   .col.me > .panel { margin:0; }

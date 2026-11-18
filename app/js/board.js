@@ -17,6 +17,20 @@
   function applyGrace() { if (graceOpen) root.setAttribute('data-grace', 'open'); else root.removeAttribute('data-grace'); }
   document.addEventListener('click', function (ev) { var t = ev.target; if (!on || !t || !t.closest || !t.closest('.panel.excl .glabel')) return; graceOpen = !graceOpen; try { localStorage.setItem(GKEY, graceOpen ? '1' : '0'); } catch (e) { } applyGrace(); });
   applyGrace();
+  // 特殊器官はふだん出さず、器官の場の右上のボタンで重ねて出す（端末に記憶 g01_sporgan＝1 で出したまま）。画面は描き直すたびに作り直されるので、器官の場が現れたらボタンを置き直す
+  var SKEY = 'g01_sporgan', spOpen = false; try { spOpen = localStorage.getItem(SKEY) === '1'; } catch (e) { }
+  function applySp() { if (spOpen) root.setAttribute('data-sporgan', 'open'); else root.removeAttribute('data-sporgan'); }
+  function placeSp() {
+    if (!on) return; var f = document.querySelector('#app .panel.ofieldp'); if (!f || f.querySelector(':scope > .sptog')) return;
+    var o = f.querySelector(':scope > .owned'); if (!o) return;
+    var hd = o.querySelector(':scope > b'), m = hd && /残り\s*(\d+)/.exec(hd.textContent || '');
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'sptog'; b.title = '特殊器官（代謝 Lv4 に達した順に 1 枚）を出す／しまう';
+    b.appendChild(document.createTextNode('特殊器官')); if (m) { var n = document.createElement('i'); n.textContent = m[1]; b.appendChild(n); }
+    b.addEventListener('click', function () { spOpen = !spOpen; try { localStorage.setItem(SKEY, spOpen ? '1' : '0'); } catch (e) { } applySp(); });
+    f.appendChild(b);
+  }
+  applySp();
+  if (window.MutationObserver) new MutationObserver(placeSp).observe(document.documentElement, { childList: true, subtree: true });
   function active() { return on; }
   // 盤は 1872×960 で設計してあり、画面に合わせて全体を拡大・縮小する（幅に合わせ、縦に収まらなければ 9 割まで縮める）
   function fit() {
