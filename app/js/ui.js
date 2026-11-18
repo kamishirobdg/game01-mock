@@ -725,7 +725,7 @@
     const R = G.RULESETS[st.rules || 'v1'], D = R.altarDouble; const rL = D && D.repeatL && (p.round.altarN || 0) > 0 ? D.repeatL : 0; const xT = rL ? `＋生命核${rL}（このラウンド ${p.round.altarN + 1} 回目）` : '';
     if (!D) return confirm(`${nm}：${ct} → 祝福+${nv}（${G.altarCount(p) + 1} 個目）。実行しますか？`) && submit(a);
     const ks = G.ALTAR_KEYS.filter(k2 => k2 !== k && !(p.tribGame && p.tribGame[k2]) && R.altar.cost[k2] !== undefined); const nv2 = R.altar.vg[G.altarCount(p) + 1] || 0;
-    const r = await ask(`${nm}：${ct}${xT} → 祝福+${nv}`, [{ type: 'select', name: 'res2', label: '2 個目', value: '', options: [{ value: '', label: 'なし' }].concat(ks.map(k2 => { const ng = check(Object.assign({}, a, { res2: k2 })); return { value: k2, label: `祭壇（${G.ALTAR_JP[k2]}）${k2 === 'coop' ? '協調' : k2}${G.altarCost(p, k2)} → 祝福+${nv2}${ng ? '（不可）' : ''}`, disabled: !!ng }; })) }]); if (!r) return;
+    const r = await ask(`${nm}：${ct}${xT} → 祝福+${nv}${D.adjacent ? '（2 個目は隣の払い口だけ）' : ''}`, [{ type: 'select', name: 'res2', label: '2 個目', value: '', options: [{ value: '', label: 'なし' }].concat(ks.map(k2 => { if (D.adjacent && !G.altarAdj(k, k2)) return { value: k2, label: `祭壇（${G.ALTAR_JP[k2]}）（隣でない）`, disabled: true }; const ng = check(Object.assign({}, a, { res2: k2 })); return { value: k2, label: `祭壇（${G.ALTAR_JP[k2]}）${k2 === 'coop' ? '協調' : k2}${G.altarCost(p, k2)} → 祝福+${nv2}${ng ? '（不可）' : ''}`, disabled: !!ng }; })) }]); if (!r) return;
     return submit(r.res2 ? Object.assign({}, a, { res2: r.res2 }) : a); }
   function tributeButtons(p, can, altar) {
     const R6 = G.RULESETS[st.rules || 'v1']; const out = []; const place = R6.tributeOnceGame ? G.tribLimitText(st) : '共用' + (R6.tribute ? '・' + G.tribLimitText(st) : '');
@@ -740,7 +740,7 @@
   }
   // v3.68：個人ボードの祭壇 3 マス（遺伝子・生命核・協調）。献上＝自分のワーカーを祭壇に置く表現（1 マス 1 個＝1 ゲームに 1 回・第66〜67部・ユーザー決定）
   function renderAltars(p, can) {
-    { const RA = G.RULESETS[st.rules || 'v1'].altar; if (RA) { const n = G.altarCount(p), nv = G.altarNextVg(p); const row = h('div', { class: 'pbrow altars' }, h('b', { title: `祭壇：払い口 5 つ（各 1 ゲームに 1 回・ワーカー 1）。報酬は何個目かで 祝福${RA.vg.map(x => '+' + x).join('／')}` }, ic('bless'), '祭壇', h('small', { class: 'desc' }, `${n}/${G.ALTAR_KEYS.length}${nv ? `・次 祝福+${nv}` : ''}`))); tributeButtons(p, can, true).forEach(b => row.appendChild(b)); return row; } } // T23（O-19）
+    { const RA = G.RULESETS[st.rules || 'v1'].altar; if (RA) { const n = G.altarCount(p), nv = G.altarNextVg(p); const row = h('div', { class: 'pbrow altars' }, h('b', { title: `祭壇：払い口 5 つ（各 1 ゲームに 1 回・ワーカー 1${G.RULESETS[st.rules || 'v1'].altarDouble ? `・1 手で${G.RULESETS[st.rules || 'v1'].altarDouble.adjacent ? '隣り合う ' : ' '}2 つまで` : ''}）。報酬は何個目かで 祝福${RA.vg.map(x => '+' + x).join('／')}` }, ic('bless'), '祭壇', h('small', { class: 'desc' }, `${n}/${G.ALTAR_KEYS.length}${nv ? `・次 祝福+${nv}` : ''}`))); tributeButtons(p, can, true).forEach(b => row.appendChild(b)); return row; } } // T23（O-19）
     const vg = G.tribOutText(st, 'G'), vgL = G.tribOutText(st, 'L'), vgC = G.tribOutText(st, 'coop'); const n = ['G', 'L', 'coop'].filter(k => p.tribGame && p.tribGame[k]).length;
     const row = h('div', { class: 'pbrow altars' }, h('b', { title: `祭壇：資源を捧げる（遺伝子＝${vg}／生命核＝${vgL}／協調＝${vgC}）。遺伝子・生命核・協調の 3 マスで、各祭壇は 1 ゲームに 1 回（使った祭壇には自分のワーカーが残る）。ワーカーを 1 つ使う` }, ic('bless'), '祭壇', h('small', { class: 'desc' }, `${n}/3`)));
     tributeButtons(p, can, true).forEach(b => row.appendChild(b));
