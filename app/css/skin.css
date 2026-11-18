@@ -350,6 +350,7 @@ html[data-skin="b"] .player .rbox { border-radius:14px; }
 html[data-skin="b"] .gauge .gs { border-radius:999px; }
 html[data-skin="b"] .player .coopc { border-radius:6px; }
 html[data-skin="b"] .slot.altar { border-radius:14px; }
+@media (max-width: 600px) { html[data-skin] .pbrow.altars > .slot.altar { padding-left:4px; padding-right:4px; } html[data-skin] .pbrow.altars .picto .pc { padding:1px 2px 1px 1px; max-width:100%; box-sizing:border-box; flex-wrap:wrap; justify-content:center; } html[data-skin] .pbrow.altars .picto .pc > svg.ic { width:16px; height:16px; flex:none; } html[data-skin] .pbrow.altars .slot.altar .aw { max-width:100%; box-sizing:border-box; gap:2px; padding:1px 4px 1px 1px; } html[data-skin] .pbrow.altars .slot.altar .aw .mk { width:18px; height:18px; line-height:15px; flex:none; } } /* スマホ：祭壇の 5 口は幅 60px ほど。3 桁の払い（P120）が枠からはみ出さないように（2026-11-18 ユーザー指摘） */
 html[data-skin="b"] .owned .tag { border-radius:999px; padding:0 8px; } html[data-skin="b"] .owned .tag.fxtag { border-radius:11px; }
 html[data-skin="b"] .others .orow { border-radius:12px; }
 html[data-skin="b"] .log .l.round { border-radius:999px; padding:1px 10px; }
