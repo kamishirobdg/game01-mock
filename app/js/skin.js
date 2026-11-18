@@ -15,7 +15,7 @@
   function set(v) { cur = (v === 'a' || v === 'b') ? v : ''; try { localStorage.setItem(KEY, cur || '0'); } catch (e) { } apply(); }
   // ヘッダ右上（版表記の左）に置く切り替え（見た目：標準／A／B）。after＝切り替えた後に呼ぶ（画面の描き直し）
   function toggle(after) {
-    var wrap = document.createElement('span'); wrap.className = 'skintog'; wrap.appendChild(document.createTextNode('見た目'));
+    var wrap = document.createElement('span'); wrap.className = 'skintog'; wrap.title = '見た目（標準／案 A／案 B）'; // O-66：「見た目」の字は書かない（title）
     var box = document.createElement('span'); box.className = 'vtog';
     ['', 'a', 'b'].forEach(function (k) {
       var b = document.createElement('button'); b.type = 'button'; b.textContent = NAMES[k]; b.title = TITLES[k]; if (k === cur) b.className = 'on';

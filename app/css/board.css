@@ -183,11 +183,11 @@ html[data-board] #app .grid {
   .ogrid.ofield > .ocard.mine { border-color:var(--sk-ok, #5fd39a); box-shadow:0 0 0 1.5px var(--sk-ok, #5fd39a), 0 3px 7px rgba(0,0,0,.5); }
   .ogrid.ofield > .ocard.locked { opacity:.78; filter:saturate(.7); }
   .ogrid.ofield > .ocard.na:not(.locked) { opacity:1; }
-  /* 系統の見出し：名前と役割（その系統で主に増えるもの） */
+  /* 系統の見出し：名前だけ（O-66・役割はカードの記号で分かる） */
   .ogrid.ofield > .ocard[data-slot$="3"]::before { content:var(--ln, ''); position:absolute; left:-2px; right:-2px; top:-29px; height:22px; line-height:21px; box-sizing:border-box; border-radius:11px; font-size:12px; font-weight:700; letter-spacing:1px; color:#fff; text-align:center; white-space:nowrap;
     background:color-mix(in srgb, var(--lin) 30%, #000); border:1px solid color-mix(in srgb, var(--lin) 70%, #000); }
-  .ocard[data-slot^="OC_Mg"] { --ln:'代謝・E'; } .ocard[data-slot^="OC_Pu"] { --ln:'脈動・個体数'; } .ocard[data-slot^="OC_Fk"] { --ln:'孵化・個体数'; } .ocard[data-slot^="OC_Nv"] { --ln:'神経・形質'; } .ocard[data-slot^="OC_Hc"] { --ln:'群心・協調'; }
-  .ocard[data-slot^="OC_Tl"] { --ln:'転写・形質'; } .ocard[data-slot^="OC_Li"] { --ln:'連結・資源'; } .ocard[data-slot^="OC_Lm"] { --ln:'発光・祝福'; } .ocard[data-slot^="OC_Pr"] { --ln:'推進・星海'; }
+  .ocard[data-slot^="OC_Mg"] { --ln:'代謝'; } .ocard[data-slot^="OC_Pu"] { --ln:'脈動'; } .ocard[data-slot^="OC_Fk"] { --ln:'孵化'; } .ocard[data-slot^="OC_Nv"] { --ln:'神経'; } .ocard[data-slot^="OC_Hc"] { --ln:'群心'; }
+  .ocard[data-slot^="OC_Tl"] { --ln:'転写'; } .ocard[data-slot^="OC_Li"] { --ln:'連結'; } .ocard[data-slot^="OC_Lm"] { --ln:'発光'; } .ocard[data-slot^="OC_Pr"] { --ln:'推進'; }
   /* 特殊器官 */
   .panel.ofieldp > .owned { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0 0; }
   .panel.ofieldp > .owned > b { flex:0 0 100%; font-size:12px; font-weight:600; letter-spacing:1px; color:#c9a24a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -314,9 +314,9 @@ html[data-board] #app .grid {
 
   /* 16. 恩寵枠：開く前（ラウンド 5 まで）は小さくたたんでおく。見出しを押すと広げる／たたむ（board.js が <html data-grace="open"> を付ける・端末に記憶）。開いたあとは今までどおり大きく出る */
   .panel.excl .sgroup:has(> .slot.locked) > .glabel { cursor:pointer; pointer-events:auto; }
-  .panel.excl .sgroup:has(> .slot.locked) > .glabel::after { content:'　▴ たたむ'; opacity:.7; letter-spacing:0; }
+  .panel.excl .sgroup:has(> .slot.locked) > .glabel::after { content:'　▴'; opacity:.7; letter-spacing:0; }
   html:not([data-grace="open"]) & .panel.excl .sgroup:has(> .slot.locked) > .glabel { height:36px; padding:0 14px; line-height:33px; }
-  html:not([data-grace="open"]) & .panel.excl .sgroup:has(> .slot.locked) > .glabel::after { content:'　▾ ひろげる'; }
+  html:not([data-grace="open"]) & .panel.excl .sgroup:has(> .slot.locked) > .glabel::after { content:'　▾'; }
   html:not([data-grace="open"]) & .panel.excl .sgroup:has(> .slot.locked) > .slot.locked { top:22px; width:32px !important; height:28px; margin:-14px 0 0 -16px; padding:0; pointer-events:none; }
   html:not([data-grace="open"]) & .panel.excl .sgroup:has(> .slot.locked) > .slot.locked > * { display:none; }
   html:not([data-grace="open"]) & .panel.excl .sgroup:has(> .slot.locked) > .slot.locked::after { inset:2px; background:var(--hf); }

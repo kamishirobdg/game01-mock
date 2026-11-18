@@ -52,7 +52,7 @@
   function set(v) { on = !!v; try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) { } apply(); }
   // ヘッダ右上（見た目の切り替えの左）に置く切り替え（表示：一覧／盤）。after＝切り替えた後に呼ぶ（画面の描き直し）
   function toggle(after) {
-    var wrap = document.createElement('span'); wrap.className = 'skintog boardtog'; wrap.appendChild(document.createTextNode('表示'));
+    var wrap = document.createElement('span'); wrap.className = 'skintog boardtog'; wrap.title = '表示（一覧／盤）'; // O-66：ボタンの字で分かるので「表示」の字は書かない
     var box = document.createElement('span'); box.className = 'vtog';
     [[false, '一覧', '今の一覧の画面'], [true, '盤', '共用の場を 1 枚の盤の形に並べる（狭い画面では横に送って見る）']].forEach(function (k) {
       var b = document.createElement('button'); b.type = 'button'; b.textContent = k[1]; b.title = k[2]; if (k[0] === on) b.className = 'on';
