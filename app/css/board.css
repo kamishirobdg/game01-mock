@@ -343,6 +343,17 @@ html[data-board] #app .grid {
   .tgrid > .tcard .hd .cost .tcw::before { margin:0 1px; opacity:.7; }
   .tgrid > .tcard:not(.mine) > b { text-overflow:ellipsis; }
 
+  /* 19. 盤の絵（O-57 第 2 段・2026-11-18・ユーザーが Gemini で作成）：地・生命核・トラックの帯 5 本。原画は works/game01/art_src/board/（公開しない）、ここには縮小した webp だけ置く。
+     帯の絵は明るさをそろえてあり（変換時）、上から今の色を半透明で掛けて色分けを保つ。素材（甲殻・膜）はまだ無い */
+  .col.shared::before { background:radial-gradient(ellipse 760px 520px at 15% 10%, rgba(58,82,192,.22), transparent 70%), radial-gradient(ellipse 700px 480px at 85% 95%, rgba(28,154,108,.2), transparent 70%), linear-gradient(rgba(6,14,22,.2), rgba(6,14,22,.2)), url(board/bg.webp) center / cover no-repeat #0a1c26; }
+  .panel.excl { background:url(board/core.webp) 157px 285px / 230px 230px no-repeat, url(board_core.svg) 0 0 / 544px 832px no-repeat; }
+  .lane { --lgr:linear-gradient(180deg, color-mix(in srgb, var(--trk) 30%, rgb(0 0 0 / .3)), color-mix(in srgb, var(--trk) 18%, rgb(0 0 0 / .42)) 50%, color-mix(in srgb, var(--trk) 10%, rgb(0 0 0 / .5))); background-position:0 0, center bottom; background-size:auto, cover; background-repeat:no-repeat; background-color:#000; }
+  .lane.lane-red { background-image:var(--lgr), url(board/lane_body.webp); }
+  .lane.lane-blue { background-image:var(--lgr), url(board/lane_intel.webp); }
+  .lane.lane-white { background-image:var(--lgr), url(board/lane_social.webp); }
+  .lane.lane-green { background-image:var(--lgr), url(board/lane_metab.webp); }
+  .lane.lane-star { background-image:var(--lgr), url(board/lane_star.webp); }
+
   /* 7. 盤の下：個人ボード・他の人・ログを横に並べる */
   .col.me { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:start; }
   .col.me > .panel { margin:0; }
