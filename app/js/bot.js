@@ -300,6 +300,7 @@
     if (RSo(st).gToE) [1, 2, 4].forEach(n => out.push(A({ type: 'gToE', n })));
     p.cards.forEach(c => { out.push(A({ type: 'card', card: c, choice: 'E' })); if (c === 'J') out.push(A({ type: 'card', card: c, choice: 'G' })); if (p.shields > 0) out.push(A({ type: 'card', card: c, choice: 'E', shield: true })); });
     ['St1', 'St2', 'St3'].forEach(o => { if (G.organ(p, o)) out.push(A({ type: 'stAct', organ: o, pe: 14, pg: 12 })); });
+    if (p.round && p.round.boostLock) return out.filter(a => !(a.type === 'res' && (a.useL || a.bypassCoop || a.bypassL))); // T40（O-69）：神の加護を取った人は緊急進出・協調進出なし
     return out;
   }
   function chooseGreedy(st, pid, w) {
