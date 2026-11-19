@@ -361,6 +361,9 @@ html[data-board] #app .grid {
   .tgrid > .tcard { background-image:url(board/tex_membrane.webp), linear-gradient(180deg, color-mix(in srgb, var(--lin) 42%, #000), color-mix(in srgb, var(--lin) 32%, #000)); background-size:180px 180px, auto; background-blend-mode:soft-light, normal; }
   .panel.shared2 .sgroup > .slot { background-image:url(board/tex_membrane.webp), linear-gradient(180deg, #37593a, #2c4a30); background-size:140px 140px, auto; background-blend-mode:soft-light, normal; }
 
+  /* 20. ラウンドの列（O-70）：中央の上（恩寵枠の上の空き）。中心＝生命核の中心の真上 */
+  .rtrack { position:absolute; left:1116px; top:8px; transform:translateX(-50%); margin:0; z-index:3; background:rgba(6,14,22,.55); border-color:rgba(232,207,122,.35); }
+
   /* 7. 盤の下：個人ボード・他の人・ログを横に並べる */
   .col.me { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:start; }
   .col.me > .panel { margin:0; }

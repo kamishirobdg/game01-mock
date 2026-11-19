@@ -374,3 +374,12 @@ html[data-skin] .tcard[data-slot^="TC_J"] { --lin:#a070e8; } html[data-skin] .tc
   html[data-skin="b"] .lane .lane-lbl { border-radius:10px 4px 4px 10px; padding-left:2px; }
   html[data-skin="b"] .panel:not(.player) { border-radius:12px; padding:10px 12px; }
 }
+/* O-70 ラウンドの列（2026-11-19 ユーザー「PC 表示時、ラウンド表記がわかりやすいところにない」）：共用の場の先頭に 1〜5 の丸。今＝金の大きな丸・済み＝薄く・恩寵枠が開くラウンド＝金の縁。PC（1100px 以上）だけ。ヘッダの「ラウンド n/5」と入れ替える */
+.rtrack { display:flex; align-items:center; gap:8px; width:max-content; margin:0 0 10px; padding:5px 16px 5px 12px; border-radius:999px; background:var(--sk-plate, rgba(0,0,0,.25)); border:1px solid var(--sk-edge2, rgba(255,255,255,.15)); }
+.rtrack > svg.ic { width:20px; height:20px; color:var(--sk-gold, #c9a24a); }
+.rtrack > .rp { width:26px; height:26px; box-sizing:border-box; border-radius:50%; display:grid; place-items:center; font-size:13px; font-weight:700; border:1.5px solid color-mix(in srgb, var(--ink, #ccc) 35%, transparent); color:color-mix(in srgb, var(--ink, #ccc) 75%, transparent); }
+.rtrack > .rp.god { border-color:var(--sk-gold, #c9a24a); color:var(--sk-gold-ink, #c9a24a); }
+.rtrack > .rp.past { opacity:.4; }
+.rtrack > .rp.now { width:36px; height:36px; font-size:18px; background:var(--sk-gold, #e8c547); border-color:#fff3c0; color:#1a1408; box-shadow:0 0 10px rgba(232,197,71,.55); }
+@media (min-width: 1100px) { #hdr > .pill.rpill { display:none; } }
+@media (max-width: 1099px) { #app .rtrack { display:none !important; } } /* 携帯幅・狭い画面はヘッダの「ラウンド n/5」だけ（上に貼りつくので見失わない） */

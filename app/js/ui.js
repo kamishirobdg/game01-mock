@@ -387,7 +387,7 @@
     const un = renderUndoNotice(); if (un) { root.appendChild(un); if (renderUndoNotice._toasted !== st.undoInfo.key) { renderUndoNotice._toasted = st.undoInfo.key; toast('あなたの行動が巻き戻されました', true); } }
     const grid = h('div', { class: 'grid' + (can ? '' : ' ro') });
     const tabs = h('div', { class: 'tabs' }, h('button', { class: tab === 'organ' ? 'on' : '', onclick: () => { tab = 'organ'; render(); } }, '器官の場'), h('button', { class: tab === 'trait' ? 'on' : '', onclick: () => { tab = 'trait'; render(); } }, '形質プール'));
-    { const colS = h('div', { class: 'col shared' }, renderTracks(p, can), renderExcl(p, can), renderShared(p, can), tabs, (tab === 'organ' || boardOn()) ? renderOrganField(p, can) : null, (tab !== 'organ' || boardOn()) ? renderTraitPool(p, can) : null); grid.appendChild(boardOn() ? h('div', { class: 'bdscroll' }, colS) : colS); } // O-57：盤では器官の場と形質プールを両方出す // O-59：盤は横に送れる枠に入れる
+    { const colS = h('div', { class: 'col shared' }, renderRoundTrack(), renderTracks(p, can), renderExcl(p, can), renderShared(p, can), tabs, (tab === 'organ' || boardOn()) ? renderOrganField(p, can) : null, (tab !== 'organ' || boardOn()) ? renderTraitPool(p, can) : null); grid.appendChild(boardOn() ? h('div', { class: 'bdscroll' }, colS) : colS); } // O-57：盤では器官の場と形質プールを両方出す // O-59：盤は横に送れる枠に入れる
     grid.appendChild(h('div', { class: 'col me' }, renderPlayer(p, can), isOnline() ? renderSeatsMini() : null, renderOthers(p), renderLog()));
     root.appendChild(grid);
     const pend = p.pending[0];
@@ -442,7 +442,7 @@
     const hd = $('#hdr'); hd.innerHTML = ''; if (!st || st.phase !== 'play') document.title = BASE_TITLE; // O-48：自分の番の印は対局中だけ
     hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール')); // 2026-10-28：「game01 モック」の表記は不要（1行に収める）
     if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (st && st.phase === 'end') hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: exportJson }, '保存(JSON)'), h('button', { onclick: exportCsv }, 'ログCSV'))); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); hd.appendChild(h('span', { class: 'hmenuwrap' }, ...dispGroup(false), h('small', { class: 'ver' }, 'v' + (G.VERSION || '')))); return; }
-    hd.appendChild(h('span', { class: 'pill' }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`));
+    hd.appendChild(h('span', { class: 'pill rpill' }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`));
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
     // 版の小文字＋ボタン群の開閉「≡」は1行目の右端（2026-10-28 ユーザー要望：1行を占有させない）
     hd.appendChild(h('span', { class: 'hmenuwrap' }, ...dispGroup(true), h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), G.FX && G.FX.on(st) ? h('button', { class: 'fxbtn', title: '効果の記号（いつ・得る・払う・軽減など）の見方', onclick: showLegend }, '記号の一覧') : null, h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
@@ -556,6 +556,11 @@
   function rtxt(s) { return G.FX ? G.FX.txt(st, s) : s; } // O-49：全文の差し替えは fx.js（ガイドの「カードの記号一覧」と同じ文）
   // O-37（T30）：身体・知性・代謝のトラックが淘汰に効く分（1 段ごとに E+5／G+5／P+5）
   function massTip(p, t) { const R = G.RULESETS[st.rules || 'v1'], vp = viewP(p), lv = vp.lv[t]; if (t === 'body' && R.mmLv) return `淘汰（代謝）の獲得 ${G.mmForm(st).E}（いま Lv${lv}＝E${G.mmGainOf(vp).E}）`; if (t === 'intel' && R.mmLv) return `淘汰（代謝）の獲得 ${G.mmForm(st).G}（いま Lv${lv}＝G${G.mmGainOf(vp).G}）`; if (t === 'metab' && R.massRetMetab) return `淘汰 4 種を実行したあと P が${G.retForm(st)} 返る（いま Lv${lv}＝P+${G.massRet(vp)}）`; return null; }
+  // O-70（2026-11-19 ユーザー「PC 表示時、ラウンド表記がわかりやすいところにない」）：ラウンドの列＝共用の場の先頭（盤では中央の上）。今のラウンドを光らせ、恩寵枠が開くラウンドは金の縁
+  function renderRoundTrack() {
+    const R = G.RULESETS[st.rules || 'v1'], RN = R.rounds || G.ROUNDS, T = R.tribute, OR = T ? (T.openRound || 6) : 99;
+    return h('div', { class: 'rtrack', title: `ラウンド ${st.round}/${RN}${OR <= RN ? `（ラウンド${OR}から恩寵枠）` : ''}` }, objIc('round'), ...Array.from({ length: RN }, (_, i) => i + 1).map(r => h('span', { class: 'rp' + (r < st.round ? ' past' : r === st.round ? ' now' : '') + (r >= OR ? ' god' : '') }, String(r))));
+  }
   function renderTracks(p, can) {
     const box = h('div', { class: 'panel tracksp' }, h('h3', { title: G.RULESETS[st.rules || 'v1'].gates ? '素材（器官・形質・協調・投入）が矢印の数に達すると自動で上がる。Eでの進化（点線をクリック）も自由。★＝痕跡・先駆は強い報酬' : '次の段（点線）をクリックで進化（ワーカー必須・排他なし）。★＝痕跡・先駆は強い報酬' }, '進化トラック')) // O-66：見出しの補足は title へ);
     const lanes = h('div', { class: 'lanes' }); box.appendChild(lanes); // レーンだけ横スクロール（スマホ）
