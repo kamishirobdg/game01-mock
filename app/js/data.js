@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.157'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.158'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -343,8 +343,9 @@
   G.RULESETS.t36 = Object.assign({}, G.RULESETS.t35, { name: 'T36（T35＋個体培養の基礎 P30→P35）', p8: 35 }); // O-64（第71部 §117・2026-11-18 ユーザー「P+1は崩したくないので、個体培養の数値を35にして試す」）
   G.RULESETS.t37 = Object.assign({}, G.RULESETS.t35, { name: 'T37（T35＋繁殖の恩寵＝P の段と生命核の段を 1 段ずつ・2 段まで・額は定価の 2/3）', breedTrib: { num: 2, den: 3, both: true } }); // O-65（第71部 §118・2026-11-18 ユーザー「繁殖の恩寵が生命核/Pの片方しか払えないが、どちらも使えるようにしたい。両方半分がやりすぎなら、2/3でもよい。」）
   G.RULESETS.t37h = Object.assign({}, G.RULESETS.t35, { name: 'T37h（計測用・T37 の額を半額に＝P75＋生命核2 で 2 段まで）', breedTrib: { num: 1, den: 2, both: true } }); // O-65 の参考（計測だけ・既定にはしない）
-  G.RULES_VISIBLE = ['t37']; // v3.154（O-65）：既定を T37 に・v3.146（O-64）：T36 は隠しセット（計測で万列協和衆の勝率が基準を超えた）・v3.143（O-63）：既定を T35 に・v3.142（O-62）：既定を T34 に（T33 以前は ?rules= で打てる）・v3.128（O-51）：T33
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31', 't32', 't33', 't34', 't35', 't36', 't37', 't37h'];
+  G.RULESETS.t38 = Object.assign({}, G.RULESETS.t37, { name: 'T38（T37＋繁殖の恩寵＝通常の繁殖と同じ動き・額だけ 2/3＝増殖暴走が掛かる）', breedTrib: { num: 2, den: 3, both: true, normal: true } }); // O-67（第71部 §119・2026-11-19 ユーザー「恩寵は通常アクションの上位互換であるべきなので、4段進行出来て良いと考えてる。」「Aで起票する」）：段数と割引は通常の繁殖と同じ（breedMaxN・breedCost）・額はその人の払う額の 2/3（切り上げ）
+  G.RULES_VISIBLE = ['t38']; // v3.158（O-67）：既定を T38 に・v3.154（O-65）：既定を T37 に・v3.146（O-64）：T36 は隠しセット（計測で万列協和衆の勝率が基準を超えた）・v3.143（O-63）：既定を T35 に・v3.142（O-62）：既定を T34 に（T33 以前は ?rules= で打てる）・v3.128（O-51）：T33
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31', 't32', 't33', 't34', 't35', 't36', 't37', 't37h', 't38'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
