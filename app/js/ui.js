@@ -224,7 +224,7 @@
       const btns = h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, opts.okLabel || '実行'));
       if (opts.skipLabel) btns.appendChild(h('button', { type: 'button', onclick: () => { back.classList.remove('open'); resolve({ __skip: true }); } }, opts.skipLabel));
       if (!opts.noCancel) btns.appendChild(h('button', { type: 'button', onclick: () => { back.classList.remove('open'); resolve(null); } }, 'キャンセル'));
-      if (inPending && wholeUndo()) btns.appendChild(h('button', { type: 'button', title: 'この選択のもとになった自分の手の前まで戻す（間にある AI の手も取り消される）', onclick: () => { back.classList.remove('open'); reject(UNDO_REQ); } }, '1手戻す'));
+      if (inPending && dlgUndo()) btns.appendChild(h('button', { type: 'button', title: 'この選択のもとになった自分の手の前まで戻す（間にある AI・他プレイヤーの手も取り消される）', onclick: () => { back.classList.remove('open'); reject(UNDO_REQ); } }, '1手戻す'));
       form.appendChild(btns);
       form.addEventListener('submit', ev => { ev.preventDefault(); const out = read(); back.classList.remove('open'); resolve(out); });
       back.appendChild(form); back.classList.add('open'); const first = form.querySelector('select,input,button'); if (first) first.focus();
@@ -1065,11 +1065,12 @@
   // O-40：ローカル・自由のときは、選択のダイアログにも「1手戻す」を出す（押すとダイアログを閉じ、その選択のもとになった自分の手の前まで戻る）
   const UNDO_REQ = { undo: true }; let inPending = false;
   const wholeUndo = () => !isOnline() && !!game && (game.meta || {}).undoMode !== 'approve';
+  const dlgUndo = () => !!game && (((isOnline() ? Net.meta : game.meta) || {}).undoMode) !== 'approve'; // v3.157：選択のダイアログの「1手戻す」はオンラインでもアンドゥ自由なら出す（承認モードは今のまま）
   const undoEntry = () => wholeUndo() ? { type: 'undo', pids: myHumanPids(), whole: true } : { type: 'undo', pids: myHumanPids() };
   async function handlePending(p, pd) {
     if (pendingBusy) return; pendingBusy = true; let undone = false;
     try { inPending = true; await handlePendingBody(p, pd); } catch (e) { if (e !== UNDO_REQ) throw e; undone = true; } finally { pendingBusy = false; inPending = false; }
-    if (undone) { await submit(undoEntry()); return; } // 送信の完了（await）まで待ってから解放する（return submit(...) だと finally が先に走る）
+    if (undone) { await submit({ type: 'undo', pids: myHumanPids(), whole: true }); return; } /* ダイアログからは選択のもとになった手とまとめて戻す（オンラインも同じ） */ // 送信の完了（await）まで待ってから解放する（return submit(...) だと finally が先に走る）
     // 送信中の再描画は pendingBusy で弾かれるため、次の保留が残っていればここで描画し直して続きのダイアログを出す
     const q = st && st.players[p.id]; if (q && q.pending.length && st.phase === 'play' && G.cur(st).id === q.id) setTimeout(render, 0);
   }
