@@ -390,6 +390,20 @@ html[data-board] #app .grid {
   .tgrid:has(> .tcard:nth-child(15)) > .tcard:has(.hd .sw.weak) > .fx ~ .fx { height:14px; }
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .owners .mk { width:10px; height:10px; line-height:10px; }
 
+  /* 23. O-86 の記号の当てはめに盤を合わせる：採集の丸は名前があるので［採集］の記号を省き、字と記号を一回り小さく（丸からはみ出さない）／Lv ごとの記号が 3 つ並ぶ枠（淘汰(代謝)）は詰めて上の穴に重ならないように／使用済みの淘汰の枠に 2 人目の入り方（協調 か 生命核）を下に出す */
+  .panel.shared2 .sgroup > [data-slot="GTH"] > .picto { max-width:78px; gap:0 1px; }
+  .panel.shared2 .sgroup > [data-slot="GTH"] > .picto > svg.ic:first-child { display:none; }
+  .panel.shared2 .sgroup > [data-slot="GTH"] .pc { font-size:10px; padding:0 1px; }
+  .panel.shared2 .sgroup > [data-slot="GTH"] .pc svg.ic { width:12px; height:12px; }
+  .panel.shared2 .sgroup > [data-slot="GTH"] > .picto > svg.ic { width:8px; height:8px; opacity:.7; }
+  .panel.shared2 .sgroup > [data-slot="GTH"] .po { font-size:10px; }
+  .panel.excl .sgroup > .slot:has(.cbper ~ .cbper ~ .cbper) > .picto { gap:0 1px; max-width:114px; margin-top:10px; line-height:1.05; } .panel.excl .sgroup > .slot:has(.cbper ~ .cbper ~ .cbper) > .picto > .po { font-size:10px; margin:0; } .panel.excl .sgroup > .slot:has(.cbper ~ .cbper ~ .cbper) > .picto > .po:has(+ .cbper) { display:none; }
+  .panel.excl .sgroup > .slot:has(.cbper ~ .cbper ~ .cbper) .pc { font-size:10.500px; padding:0 1px; line-height:1.05; min-height:0; }
+  .panel.excl .sgroup > .slot:has(.cbper ~ .cbper ~ .cbper) .pc svg.ic { width:12px; height:12px; }
+  .panel.excl .sgroup > .slot:has(.cbper ~ .cbper ~ .cbper) .pc.bonus { font-size:9px; padding:0 1px; margin:0; letter-spacing:-.2px; } .panel.excl .sgroup > .slot:has(.cbper ~ .cbper ~ .cbper) .pc.bonus svg.ic { width:9px; height:9px; }
+  .panel.excl .sgroup > .slot:is([data-slot="MB"], [data-slot="MI"], [data-slot="MS"], [data-slot="MM"]).used > .sfoot > .fxbyp { display:flex; position:absolute; left:50%; bottom:9px; transform:translateX(-50%); z-index:2; align-items:center; gap:2px; padding:1px 5px; border-radius:9px; background:rgba(8,16,18,.82); box-shadow:0 0 0 1px rgba(255,255,255,.18); white-space:nowrap; flex-wrap:nowrap; max-width:none; }
+  .panel.excl .sgroup > .slot:is([data-slot="MB"], [data-slot="MI"], [data-slot="MS"], [data-slot="MM"]).used > .sfoot > .fxbyp :is(.pc) { font-size:10.500px; padding:0 1px; } .panel.excl .sgroup > .slot:is([data-slot="MB"], [data-slot="MI"], [data-slot="MS"], [data-slot="MM"]).used > .sfoot > .fxbyp svg.ic { width:12px; height:12px; }
+
   /* 7. 盤の下：個人ボード・他の人・ログを横に並べる */
   .col.me { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:start; }
   .col.me > .panel { margin:0; }
