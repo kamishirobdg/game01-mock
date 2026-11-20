@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const G = globalThis.G1; if (!G) return;
-  const SETS = ['t33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41']; // O-51（v3.128）：T33 の数値で書く（T32 以前は文字の表示）・O-62（v3.142）：T34 は T33 と同じ数値・v3.159：T38（v3.158 で抜けていた）・T39
+  const SETS = ['t33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41', 't42']; // O-51（v3.128）：T33 の数値で書く（T32 以前は文字の表示）・O-62（v3.142）：T34 は T33 と同じ数値・v3.159：T38（v3.158 で抜けていた）・T39
   const ORGAN = {
     Mg1: '手 +E6', Mg2: '! +E6 ; 手 +E3 +G3', Mg3: '手 +all4 ; ∞ =organ1',
     Tl1: '! +G6 ; ∞ ↓trait:G:6', Tl2: '! +G9 ; ! @traitw! $0 … ; ∞ ↓trait:G:9', Tl3: '! @trait! $0 … ; ∞ ↓trait:G:12',
@@ -42,6 +42,8 @@
     TO: '! -organ:定価Ⅰ > +organ:×3 …', TB: '! @rslot! i:usedslot … ; ∞ i:rslot x2 i:round', TJ: '! i:up x2 ↓:E:24',
     TAL: '! ↓altar::½ …', TLF: '! +L3', TBR: '! i:breed ↓::½ …',
   };
+  // O-76（T42）：数値セットごとの差し替え（無いものは上の表のまま）
+  const OV = { t42: { organ: { Fk3: '! +P30 ; ! @breed! … ; 手 +P12', Pr1: '∞ ?star↑ +any9', Pr2: '! @star! …', Pr3: '! @star! x1.5 …' }, trait: { NP: ['∞ i:roundend +P2 /E ≤E10', '∞ i:roundend +P1 /E ≤E10'], DV: ['∞ i:up i:up i:up …', '∞ i:up i:up …'] }, track: { social: { 5: ['! @join! +any12', '! @join!'] } } } };
   const on = (st) => !!st && SETS.includes(st.rules || 'v1');
   const R_ = (st) => G.RULESETS[st.rules || 'v1'];
   const split = (s) => String(s).split(';').map(x => x.trim()).filter(Boolean);
@@ -60,13 +62,14 @@
   // 記号の並び（行の配列）。無いときは null（文字の表示のまま）
   function lines(st, kind, id, which) {
     if (!on(st)) return null; let s = null;
-    if (kind === 'organ') s = ORGAN[id];
-    else if (kind === 'trait') { const a = TRAIT[id]; s = a ? a[which === 'w' ? 1 : 0] : null; }
-    else if (kind === 'track') { const [t, l] = id; const x = TRACK[t] && TRACK[t][l]; s = Array.isArray(x) ? x[which === 'w' ? 1 : 0] : x; }
+    const ov = OV[st.rules || 'v1'] || {};
+    if (kind === 'organ') s = (ov.organ || {})[id] || ORGAN[id];
+    else if (kind === 'trait') { const a = (ov.trait || {})[id] || TRAIT[id]; s = a ? a[which === 'w' ? 1 : 0] : null; }
+    else if (kind === 'track') { const [t, l] = id; const ox = ((ov.track || {})[t] || {})[l]; const x = ox !== undefined ? ox : TRACK[t] && TRACK[t][l]; s = Array.isArray(x) ? x[which === 'w' ? 1 : 0] : x; }
     else if (kind === 'trib') { const R = R_(st); const TS = (R.tribute || {}).slots || {}; s = id === 'TBR' && (R.breedTrib || {}).both ? `! -P${G.breedTribCost(R, 'P', 0)} > i:breed ; ! -L${G.breedTribCost(R, 'L')} > i:breed …` : id === 'TAL' && (TS.TAL || {}).pair ? '! i:altar x2 ↓::½ …' : id === 'TB' && TS.TB ? `! @rslot! i:usedslot${TS.TB.instantVg && R.finalSlotVg ? ' +bless1' : ''} … ; ∞ i:rslot x${TS.TB.mul || 2} i:round` : id === 'TJ' && TS.TJ ? `! i:up x${TS.TJ.n || 2} ↓:E:${G.sc(st, TS.TJ.disc || 0)}` : TRIB[id]; } // T39（O-68）：祭壇の恩寵 2 口・加護の倍率と祝福・跳躍の値引きは数値セットから // T37（O-65）：P の段・生命核の段（両方で 2 段）
     return s ? split(s) : null;
   }
-  const trackSplit = (st, t, l) => on(st) && Array.isArray(TRACK[t] && TRACK[t][l]);
+  const trackSplit = (st, t, l) => { if (!on(st)) return false; const ox = (((OV[st.rules || 'v1'] || {}).track || {})[t] || {})[l]; return Array.isArray(ox !== undefined ? ox : TRACK[t] && TRACK[t][l]); };
 
   // ---------- 描画（ブラウザのみ） ----------
   const ICO = { E: 'ico-e', G: 'ico-g', P: 'ico-pop', L: 'ico-life', coop: 'ico-coord', gem: 'ico-gem', W: 'ico-w', bless: 'ico-bless', trait: 'ico-trait', organ: 'ico-organ', breed: 'ico-breed', up: 'ico-up', rslot: 'ico-slot', star: 'ico-star', join: 'ico-join', launch: 'ico-launch', any: 'ico-any',
