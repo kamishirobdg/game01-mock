@@ -169,6 +169,7 @@
     st.shared.used = {}; st.shared.organUsed = {};
     st.players.forEach(p => {
       if (p.spore && RS(p).sporeKeep) { const cap = RS(p).sporeCap || sc(p, 3); const use = Math.min(p.E, cap), k = RS(p).sporeKeep[p.spore === 3 ? 0 : 1]; if (use > 0) { p.P += use * k; log(st, p.id, `${p.name}：胞子 E${use}×${k}→P+${use * k}（E は減らない）${st.round > 1 ? '（前ラウンドの残り）' : ''}`); } } /* T42（O-76）sporeKeep：E は減らさず E1 につき P+[強, 弱] */ else if (p.spore) { const cap = RS(p).sporeCap || sc(p, 3); const use = Math.min(p.E, cap); if (use > 0) { p.E -= use; p.P += use * p.spore; log(st, p.id, `${p.name}：胞子 E${use}→P${use * p.spore}${st.round > 1 ? '（前ラウンドの残り）' : ''}`); } } // 第42部 N9 胞子（強 E1→P3／弱 E1→P2・上限 sporeCap）
+      { const nh = trait(p, 'NH'), NHG = RS(p).nhGain; if (nh && NHG) { const k = NHG[nh.strong ? 0 : 1], z = ['E', 'G', 'P'].filter(r => p[r] <= 0); if (z.length) { z.forEach(r => { p[r] += k; }); log(st, p.id, `${p.name}：渇望（手持ち 0 の ${z.join('・')}）${z.map(r => r + '+' + k).join(' ')}`); } } } /* T44（O-79）渇望：収入の最初の手持ちで 0 の資源に +6／+4 */
       // 収入
       p._round = st.round; // p._round＝これから始まるラウンド番号（yieldByRound 用）
       if (RS(p).yieldAfterL) { p.lRemain -= 1; p.L += 1; } // 試作 yieldAfterL（2026-11-05 ユーザー提案）：L を先に受け取ってから利回り（受け取った L も利回りに数える）
@@ -181,6 +182,7 @@
       p.round = { firstDone: false, rh3Used: false, trib: {} }; p.st3Used = false;
       log(st, p.id, `収入 E+${inc.E} G+${inc.G} P+${inc.P}${inc.coop ? ' 協調+' + inc.coop : ''} L+1（${inc.parts.join('・')}）`);
       const cv1 = organ(p, 'Cv1'); if (cv1) { const n = Math.floor(p.organs.length / (cv1.strong ? 2 : 3)); if (n > 0) p.pending.push({ type: 'cvIncome', n }); }
+      if (organ(p, 'Sv3') && RS(p).svInc) p.pending.push({ type: 'cvIncome', n: RS(p).svInc.Sv3, src: '貯蔵核' }); // T44（O-79）：貯蔵核＝収入のたびに好きな資源+12
       const flMax = flSwapMax(p); if (flMax) p.pending.push({ type: 'flSwap', max: flMax });
       if (trait(p, 'DG')) p.pending.push({ type: 'dgBuy', disc: RS(p).dgDisc ? RS(p).dgDisc[trait(p, 'DG').strong ? 0 : 1] : sc(p, (trait(p, 'DG').strong ? 2 : 1) + (RS(p).traitGateBoost ? 1 : 0)) });
       p.pending.forEach(x => { x.pre = true; }); // 2026-11-05 v3.63：収入時の保留（利回り選択・収斂膜・転流・遺伝子図書館）は「手番前」の解決＝解決しても手番は進めない（apply）。従来は resolve のたびに advanceTurn され、最初の手番が飛ばされていた（ユーザー指摘）
@@ -214,6 +216,7 @@
       if (R5.pulseInc) ['Pu1', 'Pu2'].forEach(id => { const o = organ(p, id); if (o && R5.pulseInc[id]) add(G.ORGANS[id].name, 0, 0, R5.pulseInc[id] * (o.amp ? 2 : 1), 'org:' + id); }); // T22（O-18）：脈動点 P+15・脈動腺 P+25
       if (organ(p, 'Pr2') && R5.propel && R5.propel.pr2P) { const k = R5.propel.pr2P * (p.star | 0); add('推進腺', 0, 0, k, 'org:Pr2'); } // T27（O-27）：星海開拓の Lv2 以上 1 つにつき P+6（Lv6 で P+30）
       if (organ(p, 'Nv2') && R5.nv2Inc) add('神経網', 0, R5.nv2Inc, 0, 'org:Nv2'); if (organ(p, 'Lm1') && R5.lm1Inc) add('発光点', 0, R5.lm1Inc, 0, 'org:Lm1');
+      if (R5.svInc) { if (organ(p, 'Sv1')) add('貯蔵膜', 0, R5.svInc.Sv1, 0, 'org:Sv1'); if (organ(p, 'Sv2')) add('貯蔵腺', R5.svInc.Sv2, 0, 0, 'org:Sv2'); } // T44（O-79）：貯蔵膜 G+4・貯蔵腺 E+9
       if (R5.spInc) p.organs.forEach(o => { const v = R5.spInc[o.id]; if (!v) return; const n = p.organs.length, key = 'org:' + o.id; if (v.coopFlat) addC(G.ORGANS[o.id].name, v.coopFlat, key); if (v.coop) addC(G.ORGANS[o.id].name, Math.floor(n * v.coop), key); if (v.E || v.G || v.P) add(G.ORGANS[o.id].name, (v.E || 0) * n, (v.G || 0) * n, (v.P || 0) * n, key); }); }
     p.traits.forEach(t => {
       if (t.id === 'IE' && t.strong) add('IE', sc(p, 2), 0, 0);
@@ -321,6 +324,7 @@
     if (RS(p).organFx === 2) { e -= cxDisc(p, 'E'); g = Math.max(0, g - cxDisc(p, 'G')); } // T13 促進
     e = Math.max(sc(p, 1), e);
     e = applyRh2(p, e);
+    { const nd = trait(p, 'ND'); if (nd && RS(p).ndDisc) e = Math.max(0, e - RS(p).ndDisc[nd.strong ? 0 : 1]); } // T44（O-79）分化：ほかの値引きを全部掛けた後の E から −5／−3（下限 0）
     return { E: e, G: g, strong, first, list, diff };
   }
   function traitCost(st, p, tid, viaReward, wantWeak) {
@@ -602,7 +606,7 @@
     }
   }
   // O-36 計測のみ intelFlip：弱の形質を強に裏返す（先着の記録は変えない・即時の資源／痕跡は受け取り直さない・数／回数の形質は差分を足す）
-  const FLIP_OK = ['MC', 'DG', 'NB', 'MB', 'NF', 'DV', 'NM', 'JI', 'JB', 'NP', 'NE', 'NS']; // 即時だけの形質（群れ本能 NC・長命 NL・星渡 JS）は対象外
+  const FLIP_OK = ['MC', 'DG', 'NB', 'MB', 'NF', 'DV', 'NM', 'JI', 'JB', 'NP', 'NE', 'NS', 'ND', 'NH']; // 即時だけの形質（群れ本能 NC・長命 NL・星渡 JS・T44 の共鳴 NK・化石 NZ）は対象外・T44（O-79）の分化 ND・渇望 NH は強弱を使うたびに見るので裏返しの差分なし
   function flippable(p) { return p.traits.filter(t => !t.strong && FLIP_OK.includes(t.id)).map(t => t.id); }
   const FLIP_SRC = { '3w': '知性 Lv3★ 弱', '5w': '知性 Lv5★ 弱', '5s': '知性 Lv5★ 強' };
   function flipStart(st, p, n, g, src) { // n＝裏返せる枚数（99＝好きなだけ）／g＝裏返さない 1 枚あたりの G
@@ -677,6 +681,8 @@
     if (tid === 'NE') p.altFuel = strong ? [1, 1] : [5, 3]; // 第42部 N5（2026-10-30 ユーザー採用：強 E1＝P1／弱 E3＝P5。[P, E] の比）
     if (tid === 'NS') p.symbiosis = strong ? 'free' : 'disc'; // 第42部 N8
     if (tid === 'NP') p.spore = strong ? 3 : 2; // 第42部 N9
+    if (tid === 'NK') { addShield(st, p, 1, '共鳴'); if (strong && RS(p).nkCoop) gainRes(p, 'coop', RS(p).nkCoop); } // T44（O-79）共鳴：合流進出 1 回（社会 Lv3★ と同じ）＋強は協調+2
+    if (tid === 'NZ' && RS(p).nzGem) addGem(st, p, 'body', RS(p).nzGem[strong ? 0 : 1], '化石'); // T44（O-79）化石：淘汰(身体) と同じ置き場
     const jmax = RS(p).jumpMaxLv || 99; // 試作 jumpMaxLv：跳躍で上がれる上限（Lv6 は飛び越えない）
     // 試作 leapStrong（第68部・2026-11-06 ユーザー所見「JI/JB の強は人が使うと強すぎる」）：'res'＝強は +1 段＋色の資源（JI G+{3}／JB L+1）／'cap4'＝強の 2 段目は Lv4 を超えない（Lv3→5 の跳躍を止める）。未設定＝現行（+2 段）
     const LS = RS(p).leapStrong; const leap2 = (track) => strong && p.lv[track] < jmax && (LS !== 'res') && (LS !== 'gate') && (LS !== 'gem') && !(LS === 'cap4' && p.lv[track] >= 4); // 'gem'（T14・第71部 §12 J-d）＝強は +1 段＋痕跡+1
@@ -833,6 +839,7 @@
     const c = organCost(st, p, a.organ, !!a.full); if (!c) throw new Error('その器官は今は形成できません（系統内は形態の順）');
     if (organ(p, a.organ)) throw new Error('形成済みです');
     if (RS(st).organExcl) { const u = st.shared.organUsed[a.organ]; if (u !== undefined && u !== p.id) throw new Error(`このカードは今ラウンド ${P(st, u).name} が形成しました（1ラウンド1人）`); }
+    if (!mode || mode === 'half') { const nd = trait(p, 'ND'); if (nd && RS(p).ndDisc) { const c0 = organCost(st, Object.assign({}, p, { traits: p.traits.filter(t => t.id !== 'ND') }), a.organ, !!a.full); if (c0) p.ndSaved = (p.ndSaved || 0) + Math.max(0, c0.E - c.E); } } // T44（O-79）計測用：分化で安くなった E の合計
     let e = c.E, g = c.G; if (mode === 'free' || mode === 'freeChain') { e = 0; g = 0; } else if (mode === 'half') { e = ceilHalf(e); g = ceilHalf(g); } // 'freeChain'＝T15 器官の恩寵の 2 枚目以降（無料・コマ不要）。追加アクションの E 半額は削除（O-03）
     if (a.payP) { if (!p.altFuel) throw new Error('代替燃料がありません'); const need = altFuelP(p, e); if (p.P < need) throw new Error(`Pが足りません（E${e}＝P${need}）`); }
     if (!a.bonus && !mode) useToken(p, false);

@@ -124,7 +124,7 @@
       list.sort((a, b) => (G.ORGANS[b.o].tier - G.ORGANS[a.o].tier) || (b.c.strong - a.c.strong) || (a.c.E - b.c.E));
       return list.map(x => A({ type: 'organ', organ: x.o, useL: Math.max(0, Math.min(p.L, Math.ceil((x.c.E - p.E) / 3))), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' }));
     };
-    const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'NP', 'NE', 'NS', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'JS', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM'].filter(t => G.traitPool(st).includes(t));
+    const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'NP', 'NE', 'NS', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'JS', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM', 'ND', 'NH', 'NK', 'NZ'].filter(t => G.traitPool(st).includes(t)); // T44（O-79）：新しい 4 種は後ろに
     const jsVar = (t) => { if (t !== 'JS' || !((RSo(st).star || {}).jump === 'half')) return [{}]; const lv = G.starJumpLv(st, p); if (!lv) return [{ jsPay: 'skip' }]; const c = G.starCost(st, lv); return Object.keys(c).map(r => ({ jsPay: r, jsPros: G.starProsOk(st, p, lv) ? starPros(st, p, [lv]) : undefined })).concat([{ jsPay: 'skip' }]); }; // T27（O-27）：星渡は払う 1 種まで含めて候補にする
     const traitCands = (slots) => traitPref.filter(t => !G.trait(p, t)).flatMap(t => jsVar(t).flatMap(jv => slots.map(sl => A(Object.assign({ type: 'trait', trait: t, useL: Math.max(0, Math.min(p.L, Math.ceil((G.traitCost(st, p, t).G - p.G) / 3))), res: pref[0], track: 'intel' }, jv, sl)))));
     const traitSlots = [{}, { slot: 'TRT2' }, p.coop >= 2 && style !== 'white' ? { bypassCoop: true } : null, p.L >= 2 ? { bypassL: true } : null].filter(Boolean);
@@ -227,6 +227,7 @@
       else { v += rem * 0.9 * lm('Cx', [1, 2, 3], [1, 1, 2]) * w.E; // 促進：進行 0.9回/R
         const li1 = G.organ(p, 'Li1'); if (li1) v += rem * 0.6 * (li1.strong ? 2 : 1) * k1 * w.E; const li2 = G.organ(p, 'Li2'); if (li2) v += rem * 0.6 * (li2.strong ? 3 : 2) * k1 * w.E; }
       const dv = G.trait(p, 'DV'); if (dv) { if (R.dvMode === 'triple') v += (p.dv3 || 0) * 15 * w.E; else if (R.dvMode === 'perm') v += Math.min(rem, 2) * (dv.strong ? 2 : 1) * 15 * w.E; /* T42（O-76）：回数なし＝残りの R で手番 1 つの節約（三段進行の評価と同じ E15）を強 2・弱 1 回ぶん（最大 2 R） */ else v += rem * 0.9 * (dv.strong ? 2 : 1) * k1 * w.E; } /* T14 三段進行＝残り回数×手番 1 つ（E15 相当） */ const dg = G.trait(p, 'DG'); if (dg) v += rem * 0.5 * (R.dgDisc ? R.dgDisc[dg.strong ? 0 : 1] : 2 * k1) * w.G; // 2026-11-09 O-10：DG の行が上のコメントに飲み込まれていたのを生かした
+      { const nd = G.trait(p, 'ND'); if (nd && R.ndDisc) v += rem * 0.6 * R.ndDisc[nd.strong ? 0 : 1] * w.E; if (G.organ(p, 'Sv3') && R.svInc) v += rem * w.inc * R.svInc.Sv3 * w.E; } // T44（O-79）：分化＝器官 0.6 枚/R の E 値引き（今の器官の割引と同じ見方）・貯蔵核＝収入の好きな資源（E と同じ見方・収斂膜の保留と同じく income には入らない）
       const mb = G.trait(p, 'MB'); if (mb && mb.strong && R.mbBreedDisc && R.mbMode !== 'multi') v += Math.min(rem, (R.breed.length - p.breed)) * 0.5 * R.mbBreedDisc * k1 * w.P;
       // 2026-11-04 消費軽減（MC）の見込み：これまで評価に無く（形質1枚ぶんの重みだけ）、G15 の MC は G9 の形質に常に負けて 0.02 枚/戦しか買われなかった。大量消費 0.5回/R × 軽減 を残Rぶん。1回限り（弱／freeOnce の強）は 1回ぶん
       const mcT = G.trait(p, 'MC'); if (mcT) { const fo = R.mcMode === 'freeOnce'; const perm = fo ? (!mcT.strong ? (R.mcDiscWeak !== undefined ? R.mcDiscWeak : R.mcDisc) : 0) : (mcT.strong ? R.mcDisc : 0); v += rem * 0.5 * perm * w.P;
