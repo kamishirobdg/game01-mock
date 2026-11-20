@@ -387,3 +387,4 @@ html[data-skin] .tcard[data-slot^="TC_J"] { --lin:#a070e8; } html[data-skin] .tc
 @media (min-width: 1100px) { #hdr > .pill.rpill { display:none; } }
 @media (max-width: 1099px) { #app .rtrack { display:none !important; } } /* 携帯幅・狭い画面はヘッダの「ラウンド n/5」だけ（上に貼りつくので見失わない） */
 @media (max-width: 600px) { #hdr > .turnbar { min-width:0; max-width:100%; box-sizing:border-box; } #hdr > .turnbar .since { max-height:54px; } #hdr > .turnbar .since .sv { white-space:normal; align-items:flex-start; } } /* 携帯幅：長いログの 1 行が画面幅を押し広げないよう折り返す */
+#app .panel.excl > .coresp { display:none; } /* O-82：中央の種族は盤の画面だけ（board.css） */

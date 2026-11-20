@@ -660,6 +660,7 @@
     if (id === 'GTH') return { pid, type: 'gather', res: 'E' };
     return { pid, type: 'reserve', res: 'E' };
   }
+  function coreSpecies() { const q = st && st.phase === 'play' && !st.ended ? G.cur(st) : null; if (!q || !q.species) return null; const sp = G.speciesInfo(st, q.species); return h('div', { class: 'coresp p' + q.id, title: `手番：${q.name}（${sp.name}）` }, art(SPECIES_ART[q.species] || 'species_wing', 'portrait'), h('span', { class: 'cname' }, h('span', { class: 'mk p' + q.id }, q.id + 1), sp.name)); } // O-82：表示は盤の画面だけ（board.css）
   function renderExcl(p, can) {
     const m4 = st.slotSet === 'm4';
     const x1 = st.ext === 'x1';
@@ -677,7 +678,7 @@
     { const T = G.RULESETS[st.rules || 'v1'].tribute; if (T) { const open = st.round >= (T.openRound || 6); const gt = h('div', { class: 'sgroup' + (open ? ' god' : '') }, h('b', { class: 'glabel', title: open ? '神の到来：恩寵枠（占有）' : `恩寵枠：ラウンド${T.openRound || 6}から（神の到来）` }, '恩寵枠')); G.tribSlots(st).map(id => G.SLOT_BY_ID[id]).forEach(s => { if (open) gt.appendChild(slotButton(p, can, s, () => onSlot(p, s.id))); else { const b = slotBody(p, s.id, s.name, G.slotText(st, s.id), null); gt.appendChild(h('button', { class: 'slot locked' + (b[0].className === 'pname' ? ' pic' : ''), disabled: true, title: G.slotTip(st, s.id) }, ...b)); } }); box.appendChild(gt); } }
     const g3 = h('div', { class: 'sgroup' }, h('h4', null, 'その他'));
     G.SLOTS.filter(s => s.group === 'oth' && (!s.ext || s.ext === st.ext) && (!s.rs || G.RULESETS[st.rules || 'v1'][s.rs]) && !(s.id === 'TRT2' && G.RULESETS[st.rules || 'v1'].traitShared) && !(s.id === 'TRT' && G.RULESETS[st.rules || 'v1'].traitShared) && !(s.id === 'GEM' && G.RULESETS[st.rules || 'v1'].gemsetShared)).forEach(s => g3.appendChild(slotButton(p, can, s, () => onSlot(p, s.id), G.slotUsedBy(st, s.id) !== undefined && G.bypassable(st, s.id) ? bypassHint() : null)));
-    box.appendChild(g1); box.appendChild(g2); if (g3.childNodes.length > 1) box.appendChild(g3); return box; // O-52：中身が無ければ「その他」ごと消す
+    box.appendChild(g1); box.appendChild(g2); if (g3.childNodes.length > 1) box.appendChild(g3); { const cs = coreSpecies(); if (cs) box.appendChild(cs); } return box; // O-52／O-82：盤の中央（生命核の内側）に手番の人の種族：中身が無ければ「その他」ごと消す
   }
   const restoreCands = (p) => G.traitPool(st).filter(t => st.shared.traitFirst[t] !== undefined && st.shared.traitFirst[t] !== p.id && !G.trait(p, t)); // T10 復元の候補
   const burstCands = (p) => { const B = G.RULESETS[st.rules || 'v1'].burst; if (!B) return []; const out = []; st.shared.lineages.forEach(lin => { const n = G.lineageCount(p, lin); const seq = [1, 2, 3].filter(t => t > n).map(t => lin + t).filter(id => st.shared.organField.includes(id)); for (let k = 2; k <= Math.min(seq.length, B.max || 3); k++) out.push(seq.slice(0, k)); }); return out; }; // T14 一気立ての候補（系統ごとに次の 2 枚・3 枚）

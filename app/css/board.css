@@ -364,6 +364,13 @@ html[data-board] #app .grid {
   /* 20. ラウンドの列（O-70）：中央の上（恩寵枠の上の空き）。中心＝生命核の中心の真上 */
   .rtrack { position:absolute; left:1116px; top:8px; transform:translateX(-50%); margin:0; z-index:3; background:rgba(6,14,22,.55); border-color:rgba(232,207,122,.35); }
 
+  /* 22. 中央の生命核の内側に手番の人の種族（O-82）：結晶の絵（直径 230）を外の輪として残し、内側 150 の丸に種族の絵・縁＝その人の色・下に名前の札 */
+  .panel.excl > .coresp { display:block; position:absolute; left:272px; top:400px; width:150px; height:150px; margin:-75px 0 0 -75px; z-index:2; pointer-events:none; --pc:var(--p0); }
+  .panel.excl > .coresp.p1 { --pc:var(--p1); } .panel.excl > .coresp.p2 { --pc:var(--p2); } .panel.excl > .coresp.p3 { --pc:var(--p3); }
+  .panel.excl > .coresp > .art { display:block; width:100%; height:100%; margin:0; border-radius:50%; object-fit:cover; background:radial-gradient(circle at 50% 40%, #1d3340 0, #08131a 75%); border:0; box-shadow:0 0 0 4px var(--pc), 0 0 0 7px rgba(0,0,0,.55), 0 0 26px 6px rgba(0,0,0,.55); }
+  .panel.excl > .coresp > .cname { position:absolute; left:50%; bottom:-12px; transform:translateX(-50%); display:flex; align-items:center; gap:5px; padding:2px 11px 2px 4px; border-radius:999px; white-space:nowrap; font-size:13px; font-weight:700; letter-spacing:1px; color:#f3ead0; background:rgba(8,16,22,.88); border:1.5px solid var(--pc); }
+  .panel.excl > .coresp > .cname .mk { width:18px; height:18px; line-height:18px; font-size:11px; }
+
   /* 21. 形質が 15 枚以上（T44＝17 枚・O-80）：2 列 × 9 段に詰める（T43 までの 14 枚は今のまま）。板を 57→44px にし、強・弱の 2 行は字と記号を一回り小さく */
   .tgrid:has(> .tcard:nth-child(15)) { grid-template-rows:repeat(9, 44px); grid-auto-rows:44px; row-gap:2px; }
   .tgrid:has(> .tcard:nth-child(15)) > .tcard { height:44px; grid-template-columns:24px auto minmax(0, 1fr); grid-template-rows:17px 14px 11px; padding:1px 5px 1px 10px; }
