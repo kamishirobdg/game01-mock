@@ -93,7 +93,7 @@
     if (st.players.some(q => q.species === spId)) throw new Error('その種族は選択済みです');
     const mod = (RS(p).speciesMod || {})[spId] || {}; // 試作 speciesMod：{ stock:{E,G,P}, L, coop, mantaP, mantaIncE }
     const stock = mod.stock || sp.stock;
-    p.species = spId; p.E = stock.E; p.G = stock.G; p.P = stock.P; if (mod.L) p.L += mod.L; if (mod.shields) p.shields += mod.shields; // 試作 speciesMod.shields：Wなし実行権
+    p.species = spId; { const ss = (RS(p).speciesStart || {})[spId]; if (ss) { if (ss.gem) addGem(st, p, sp.track || 'body', ss.gem, '種族の初期の痕跡'); if (ss.bless) p.gemsets += ss.bless; } } /* T43（O-78）speciesStart */ p.E = stock.E; p.G = stock.G; p.P = stock.P; if (mod.L) p.L += mod.L; if (mod.shields) p.shields += mod.shields; // 試作 speciesMod.shields：Wなし実行権
     if (p.passive) {
       if (spId === 'wing') { if (RS(p).lv0) advanceTrack(st, p, 'body', '種族パッシブ'); advanceTrack(st, p, 'body', '種族パッシブ'); if (mod.wingInv) { p.lInvested = (p.lInvested || 0) + mod.wingInv; } } // 試作 speciesMod.wing.wingInv：開始時に L の投入回数を持つ // Lv2到達扱い＝Lv2報酬（P+8）も得る（lv0 では 0→2）
       if (spId === 'ant') p.coop = mod.coop !== undefined ? mod.coop : 1;
@@ -140,8 +140,8 @@
     if (st.phase !== 'setup') return; // 既に開始済み（ドラフト完了時に自動開始するため 'finish' エントリは冪等）
     if (st.players.some(p => !p.species || p.cards.length !== handSize(st))) throw new Error('セットアップが完了していません');
     // 第1Rの手番順＝手番値の大きい順（同値はランダム）
-    const ps = st.players.map(p => ({ id: p.id, o: G.SPECIES[p.species].order, r: rngNext(st) }));
-    ps.sort((a, b) => b.o - a.o || a.r - b.r);
+    const ps = st.players.map(p => ({ id: p.id, o: G.SPECIES[p.species].order, r: rngNext(st), g: realGems(p), b: p.gemsets || 0 }));
+    if (RS(st).turnOrder === 'gemsDesc') ps.sort((a, b) => b.g - a.g || b.b - a.b || b.o - a.o || a.r - b.r); /* T43（O-78）：R1 も痕跡の多い順 → 祝福の多い順 → 手番値の大きい順 */ else ps.sort((a, b) => b.o - a.o || a.r - b.r);
     st.turnOrder = ps.map(x => x.id);
     st.players.forEach(p => syncGates(st, p)); // 初期の収集物（協調2・形質など）でゲートを満たしていれば開始前に上げる
     st.phase = 'play';
@@ -154,7 +154,7 @@
     if (st.round > 1) {
       // 痕跡の少ない順（同数は前R維持＝安定ソート）
       const order = st.turnOrder.slice();
-      order.sort((a, b) => realGems(P(st, a)) - realGems(P(st, b)));
+      if (RS(st).turnOrder === 'gemsDesc') order.sort((a, b) => realGems(P(st, b)) - realGems(P(st, a)) || (P(st, b).gemsets || 0) - (P(st, a).gemsets || 0)); /* T43（O-78）：痕跡の多い順 → 祝福の多い順 → 前 R の順（安定ソート） */ else order.sort((a, b) => realGems(P(st, a)) - realGems(P(st, b)));
       st.turnOrder = order;
       // 律動T1：整列後の手番が遅い者から順に1つ前へ
       for (let i = st.turnOrder.length - 1; i >= 1; i--) {
@@ -1662,7 +1662,8 @@
     if (id === 'manta' && mod.stock) { const pP = mod.mantaP !== undefined ? mod.mantaP : 10, iE = mod.mantaIncE !== undefined ? mod.mantaIncE : 1; passive = [pP ? `P+${pP}` : null, iE ? `E収入+${iE}（恒久）` : null].filter(Boolean).join(' ＋ ') || '初期資源が多い（何にでも伸ばせる）'; hint = '初期資源が全種類多く、最初の手番から形質・器官・進化のどれにも手が届く。何にでも伸ばせる万能型。'; } const type = (id === 'manta' && mod.stock) ? '万能' : sp.type;
     if (id === 'ant' && mod.coop !== undefined) passive = `協調${mod.coop}でスタート`;
     if (id === 'arm' && RS(st).armTraitMax) passive = `コストG${RS(st).armTraitMax}以下の形質1枚を取得済みでスタート`;
-    return { name: sp.name, type, order: sp.order, stock: { E: stock.E, G: stock.G, P: stock.P }, L: mod.L || 0, passive, hint };
+    const ss = (RS(st).speciesStart || {})[id] || null; // T43（O-78）：初期の痕跡・祝福（あれば手番値は出さない）
+    return { name: sp.name, type, order: sp.order, stock: { E: stock.E, G: stock.G, P: stock.P }, L: mod.L || 0, passive, hint, gem: ss ? ss.gem || 0 : null, bless: ss ? ss.bless || 0 : null };
   }
 
   // ---------- 表示文（数値セット連動） ----------

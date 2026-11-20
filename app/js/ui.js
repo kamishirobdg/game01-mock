@@ -332,7 +332,7 @@
       box.appendChild(h('h2', null, `種族選択：${pl.name}（${i + 1}/${n}）`));
       if (!mine(i)) { box.appendChild(h('p', { class: 'note' }, `${pl.name} の端末で選択中です`)); return box; }
       const taken = st.players.map(q => q.species);
-      Object.keys(G.SPECIES).forEach(id => { const sp = G.speciesInfo(st, id); box.appendChild(h('button', { class: 'bigbtn withart', disabled: taken.includes(id), onclick: () => submit({ type: 'species', pid: i, species: id }) }, art(SPECIES_ART[id], 'portrait'), h('b', null, sp.name), h('em', { class: 'sptype' }, sp.type), h('span', null, `手番順${sp.order}・初期 E${sp.stock.E}/G${sp.stock.G}/P${sp.stock.P}${sp.L ? '/L' + sp.L : ''}`), h('small', { class: 'sphint' }, sp.hint), h('small', null, 'パッシブ：' + sp.passive))); });
+      Object.keys(G.SPECIES).forEach(id => { const sp = G.speciesInfo(st, id); box.appendChild(h('button', { class: 'bigbtn withart', disabled: taken.includes(id), onclick: () => submit({ type: 'species', pid: i, species: id }) }, art(SPECIES_ART[id], 'portrait'), h('b', null, sp.name), h('em', { class: 'sptype' }, sp.type), h('span', null, sp.gem !== null ? [pc('gem', String(sp.gem), { title: `初期の痕跡 ${sp.gem}` }), sp.bless ? pc('bless', String(sp.bless), { title: `初期の祝福 ${sp.bless}` }) : null, `・初期 E${sp.stock.E}/G${sp.stock.G}/P${sp.stock.P}${sp.L ? '/L' + sp.L : ''}`] : `手番順${sp.order}・初期 E${sp.stock.E}/G${sp.stock.G}/P${sp.stock.P}${sp.L ? '/L' + sp.L : ''}`) /* O-78（T43）：手番値の代わりに初期の痕跡 */, h('small', { class: 'sphint' }, sp.hint), h('small', null, 'パッシブ：' + sp.passive))); });
     } else if (st.setupStep === 'armTrait') {
       const i = st.setupIdx; const pl = st.players[i];
       box.appendChild(h('h2', null, `${pl.name}（九腕知性体）：初期形質を1枚選択（G${G.RULESETS[st.rules || 'v1'].armTraitMax || 4}以下）`));
@@ -367,7 +367,7 @@
     if (p.traits.length) st0.push('形質 ' + p.traits.map(t => `${t.id} ${G.TRAITS[t.id].name}`).join('・'));
     box.appendChild(h('div', { class: 'note' }, st0.join('／')));
     box.appendChild(h('div', { class: 'note' }, spi.hint));
-    const order = st.players.slice().sort((a, b) => G.SPECIES[b.species].order - G.SPECIES[a.species].order);
+    const order = G.RULESETS[st.rules || 'v1'].turnOrder === 'gemsDesc' ? st.players.slice().sort((a, b) => G.realGems(b) - G.realGems(a) || (b.gemsets || 0) - (a.gemsets || 0) || G.SPECIES[b.species].order - G.SPECIES[a.species].order) : st.players.slice().sort((a, b) => G.SPECIES[b.species].order - G.SPECIES[a.species].order); // O-78（T43）：痕跡の多い順
     box.appendChild(h('div', { class: 'note' }, '第1ラウンドの手番順：' + order.map(q => `${q.name}（${G.SPECIES[q.species].name}）`).join(' → ')));
     const done = st.players.filter(q => q.cards.length);
     if (done.length) box.appendChild(h('div', { class: 'note' }, '選択済み：' + done.map(q => `${q.name} ${q.cards.join('・')}`).join('／')));
@@ -453,7 +453,7 @@
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
     // 版の小文字＋ボタン群の開閉「≡」は1行目の右端（2026-10-28 ユーザー要望：1行を占有させない）
     hd.appendChild(h('span', { class: 'hmenuwrap' }, ...dispGroup(true), h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), G.FX && G.FX.on(st) ? h('button', { class: 'fxbtn', title: '効果の記号（いつ・得る・払う・軽減など）の見方', onclick: showLegend }, '記号の一覧') : null, h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
-    const to = h('span', { class: 'order' }, '手番順：');
+    const to = h('span', { class: 'order', title: G.RULESETS[st.rules || 'v1'].turnOrder === 'gemsDesc' ? '手番順：ラウンドの始めに痕跡の多い順（同数は祝福の多い順・それも同じなら前のラウンドの順）' : '手番順：ラウンド2から痕跡の少ない順' }, '手番順：');
     { const hp0 = headerPids(); if (peekPid !== null && (!st.players[peekPid] || hp0.includes(peekPid))) peekPid = null;
       st.turnOrder.forEach((pid, i) => { const q = st.players[pid]; const other = !hp0.includes(pid); to.appendChild(h('span', { class: 'chip' + (i === st.cur ? ' now' : '') + (q.left.W + q.left.AT === 0 ? ' done' : '') + (other ? ' tap' : '') + (peekPid === pid ? ' peek' : ''), title: other ? (peekPid === pid ? 'もう一度押すと資源の行を閉じる' : '押すとこの人の資源を自分の資源の上に出す') : null, onclick: other ? () => { peekPid = peekPid === pid ? null : pid; render(); } : null }, h('span', { class: 'mk p' + q.id }, q.id + 1), `${q.name} ${leftTxt(q)}`)); }); } // O-52：ほかの人の札を押すとその人の資源の行
     hd.appendChild(to);

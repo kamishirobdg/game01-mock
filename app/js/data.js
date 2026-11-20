@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.167'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.168'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -355,8 +355,9 @@
       Pr3: { strong: `形成時 ${SN}を 1 段、手番なしで（着く Lv の${CN}の 2 種のうち 1 種を 1.5 倍〔切り上げ〕払う・もう 1 種は払わない・Lv6 には入れない・見送れる）`, weak: '同' } },
     traitTextOv: { NP: [`ラウンド終了時、残っている E1 につき P+2（上限 E${cap}＝最大 P+${cap * 2}・E は減らない）`, `ラウンド終了時、残っている E1 につき P+1（上限 E${cap}＝最大 P+${cap}・E は減らない）`],
       DV: ['二段進化・三段進化で Lv6 に入れる（Lv4 から二段・Lv3 から三段）。三段進化を回数の制限なく使える（通過する段の額を合算・手番 1 つ）', '二段進化で Lv6 に入れる（Lv4 から二段＝Lv5 の額と Lv6 の払いを合わせて手番 1 つ）'] } }); } // O-76（第71部 §124・2026-11-20 ユーザー「K2 は採用」「進化加速は回数制限無く Lv6 にも一括上昇出来るようにする。強は更に 3 段階上昇も可能」「上記の内容以外は全て推奨でよい」）：massBodyGem＝淘汰(身体) の痕跡／sporeKeep＝胞子 [強, 弱] の E1 あたりの P（E は減らない）／dvMode 'perm'＝進化加速は回数なし・Lv6 に二段（強は三段も）／fk3P＝孵化核の形成時 P／launchMul 3＝協調進出／propel：推進膜 好きな資源+9・推進腺 形成時の進化・推進核 星渡の払い方で 1 段
-  G.RULES_VISIBLE = ['t41']; // v3.165（O-74）：既定を T41 に・v3.160（O-69）：既定を T40 に・v3.159（O-68）：既定を T39 に・v3.158（O-67）：既定を T38 に・v3.154（O-65）：既定を T37 に・v3.146（O-64）：T36 は隠しセット（計測で万列協和衆の勝率が基準を超えた）・v3.143（O-63）：既定を T35 に・v3.142（O-62）：既定を T34 に（T33 以前は ?rules= で打てる）・v3.128（O-51）：T33
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31', 't32', 't33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41', 't42'];
+  { const T42 = G.RULESETS.t42; G.RULESETS.t43 = Object.assign({}, T42, { name: 'T43（T42＋手番順は R1 から痕跡の多い順〔同数は祝福の多い順・前のラウンドの順〕・種族の初期の痕跡 光翼 3・九腕 2・群泳 1・万列 0）', turnOrder: 'gemsDesc', speciesStart: { wing: { gem: 3, bless: 0 }, arm: { gem: 2, bless: 0 }, manta: { gem: 1, bless: 0 }, ant: { gem: 0, bless: 0 } } }); } // O-78（§125・§126・2026-11-20 ユーザー「多い順で進める」「推奨で良い。…実装して試プレイできるように公開までして」）：turnOrder 'gemsDesc'＝毎 R 開始時（R1 も）痕跡の多い順 → 祝福の多い順 → 前 R の順（R1 は手番値の大きい順）／speciesStart＝種族ごとの初期の痕跡・祝福（痕跡は種族の対応トラック G.SPECIES[].track に）
+  G.RULES_VISIBLE = ['t43']; // v3.168（O-78）：既定を T43 に・v3.165（O-74）：既定を T41 に・v3.160（O-69）：既定を T40 に・v3.159（O-68）：既定を T39 に・v3.158（O-67）：既定を T38 に・v3.154（O-65）：既定を T37 に・v3.146（O-64）：T36 は隠しセット（計測で万列協和衆の勝率が基準を超えた）・v3.143（O-63）：既定を T35 に・v3.142（O-62）：既定を T34 に（T33 以前は ?rules= で打てる）・v3.128（O-51）：T33
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31', 't32', 't33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41', 't42', 't43'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
@@ -593,10 +594,10 @@
 
   // 種族（基本4）
   G.SPECIES = {
-    wing:  { name: '光翼類',     order: 1, stock: { E: 2, G: 1, P: 4 }, passive: '身体トラックLv2スタート', type: '速攻', hint: '身体トラックをLv2から始められ、身体Lv3★の先駆ボーナスを狙いやすい。' },
-    arm:   { name: '九腕知性体', order: 2, stock: { E: 2, G: 2, P: 4 }, passive: 'コストG4以下の形質1枚を取得済みでスタート', type: '形質', hint: '形質を1枚持って始まる。形質集めと知性トラックに向く。' },
-    ant:   { name: '万列協和衆', order: 4, stock: { E: 4, G: 1, P: 6 }, passive: '協調1でスタート', type: '協調・初心者向け', hint: '協調で序盤から行動が強く、資源も多め。クセが少なく扱いやすい。' },
-    manta: { name: '群泳双盤',   order: 3, stock: { E: 2, G: 0, P: 0 }, passive: 'P+10 ＋ E収入+1（恒久）', type: '物量', hint: 'P+10とE収入+1で資源が豊富。形質の取得は遅め。' },
+    wing:  { name: '光翼類',     track: 'body', order: 1, stock: { E: 2, G: 1, P: 4 }, passive: '身体トラックLv2スタート', type: '速攻', hint: '身体トラックをLv2から始められ、身体Lv3★の先駆ボーナスを狙いやすい。' },
+    arm:   { name: '九腕知性体', track: 'intel', order: 2, stock: { E: 2, G: 2, P: 4 }, passive: 'コストG4以下の形質1枚を取得済みでスタート', type: '形質', hint: '形質を1枚持って始まる。形質集めと知性トラックに向く。' },
+    ant:   { name: '万列協和衆', track: 'social', order: 4, stock: { E: 4, G: 1, P: 6 }, passive: '協調1でスタート', type: '協調・初心者向け', hint: '協調で序盤から行動が強く、資源も多め。クセが少なく扱いやすい。' },
+    manta: { name: '群泳双盤',   track: 'metab', order: 3, stock: { E: 2, G: 0, P: 0 }, passive: 'P+10 ＋ E収入+1（恒久）', type: '物量', hint: 'P+10とE収入+1で資源が豊富。形質の取得は遅め。' },
   };
 
   // コンボ
