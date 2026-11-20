@@ -187,7 +187,7 @@ html[data-board] #app .grid {
   .ogrid.ofield > .ocard[data-slot$="3"]::before { content:var(--ln, ''); position:absolute; left:-2px; right:-2px; top:-29px; height:22px; line-height:21px; box-sizing:border-box; border-radius:11px; font-size:12px; font-weight:700; letter-spacing:1px; color:#fff; text-align:center; white-space:nowrap;
     background:color-mix(in srgb, var(--lin) 30%, #000); border:1px solid color-mix(in srgb, var(--lin) 70%, #000); }
   .ocard[data-slot^="OC_Mg"] { --ln:'代謝'; } .ocard[data-slot^="OC_Pu"] { --ln:'脈動'; } .ocard[data-slot^="OC_Fk"] { --ln:'孵化'; } .ocard[data-slot^="OC_Nv"] { --ln:'神経'; } .ocard[data-slot^="OC_Hc"] { --ln:'群心'; }
-  .ocard[data-slot^="OC_Tl"] { --ln:'転写'; } .ocard[data-slot^="OC_Li"] { --ln:'連結'; } .ocard[data-slot^="OC_Lm"] { --ln:'発光'; } .ocard[data-slot^="OC_Pr"] { --ln:'推進'; }
+  .ocard[data-slot^="OC_Tl"] { --ln:'転写'; } .ocard[data-slot^="OC_Li"] { --ln:'連結'; } .ocard[data-slot^="OC_Lm"] { --ln:'発光'; } .ocard[data-slot^="OC_Pr"] { --ln:'推進'; } .ocard[data-slot^="OC_Sv"] { --ln:'貯蔵'; }
   /* 特殊器官 */
   .panel.ofieldp > .owned { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0 0; }
   .panel.ofieldp > .owned > b { flex:0 0 100%; font-size:12px; font-weight:600; letter-spacing:1px; color:#c9a24a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -363,6 +363,25 @@ html[data-board] #app .grid {
 
   /* 20. ラウンドの列（O-70）：中央の上（恩寵枠の上の空き）。中心＝生命核の中心の真上 */
   .rtrack { position:absolute; left:1116px; top:8px; transform:translateX(-50%); margin:0; z-index:3; background:rgba(6,14,22,.55); border-color:rgba(232,207,122,.35); }
+
+  /* 21. 形質が 15 枚以上（T44＝17 枚・O-80）：2 列 × 9 段に詰める（T43 までの 14 枚は今のまま）。板を 57→44px にし、強・弱の 2 行は字と記号を一回り小さく */
+  .tgrid:has(> .tcard:nth-child(15)) { grid-template-rows:repeat(9, 44px); grid-auto-rows:44px; row-gap:2px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard { height:44px; grid-template-columns:24px auto minmax(0, 1fr); grid-template-rows:17px 14px 11px; padding:1px 5px 1px 10px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard :is(img.art, div.art) { width:22px; height:22px; border-radius:6px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard .hd .cost { font-size:12px; line-height:15px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard .hd .cost svg.ic { width:12px; height:12px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > b { font-size:13px; line-height:16px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx { height:14px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx .fxl, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx .fxl .pc { font-size:12px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx :is(.pc, .fxper, .fxact) svg.ic, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx .fxt > svg.ic { width:13px; height:13px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx .fxw { width:13px; height:13px; font-size:10px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx .fxlab { font-size:8.500px; line-height:10px; min-width:12px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx { height:11px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx .fxl, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx .fxl .pc { font-size:10px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx :is(.pc, .fxper, .fxact) svg.ic, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx .fxt > svg.ic { width:11px; height:11px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx .fxw { width:11px; height:11px; font-size:9px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard:has(.hd .sw.weak) > .fx ~ .fx { height:14px; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .owners .mk { width:10px; height:10px; line-height:10px; }
 
   /* 7. 盤の下：個人ボード・他の人・ログを横に並べる */
   .col.me { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:start; }
