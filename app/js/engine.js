@@ -913,7 +913,7 @@
     const desc = `${G.SLOT_BY_ID[a.kind].name}${nMM > 1 ? ` ${nMM} 口` : ''}（${a.free ? '無料・報酬' : lm !== null ? 'L' + lm : 'P' + cAll}${mmX && mmG ? `→E+${mmG.E * nMM} G+${mmG.G * nMM}` : ''}）${byp ? '・' + bypassDesc(byp) + (bPaid ? `（${bPaid}）` : '') : ''}${ret > 0 ? `・P+${ret} が返る` : ''}`;
     if (ret > 0) p.P += ret;
     afterAction(st, p, desc, !a.free);
-    if (a.kind === 'MB') { if (RS(p).massBodyVirtual) { p.gemsets += 1; log(st, p.id, `${p.name}：淘汰(身体)→ 祝福 ${p.gemsets}`); } else addGem(st, p, 'body', RS(p).massBodyGem || 1, '淘汰'); } /* T42（O-76）massBodyGem */ // massBodyVirtual：C2 の手当て(a)
+    if (a.kind === 'MB') { if (RS(p).massBodyVirtual) { p.gemsets += 1; log(st, p.id, `${p.name}：淘汰(身体)→ 祝福 ${p.gemsets}`); } else addGem(st, p, 'body', RS(p).massBodyGem || 1, '淘汰'); if (RS(p).massBodyL) { p.L += RS(p).massBodyL; p.mbL = (p.mbL || 0) + RS(p).massBodyL; log(st, p.id, `${p.name}：淘汰(身体)→ 生命核+${RS(p).massBodyL}`); } } /* T42（O-76）massBodyGem・T45（O-83）massBodyL＝生命核（mbL は計測用） */ // massBodyVirtual：C2 の手当て(a)
     if (a.kind === 'MS') { gainRes(p, 'coop', RS(p).msCoop !== undefined ? RS(p).msCoop : (st.ext === 'x1' ? 3 : 2)); if (RS(p).msGem) addGem(st, p, 'social', 1, '淘汰(社会)'); }
     p.pInv = (p.pInv || 0) + 1; if (a.kind === 'MB') p.pInvBody = (p.pInvBody || 0) + 1;
     if (a.kind === 'MM') { p.E += mmG.E * nMM; p.G += mmG.G * nMM; } // T18：mmGain＝E/G の量（既定 E30+G30）／O-34：mmLv・口数
@@ -1645,7 +1645,7 @@
       EG: R.herd ? `群体同期：P${R.herdCost || 6}を払って E+${slotAmt(st, 'EG').E}＋協調+${R.herdCoop || 1}。${cb}。${byp}` : `群体同期：E+${sc(st, 2)}＋P${sc(st, 10)}ごとに+${sc(st, 1)}E。${cb}。${byp}`,
       GG: R.herd ? `群体融合：P${R.herdCost || 6}を払って G+${slotAmt(st, 'GG').G}＋協調+${R.herdCoop || 1}。${cb}。${byp}` : `群体融合：G+${sc(st, 1)}＋P${sc(st, 10)}ごとに+${sc(st, 1)}G。${cb}。${byp}`,
       ALL: `資源合成：E+${slotAmt(st, 'ALL').E} G+${slotAmt(st, 'ALL').G} P+${slotAmt(st, 'ALL').P}。${cb}（資源を選ぶ）。${byp}`, PB: R.pbG === 0 ? `自己複製：P+${pbBase(st)}${R.pbBodyLv ? `＋身体 Lv×${R.pbBodyLv}（倍率は ${pbBase(st)} だけに掛かる）` : ''}（払いなし・協調ボーナスなし）。${R.pbLaunch ? byp : byp0}${R.joinNow ? '' : '（自由行動は対象外）'}` : `自己複製：G${sc(st, 2)}→P+${pbGain(st)}（全翻訳で割引）${R.pbCoop ? '。' + cb : ''}。${byp0}${R.joinNow ? '' : '（自由行動は対象外）'}`, // 2026-11-05 Pブーストも緊急発進・協調発進の対象に
-      MB: `淘汰(身体)：P${R.massCost}（下限${R.massMin.body}）→痕跡+${R.massBodyGem || 1}。${R.bodyAxis === 'L' ? '誰でもP→痕跡の出口' : '身体Lv4/5で軽減'}${bypM}`,
+      MB: `淘汰(身体)：P${R.massCost}（下限${R.massMin.body}）→${R.massBodyL ? `生命核+${R.massBodyL}・` : ''}痕跡+${R.massBodyGem || 1}。${R.bodyAxis === 'L' ? '誰でもP→痕跡の出口' : '身体Lv4/5で軽減'}${bypM}`,
       MI: `淘汰(知性)：P${R.massCost}→G${R.miMaxCost || 4}以下の形質${R.miMaxCost ? (R.miCount || 1) + '種' : 'を異なる2種'}（無料）${bypM}`, MS: `淘汰(社会)：P${R.msCost || R.massCost}→協調+${R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)}${bypM}`, MM: `淘汰(代謝)：P${R.mmCost || R.massCost}→${R.mmLv ? mmForm(st).E + ' ' + mmForm(st).G : `E+${R.mmGain || sc(st, 10)} G+${R.mmGain || sc(st, 10)}`}${bypM}`, // O-37：mmLv の式
       MIM: `模倣：G${R.mimicCost || 4}を払い、自分を含む誰かが到達済みの Lv2／Lv3★ の !即時効果（G+${sc(st, 3)}／P+${sc(st, 6)}／P+${sc(st, 10)}／E+${sc(st, 8)}／自由行動+1）を1つ受け取る。◆生命核の L+1 と ∞恒久・手収入は対象外。1ラウンド1人`,
       EXP: `発現：G${R.expressCost || 10}を払い、痕跡+1（先駆なし・トラックは進まない）。1ラウンド1人${bypM}`,
@@ -1681,7 +1681,7 @@
     const eff = (base, mine) => (p && mine !== null && mine !== undefined && mine !== base) ? `${mine}（軽減後）` : String(base);
     const mass = (kind) => eff(kind === 'MM' && R.mmCost ? R.mmCost : kind === 'MS' && R.msCost ? R.msCost : R.massCost, p ? massCost(p, kind) : null);
     const rt = p ? (massRet(p) ? `・P+${massRet(p)} が返る` : '') : R.massRetMetab ? `・P が${retForm(st)} 返る` : ''; // O-37：淘汰 4 種のあと返る P（いまの自分の代謝 Lv）
-    if (id === 'MB') return `P${mass('MB')} → 痕跡+1${rt}`;
+    if (id === 'MB') return `P${mass('MB')} → ${R.massBodyL ? `生命核+${R.massBodyL}・` : ''}痕跡+${R.massBodyGem || 1}${rt}`; // O-83：数値セットの値から（T42 から痕跡+2 なのに +1 と出ていた）
     if (id === 'MI') return (R.miMaxCost ? `P${mass('MI')} → G${R.miMaxCost}以下の形質${R.miCount || 2}種` : `P${mass('MI')} → G4以下の形質を異なる2種`) + rt;
     if (id === 'MS') return `P${mass('MS')} → 協調+${R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2)}${rt}`;
     if (id === 'MM') { const g = p && (R.mmLv || R.mmLvMetab) ? mmGainOf(p) : { E: R.mmGain || sc(st, 10), G: R.mmGain || sc(st, 10) }; return !p && R.mmLv ? `P${mass('MM')} → ${mmForm(st).E} ${mmForm(st).G}${rt}` : `P${mass('MM')} → E+${g.E} G+${g.G}${rt}`; } // O-37：mmLv はいまの自分の量 // T18：mmGain（v3.96 で短文も）

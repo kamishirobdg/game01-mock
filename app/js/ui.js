@@ -75,7 +75,7 @@
       case 'EG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('E', '+' + G.slotAmt(st, 'EG').E), pc('coop', '+' + (R.herdCoop || 1), cbNew ? { cls: 'big' } : null), ...resB] : null; // O-51：資源獲得の枠では協調 +1 の札を一回り大きく
       case 'GG': return R.herd ? [pcost('P', R.herdCost || 6), po('→'), pc('G', '+' + G.slotAmt(st, 'GG').G), pc('coop', '+' + (R.herdCoop || 1), cbNew ? { cls: 'big' } : null), ...resB] : null;
       case 'PB': if (R.pbG === 0) return R.pbBodyLv && G.FX ? [pc('P', '+' + G.pbBase(st)), G.FX.perChip('P', '+' + R.pbBodyLv, '身体 Lv', `身体 Lv 1 つにつき P+${R.pbBodyLv}（緊急進出・協調進出・神の加護でも倍にならない）`)] : [pc('P', '+' + G.pbGain(st))]; // O-51（T33）：［P +25］［P +5／身体 Lv］ return [pcost('G', G.pbCost(vp), sc(2)), po('→'), pc('P', '+' + G.pbGain(st)), ...(R.pbCoop ? [coopBonus()] : [])]; // O-50：緊急進出の特記（P+120）は消す（T32 で自己複製もほかの資源枠と同じく対象）
-      case 'MB': return [massC('MB'), po('→'), pc('gem', '+' + (R.massBodyGem || 1)), ...mret()]; // O-76（T42）massBodyGem
+      case 'MB': return [massC('MB'), po('→'), ...(R.massBodyL ? [pc('L', '+' + R.massBodyL)] : []), pc('gem', '+' + (R.massBodyGem || 1)), ...mret()]; // O-76（T42）massBodyGem・O-83（T45）massBodyL
       case 'MI': return R.miMaxCost ? [massC('MI'), po('→'), pc('trait', '×' + (R.miCount || 2), { title: `コストG${R.miMaxCost}以下の形質を異なる${R.miCount || 2}種` }), pbad('≤' + R.miMaxCost, `コストG${R.miMaxCost}以下`), ...mret()] : null;
       case 'MS': return [massC('MS'), po('→'), pc('coop', '+' + (R.msCoop !== undefined ? R.msCoop : (st.ext === 'x1' ? 3 : 2))), ...mret()];
       case 'MM': { const g = (R.mmLv || R.mmLvMetab) ? G.mmGainOf(vp) : { E: R.mmGain || sc(10), G: R.mmGain || sc(10) }; return [massC('MM'), po('→'), pc('E', '+' + g.E, R.mmLv ? { title: `${G.mmForm(st).E}（身体 Lv${vp.lv.body}）` } : null), pc('G', '+' + g.G, R.mmLv ? { title: `${G.mmForm(st).G}（知性 Lv${vp.lv.intel}）` } : null), ...mret()]; } // T18：mmGain／O-37：mmLv＝いまの自分の量
@@ -603,7 +603,7 @@
 
   const TIPS = {
     E5: '熱源吸収：+5E（協調ぶん+E）', EG: '群体同期：+2E＋個体数10ごとに+1E', G3: '配列解析：+3G', GG: '群体融合：+1G＋個体数10ごとに+1G', P8: '個体培養：+8P', ALL: '資源合成：+2E+1G+4P（協調ぶんは好きな資源）', PB: '自己複製：G2→P+10（協調対象外）',
-    MB: '淘汰(身体)：P20→痕跡+1', MI: '淘汰(知性)：P20→G4以下の形質を異なる2種（排他不要）', MS: '淘汰(社会)：P20→協調+2', MM: '淘汰(代謝)：P20→E+10 G+10',
+    MB: '淘汰(身体)：P を払って痕跡（額と量は数値セットの値）', MI: '淘汰(知性)：P20→G4以下の形質を異なる2種（排他不要）', MS: '淘汰(社会)：P20→協調+2', MM: '淘汰(代謝)：P20→E+10 G+10',
     TRT: '形質獲得：形質プールのカードをクリック。強化は取得済みカードをクリック', TRT2: '形質獲得（割増枠・拡張x1）：通常コストに加えてラウンド数ぶんのEを支払う。形質プールのカードをクリック', GEM: '宝石セット得点カード：G(10−形質数・下限5)→祝福+1（自分専用）',
     BRD: '繁殖：Pを払って繁栄度+1（段数とコストは数値セットによる。T6以降は生命核L3でも可）', ORG: '器官形成：器官の場のカードをクリック', SCAN: '探索：E5→他プレイヤーの最高Lv×2の資源（自分は除く）', ADP: '適応進化：生命核1→Lv1のトラックを+1（ワーカー必須）', CNV: '資源変換：E2→G1／G2→E1／P8→E3／P8→G2', RSV: '予備動員：無料でE+2またはG+1',
   };
