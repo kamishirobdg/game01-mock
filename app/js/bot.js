@@ -124,7 +124,7 @@
       list.sort((a, b) => (G.ORGANS[b.o].tier - G.ORGANS[a.o].tier) || (b.c.strong - a.c.strong) || (a.c.E - b.c.E));
       return list.map(x => A({ type: 'organ', organ: x.o, useL: Math.max(0, Math.min(p.L, Math.ceil((x.c.E - p.E) / 3))), li2Res: p.G < G.sc(st, 2) ? 'G' : 'E', li3Res: 'E', regimeRes: 'E' }));
     };
-    const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'NP', 'NE', 'NS', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'JS', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM', 'ND', 'NH', 'NK', 'NZ'].filter(t => G.traitPool(st).includes(t)); // T44（O-79）：新しい 4 種は後ろに
+    const traitPref = ['IE', 'IG', 'IB', 'IP', 'DA', 'MC', 'NP', 'NE', 'NS', 'DB', 'DI', 'IM', 'DV', 'DG', 'MB', 'JI', 'JB', 'JS', 'NC', 'NL', 'NF', 'NB', 'NR', 'NM', 'ND', 'NH', 'NK', 'NZ', 'NY'].filter(t => G.traitPool(st).includes(t)); // T47（O-88）：結実は後ろに // T44（O-79）：新しい 4 種は後ろに
     const jsVar = (t) => { if (t !== 'JS' || !((RSo(st).star || {}).jump === 'half')) return [{}]; const lv = G.starJumpLv(st, p); if (!lv) return [{ jsPay: 'skip' }]; const c = G.starCost(st, lv); return Object.keys(c).map(r => ({ jsPay: r, jsPros: G.starProsOk(st, p, lv) ? starPros(st, p, [lv]) : undefined })).concat([{ jsPay: 'skip' }]); }; // T27（O-27）：星渡は払う 1 種まで含めて候補にする
     const traitCands = (slots) => traitPref.filter(t => !G.trait(p, t)).flatMap(t => jsVar(t).flatMap(jv => slots.map(sl => A(Object.assign({ type: 'trait', trait: t, useL: Math.max(0, Math.min(p.L, Math.ceil((G.traitCost(st, p, t).G - p.G) / 3))), res: pref[0], track: 'intel' }, jv, sl)))));
     const traitSlots = [{}, { slot: 'TRT2' }, p.coop >= 2 && style !== 'white' ? { bypassCoop: true } : null, p.L >= 2 ? { bypassL: true } : null].filter(Boolean);

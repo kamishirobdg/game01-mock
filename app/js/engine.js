@@ -197,6 +197,7 @@
     let max = 0; if (f1) max = Math.max(max, f1.strong ? 3 : 2); if (f2) max = Math.max(max, f2.strong ? 5 : 4); if (f3 && !f3.strong) max = 99;
     return max;
   }
+  function nySteps(p) { return Math.max(0, (p.breedUps || 0) - (p.starPros || 0)); } // T47（O-88）結実：繁殖で繁栄度を上げた回数（星海開拓の先駆の繁栄度は除く）
   function income(p, o) { // o.atIncome＝収入処理の本番（yieldAfterL では L 受け取り済み）。それ以外＝画面・AI の「次の収入」の見込み
     const inc = { E: 0, G: 0, P: 0, parts: [] }; const Ln = p.L + (RS(p).yieldAfterL && !(o && o.atIncome) ? 1 : 0); // 利回りに数える L
     inc.by = {}; // T19（O-13 #3）：出どころ別の収入（key→{E,G,P,coop}）＝得たその場の 1 回ぶん（incomeNow）に使う
@@ -224,6 +225,7 @@
       if (t.id === 'IP' && t.strong) add('IP', 0, 0, sc(p, 3));
       if (t.id === 'IB' && t.strong) add('IB', sc(p, 1), sc(p, 1), 0);
       if (t.id === 'IM') { const k = sc(p, t.strong ? 3 : 2); add('IM', t.res === 'E' ? k : 0, t.res === 'G' ? k : 0, t.res === 'P' ? k : 0); }
+      if (t.id === 'NY' && RS(p).nyGain) { const k = RS(p).nyGain[t.strong ? 0 : 1] * nySteps(p); add('結実', k, k, k, 'trait:NY'); } // T47（O-88）：繁殖した段×[強 5, 弱 3]（ほかの倍率は掛けない）
     });
     return inc;
   }
@@ -606,7 +608,7 @@
     }
   }
   // O-36 計測のみ intelFlip：弱の形質を強に裏返す（先着の記録は変えない・即時の資源／痕跡は受け取り直さない・数／回数の形質は差分を足す）
-  const FLIP_OK = ['MC', 'DG', 'NB', 'MB', 'NF', 'DV', 'NM', 'JI', 'JB', 'NP', 'NE', 'NS', 'ND', 'NH']; // 即時だけの形質（群れ本能 NC・長命 NL・星渡 JS・T44 の共鳴 NK・化石 NZ）は対象外・T44（O-79）の分化 ND・渇望 NH は強弱を使うたびに見るので裏返しの差分なし
+  const FLIP_OK = ['MC', 'DG', 'NB', 'MB', 'NF', 'DV', 'NM', 'JI', 'JB', 'NP', 'NE', 'NS', 'ND', 'NH', 'NY']; // T47（O-88）：結実も裏返せる・ 即時だけの形質（群れ本能 NC・長命 NL・星渡 JS・T44 の共鳴 NK・化石 NZ）は対象外・T44（O-79）の分化 ND・渇望 NH は強弱を使うたびに見るので裏返しの差分なし
   function flippable(p) { return p.traits.filter(t => !t.strong && FLIP_OK.includes(t.id)).map(t => t.id); }
   const FLIP_SRC = { '3w': '知性 Lv3★ 弱', '5w': '知性 Lv5★ 弱', '5s': '知性 Lv5★ 強' };
   function flipStart(st, p, n, g, src) { // n＝裏返せる枚数（99＝好きなだけ）／g＝裏返さない 1 枚あたりの G
@@ -1743,5 +1745,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { dvPerm, can3, multiTop, multiPlan, altarHalfCost, breedHalfCost, breedTribCost, breedTribJp, breedTribMax, breedTribP, noLateTxt, starOn, starLvText, starTop, starJumpLv, starJumpCost, starJumpOpts, starCardName, starCost, starCostText, starGem, starFirstDef, starFirstGem, starIsFirst, starProsOk, starPlan, prosRoom, breedLeft, lateFee, STAR_MAX, trialKey, trialCost, trialGem, trialDone, trialCount, altarCount, altarCost, altarNextVg, altarAdj, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, traitPoolView, traitSortView, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, pbBase, pbAdd, mmMax, mmGainOf, flippable, mutOpts, massRet, mmForm, retForm, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { nySteps, dvPerm, can3, multiTop, multiPlan, altarHalfCost, breedHalfCost, breedTribCost, breedTribJp, breedTribMax, breedTribP, noLateTxt, starOn, starLvText, starTop, starJumpLv, starJumpCost, starJumpOpts, starCardName, starCost, starCostText, starGem, starFirstDef, starFirstGem, starIsFirst, starProsOk, starPlan, prosRoom, breedLeft, lateFee, STAR_MAX, trialKey, trialCost, trialGem, trialDone, trialCount, altarCount, altarCost, altarNextVg, altarAdj, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, traitPoolView, traitSortView, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, pbBase, pbAdd, mmMax, mmGainOf, flippable, mutOpts, massRet, mmForm, retForm, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});
