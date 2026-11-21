@@ -197,7 +197,7 @@
     let max = 0; if (f1) max = Math.max(max, f1.strong ? 3 : 2); if (f2) max = Math.max(max, f2.strong ? 5 : 4); if (f3 && !f3.strong) max = 99;
     return max;
   }
-  function nySteps(p) { return Math.max(0, (p.breedUps || 0) - (p.starPros || 0)); } // T47（O-88）結実：繁殖で繁栄度を上げた回数（星海開拓の先駆の繁栄度は除く）
+  function nySteps(p) { return Math.max(0, (p.breedUps || 0) - (RS(p).nyStar ? 0 : (p.starPros || 0))); } // T48（O-90）nyStar：星海開拓の先駆の繁栄度も数える // T47（O-88）結実：繁殖で繁栄度を上げた回数（星海開拓の先駆の繁栄度は除く）
   function income(p, o) { // o.atIncome＝収入処理の本番（yieldAfterL では L 受け取り済み）。それ以外＝画面・AI の「次の収入」の見込み
     const inc = { E: 0, G: 0, P: 0, parts: [] }; const Ln = p.L + (RS(p).yieldAfterL && !(o && o.atIncome) ? 1 : 0); // 利回りに数える L
     inc.by = {}; // T19（O-13 #3）：出どころ別の収入（key→{E,G,P,coop}）＝得たその場の 1 回ぶん（incomeNow）に使う
