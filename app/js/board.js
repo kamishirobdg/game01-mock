@@ -30,7 +30,19 @@
     f.appendChild(b);
   }
   applySp();
-  if (window.MutationObserver) new MutationObserver(placeSp).observe(document.documentElement, { childList: true, subtree: true });
+  // O-94：形質の板の効果の行が板からはみ出すときだけ詰める（fit1＝間隔を詰める → まだはみ出せば fit2＝字と記号を一回り小さく → fit3＝右端まで使い値札の余白も詰める・board.css の 24）。並びと記号はそのまま
+  var fitPend = false;
+  function fitRows() {
+    fitPend = false; if (!on) return;
+    var rows = [].slice.call(document.querySelectorAll('.tgrid > .tcard > .fx')), over = function (f) { return f.clientWidth > 0 && f.scrollWidth > f.clientWidth + 1; };
+    rows.forEach(function (f) { f.classList.remove('fit1', 'fit2', 'fit3'); });
+    rows.filter(over).forEach(function (f) { f.classList.add('fit1'); });
+    rows.filter(function (f) { return f.classList.contains('fit1') && over(f); }).forEach(function (f) { f.classList.add('fit2'); });
+    rows.filter(function (f) { return f.classList.contains('fit2') && over(f); }).forEach(function (f) { f.classList.add('fit3'); });
+  }
+  function schedFit() { if (fitPend || !on) return; fitPend = true; (window.requestAnimationFrame || setTimeout)(fitRows); }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedFit);
+  if (window.MutationObserver) new MutationObserver(function () { placeSp(); schedFit(); }).observe(document.documentElement, { childList: true, subtree: true });
   function active() { return on; }
   // 盤は 1872×960 で設計してあり、画面に合わせて全体を拡大・縮小する（幅に合わせ、縦に収まらなければ 9 割まで縮める）
   function fit() {
