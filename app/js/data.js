@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.177'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.178'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -361,8 +361,14 @@
   { const T45 = G.RULESETS.t45; G.RULESETS.t46 = Object.assign({}, T45, { name: 'T46（T45＋化石 G30／G16）', traitCosts: Object.assign({}, T45.traitCosts, { NZ: [30, 16] }) }); } // O-84（§129 の 10.・2026-11-20 ユーザー「G30/G16 でやってみる」）：化石の値段だけ
   { const T46 = G.RULESETS.t46; G.RULESETS.t47 = Object.assign({}, T46, { name: 'T47（T46＋形質「結実」〔収入のたび、繁殖した段 1 つにつき E・G・P 各 5／3〕）', traitPool: T46.traitPool.concat(['NY']), traitCosts: Object.assign({}, T46.traitCosts, { NY: [18, 12] }), nyGain: [5, 3] }); } // O-88（§131・2026-11-21 ユーザー「元のアで 3 種、5/3 で進めて」「結実にしよう」）：nyGain＝結実の 1 段あたりの E・G・P [強, 弱]（段＝繁殖で繁栄度を上げた回数・星海開拓の先駆の繁栄度は数えない）
   { const T47 = G.RULESETS.t47; G.RULESETS.t48 = Object.assign({}, T47, { name: 'T48（T47＋結実の段に星海開拓の先駆の繁栄度も数える）', nyStar: true, traitTextOv: Object.assign({}, T47.traitTextOv, { NY: ['収入のたび、繁栄度を上げた段 1 つにつき E・G・P 各+5', '収入のたび、繁栄度を上げた段 1 つにつき E・G・P 各+3'] }) }); } // O-90（§131 の 7.・2026-11-22 ユーザー「結実は星海開拓の先駆繁殖度も対象に含めたい（別管理する気が無いので）」）：nyStar＝結実の段に星海開拓の先駆で選んだ繁栄度も数える（＝繁栄度を上げた段すべて）
-  G.RULES_VISIBLE = ['t48']; // v3.177（O-90）：既定を T48 に・v3.176（O-88）：既定を T47 に・ v3.173（O-84）：既定を T46 に・v3.172（O-83）：既定を T45 に・v3.169（O-79）：既定を T44 に・v3.168（O-78）：既定を T43 に・v3.165（O-74）：既定を T41 に・v3.160（O-69）：既定を T40 に・v3.159（O-68）：既定を T39 に・v3.158（O-67）：既定を T38 に・v3.154（O-65）：既定を T37 に・v3.146（O-64）：T36 は隠しセット（計測で万列協和衆の勝率が基準を超えた）・v3.143（O-63）：既定を T35 に・v3.142（O-62）：既定を T34 に（T33 以前は ?rules= で打てる）・v3.128（O-51）：T33
-  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31', 't32', 't33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41', 't42', 't43', 't44', 't45', 't46', 't47', 't48'];
+  { const T48 = G.RULESETS.t48, TR = T48.tribute; G.RULESETS.t49 = Object.assign({}, T48, { name: 'T49（T48＋形質 5 種〔強行・供物・互恵・標本・頂〕・器官の系統 2 つ〔消化・年輪〕・恩寵 2 種〔星・淘汰〕・形質の場は 23 枚から卓ごとに 18 枚）',
+    traitPool: T48.traitPool.concat(['NG', 'NO', 'NU', 'NV', 'NT']), traitDraw: 18, traitPoolBeginner: T48.traitPool.slice(),
+    traitCosts: Object.assign({}, T48.traitCosts, { NG: [18, 12], NO: [27, 12], NU: [9, 6], NV: [24, 15], NT: [33, 15] }),
+    ngLaunchP: [50, 60], noAltarHalf: true, nuGain: [6, 4], nvBless: { per: [3, 4], cap: [3, 2] }, ntBless: [2, 1],
+    organSet: T48.organSet.concat(['Di', 'Yr']), diPay: { Di1: { P: 10, E: 12 }, Di2: { P: 10, G: 8 }, Di3: 9 }, yrInc: { Yr1E: 2, Yr2G: 6, Yr2Inc: 1, Yr3: 6 },
+    tribute: Object.assign({}, TR, { slots: Object.assign({}, TR.slots, { TST: { kind: 'star' }, TCU: { kind: 'cull', P: 100, n: 2 } }), pool: TR.pool.concat(['TST', 'TCU']) }) }); } // O-91（§133・proposals_pool.md の 7-1・8-3・2026-11-22 ユーザー「残りは入れ方も含めて推奨でよい」）：traitPool＝全 23 枚・traitDraw＝卓ごとに場へ出す枚数（初心者は traitPoolBeginner）／ngLaunchP＝強行の P [強, 弱]／noAltarHalf＝供物（強 E・G・P の口・弱 P の口を半額）／nuGain＝互恵／nvBless＝標本（器官 per 枚につき祝福+1・上限 cap）／ntBless＝頂／diPay＝消化／yrInc＝年輪／恩寵 TST＝星の恩寵・TCU＝淘汰の恩寵
+  G.RULES_VISIBLE = ['t49']; // v3.178（O-91）：既定を T49 に・v3.177（O-90）：既定を T48 に・v3.176（O-88）：既定を T47 に・ v3.173（O-84）：既定を T46 に・v3.172（O-83）：既定を T45 に・v3.169（O-79）：既定を T44 に・v3.168（O-78）：既定を T43 に・v3.165（O-74）：既定を T41 に・v3.160（O-69）：既定を T40 に・v3.159（O-68）：既定を T39 に・v3.158（O-67）：既定を T38 に・v3.154（O-65）：既定を T37 に・v3.146（O-64）：T36 は隠しセット（計測で万列協和衆の勝率が基準を超えた）・v3.143（O-63）：既定を T35 に・v3.142（O-62）：既定を T34 に（T33 以前は ?rules= で打てる）・v3.128（O-51）：T33
+  G.RULESET_ORDER = ['v1', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't8s', 't9', 't10', 't10s', 't11', 't11s', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19a', 't19', 't19b', 't19c', 't19d', 't19e', 't20', 't21a', 't21b', 't21', 't22a', 't22b', 't22c', 't22d', 't22', 't23L', 't23', 't24H', 't24F', 't24', 't25S', 't25N', 't25', 't26L', 't26M', 't26', 't27a', 't27', 't28a', 't28', 't29a', 't29b', 't29c', 't29d', 't29e', 't29f', 't29x1', 't29x2', 't29x3', 't29x4', 't29k', 't29y1', 't29y2', 't29y3', 't29y4', 't29i', 't29i9', 't29z1', 't29z2', 't29z3', 't29', 't30v1', 't30v2', 't30v3', 't30v4', 't30w1', 't30w2', 't30w3', 't30s0', 't30s1', 't30s2', 't30', 't31', 't32', 't33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41', 't42', 't43', 't44', 't45', 't46', 't47', 't48', 't49'];
   G.GATE_LABEL = { metab: '器官', intel: '形質', social: '協調', body: '個体数の投入（繁殖・淘汰）' };
   G.GATE_LABEL_L = '生命核の投入（支払い・緊急進出・適応進化）'; G.GATE_SHORT_L = '投入'; // T5：身体＝生命核軸 // T4 では赤＝繁殖変換＋大量消費(身体)のみ（engine の gateCount）
   G.GATE_SHORT = { metab: '器官', intel: '形質', social: '協調', body: '投入' };
@@ -445,10 +451,15 @@
     NK: { name: '共鳴', cat: 'N', cost: [5, 4], strong: '取得時 合流進出 1 回＋協調+2', weak: '取得時 合流進出 1 回', permWeak: false, instant: true },
     NZ: { name: '化石', cat: 'N', cost: [5, 3], strong: '取得時 痕跡+2', weak: '取得時 痕跡+1', permWeak: false, instant: true },
     NY: { name: '結実', cat: 'N', cost: [18, 12], strong: '収入のたび、繁殖した段 1 つにつき E・G・P 各+5（星海開拓の先駆の繁栄度は数えない）', weak: '収入のたび、繁殖した段 1 つにつき E・G・P 各+3（星海開拓の先駆の繁栄度は数えない）', permWeak: true }, // T47（O-88・§131）：額は nyGain [強, 弱]
+    NG: { name: '強行', cat: 'N', cost: [18, 12], strong: '1 ラウンドに 1 回、緊急進出の生命核 1 の代わりに P50 を払える（払った P は投入に数えない）', weak: '1 ラウンドに 1 回、緊急進出の生命核 1 の代わりに P60 を払える（払った P は投入に数えない）', permWeak: true }, // T49（O-91）：額は ngLaunchP
+    NO: { name: '供物', cat: 'N', cost: [27, 12], strong: '祭壇の E・G・P の口が半額（E30／G20／P60）', weak: '祭壇の P の口が半額（P60）', permWeak: true }, // T49（O-91）：noAltarHalf
+    NU: { name: '互恵', cat: 'N', cost: [9, 6], strong: '使用済みの資源枠を使うたび（協調進出・合流進出・擬態・神の加護）、その枠の資源 +6（協調ボーナスと同じ資源・倍にならない）', weak: '使用済みの資源枠を使うたび（協調進出・合流進出・擬態・神の加護）、その枠の資源 +4（協調ボーナスと同じ資源・倍にならない）', permWeak: true }, // T49（O-91）：nuGain
+    NV: { name: '標本', cat: 'N', cost: [24, 15], strong: '取得時、器官 3 枚につき 祝福+1（上限 3・器官の数え方は代謝の臨界と同じ）', weak: '取得時、器官 4 枚につき 祝福+1（上限 2・器官の数え方は代謝の臨界と同じ）', permWeak: false, instant: true }, // T49（O-91）：nvBless
+    NT: { name: '頂', cat: 'N', cost: [33, 15], strong: 'Lv6 に着くたび 祝福+2（身体・知性・社会・代謝・星海開拓のどれでも。取る前に着いた Lv6 は数えない）', weak: 'Lv6 に着くたび 祝福+1（身体・知性・社会・代謝・星海開拓のどれでも。取る前に着いた Lv6 は数えない）', permWeak: true }, // T49（O-91）：ntBless
     NR: { name: '適応放散', cat: 'N', cost: [12, 9], strong: '器官の系統完成（同じ系統3枚）の成熟度+1を、通常の2系統目までに加えて3系統目でも得る', strongTwo: '器官の系統完成が 2 枚で成立する（1 系統だけ・取得時に 2 枚の系統があれば即時）', strongTwo2: '器官の系統完成が 2 枚で成立する（2 系統まで・取得時に 2 枚の系統があれば即時）', weakTwo: '器官の系統完成が 2 枚で成立する（1 系統だけ・取得時に 2 枚の系統があれば即時）', weak: '系統完成のたびE+{3}', permWeak: true }, // strongTwo2／weakTwo＝T14（nrTwoN [2,1]・第71部 §5） // strongTwo＝T13（nrMode 'two'） // 2026-11-05 文言を具体的に（ユーザー「意味がぴんとこない」）
   });
   // 画像の代替（新しいIDは既存の絵を仮に使う）
-  G.ART_ALIAS = { NY: 'IB', ND: 'DA', NH: 'IP', NK: 'IG', NZ: 'MC', Sv1: 'Cv1', Sv2: 'Cv2', Sv3: 'Cv3', NC: 'IG', NB: 'MC', NM: 'DA', NL: 'IP', NF: 'DI', NR: 'DV', Mg1: 'Cv1', Mg2: 'Cv2', Mg3: 'Cv3', Tl1: 'Tr1', Tl2: 'Tr2', Tl3: 'Tr3', Hc1: 'Li1', Hc2: 'Li2', Hc3: 'Li3', Pu1: 'St1', Pu2: 'St2', Pu3: 'St3', Cx1: 'Ca1', Cx2: 'Ca2', Cx3: 'Ca3' };
+  G.ART_ALIAS = { NG: 'DB', NO: 'MC', NU: 'IG', NV: 'DA', NT: 'DI', Di1: 'Ca1', Di2: 'Ca2', Di3: 'Ca3', Yr1: 'Re1', Yr2: 'Re2', Yr3: 'Re3', NY: 'IB', ND: 'DA', NH: 'IP', NK: 'IG', NZ: 'MC', Sv1: 'Cv1', Sv2: 'Cv2', Sv3: 'Cv3', NC: 'IG', NB: 'MC', NM: 'DA', NL: 'IP', NF: 'DI', NR: 'DV', Mg1: 'Cv1', Mg2: 'Cv2', Mg3: 'Cv3', Tl1: 'Tr1', Tl2: 'Tr2', Tl3: 'Tr3', Hc1: 'Li1', Hc2: 'Li2', Hc3: 'Li3', Pu1: 'St1', Pu2: 'St2', Pu3: 'St3', Cx1: 'Ca1', Cx2: 'Ca2', Cx3: 'Ca3' };
   // 試作：上位形質（終盤のGの出口。RS.premium のときだけアクション 'premium' で購入可。形質として数える＝青ゲート・4/8枚目にも算入）
   Object.assign(G.TRAITS, {
     XA: { name: '結晶核', cat: 'X', cost: [12, 10], strong: '即時 祝福+2', weak: '即時 祝福+1', permWeak: false, instant: true, premium: true },
@@ -520,6 +531,12 @@
     Sv1: { lin: 'Sv', tier: 1, name: '貯蔵膜', strong: '収入 G+4', weak: '同' }, // T44（O-79）：貯蔵（数値は svInc）
     Sv2: { lin: 'Sv', tier: 2, name: '貯蔵腺', strong: '収入 E+9', weak: '同' },
     Sv3: { lin: 'Sv', tier: 3, name: '貯蔵核', strong: '収入のたびに好きな資源（E・G・P）を 1 種選んで +12', weak: '同' },
+    Di1: { lin: 'Di', tier: 1, name: '消化膜', strong: '収入のとき P10 を払って E+12 してよい（収入を受け取ったあとに選ぶ）', weak: '同' }, // T49（O-91）：消化（数値は diPay）
+    Di2: { lin: 'Di', tier: 2, name: '消化腺', strong: '収入のとき P10 を払って G+8 してよい（消化膜とは別に払える）', weak: '同' },
+    Di3: { lin: 'Di', tier: 3, name: '消化核', strong: '淘汰をするたび 好きな資源（E・G・P）+9', weak: '同' },
+    Yr1: { lin: 'Yr', tier: 1, name: '年輪膜', strong: '収入 E+2×今のラウンド数（ラウンド 3 の収入なら E+6）', weak: '同' }, // T49（O-91）：年輪（数値は yrInc）
+    Yr2: { lin: 'Yr', tier: 2, name: '年輪腺', strong: '形成時 G+6 ＋ 収入 G+1×今のラウンド数', weak: '同' },
+    Yr3: { lin: 'Yr', tier: 3, name: '年輪核', strong: '形成時 好きな資源（E・G・P）+6×今のラウンド数（ラウンド 4 に形成すれば +24）', weak: '同' },
     SpE: { lin: 'Sp', tier: 0, special: true, name: '蓄電嚢', strong: '収入 器官 1 枚につき E+3', weak: '同' },
     SpG: { lin: 'Sp', tier: 0, special: true, name: '蓄積腺', strong: '収入 器官 1 枚につき G+2', weak: '同' },
     SpP: { lin: 'Sp', tier: 0, special: true, name: '育児腔', /* O-81（2026-11-20）：貯蔵腔 → 育児腔（名前だけ・系統「貯蔵」と字が重なるため） */ strong: '収入 器官 1 枚につき P+5', weak: '同' },
@@ -576,7 +593,7 @@
   G.organDef = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); const d = G.ORGANS[id]; if (!d) return d; let o = (R && R.organFx === 2 && G.ORGANS_V2[id]) ? Object.assign({}, d, G.ORGANS_V2[id]) : d; if (R && R.noOrganGate && G.ORGANS_V3[id]) o = Object.assign({}, o, G.ORGANS_V3[id]); if (R && R.liMode === 'lineage' && G.ORGANS_V4[id]) o = Object.assign({}, o, G.ORGANS_V4[id]); if (R && R.nvTrait === 2 && G.ORGANS_V5[id]) o = Object.assign({}, o, G.ORGANS_V5[id]); if (R && R.nvW && G.ORGANS_V6[id]) o = Object.assign({}, o, G.ORGANS_V6[id]); if (R && R.pulseInc && G.ORGANS_V7[id]) o = Object.assign({}, o, G.ORGANS_V7[id]); if (R && R.hc2Herd && id === 'Hc2') o = Object.assign({}, o, { strong: `形成時 協調+${R.hc2Coop} ＋ 群体同期・群体融合で協調+${R.hc2Herd}`, weak: '同' }); /* T28（O-29） */ if (R && R.joinNow && ['strong', 'weak', 'strongB', 'weakB'].some(k => o[k] && o[k].includes('形成時 自由行動+1'))) { const fx = (t) => t && t.replace('形成時 自由行動+1', '形成時 合流進出 1 回（その場で使う）'); o = Object.assign({}, o, { strong: fx(o.strong), weak: fx(o.weak), strongB: fx(o.strongB), weakB: fx(o.weakB) }); } /* O-46：群心核 Hc3 は joinNow（T19 以降）なら合流進出（engine の addShield） */ if (R && ((id === 'Lm2' && R.lm2Vg > 1) || (id === 'Lm3' && R.lm3Vg > 1))) { const v = id === 'Lm2' ? R.lm2Vg : R.lm3Vg; const fx = (t) => t && t.replace('祝福+1', '祝福+' + v); o = Object.assign({}, o, { strong: fx(o.strong), weak: fx(o.weak) }); } /* T32（O-47）：発光腺・発光核の祝福+2 */ if (R && R.organTextOv && R.organTextOv[id]) o = Object.assign({}, o, R.organTextOv[id]); /* T42（O-76）：器官の文の差し替え */ return o; }; // x＝ゲーム状態 or 数値セット
   G.isChanged = (x, id) => { const R = (x && x.rules !== undefined) ? G.RULESETS[x.rules || 'v1'] : (x || {}); return !!(R && R.changed && R.changed.includes(id)); }; // 画面の「改」バッジ
   G.ORGAN_FIELD = ['Li1', 'Li2', 'Li3', 'Tr1', 'Tr2', 'Tr3', 'Fl1', 'Fl2', 'Fl3', 'Rh1', 'Rh2', 'Rh3']; // 初心者固定
-  G.LINEAGES = { Sv: '貯蔵', Li: '連結', Tr: '翻訳', Fl: '転流', Rh: '律動', Ca: '触媒', Cv: '収斂', Re: '感応', St: '応力', Mg: '代謝', Tl: '転写', Hc: '群心', Pu: '脈動', Cx: '促進', Fk: '孵化', Nv: '神経', Lm: '発光', Pr: '推進', Sp: '特殊' };
+  G.LINEAGES = { Di: '消化', Yr: '年輪', Sv: '貯蔵', Li: '連結', Tr: '翻訳', Fl: '転流', Rh: '律動', Ca: '触媒', Cv: '収斂', Re: '感応', St: '応力', Mg: '代謝', Tl: '転写', Hc: '群心', Pu: '脈動', Cx: '促進', Fk: '孵化', Nv: '神経', Lm: '発光', Pr: '推進', Sp: '特殊' };
   G.LINEAGE_TYPE = { cumulative: ['Li', 'Ca', 'Cv', 'Tr'], functional: ['Fl', 'Rh', 'Re', 'St'] };
   G.ST_CAPS = { St1: [15, 10], St2: [12, 9], St3: [15, 12] }; // [強, 弱] or St3:[P→E上限, P→G上限]
 
@@ -650,6 +667,8 @@
     { id: 'TAL',  group: 'trib', excl: true,  name: '祭壇の恩寵', text: '祭壇の払い口 1 つを半額で', rs: 'tribute' }, // T32（O-47）
     { id: 'TLF',  group: 'trib', excl: true,  name: '命の恩寵', text: '生命核+3', rs: 'tribute' },
     { id: 'TBR',  group: 'trib', excl: true,  name: '繁殖の恩寵', text: '繁殖 1 段を半額で', rs: 'tribute' },
+    { id: 'TST',  group: 'trib', excl: true,  name: '星の恩寵', text: '星海開拓を 1 段（条件 1 種だけ払う）', rs: 'tribute' }, // T49（O-91）
+    { id: 'TCU',  group: 'trib', excl: true,  name: '淘汰の恩寵', text: 'P100 → 異なる淘汰 2 種', rs: 'tribute' },
     { id: 'SCAN', group: 'cu',   excl: false, name: '探索', text: 'E5 → 他者の最高Lv×2の資源' },
     { id: 'ADP',  group: 'cu',   excl: false, name: '適応進化',  text: 'L1 → Lv1のトラックを+1（ワーカー必須）', worker: true },
     { id: 'CNV',  group: 'cu',   excl: false, name: '資源変換',  text: 'E2→G1 / G2→E1 / P8→E3 / P8→G2' },
