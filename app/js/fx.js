@@ -34,7 +34,7 @@
     JB: ['! +invest3 … ; ! +gem1', '! +invest2 …'], NP: ['∞ i:roundend -E1 > +P3 ≤E10', '∞ i:roundend -E1 > +P2 ≤E10'],
     JS: ['! @star! x1.5 … ; ! +gem1', '! @star! x1.5 …'],
     ND: ['∞ ↓organ:E:5', '∞ ↓organ:E:3'], NH: ['手 ?empty +E6 +G6 +P6 …', '手 ?empty +E4 +G4 +P4 …'], NK: ['! @join! +coop2', '! @join!'], NZ: ['! +gem2', '! +gem1'], NY: ['手 +E5 +G5 +P5 /breed …', '手 +E3 +G3 +P3 /breed …'], // T47（O-88）：結実＝繁殖の段ごと（星海の先駆の繁栄度は数えない＝…）
-    NG: ['∞ -P50 > i:launch 1/R', '∞ -P60 > i:launch 1/R'], NO: ['∞ ↓altar:E:½ ↓:G:½ ↓:P:½', '∞ ↓altar:P:½'], NU: ['∞ ?usedslot↑ +any6 …', '∞ ?usedslot↑ +any4 …'], NV: ['! +bless1 /organ3 ≤bless3', '! +bless1 /organ4 ≤bless2'], NT: ['∞ ?up↑ +bless2 …', '∞ ?up↑ +bless1 …'], // T49（O-91）：互恵の「その枠の資源」・頂の「Lv6」は今ある絵が無いので any／進化と …
+    NG: ['∞ -P50 > i:launch 1/R', '∞ -P60 > i:launch 1/R'], NO: ['∞ ↓altar:E:½ ↓:G:½ ↓:P:½', '∞ ↓altar:P:½'], NU: ['∞ ?usedslot↑ +slotres6 …', '∞ ?usedslot↑ +slotres4 …'], NV: ['! +bless1 /organ3 ≤bless3', '! +bless1 /organ4 ≤bless2'], NT: ['∞ ?lvtop↑ +bless2 …', '∞ ?lvtop↑ +bless1 …'], // T49（O-91）／O-93：互恵＝その枠の資源・頂＝Lv6（O-92 の絵）
     // T44（O-79）：渇望は記号で書ききれない（…＋全文）
   };
   const L6 = (x) => '! +gem2 (先 +gem1 +bless1 ) ; 旗 ' + x; // O-52：先駆と追随を 1 行に（基本＝追随・（先 …）＝先駆ならさらに得るぶん）
@@ -47,7 +47,7 @@
   const TRIB = {
     TO: '! -organ i:form1 > +organ i:form1 i:form2 i:form3 …', TB: '! @rslot! i:usedslot … ; ∞ i:rslot x2 i:round', TJ: '! i:up x2 ↓:E:24',
     TAL: '! ↓altar::½ …', TLF: '! +L3', TBR: '! i:breed ↓::½ …',
-    TST: '! @star ↓::½ …', TCU: '! -P100 > i:cull i:cull …', // T49（O-91）：星の恩寵（条件 2 種のうち 1 種だけ＝今ある絵が無いので半額の札と …）・淘汰の恩寵（異なる 2 種）
+    TST: '! @star -oneof …', TCU: '! -P100 > i:cull i:cull …', // T49（O-91）／O-93：星の恩寵（条件 2 種のうち 1 種だけ＝値札に O-92 の絵）・淘汰の恩寵（異なる 2 種）
   };
   // O-76（T42）：数値セットごとの差し替え（無いものは上の表のまま）
   const OV0 = { t42: { organ: { Fk3: '! +P30 ; ! @breed! … ; 手 +P12', Pr1: '∞ ?star↑ +any9', Pr2: '! @star! …', Pr3: '! @star! x1.5 …' }, trait: { NP: ['∞ i:roundend +P2 /E ≤E10', '∞ i:roundend +P1 /E ≤E10'], DV: ['∞ i:up i:up i:up …', '∞ i:up i:up …'] }, track: { social: { 5: ['! @join! +any12', '! @join!'] } } } };
@@ -83,13 +83,13 @@
   // ---------- 描画（ブラウザのみ） ----------
   const ICO = { E: 'ico-e', G: 'ico-g', P: 'ico-pop', L: 'ico-life', coop: 'ico-coord', gem: 'ico-gem', W: 'ico-w', bless: 'ico-bless', trait: 'ico-trait', organ: 'ico-organ', breed: 'ico-breed', up: 'ico-up', rslot: 'ico-slot', star: 'ico-star', join: 'ico-join', launch: 'ico-launch', any: 'ico-any',
     cull: 'ico-cull', altar: 'ico-altar', sporgan: 'ico-sporgan', herd: 'ico-herd', invest: 'ico-invest', lineage: 'ico-lineage', traitw: 'ico-traitw', traits: 'ico-traits', flip: 'ico-flip', round: 'ico-round', roundend: 'ico-roundend', usedslot: 'ico-usedslot', pros: 'ico-breed',
-    or: 'ico-or', empty: 'ico-zero', follow: 'ico-follow', starstep: 'ico-starstep', adj: 'ico-adj', ban: 'ico-ban', lastround: 'ico-lastround', everyone: 'ico-all', coopadv: 'ico-coopadv', rapid: 'ico-rapid', gather: 'ico-gather', perlv: 'ico-perlv', form1: 'ico-form1', form2: 'ico-form2', form3: 'ico-form3', order: 'ico-order', start: 'ico-start', each: 'ico-each' }; // O-86：O-85 の絵（icons.js） // O-61：字の札の代わりの記号（絵はデザイン・icons.js）。pros＝繁栄度（繁殖と同じ絵）
+    or: 'ico-or', empty: 'ico-zero', follow: 'ico-follow', starstep: 'ico-starstep', adj: 'ico-adj', ban: 'ico-ban', lastround: 'ico-lastround', everyone: 'ico-all', coopadv: 'ico-coopadv', rapid: 'ico-rapid', gather: 'ico-gather', perlv: 'ico-perlv', form1: 'ico-form1', form2: 'ico-form2', form3: 'ico-form3', order: 'ico-order', start: 'ico-start', each: 'ico-each', slotres: 'ico-slotres', lvtop: 'ico-lv6', oneof: 'ico-oneof' }; // O-93：O-92 の絵 // O-86：O-85 の絵（icons.js） // O-61：字の札の代わりの記号（絵はデザイン・icons.js）。pros＝繁栄度（繁殖と同じ絵）
   const JP = { E: 'エネルギー', G: '遺伝子', P: '個体数', L: '生命核', coop: '協調', gem: '痕跡', W: 'ワーカー', bless: '祝福', trait: '形質', organ: '器官', breed: '繁殖', up: '進化', rslot: '資源枠', star: '星海開拓', join: '合流進出', launch: '緊急進出', any: '好きな資源', all: '全種（E・G・P）', cb: '協調ボーナス',
     cull: '淘汰', altar: '祭壇', sporgan: '特殊器官', herd: '群体の枠', invest: '投入', lineage: '完成した系統', traitw: '弱の形質', traits: '強の形質', flip: '裏返す', round: 'ラウンド', roundend: 'ラウンド終了', usedslot: '使用済みの枠', pros: '繁栄度',
-    or: 'か', empty: '手持ちが 0', follow: '追随', starstep: '★の段', adj: '隣り合う', ban: 'できない', lastround: '最終ラウンド', everyone: '全員', coopadv: '協調進出', rapid: '急速形成', gather: '採集', perlv: 'Lv 1 つにつき', form1: '形態Ⅰ', form2: '形態Ⅱ', form3: '形態Ⅲ', order: '手番順', start: '開始時', each: '〜するたび' };
+    or: 'か', empty: '手持ちが 0', follow: '追随', starstep: '★の段', adj: '隣り合う', ban: 'できない', lastround: '最終ラウンド', everyone: '全員', coopadv: '協調進出', rapid: '急速形成', gather: '採集', perlv: 'Lv 1 つにつき', form1: '形態Ⅰ', form2: '形態Ⅱ', form3: '形態Ⅲ', order: '手番順', start: '開始時', each: '〜するたび', slotres: 'その枠の資源', lvtop: 'Lv6', oneof: '条件 1 種だけ' };
   // O-61（§114）：新しい記号の説明（ヒント・記号の一覧・ガイド・早見表で同じ文）
   const HINT = { cull: '淘汰のアクション（色つきはそのトラックの淘汰）', altar: '祭壇の払い口', sporgan: '特殊器官（代謝 Lv4 に達した順に 1 枚）', herd: '資源獲得の枠の群体同期・群体融合', invest: '生命核の投入', lineage: '第 3 形態までそろえた器官の系統', traitw: '形質の弱い面', traits: '形質の強い面', flip: '弱で持っている形質を強に裏返す', round: '1／ラウンド＝ラウンドに 1 回・終わりの印つき＝ラウンド終了時・単独＝このラウンドの間', roundend: 'ラウンド終了時', usedslot: 'ほかの人のコマが置かれた資源獲得の枠', pros: '繁栄度 +1（繁殖 1 段と同じく得点の倍率が上がる）', zero: '無料', ticket: 'ゲーム中に使える回数（使い切り）',
-    or: 'どちらか選ぶ（2 つの並びの間）', empty: '手持ちが 0 の資源（条件の中）', follow: '追随（先駆のあとに着いた人）', starstep: '★の段（Lv3★・Lv5★＝強い報酬の段）', adj: '隣り合う（祭壇の払い口）', ban: 'できない（記号に重ねる）', lastround: '最終ラウンド（条件の中）', everyone: '全員（当てはまる人みな）', coopadv: '協調進出（協調を払って使用済みの資源枠に置く）', rapid: '急速形成（同じ系統の器官を 2〜3 枚続けて形成）', gather: '採集（E・G・P・協調のどれかを少し得る）', perlv: 'トラックの Lv 1 つにつき（色はそのトラック）', form: '器官の形態Ⅰ・Ⅱ・Ⅲ（何段目の器官か）', form1: '器官の形態Ⅰ（1 段目）', form2: '器官の形態Ⅱ（2 段目）', form3: '器官の形態Ⅲ（3 段目）', order: '手番順', start: '開始時（ゲームの始めから）', each: '〜するたび（条件の中）' };
+    or: 'どちらか選ぶ（2 つの並びの間）', empty: '手持ちが 0 の資源（条件の中）', follow: '追随（先駆のあとに着いた人）', starstep: '★の段（Lv3★・Lv5★＝強い報酬の段）', adj: '隣り合う（祭壇の払い口）', ban: 'できない（記号に重ねる）', lastround: '最終ラウンド（条件の中）', everyone: '全員（当てはまる人みな）', coopadv: '協調進出（協調を払って使用済みの資源枠に置く）', rapid: '急速形成（同じ系統の器官を 2〜3 枚続けて形成）', gather: '採集（E・G・P・協調のどれかを少し得る）', perlv: 'トラックの Lv 1 つにつき（色はそのトラック）', form: '器官の形態Ⅰ・Ⅱ・Ⅲ（何段目の器官か）', form1: '器官の形態Ⅰ（1 段目）', form2: '器官の形態Ⅱ（2 段目）', form3: '器官の形態Ⅲ（3 段目）', order: '手番順', start: '開始時（ゲームの始めから）', each: '〜するたび（条件の中）', slotres: 'その枠の資源（いま使った資源獲得の枠と同じ種類の資源）', lvtop: 'Lv6（トラックの最上段・条件の中）', oneof: '条件のうち 1 種だけ払う（値札の中）' };
   const TRK = { body: '身体', intel: '知性', social: '社会', metab: '代謝' };
   const WHEN = { '!': ['now', '今すぐ 1 回（形成時・取得時・到達時）'], '手': ['inc', '毎回の収入'], '∞': ['perm', '恒久（持っているあいだずっと）'], '旗': ['end', 'ゲーム終了時'], '始': ['start', '開始時（ゲームの始めから）'] }; // O-86：5 つ目＝開始時（種族の能力）
   const NS = 'http://www.w3.org/2000/svg';
@@ -142,7 +142,7 @@
   function perChip(k, n, word, title) { const c = el('span', 'pc bonus cbper'); if (title) c.title = title; c.appendChild(ic(k)); c.appendChild(el('b', null, n)); c.appendChild(el('span', 'fxper', '／', el('span', 'fxword', word))); return c; }
   // O-61（§114）：補足の記号（記号の一覧・ガイド・早見表で同じ並びと文）
   const EXTRA = [['i:cull i:cull.body i:cull.intel i:cull.social i:cull.metab', HINT.cull], ['i:altar', HINT.altar], ['i:sporgan', HINT.sporgan], ['i:herd', HINT.herd], ['i:invest', HINT.invest], ['i:lineage', HINT.lineage], ['i:traitw', HINT.traitw], ['i:traits', HINT.traits], ['i:flip', HINT.flip], ['1/R i:round i:roundend', 'ラウンド：' + HINT.round], ['^1', '回数：' + HINT.ticket], ['i:usedslot', HINT.usedslot], ['$0', '値札 0：' + HINT.zero], ['+pros1', HINT.pros],
-    ['i:or', 'か：' + HINT.or], ['i:empty', HINT.empty], ['i:starstep', HINT.starstep], ['i:follow =先', HINT.follow + '＝（先）＝先駆と同じ'], ['i:adj', HINT.adj], ['%launch %coopadv', HINT.ban + '（緊急進出・協調進出はできない）'], ['i:lastround', HINT.lastround], ['i:everyone', HINT.everyone], ['i:coopadv', HINT.coopadv], ['i:rapid', HINT.rapid], ['i:gather', HINT.gather], ['i:perlv.body i:perlv.intel i:perlv.social i:perlv.metab', HINT.perlv], ['i:form1 i:form2 i:form3', HINT.form], ['i:order', HINT.order], ['i:each', HINT.each]]; // O-86
+    ['i:or', 'か：' + HINT.or], ['i:empty', HINT.empty], ['i:starstep', HINT.starstep], ['i:follow =先', HINT.follow + '＝（先）＝先駆と同じ'], ['i:adj', HINT.adj], ['%launch %coopadv', HINT.ban + '（緊急進出・協調進出はできない）'], ['i:lastround', HINT.lastround], ['i:everyone', HINT.everyone], ['i:coopadv', HINT.coopadv], ['i:rapid', HINT.rapid], ['i:gather', HINT.gather], ['i:perlv.body i:perlv.intel i:perlv.social i:perlv.metab', HINT.perlv], ['i:form1 i:form2 i:form3', HINT.form], ['i:order', HINT.order], ['i:each', HINT.each], ['+slotres6', HINT.slotres], ['?lvtop↑', HINT.lvtop], ['-oneof', HINT.oneof]]; // O-86／O-93
   // 記号の一覧（凡例）
   function legend() {
     const d = el('div', 'fxlegend');
