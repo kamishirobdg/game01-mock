@@ -216,7 +216,7 @@
       const inputs = {}, rows = {}, descs = {};
       const read = () => { const out = {}; fields.forEach(f => { const i = inputs[f.name]; out[f.name] = f.type === 'check' ? i.checked : f.type === 'number' ? parseInt(i.value || '0', 10) : f.type === 'multi' ? Array.from(i.selectedOptions).map(o => o.value) : i.value; }); return out; };
       // f.when(値) が偽の項目は隠す（値は既定のまま返す）。f.desc(値) は選んだ内容の説明を項目の下に出す。選択肢が「使わない」だけの生命核欄は出さない
-      const refresh = () => { const v = read(); fields.forEach(f => { const trivial = f.name === 'useL' && f.type === 'select' && f.options.length <= 1; rows[f.name].style.display = trivial || (f.when && !f.when(v)) ? 'none' : ''; if (f.desc) descs[f.name].textContent = f.desc(v) || ''; if (f.descEl) descs[f.name].replaceChildren(f.descEl(v) || ''); }); /* O-97：descEl＝選んだ内容の説明を要素で */ if (opts.maxCheck) { const cs = fields.filter(f => f.type === 'check').map(f => inputs[f.name]); const full = cs.filter(i => i.checked).length >= opts.maxCheck; cs.forEach(i => { i.disabled = full && !i.checked; }); } }; // T31（O-44）：opts.maxCheck＝チェックはその数で止まる
+      const refresh = () => { const v = read(); fields.forEach(f => { const trivial = f.name === 'useL' && f.type === 'select' && f.options.length <= 1; rows[f.name].style.display = trivial || (f.when && !f.when(v)) ? 'none' : ''; if (f.descEl) descs[f.name].style.display = rows[f.name].style.display; if (f.desc) descs[f.name].textContent = f.desc(v) || ''; if (f.descEl) descs[f.name].replaceChildren(f.descEl(v) || ''); }); /* O-97：descEl＝選んだ内容の説明を要素で */ if (opts.maxCheck) { const cs = fields.filter(f => f.type === 'check').map(f => inputs[f.name]); const full = cs.filter(i => i.checked).length >= opts.maxCheck; cs.forEach(i => { i.disabled = full && !i.checked; }); } }; // T31（O-44）：opts.maxCheck＝チェックはその数で止まる
       fields.forEach(f => {
         const row = h('label', { class: 'frow' }, h('span', null, f.label)); let inp;
         if (f.type === 'select') { inp = h('select', { name: f.name }); f.options.forEach(o => inp.appendChild(h('option', { value: o.value, selected: o.value === f.value, disabled: !!o.disabled }, o.label))); }
@@ -224,8 +224,8 @@
         else if (f.type === 'check') inp = h('input', { type: 'checkbox', name: f.name, checked: !!f.value });
         else if (f.type === 'multi') { inp = h('select', { name: f.name, multiple: true, size: Math.min(8, Math.max(2, f.options.length)) }); f.options.forEach(o => inp.appendChild(h('option', { value: o.value }, o.label))); }
         else inp = h('input', { type: 'text', name: f.name, value: f.value || '' });
-        inputs[f.name] = inp; row.appendChild(inp); if (f.hint) row.appendChild(h('small', null, f.hint)); if (f.desc) { descs[f.name] = h('small', { class: 'desc' }); row.appendChild(descs[f.name]); } if (f.descEl) { descs[f.name] = h('div', { class: 'desc descel' }); row.appendChild(descs[f.name]); }
-        rows[f.name] = row; form.appendChild(row); inp.addEventListener('change', refresh); inp.addEventListener('input', refresh);
+        inputs[f.name] = inp; row.appendChild(inp); if (f.hint) row.appendChild(h('small', null, f.hint)); if (f.desc) { descs[f.name] = h('small', { class: 'desc' }); row.appendChild(descs[f.name]); } if (f.descEl) descs[f.name] = h('div', { class: 'desc descel' }); /* O-97 の直し（2026-11-24 ユーザー「キャンセルがきかないことがある」）：一覧は label の外に置く（label の中だと一覧を触るたび選択欄が反応し、携帯では選択の画面が開いて次のキャンセルが空振りする） */
+        rows[f.name] = row; form.appendChild(row); if (f.descEl) form.appendChild(descs[f.name]); inp.addEventListener('change', refresh); inp.addEventListener('input', refresh);
       });
       refresh();
       const btns = h('div', { class: 'mbtns' }, h('button', { type: 'submit', class: 'primary' }, opts.okLabel || '実行'));
