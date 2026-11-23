@@ -163,7 +163,7 @@
   G.RULESETS.t9 = G.scaleRuleset(G.RULESETS.t7, 1, { name: '仮値セットT9（資源1倍・協調12）', coopMode: 'third', coopMax: 12, coopGemAt: 9, hc3RoundUp: false, hc3Bonus: 1, mg3Inc: 1,
     gates: Object.assign({}, G.RULESETS.t7.gates, { social: [0, 0, 3, 6, 9, 12] }),
     traitCosts: { JI: [11, 9], JB: [13, 11], DV: [6, 5], MB: [10, 8], MC: [5, 4], DG: [5, 4], NC: [7, 6], NB: [5, 4], NM: [7, 6], NL: [10, 9], NF: [6, 5], NR: [5, 4] } });
-  G.VERSION = '3.180'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
+  G.VERSION = '3.181'; // 画面の表示用（README の版と合わせる。公開時は index.html の ?v= も上げる＝キャッシュ対策）
   // 2026-10-30 ユーザー試行：T8 の5ラウンド版（通常4＋神の到来1）。「全トラック・係数が上がり切る」のを防ぐ（AI56）。既定は T8（7R）のまま
   G.RULESETS.t8s = Object.assign({}, G.RULESETS.t8, { name: '仮値セットT8・5ラウンド（4＋神の到来1・試行）', rounds: 5, tribute: Object.assign({}, G.RULESETS.t8.tribute, { openRound: 5 }),
     lv6Pay: Object.assign({}, G.RULESETS.t8.lv6Pay, { body: { L: 3 } }),
@@ -451,7 +451,7 @@
     NK: { name: '共鳴', cat: 'N', cost: [5, 4], strong: '取得時 合流進出 1 回＋協調+2', weak: '取得時 合流進出 1 回', permWeak: false, instant: true },
     NZ: { name: '化石', cat: 'N', cost: [5, 3], strong: '取得時 痕跡+2', weak: '取得時 痕跡+1', permWeak: false, instant: true },
     NY: { name: '結実', cat: 'N', cost: [18, 12], strong: '収入のたび、繁殖した段 1 つにつき E・G・P 各+5（星海開拓の先駆の繁栄度は数えない）', weak: '収入のたび、繁殖した段 1 つにつき E・G・P 各+3（星海開拓の先駆の繁栄度は数えない）', permWeak: true }, // T47（O-88・§131）：額は nyGain [強, 弱]
-    NG: { name: '強行', cat: 'N', cost: [18, 12], strong: '1 ラウンドに 1 回、緊急進出の生命核 1 の代わりに P50 を払える（払った P は投入に数えない）', weak: '1 ラウンドに 1 回、緊急進出の生命核 1 の代わりに P60 を払える（払った P は投入に数えない）', permWeak: true }, // T49（O-91）：額は ngLaunchP
+    NG: { name: '強行', cat: 'N', cost: [18, 12], strong: '1 ラウンドに 1 回、緊急進出の生命核 1 の代わりに P50 を払える', weak: '1 ラウンドに 1 回、緊急進出の生命核 1 の代わりに P60 を払える', permWeak: true }, // T49（O-91）：額は ngLaunchP
     NO: { name: '供物', cat: 'N', cost: [27, 12], strong: '祭壇の E・G・P の口が半額（E30／G20／P60）', weak: '祭壇の P の口が半額（P60）', permWeak: true }, // T49（O-91）：noAltarHalf
     NU: { name: '互恵', cat: 'N', cost: [9, 6], strong: '使用済みの資源枠を使うたび（協調進出・合流進出・擬態・神の加護）、その枠の資源 +6（協調ボーナスと同じ資源・倍にならない）', weak: '使用済みの資源枠を使うたび（協調進出・合流進出・擬態・神の加護）、その枠の資源 +4（協調ボーナスと同じ資源・倍にならない）', permWeak: true }, // T49（O-91）：nuGain
     NV: { name: '標本', cat: 'N', cost: [24, 15], strong: '取得時、器官 3 枚につき 祝福+1（上限 3・器官の数え方は代謝の臨界と同じ）', weak: '取得時、器官 4 枚につき 祝福+1（上限 2・器官の数え方は代謝の臨界と同じ）', permWeak: false, instant: true }, // T49（O-91）：nvBless
