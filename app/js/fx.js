@@ -10,7 +10,7 @@
 (function () {
   'use strict';
   const G = globalThis.G1; if (!G) return;
-  const SETS = ['t33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41', 't42', 't43', 't44', 't45', 't46', 't47', 't48', 't49', 't50']; // O-51（v3.128）：T33 の数値で書く（T32 以前は文字の表示）・O-62（v3.142）：T34 は T33 と同じ数値・v3.159：T38（v3.158 で抜けていた）・T39
+  const SETS = ['t33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41', 't42', 't43', 't44', 't45', 't46', 't47', 't48', 't49', 't50', 't51']; // O-51（v3.128）：T33 の数値で書く（T32 以前は文字の表示）・O-62（v3.142）：T34 は T33 と同じ数値・v3.159：T38（v3.158 で抜けていた）・T39
   const ORGAN = {
     Mg1: '手 +E6', Mg2: '! +E6 ; 手 +E3 +G3', Mg3: '手 +all4 ; ∞ =organ1',
     Tl1: '! +G6 ; ∞ ↓trait:G:6', Tl2: '! +G9 ; ! @traitw! $0 … ; ∞ ↓trait:G:9', Tl3: '! @trait! $0 … ; ∞ ↓trait:G:12',
@@ -23,6 +23,7 @@
     Lm1: '手 +G6', Lm2: '! +bless2', Lm3: '! +gem1 +bless2',
     Sv1: '手 +G4', Sv2: '手 +E9', Sv3: '手 +any12', // T44（O-79）
     Di1: '手 -P10 > +E12', Di2: '手 -P10 > +G8', Di3: '∞ ?cull↑ +any9', Yr1: '手 +E2 /round', Yr2: '! +G6 ; 手 +G1 /round', Yr3: '! +any6 /round', // T49（O-91）：消化・年輪
+    Ad1: '! @join!', Ad2: '∞ ↓coopadv:coop:1 ↓cull:coop:1 …', Ad3: '∞ i:coopadv x4', // T51（O-99）：吸着（第 2 形態＝協調進出と淘汰の 2 人目の協調 −1）
     SpE: '手 +E4 /organ', SpG: '手 +G3 /organ', SpP: '手 +P8 /organ', SpC: '手 +coop1', SpM: '手 +E2 +G1 /organ',
   };
   const TRAIT = { // [強, 弱]
@@ -34,7 +35,8 @@
     JB: ['! +invest3 … ; ! +gem1', '! +invest2 …'], NP: ['∞ i:roundend -E1 > +P3 ≤E10', '∞ i:roundend -E1 > +P2 ≤E10'],
     JS: ['! @star! x1.5 … ; ! +gem1', '! @star! x1.5 …'],
     ND: ['∞ ↓organ:E:5', '∞ ↓organ:E:3'], NH: ['手 ?empty +E6 +G6 +P6 …', '手 ?empty +E4 +G4 +P4 …'], NK: ['! @join! +coop2', '! @join!'], NZ: ['! +gem2', '! +gem1'], NY: ['手 +E5 +G5 +P5 /breed …', '手 +E3 +G3 +P3 /breed …'], // T47（O-88）：結実＝繁殖の段ごと（星海の先駆の繁栄度は数えない＝…）
-    NG: ['∞ -P50 > i:launch 1/R', '∞ -P60 > i:launch 1/R'], NO: ['∞ ↓altar:E:½ ↓:G:½ ↓:P:½', '∞ ↓altar:P:½'], NU: ['∞ ?usedslot↑ +slotres6 …', '∞ ?usedslot↑ +slotres4 …'], NV: ['! +bless1 /organ3 ≤bless3', '! +bless1 /organ4 ≤bless2'], NT: ['∞ ?lvtop↑ +bless2 …', '∞ ?lvtop↑ +bless1 …'], // T49（O-91）／O-93：互恵＝その枠の資源・頂＝Lv6（O-92 の絵）
+    NG: ['∞ -P50 > i:launch 1/R', '∞ -P60 > i:launch 1/R'], NO: ['∞ ↓altar:E:½ ↓:G:½ ↓:P:½', '∞ ↓altar:P:½'], NU: ['∞ ?usedslot↑ +slotres6 …', '∞ ?usedslot↑ +slotres4 …'], NV: ['! +bless1 /organ3 ≤bless3', '! +bless1 /organ4 ≤bless2'], NT: ['∞ ?lvtop↑ +bless2 …', '∞ ?lvtop↑ +bless1 …'], // T49（O-91）
+    NA: ['∞ ↓:coop:1 …', '∞ ↓coopadv:coop:1 ↓cull:coop:1 …'], NW: ['! -E20 > +gem1 ≤gem3 …', '! -E20 > +gem1 ≤gem2 …'], NI: ['∞ ?~Lv4↑ +gem1 …', '∞ ?~Lv4↑ +any9 …'], NQ: ['∞ ?starstep↑ +any6 …', '∞ ?starstep↑ +any4 …'], NJ: ['∞ ?altar↑ +gem1', '∞ ?altar↑ +gem1 …'], NX: ['手 ?coop≤2 +E12', '手 ?coop≤2 +E6'], NN: ['手 +E4 +G4 +P4 +any4 /~系統 …', '手 +E2 +G2 +P2 +any2 /~系統 …'], // T51（O-99）：今ある絵で書く（Lv4・器官を持つ系統の数は O-100 で絵を足す＝今は語）。盟約（強）＝協調を払う所すべて／祭司（弱）＝祭壇の手ごと（…）／O-93：互恵＝その枠の資源・頂＝Lv6（O-92 の絵）
     // T44（O-79）：渇望は記号で書ききれない（…＋全文）
   };
   const L6 = (x) => '! +gem2 (先 +gem1 +bless1 ) ; 旗 ' + x; // O-52：先駆と追随を 1 行に（基本＝追随・（先 …）＝先駆ならさらに得るぶん）
@@ -52,7 +54,7 @@
   // O-76（T42）：数値セットごとの差し替え（無いものは上の表のまま）
   const OV0 = { t42: { organ: { Fk3: '! +P30 ; ! @breed! … ; 手 +P12', Pr1: '∞ ?star↑ +any9', Pr2: '! @star! …', Pr3: '! @star! x1.5 …' }, trait: { NP: ['∞ i:roundend +P2 /E ≤E10', '∞ i:roundend +P1 /E ≤E10'], DV: ['∞ i:up i:up i:up …', '∞ i:up i:up …'] }, track: { social: { 5: ['! @join! +any12', '! @join!'] } } } };
   const OV = Object.assign({}, OV0, { t43: OV0.t42, t44: OV0.t42, t45: OV0.t42, t46: OV0.t42, t47: OV0.t42, t48: Object.assign({}, OV0.t42, { trait: Object.assign({}, OV0.t42.trait, { NY: ['手 +E5 +G5 +P5 /breed', '手 +E3 +G3 +P3 /breed'] }) }) }); // T48（O-90）：結実＝繁栄度の段ごと（書ききれない但し書きが無いので … なし） // O-78：T43 は T42 と同じ記号
-  OV.t49 = OV.t48; OV.t50 = OV.t49; // T50（O-98）：T49 と同じ // T49（O-91）：T48 と同じ差し替え
+  OV.t49 = OV.t48; OV.t50 = OV.t49; OV.t51 = OV.t50; // T51（O-99）：T50 と同じ差し替え // T50（O-98）：T49 と同じ // T49（O-91）：T48 と同じ差し替え
   const on = (st) => !!st && SETS.includes(st.rules || 'v1');
   const R_ = (st) => G.RULESETS[st.rules || 'v1'];
   const split = (s) => String(s).split(';').map(x => x.trim()).filter(Boolean);

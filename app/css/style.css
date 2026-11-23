@@ -96,6 +96,8 @@ table.tracks td .first { display:block; font-size:10px; color:#a0760a; }
 .modal-box h3 { margin:0 0 8px; }
 /* O-97：急速形成の枠＝形成する器官の一覧（1 枚ずつ額と効果）・長いときも実行／キャンセルを下に留める */
 .burstmodal .descel { margin:6px 0 0; font-size:12px; } .burstlist { display:flex; flex-direction:column; gap:6px; width:100%; } .burstlist .bitem { border:1px solid rgba(127,127,127,.35); border-radius:6px; padding:6px 8px; } .burstlist .bhd { display:flex; flex-wrap:wrap; align-items:center; gap:4px; } .burstlist .btx { display:block; margin-top:2px; } .burstlist .bsum { font-weight:bold; }
+.oracle { display:flex; flex-direction:column; gap:2px; margin:0 0 10px; padding:6px 10px; border:1px solid rgba(201,162,74,.45); border-radius:8px; font-size:12px; } .oracle .orc { opacity:.75; } .oracle .orc b { margin-right:2px; } .oracle .orc.past { opacity:.4; } .oracle .orc.now { opacity:1; font-weight:bold; color:var(--sk-gold-ink, #9a7212); } /* T51（O-99）ラウンドの神託（一覧の画面・盤の置き場は O-100） */
+.rpill .rorc { font-size:11px; font-weight:normal; } @media (max-width:600px) { .rpill .rorc { display:none; } } /* T51（O-99）ヘッダの今のラウンドの神託（携帯幅は一覧の画面の 4 枚で見る） */
 .burstmodal .mbtns { position:sticky; bottom:-16px; margin:12px -20px -16px; padding:10px 20px 16px; background:inherit; border-top:1px solid rgba(127,127,127,.25); }
 @media (max-width:600px) { .burstmodal .mbtns { bottom:-12px; margin:12px -14px -12px; padding:8px 14px 12px; } }
 .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#333; color:#fff; padding:8px 14px; border-radius:6px; opacity:0; transition:opacity .2s; z-index:30; }
