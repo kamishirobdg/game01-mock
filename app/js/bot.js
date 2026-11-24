@@ -234,7 +234,7 @@
         const na = T('NA'); if (na && R.naDisc) v += rem * 0.4 * (na.strong ? 1.5 : 1) * ce; if (R.adCoopDisc && G.organ(p, 'Ad2')) v += rem * 0.3 * ce; if (R.adLaunch && G.organ(p, 'Ad3')) v += rem * 0.4 * 6 * w.E;
         const ahead = (lv) => G.TRACKS.reduce((a, t) => a + (p.lv[t] < lv ? (p.lv[t] === lv - 1 ? 0.6 : 0.25) : 0), 0) + ((p.star | 0) + 1 < lv ? ((p.star | 0) + 2 === lv ? 0.5 : 0.2) : 0); // まだ着いていない Lv lv の見込みの数（星海は内部の段＋1）
         const ni = T('NI'); if (ni && R.niGain) v += Math.min(rem, ahead(4)) * (ni.strong ? gv * R.niGain.gem : R.niGain.any * w.E) * 0.8;
-        const nq = T('NQ'); if (nq && R.nqGain) v += Math.min(rem * 2, ahead(3) + ahead(5)) * R.nqGain[nq.strong ? 0 : 1] * w.E * 0.8;
+        const nq = T('NQ'); if (nq && R.nq5) v += Math.min(rem, ahead(5)) * (nq.strong ? gv * R.nq5.gem : R.nq5.any * w.E) * 0.8; /* T52（O-108）：開花＝Lv5★ だけ */ else if (nq && R.nqGain) v += Math.min(rem * 2, ahead(3) + ahead(5)) * R.nqGain[nq.strong ? 0 : 1] * w.E * 0.8;
         const nj = T('NJ'); if (nj && R.njGem && R.altar) { const u = G.ALTAR_KEYS.filter(k => !(p.tribGame && p.tribGame[k])).length; v += Math.min(u, rem) * 0.5 * gv * (nj.strong ? 1 : 0.7); }
         const nn = T('NN'); if (nn && R.nnGain && G.nnLins(p) >= 4) v += rem * w.inc * R.nnGain[nn.strong ? 0 : 1] * w.E; } // 孤高・多様の E・G・P は G.income に入る
       { const nd = G.trait(p, 'ND'); if (nd && R.ndDisc) v += rem * 0.6 * R.ndDisc[nd.strong ? 0 : 1] * w.E; if (G.organ(p, 'Sv3') && R.svInc) v += rem * w.inc * R.svInc.Sv3 * w.E; } // T44（O-79）：分化＝器官 0.6 枚/R の E 値引き（今の器官の割引と同じ見方）・貯蔵核＝収入の好きな資源（E と同じ見方・収斂膜の保留と同じく income には入らない）
