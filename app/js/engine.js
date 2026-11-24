@@ -126,7 +126,7 @@
     const p = P(st, pid); const t = G.TRAITS[tid];
     if (!armTraitOptions(st).includes(tid)) throw new Error(`コストG${RS(st).armTraitMax || 4}以下の形質のみ`);
     if (p.species !== 'arm') throw new Error('九腕知性体のみ');
-    giveTrait(st, p, tid, true, 'passive');
+    giveTrait(st, p, tid, true, '特性'); // O-107：ログの出どころを日本語に（前は英語の passive）
     if (st.phase === 'setup' && st.setupStep === 'armTrait') advanceSetup(st);
   }
   function draftCards(st, pid, ids) {
