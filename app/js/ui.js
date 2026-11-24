@@ -282,6 +282,7 @@
 
   // ---------- 画面：入口 ----------
   function render() {
+    hideOTip(); // O-103
     renderHeader();
     const root = $('#app'); root.innerHTML = '';
     setTimeout(scheduleBot, 0);
@@ -471,7 +472,7 @@
     const hd = $('#hdr'); hd.innerHTML = ''; if (!st || st.phase !== 'play') document.title = BASE_TITLE; // O-48：自分の番の印は対局中だけ
     hd.appendChild(h('a', { href: '../guide/', target: '_blank', rel: 'noopener', class: 'rulelink' }, 'ルール')); // 2026-10-28：「game01 モック」の表記は不要（1行に収める）
     if (!st || st.phase !== 'play') { if (game && isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code)); if (st && st.phase === 'end') hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: exportJson }, '保存(JSON)'), h('button', { onclick: exportCsv }, 'ログCSV'))); if (game) hd.appendChild(h('span', { class: 'hbtns' }, h('button', { onclick: quit }, '退出／新規'), game && isOnline() ? h('button', { onclick: deleteThisRoom }, 'ルーム削除') : null)); hd.appendChild(h('span', { class: 'hmenuwrap' }, ...dispGroup(false), h('small', { class: 'ver' }, 'v' + (G.VERSION || '')))); return; }
-    { const O = st.shared && st.shared.oracle, oc = O && G.oracleCard(st) ? G.RULESETS[st.rules || 'v1'].oracle.cards[G.oracleCard(st)].text : null; hd.appendChild(h('span', { class: 'pill rpill', title: O ? 'ラウンドの神託：' + O.map((k, i) => `R${i + 1}：${G.RULESETS[st.rules || 'v1'].oracle.cards[k].text}`).join('／') : null }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`, oc ? h('small', { class: 'rorc' }, '・神託：', ...(fxOn() && G.FX && G.FX.lines(st, 'oracle', G.oracleCard(st)) ? [G.FX.render(G.FX.lines(st, 'oracle', G.oracleCard(st)), oc)] : [oc])) : null)); } // T51（O-99）：今のラウンドの神託（盤の画面でも見えるようにヘッダに 1 行）
+    { const O = st.shared && st.shared.oracle, oc = O && G.oracleCard(st) ? G.RULESETS[st.rules || 'v1'].oracle.cards[G.oracleCard(st)].text : null; hd.appendChild(h('span', { class: 'pill rpill', title: O ? 'ラウンドの神託：' + O.map((k, i) => `R${i + 1}：${G.RULESETS[st.rules || 'v1'].oracle.cards[k].text}`).join('／') : null }, `ラウンド ${st.round}/${G.RULESETS[st.rules || 'v1'].rounds || G.ROUNDS}`, oc ? h('small', { class: 'rorc', 'data-otip': fxOn() && G.FX && G.FX.lines(st, 'oracle', G.oracleCard(st)) ? `R${st.round}：${oc}` : null }, '・神託：', ...(fxOn() && G.FX && G.FX.lines(st, 'oracle', G.oracleCard(st)) ? [G.FX.render(G.FX.lines(st, 'oracle', G.oracleCard(st)), oc)] : [oc])) : null)); } // T51（O-99）：今のラウンドの神託（盤の画面でも見えるようにヘッダに 1 行）
     if (isOnline()) hd.appendChild(h('span', { class: 'pill' }, 'ルーム ' + game.code));
     // 版の小文字＋ボタン群の開閉「≡」は1行目の右端（2026-10-28 ユーザー要望：1行を占有させない）
     hd.appendChild(h('span', { class: 'hmenuwrap' }, ...dispGroup(true), h('small', { class: 'ver' }, 'v' + (G.VERSION || '')), G.FX && G.FX.on(st) ? h('button', { class: 'fxbtn', title: '効果の記号（いつ・得る・払う・軽減など）の見方', onclick: showLegend }, '記号の一覧') : null, h('button', { class: 'hmenu', title: 'ボタン（戻す・保存・ログ・退出など）の表示／非表示', onclick: () => { menuOpen = !menuOpen; try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch (e) { } render(); } }, menuOpen ? '×' : '≡')));
@@ -591,14 +592,26 @@
     return h('div', { class: 'rtrack', title: `ラウンド ${st.round}/${RN}${OR <= RN ? `（ラウンド${OR}から恩寵枠）` : ''}` }, objIc('round'), ...Array.from({ length: RN }, (_, i) => i + 1).map(r => h('span', { class: 'rp' + (r < st.round ? ' past' : r === st.round ? ' now' : '') + (r >= OR ? ' god' : '') }, String(r))));
   }
   // T51（O-99）：ラウンドの神託（R1〜R4 に 1 枚ずつ・今のラウンドを目立たせる）。盤の画面の置き場は O-100（デザイン）
-  function renderOracle() { const O = st.shared && st.shared.oracle; if (!O || !O.length) return null; const C = G.RULESETS[st.rules || 'v1'].oracle.cards; return h('div', { class: 'oracle', title: 'ラウンドの神託：そのラウンドの間、全員に効く（当たるたびに受け取る）' }, ...O.map((k, i) => { const fl = fxOn() && G.FX && G.FX.lines(st, 'oracle', k); return h('div', { class: 'orc' + (fl ? ' orfx' : '') + (i + 1 < st.round ? ' past' : i + 1 === st.round ? ' now' : ''), title: fl ? `R${i + 1}：${C[k].text}` : null }, h('b', null, `R${i + 1}`), fl ? G.FX.render(fl, C[k].text) : `：${C[k].text}`); })); } // O-99 の 2 段目：アイコンの表示では記号（文はホバー）
+  function renderOracle() { const O = st.shared && st.shared.oracle; if (!O || !O.length) return null; const C = G.RULESETS[st.rules || 'v1'].oracle.cards; return h('div', { class: 'oracle', title: 'ラウンドの神託：そのラウンドの間、全員に効く（当たるたびに受け取る）' }, ...O.map((k, i) => { const fl = fxOn() && G.FX && G.FX.lines(st, 'oracle', k); return h('div', { class: 'orc' + (fl ? ' orfx' : '') + (i + 1 < st.round ? ' past' : i + 1 === st.round ? ' now' : ''), title: fl ? `R${i + 1}：${C[k].text}` : null, 'data-otip': fl ? `R${i + 1}：${C[k].text}` : null }, h('b', null, `R${i + 1}`), fl ? G.FX.render(fl, C[k].text) : `：${C[k].text}`); })); } // O-99 の 2 段目：アイコンの表示では記号（文はホバー）
   // O-101：恩寵の場所の「神託／恩寵」の切り替え（一覧と盤で共通の 1 つ・見ている人ごと・ログと保存には入れない）。oracleFaceSel＝選んだ面と、選んだときの区切り（神託のラウンド中＝'early'／神託の後〔R5〕＝'late'）。区切りが変わったら自動（R1〜R4＝神託・R5 以降＝恩寵）に戻る
   let oracleFaceSel = null;
   const oraclePhase = () => { const O = st && st.shared && st.shared.oracle; return O && st.round > O.length ? 'late' : 'early'; };
   function oracleFace() { const O = st && st.shared && st.shared.oracle; if (!O || !O.length) return null; if (oracleFaceSel && oracleFaceSel.phase === oraclePhase()) return oracleFaceSel.face; return oraclePhase() === 'late' ? 'grace' : 'oracle'; } // 'oracle'＝神託の面／'grace'＝恩寵の面／null＝神託の無い卓（切り替えなし）
   function setOracleFace(face) { if (face !== 'oracle' && face !== 'grace') return; oracleFaceSel = { face, phase: oraclePhase() }; render(); }
   function oracleToggle() { const f = oracleFace(); if (!f) return null; return h('span', { class: 'oratog' }, ...[['oracle', '神託'], ['grace', '恩寵']].map(([k, t]) => h('button', { type: 'button', class: f === k ? 'on' : '', 'aria-pressed': f === k ? 'true' : 'false', onclick: (ev) => { ev.stopPropagation(); setOracleFace(k); } }, t))); }
-  G.oracleFace = oracleFace; G.setOracleFace = setOracleFace; G.oracleToggle = oracleToggle; G.renderOracle = renderOracle; // O-101：盤の側（デザイン・O-100）から使う口
+  G.oracleFace = oracleFace; G.setOracleFace = setOracleFace; G.oracleToggle = oracleToggle; G.renderOracle = renderOracle;
+  // O-103：神託の札（記号）をタップ／クリックすると説明文の吹き出し（data-otip を持つ要素・同時に 1 つ・同じ札かほかの所をタップで閉じる・描き直し／スクロールでも閉じる）
+  let otipEl = null, otipAt = null;
+  function hideOTip() { if (otipEl) otipEl.remove(); otipEl = null; otipAt = null; }
+  function showOTip(a) {
+    hideOTip(); const b = document.createElement('div'); b.className = 'otip'; b.setAttribute('role', 'tooltip'); b.textContent = a.getAttribute('data-otip'); document.body.appendChild(b);
+    const r = a.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight, w = b.offsetWidth, hh = b.offsetHeight;
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, vw - w - 8)); const below = r.bottom + 6 + hh <= vh - 8 || r.top - 6 - hh < 8;
+    b.style.left = left + 'px'; b.style.top = (below ? r.bottom + 6 : r.top - 6 - hh) + 'px'; otipEl = b; otipAt = a;
+  }
+  document.addEventListener('click', (ev) => { const a = ev.target && ev.target.closest ? ev.target.closest('[data-otip]') : null; if (a) { ev.stopPropagation(); if (otipAt === a) hideOTip(); else showOTip(a); return; } if (otipEl && !(ev.target && ev.target.closest && ev.target.closest('.otip'))) hideOTip(); }, true);
+  window.addEventListener('scroll', hideOTip, true); window.addEventListener('resize', hideOTip);
+  G.hideOTip = hideOTip; // O-103：盤の側（デザイン）から閉じる口 // O-101：盤の側（デザイン・O-100）から使う口
   function renderTracks(p, can) {
     const box = h('div', { class: 'panel tracksp' }, h('h3', { title: G.RULESETS[st.rules || 'v1'].gates ? '素材（器官・形質・協調・投入）が矢印の数に達すると自動で上がる。Eでの進化（点線をクリック）も自由。★＝痕跡・先駆は強い報酬' : '次の段（点線）をクリックで進化（ワーカー必須・排他なし）。★＝痕跡・先駆は強い報酬' }, '進化トラック')) // O-66：見出しの補足は title へ);
     const lanes = h('div', { class: 'lanes' }); box.appendChild(lanes); // レーンだけ横スクロール（スマホ）

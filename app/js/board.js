@@ -35,15 +35,16 @@
   function fitRows() {
     fitPend = false; if (!on) return;
     var rows = [].slice.call(document.querySelectorAll('.tgrid > .tcard > .fx')), over = function (f) { return f.clientWidth > 0 && f.scrollWidth > f.clientWidth + 1; };
-    rows.forEach(function (f) { f.classList.remove('fit1', 'fit2', 'fit3', 'fit4'); });
+    rows.forEach(function (f) { f.classList.remove('fit1', 'fit2', 'fit3', 'fit4', 'fit5'); });
     rows.filter(over).forEach(function (f) { f.classList.add('fit1'); });
     rows.filter(function (f) { return f.classList.contains('fit1') && over(f); }).forEach(function (f) { f.classList.add('fit2'); });
     rows.filter(function (f) { return f.classList.contains('fit2') && over(f); }).forEach(function (f) { f.classList.add('fit3'); });
     rows.filter(function (f) { return f.classList.contains('fit3') && over(f); }).forEach(function (f) { f.classList.add('fit4'); }); // O-100：四相（強）
+    rows.filter(function (f) { return f.classList.contains('fit4') && over(f); }).forEach(function (f) { f.classList.add('fit5'); }); // O-102：四相の 4 段（分類の紋を隠して左端から）
   }
   // O-100：神託の札（ui.js の renderOracle・O-101 から恩寵の場所）は「R1：文」の形。盤ではラウンドの番号を丸にして札の左に置くので、文の頭の「：」だけ外す（字の中身はそのまま）
   function trimOracle() { if (!on) return; [].forEach.call(document.querySelectorAll('.panel.excl .sgroup.oraface > .oracle > .orc > b'), function (b) { var t = b.nextSibling; if (t && t.nodeType === 3 && t.data.charAt(0) === '：') t.data = t.data.slice(1); }); }
-  function schedFit() { if (fitPend || !on) return; fitPend = true; (window.requestAnimationFrame || setTimeout)(fitRows); }
+  function schedFit() { if (fitPend || !on) return; fitPend = true; var run = function () { if (fitPend) fitRows(); }; (window.requestAnimationFrame || setTimeout)(run); setTimeout(run, 200); } // O-102：画面に映っていないとき requestAnimationFrame が止まり詰め損ねることがあるので、setTimeout でも走らせる（先に走った方だけ）
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedFit);
   if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', schedFit); window.addEventListener('load', schedFit); window.addEventListener('resize', schedFit); // O-100：字や画面の大きさが後から変わったときも詰め直す（読み込みの順で詰め損ねることがあった）
   if (window.MutationObserver) new MutationObserver(function () { placeSp(); trimOracle(); schedFit(); }).observe(document.documentElement, { childList: true, subtree: true });

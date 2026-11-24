@@ -396,3 +396,4 @@ div.art.noart.small { aspect-ratio:2/1; }
   #hdr .hmenuwrap { flex-wrap:wrap; justify-content:flex-end; row-gap:4px; }
   #hdr .hmenuwrap .dispgrp { order:9; flex-basis:100%; justify-content:flex-end; }
 }
+.otip { position:fixed; z-index:9000; max-width:min(320px, calc(100vw - 16px)); box-sizing:border-box; padding:7px 11px; border-radius:8px; background:#1f2533; color:#f4f1e6; border:1px solid rgba(201,162,74,.7); font-size:13px; line-height:1.45; box-shadow:0 4px 14px rgba(0,0,0,.35); pointer-events:none; } [data-otip] { cursor:pointer; } /* O-103：神託の札をタップ／クリックすると説明文 */

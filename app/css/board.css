@@ -416,6 +416,13 @@ html[data-board] #app .grid {
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit4 .fxl, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit4 .fxl .pc { font-size:8.500px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit4 :is(.pc, .fxper, .fxact) svg.ic, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit4 .fxt > svg.ic { width:9px; height:9px; }
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit4 :is(.fxword, .pbad) { padding:0 1px; letter-spacing:-.5px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit4 .fxl .pc { padding:1px 1px 1px 0; }
 
+  /* O-102：fit4 でもはみ出す行（四相の 4 段）は fit5＝分類の紋を隠し、強・弱の 2 行とも板の左端から使う（並びと記号はそのまま） */
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard:has(> .fx.fit5) :is(img.art, div.art) { display:none; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard:has(> .fx.fit5) > .fx { grid-column:1 / 4; max-width:100%; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit5 :is(.fxt, .fxtier, .fxcond) { gap:0; column-gap:0; }
+  .tgrid:has(> .tcard:nth-child(15)) > .tcard:has(> .fx.fit5) > .owners { bottom:auto; top:4px; right:36px; } /* 行が右端まで来るので、取った人の丸は見出しの行（強弱の札の左）へ */
+  .col.shared svg.ic.lincount { color:#6fcf8f; } .col.shared svg.ic.lvfour { color:#e0b84a; } /* O-102：T51 の記号の盤での色（系統の数＝器官・系統と同じ緑・Lv4＝Lv6・★の段と同じ金。盤では色の指定が無く暗く沈んでいた） */
+
   /* 25. 神託（O-100・O-101）：恩寵の場所に「神託／恩寵」の切り替え（ui.js の oracleToggle・状態は一覧と共通）。
      切り替えは見出しの字のすぐ右・指で押せる高さ（--otg＝画面の上で 32px 前後になるよう盤の倍率 --bz で割る）。神託の面（.sgroup.oraface）＝たたんだ恩寵と同じ点線の枠を 1 段高くし、見出しの行の下に R1〜R4 の札を横に 4 枚（今のラウンド＝金の縁・済んだラウンド＝薄く）。
      恩寵の面でも切り替えがあるときは、見出しの行を切り替えの高さに合わせ、恩寵の枠を下へずらして重ならないようにする。神託を入れない卓は切り替えが無い＝今のまま */
@@ -437,6 +444,20 @@ html[data-board] #app .grid {
   html[data-grace="open"] & .panel.excl .sgroup:has(> .slot.locked):has(.oratog) > .glabel { height:calc(122px + var(--otg)); padding-top:4px; line-height:var(--otg); }
   html[data-grace="open"] & .panel.excl .sgroup:has(> .slot.locked):has(.oratog) > .slot.locked, .panel.excl .sgroup:has(> .glabel .oratog):not(:has(> .slot.locked)) > .slot { top:calc(60px + var(--otg)); }
   .panel.excl .sgroup:has(> .glabel .oratog):not(:has(> .slot.locked)):not(.oraface) > .glabel { line-height:var(--otg); }
+
+  /* O-102：記号になった神託の札（.orc.orfx）＝左に R の番号（上）と［このラウンドの間］（下）を縦に積み、右に 1 行目＝行動・するたび、2 行目＝得る物。札を広げるため神託の面の枠は恩寵の欄より左右に広い */
+  .panel.excl .sgroup.oraface:has(.orc.orfx) > .glabel { left:8px; width:528px; }
+  .panel.excl .sgroup.oraface > .oracle:has(> .orc.orfx) { left:18px; width:508px; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx { padding:4px 4px 4px 30px; justify-content:center; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx > b { top:6px; margin:0; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx :is(.fx, .fxl) { display:block; position:static; margin:0; padding:0; background:none; border:0; min-width:0; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx .fxw { position:absolute; left:5px; bottom:6px; width:20px; height:20px; margin:0; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx .fxw svg.ic { width:13px; height:13px; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx .fxt { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px 1px; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx .fxt::after { content:''; flex-basis:100%; height:0; order:1; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx .fxt > .pc.gain { order:2; font-size:12px; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx .fxcond { display:inline-flex; align-items:center; gap:1px; }
+  .panel.excl .sgroup.oraface > .oracle > .orc.orfx svg.ic { width:16px; height:16px; }
 
   /* 7. 盤の下：個人ボード・他の人・ログを横に並べる */
   .col.me { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:start; }
