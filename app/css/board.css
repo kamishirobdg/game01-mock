@@ -186,8 +186,8 @@ html[data-board] #app .grid {
   /* 系統の見出し：名前だけ（O-66・役割はカードの記号で分かる） */
   .ogrid.ofield > .ocard[data-slot$="3"]::before { content:var(--ln, ''); position:absolute; left:-2px; right:-2px; top:-29px; height:22px; line-height:21px; box-sizing:border-box; border-radius:11px; font-size:12px; font-weight:700; letter-spacing:1px; color:#fff; text-align:center; white-space:nowrap;
     background:color-mix(in srgb, var(--lin) 30%, #000); border:1px solid color-mix(in srgb, var(--lin) 70%, #000); }
-  .ocard[data-slot^="OC_Mg"] { --ln:'代謝'; } .ocard[data-slot^="OC_Pu"] { --ln:'脈動'; } .ocard[data-slot^="OC_Fk"] { --ln:'孵化'; } .ocard[data-slot^="OC_Nv"] { --ln:'神経'; } .ocard[data-slot^="OC_Hc"] { --ln:'群心'; }
-  .ocard[data-slot^="OC_Tl"] { --ln:'転写'; } .ocard[data-slot^="OC_Li"] { --ln:'連結'; } .ocard[data-slot^="OC_Lm"] { --ln:'発光'; } .ocard[data-slot^="OC_Pr"] { --ln:'推進'; } .ocard[data-slot^="OC_Sv"] { --ln:'貯蔵'; } .ocard[data-slot^="OC_Di"] { --ln:'消化'; } .ocard[data-slot^="OC_Yr"] { --ln:'年輪'; } .ocard[data-slot^="OC_Ad"] { --ln:'吸着'; }
+  .ocard[data-slot^="OC_Mg"] { --ln:'呼吸'; } .ocard[data-slot^="OC_Pu"] { --ln:'脈動'; } .ocard[data-slot^="OC_Fk"] { --ln:'孵化'; } .ocard[data-slot^="OC_Nv"] { --ln:'神経'; } .ocard[data-slot^="OC_Hc"] { --ln:'群心'; }
+  .ocard[data-slot^="OC_Tl"] { --ln:'転写'; } .ocard[data-slot^="OC_Li"] { --ln:'連結'; } .ocard[data-slot^="OC_Lm"] { --ln:'発光'; } .ocard[data-slot^="OC_Pr"] { --ln:'遊泳'; } .ocard[data-slot^="OC_Sv"] { --ln:'貯蔵'; } .ocard[data-slot^="OC_Di"] { --ln:'消化'; } .ocard[data-slot^="OC_Yr"] { --ln:'年輪'; } .ocard[data-slot^="OC_Ad"] { --ln:'寄生'; }
   /* 特殊器官 */
   .panel.ofieldp > .owned { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0 0; }
   .panel.ofieldp > .owned > b { flex:0 0 100%; font-size:12px; font-weight:600; letter-spacing:1px; color:#c9a24a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -240,7 +240,7 @@ html[data-board] #app .grid {
   .tgrid > .tcard > .owners { bottom:4px; gap:3px; }
   .tgrid > .tcard > .owners .mk { width:12px; height:12px; line-height:12px; }
 
-  /* 8. 進化トラックの記号の大きさ（2026-11-18・拡大〔zoom〕をやめて大きさを直に決める＝星海開拓の段のはみ出しを直す）。1 行だけの段は大きく */
+  /* 8. 進化トラックの記号の大きさ（2026-11-18・拡大〔zoom〕をやめて大きさを直に決める＝星海の段のはみ出しを直す）。1 行だけの段は大きく */
   .lane :is(.node-rew, .fxstack) .fxl, .lane :is(.node-rew, .fxstack) .fxl .pc { font-size:14px; }
   .lane :is(.node-rew, .fxstack) .fxl .pc { padding:0 4px 0 2px; }
   .lane :is(.node-rew, .fxstack) .fxw { width:18px; height:18px; font-size:13px; } .lane :is(.node-rew, .fxstack) .fxw.w-perm { font-size:15px; } .lane :is(.node-rew, .fxstack) .fxw svg.wi { width:13px; height:12px; }
@@ -411,12 +411,12 @@ html[data-board] #app .grid {
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit2 .fxl .pc.ptag { padding-right:3px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit2 .pc .dn { margin-right:-1px; }
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit2 .fxl, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit2 .fxl .pc { font-size:9.500px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit2 :is(.pc, .fxper, .fxact) svg.ic, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit2 .fxt > svg.ic { width:10px; height:10px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit2 .fxw { width:10px; height:10px; font-size:8.500px; }
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit3 { max-width:100%; gap:2px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit3 :is(.fxl, .fxt) { column-gap:0; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit3 .fxl .pc.ptag { padding:1px 2px 1px 1px; }
-  /* O-100：四相（強）など fit3 でもはみ出す行は fit4（強の行も弱の行と同じ大きさまで・弱の行はもう一回り小さく・語の札の余白も詰める） */
+  /* O-100：多様（強）など fit3 でもはみ出す行は fit4（強の行も弱の行と同じ大きさまで・弱の行はもう一回り小さく・語の札の余白も詰める） */
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit4 .fxl, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit4 .fxl .pc { font-size:9.500px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit4 :is(.pc, .fxper, .fxact) svg.ic, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit4 .fxt > svg.ic { width:10px; height:10px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit4 .fxw { width:10px; height:10px; font-size:8.500px; }
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit4 .fxl, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit4 .fxl .pc { font-size:8.500px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit4 :is(.pc, .fxper, .fxact) svg.ic, .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx ~ .fx.fit4 .fxt > svg.ic { width:9px; height:9px; }
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit4 :is(.fxword, .pbad) { padding:0 1px; letter-spacing:-.5px; } .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit4 .fxl .pc { padding:1px 1px 1px 0; }
 
-  /* O-102：fit4 でもはみ出す行（四相の 4 段）は fit5＝分類の紋を隠し、強・弱の 2 行とも板の左端から使う（並びと記号はそのまま） */
+  /* O-102：fit4 でもはみ出す行（多様の 4 段）は fit5＝分類の紋を隠し、強・弱の 2 行とも板の左端から使う（並びと記号はそのまま） */
   .tgrid:has(> .tcard:nth-child(15)) > .tcard:has(> .fx.fit5) :is(img.art, div.art) { display:none; }
   .tgrid:has(> .tcard:nth-child(15)) > .tcard:has(> .fx.fit5) > .fx { grid-column:1 / 4; max-width:100%; }
   .tgrid:has(> .tcard:nth-child(15)) > .tcard > .fx.fit5 :is(.fxt, .fxtier, .fxcond) { gap:0; column-gap:0; }

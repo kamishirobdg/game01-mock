@@ -39,8 +39,8 @@
     rows.filter(over).forEach(function (f) { f.classList.add('fit1'); });
     rows.filter(function (f) { return f.classList.contains('fit1') && over(f); }).forEach(function (f) { f.classList.add('fit2'); });
     rows.filter(function (f) { return f.classList.contains('fit2') && over(f); }).forEach(function (f) { f.classList.add('fit3'); });
-    rows.filter(function (f) { return f.classList.contains('fit3') && over(f); }).forEach(function (f) { f.classList.add('fit4'); }); // O-100：四相（強）
-    rows.filter(function (f) { return f.classList.contains('fit4') && over(f); }).forEach(function (f) { f.classList.add('fit5'); }); // O-102：四相の 4 段（分類の紋を隠して左端から）
+    rows.filter(function (f) { return f.classList.contains('fit3') && over(f); }).forEach(function (f) { f.classList.add('fit4'); }); // O-100：多様（強）
+    rows.filter(function (f) { return f.classList.contains('fit4') && over(f); }).forEach(function (f) { f.classList.add('fit5'); }); // O-102：多様の 4 段（分類の紋を隠して左端から）
   }
   // O-100：神託の札（ui.js の renderOracle・O-101 から恩寵の場所）は「R1：文」の形。盤ではラウンドの番号を丸にして札の左に置くので、文の頭の「：」だけ外す（字の中身はそのまま）
   function trimOracle() { if (!on) return; [].forEach.call(document.querySelectorAll('.panel.excl .sgroup.oraface > .oracle > .orc > b'), function (b) { var t = b.nextSibling; if (t && t.nodeType === 3 && t.data.charAt(0) === '：') t.data = t.data.slice(1); }); }

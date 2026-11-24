@@ -306,7 +306,7 @@ button.slot.na { opacity:.6; }
 .slot.trial.past { opacity:.45; background:#f3f3f3; }
 .slot.trial .tw { display:inline-flex; gap:2px; margin-top:3px; }
 [data-theme="dark"] .slot.trial.past { background:#262b35; }
-/* T25（O-23）星海開拓：5 段を横に並べる（次の段だけ打てる・★＝先駆の段） */
+/* T25（O-23）星海：5 段を横に並べる（次の段だけ打てる・★＝先駆の段） */
 .starrow { display:flex; flex-wrap:wrap; gap:4px; }
 .slot.starstep { width:auto; min-width:0; flex:1 1 96px; display:flex; flex-direction:column; align-items:flex-start; gap:1px; }
 .slot.starstep.now { border:2px solid #2f7fb8; }
@@ -314,7 +314,7 @@ button.slot.na { opacity:.6; }
 .slot.starstep .first { color:#7a5cc4; }
 .slot.starstep .tw { display:inline-flex; gap:2px; margin-top:3px; }
 [data-theme="dark"] .slot.starstep.past { background:#262b35; }
-.lane-star .lane-lbl { background:#6a4fb3; } .lane-star .starrow { flex-wrap:nowrap; } .lane-star .slot.starstep { margin:0; } /* v3.114：星海開拓＝進化トラックの 5 段目 */
+.lane-star .lane-lbl { background:#6a4fb3; } .lane-star .starrow { flex-wrap:nowrap; } .lane-star .slot.starstep { margin:0; } /* v3.114：星海＝進化トラックの 5 段目 */
 
 /* ---- O-48（2026-11-17）画面の整列：群の見出しは独立した行・枠は 4 列の格子・枠の中の 3 行（名前／効果／結果）の位置をそろえる ---- */
 .sgroup { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); grid-auto-rows:auto; gap:6px; align-items:stretch; margin-bottom:10px; }
@@ -331,9 +331,9 @@ button.slot.na { opacity:.6; }
 /* 祭壇の 5 口：折り返さず 1 行に 5 等分 */
 .pbrow.altars { display:grid; grid-template-columns:auto repeat(5, minmax(0, 1fr)); gap:6px; align-items:stretch; }
 .pbrow.altars > .slot.altar { width:auto; min-width:0; flex:none; box-sizing:border-box; }
-/* 星海開拓のマス：ほかの 4 本と同じ列幅 */
+/* 星海のマス：ほかの 4 本と同じ列幅 */
 .lane .starrow > .slot { width:auto; min-width:0; flex:1; box-sizing:border-box; margin:0; }
-/* O-50：中身の最小幅で本体が伸びて列がずれないように。星海開拓も隙間・横の余白と枠線をほかの 4 本と同じに */
+/* O-50：中身の最小幅で本体が伸びて列がずれないように。星海も隙間・横の余白と枠線をほかの 4 本と同じに */
 .lane-body { min-width:0; } .lane-star .starrow { gap:2px; }
 .lane .fxact { flex-wrap:wrap; justify-content:center; } .lane .fxl .pbad { white-space:normal; } /* 「手番なし」の札は記号の下に・「弱は無料」などの札は折り返してよい（マスの外に出さない） */
 @media (min-width: 601px) { .lane .fxl:has(.pc[title^="全種"]) { flex-wrap:wrap; } .lane .fxl:has(.pc[title^="全種"]) > .fxt { flex-basis:100%; } } /* PC の 2 列表示ではマスが細い：全種（3 つの記号＋数）は次の行へ */ .lane .starrow > .slot.starstep { padding-left:5px; padding-right:5px; border-left:1px solid transparent; border-right:1px solid transparent; }
