@@ -1543,7 +1543,7 @@
 
   // ---------- 公開API ----------
   const BONUS_OK = { track: 1, breed: 1, organ: 1, scan: 1, convert: 1, reserve: 1, card: 1, stAct: 1, crystal: 1, premium: 1, lCrystal: 1, coopCrystal: 1 };
-  function apply(st, action) {
+  function apply(st, action, noSnap) { // noSnap＝巻き戻し用の複製を作らない（O-113・試しの適用 tryApply 専用＝例外のとき状態ごと捨てるので要らない）
     if (st.ended) throw new Error('ゲームは終了しています');
     const pid = action.pid; assertTurn(st, pid); const p = P(st, pid);
     const pd = p.pending[0]; let viaBonus = false;
@@ -1553,9 +1553,7 @@
     }
     // 例外時の巻き戻し用スナップショット（log/history/roundStart は複製しない）
     const lg = st.log, hist = st.history, rs = st.roundStart, logLen = lg.length;
-    st.log = []; st.history = []; st.roundStart = null;
-    const snap = clone(st);
-    st.log = lg; st.history = hist; st.roundStart = rs;
+    let snap = null; if (!noSnap) { st.log = []; st.history = []; st.roundStart = null; snap = clone(st); st.log = lg; st.history = hist; st.roundStart = rs; }
     try {
       const wasPre = action.type === 'resolve' && !!(pd && pd.pre); // 手番前の保留（収入時）の解決か
       const consumed = ACTIONS[action.type](st, p, action);
@@ -1566,7 +1564,7 @@
       if ((consumed !== false || action.type === 'resolve' || viaBonus) && !wasPre) advanceTurn(st); // 追加アクション（知性Lv4↗）を実行したら手番は次へ（本体のアクションで既にトークンを消費している）。手番前の保留の解決後はそのまま本人の手番（v3.63）
       else if (!p.pending.length && p.left.W + p.left.AT === 0) advanceTurn(st);
       return st;
-    } catch (e) { Object.assign(st, snap, { log: lg, history: hist, roundStart: rs }); lg.length = logLen; throw e; }
+    } catch (e) { if (snap) { Object.assign(st, snap, { log: lg, history: hist, roundStart: rs }); lg.length = logLen; } throw e; }
   }
   function stripHistory(st) { const h = st.history; st.history = []; const c = clone(st); st.history = h; return c; }
   function undo() { throw new Error('アンドゥはエントリ列（rebuild）で行います'); }
@@ -1615,7 +1613,29 @@
     st.pendingUndo = pendingUndo; st.rejected = rejected; st.effective = eff.length; st.undoInfo = undoInfo; // undoInfo＝直近に成立したアンドゥ（巻き込まれた手の通知用）
     return st;
   }
-  function tryApply(st, action) { const lg = st.log, hist = st.history; st.log = []; st.history = []; const s = clone(st); st.log = lg; st.history = hist; apply(s, action); return s; }
+  // 試しの適用：複製の上で apply して結果の状態を返す（元の st は変えない）。O-113：複製は 1 回だけ（apply の巻き戻し用の複製は作らない）・ラウンドの表 hist は複製せず配列だけ写す（hist の行は足すだけで書き換えないので共有してよい）
+  function tryApply(st, action) { const lg = st.log, hist = st.history, hh = st.hist; st.log = []; st.history = []; if (hh) st.hist = []; let s; try { s = clone(st); } finally { st.log = lg; st.history = hist; if (hh) st.hist = hh; } if (hh) s.hist = hh.slice(); apply(s, action, true); return s; }
+  // O-113：AI の候補の下ごしらえ。true＝apply すれば必ず例外になる手（状態を複製する前にはじく）／false＝分からない（今までどおり tryApply で確かめる）。
+  // 入れる確かめは「その手の処理で必ず通る支払い・枠の確かめ」で、そこまでに資源・値段が変わらないものだけ。opt.keepE＝E 不足の手を残す（gToE の複合候補が例外の文を見るため）
+  function surelyIllegal(st, a, opt) {
+    if (st.ended || st.phase !== 'play' || cur(st).id !== a.pid) return true;
+    const p = P(st, a.pid); if (!p || p.pending.length) return false; // 保留があると追加アクション扱いで値段が変わることがある＝確かめない
+    const R = RS(p), L = (a.useL | 0) > 0 && !!R.noLSub; // 代用払いの廃止：payE／payG は useL>0 で必ず例外
+    if (a.type === 'organ') return L; // doOrgan は必ず payE(…, a.useL) を通る
+    if (a.type === 'trait') { // ACTIONS.trait：プール → 枠（claimTraitSlot）→ 手番 → payG（G は途中で変わらない）
+      if (!G.TRAITS[a.trait]) return false; if (!traitPool(st).includes(a.trait)) return true; if (L) return true;
+      if (a.viaDG || a.viaReward) return false;
+      if (R.traitShared && a.slot === 'TRT2') return true;
+      return !(a.useL | 0) && p.G < traitCost(st, p, a.trait, 0, a.weak).G; }
+    if (a.type === 'track' && a.track !== 'star' && G.TRACKS.includes(a.track)) { // ACTIONS.track（星海は別）
+      const c = stepCost(p, a.track, a.bonus); if (c === null) return true;
+      if (a.steps === 2 || a.steps === 3) return L;
+      if (p.lv[a.track] === 5) { const d = lv6PayDef(p, a.track); if (d) return L && !!(d.G || d.E); }
+      if (a.pay === 'P' || a.pay === 'G') return false;
+      if (L) return true;
+      return !(opt && opt.keepE) && !(a.useL | 0) && p.E < c; }
+    return false;
+  }
 
   // ---------- 得点 ----------
   function virtualGems(st, p) {
@@ -1784,5 +1804,5 @@
   }
   function summaryRow(st, p) { return { round: st.round, name: p.name, E: p.E, G: p.G, P: p.P, L: p.L, lv: G.TRACKS.map(t => p.lv[t]).join('/'), gems: realGems(p), vg: virtualGems(st, p), coef: RS(st).coef2 ? `${coefB(p)}/${coefC(p)}` : coef(p), traits: p.traits.length, organs: p.organs.length, coop: p.coop, score: score(st, p).total }; }
 
-  Object.assign(G, { coopCost, oracleCard, nnLins, nySteps, ngCost, dvPerm, can3, multiTop, multiPlan, altarHalfCost, breedHalfCost, breedTribCost, breedTribJp, breedTribMax, breedTribP, noLateTxt, starOn, starLvText, starTop, starJumpLv, starJumpCost, starJumpOpts, starCardName, starCost, starCostText, starGem, starFirstDef, starFirstGem, starIsFirst, starProsOk, starPlan, prosRoom, breedLeft, lateFee, STAR_MAX, trialKey, trialCost, trialGem, trialDone, trialCount, altarCount, altarCost, altarNextVg, altarAdj, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, traitPoolView, traitSortView, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, pbBase, pbAdd, mmMax, mmGainOf, flippable, mutOpts, massRet, mmForm, retForm, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
+  Object.assign(G, { coopCost, oracleCard, nnLins, nySteps, ngCost, dvPerm, can3, multiTop, multiPlan, altarHalfCost, breedHalfCost, breedTribCost, breedTribJp, breedTribMax, breedTribP, noLateTxt, starOn, starLvText, starTop, starJumpLv, starJumpCost, starJumpOpts, starCardName, starCost, starCostText, starGem, starFirstDef, starFirstGem, starIsFirst, starProsOk, starPlan, prosRoom, breedLeft, lateFee, STAR_MAX, trialKey, trialCost, trialGem, trialDone, trialCount, altarCount, altarCost, altarNextVg, altarAdj, ALTAR_KEYS, ALTAR_JP, advanceTrack, gateCount, traitCountC, traitCountI, intelCnt6, slotAmt, incomeNow, lineageCount, cxDisc, restoreE, ampE, lineageDone, altFuelP, traitText, stepCostDouble, stepCostTriple, tribVg, tribReal, tribOutText, nrTwoLeft, breedMaxN, tribLimitText, ampOk, ampTargetText, tribOpenRound: (st) => (RS(st).tribute || {}).openRound || 6, tribSlots, sc, txt, coefB, coefC, mimicOptions, gSlotCost, traitPool, traitPoolView, traitSortView, baseTraitCost, armTraitOptions, speciesInfo, handSize, slotText, slotTip, previewGain, gainText, trackRewardText, gateLabel, gateShort, gateNote, applyEntry, rebuild, tryApply, surelyIllegal, flSwapMax, reachedMilestones, newGame, chooseSpecies, chooseStartTrait, draftCards, finishSetup, apply, undo, undoRound, score, realGems, coef, virtualGems, stepCost, lv6CostText, lv6Preview, lv6PayDef, organCost, traitCost, massCost, breedCost, gemsetPrice, pbCost, pbGain, pbBase, pbAdd, mmMax, mmGainOf, flippable, mutOpts, massRet, mmForm, retForm, scanCandidates, income, availability, slotUsedBy, bypassable, coopBypassable, gateReq, autoLv, summaryRow, comboNames, organ, trait, lineageCount, cur, P, clone });
 })((typeof window !== 'undefined' ? window : globalThis).G1 = (typeof window !== 'undefined' ? window : globalThis).G1 || {});

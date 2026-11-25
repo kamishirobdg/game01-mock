@@ -255,6 +255,8 @@
     lvs.forEach(lv => { if (room <= 0 || !G.starProsOk(st, p, lv)) return; const keep = (G.starFirstDef(st, lv).pros || 0); if (proj + keep > 5 * (G.coefB(p) + (out.length))) { out.push(lv); room -= 1; } });
     return out.length ? out : undefined;
   }
+  // O-113：AI が試す候補＝全部の候補から「必ず例外になる手」を複製の前にはじいたもの（選ぶ手と得点は変わらない）。G.Bot.candidates は全部の候補のまま
+  function cands(st, p) { const keepE = !!RSo(st).gToE; return candidates(st, p).filter(a => !G.surelyIllegal(st, a, { keepE })); }
   function candidates(st, p) {
     const pid = p.id, A = (x) => Object.assign({ pid }, x); const out = [];
     const used = (s) => G.slotUsedBy(st, s) !== undefined;
@@ -325,7 +327,7 @@
     const isFree = (a) => a.shield || a.type === 'gToE' || a.type === 'freeConv';
     const base = evaluate(st, p, w);
     let best = null, bv = -Infinity, bestFree = null, bfv = base + 0.2, ties = 0; // ties：最良値と同点の候補数（検証用 G.TIES）
-    for (const a of candidates(st, p)) {
+    for (const a of cands(st, p)) {
       let s2; try { s2 = G.tryApply(st, a); } catch (e) {
         // E不足で打てない手は、G→E変換（無料）を挟めば打てるか試す＝複合候補。成立すれば先に変換を返す
         if (R.gToE && a.type !== 'gToE' && p.G >= R.gToE[0] && /エネルギーが足りません/.test(e.message)) {
@@ -346,8 +348,8 @@
       const SETUP = (a) => a.type === 'res' || a.type === 'convert' || a.type === 'gToE' || a.type === 'card' || a.type === 'scan' || (a.type === 'tributeSlot' && a.res);
       const SCORE = (a) => ['breed', 'tribute', 'tributeAll', 'tributeSlot', 'track', 'mass', 'trait', 'organ', 'burst', 'gemset', 'altar', 'trial', 'lCrystal', 'coopCrystal', 'express', 'premium', 'crystal'].includes(a.type);
       let b2 = null, b2v = base + 1e-9;
-      for (const a1 of candidates(st, p).filter(SETUP)) { let s1; try { s1 = G.tryApply(st, a1); } catch (e) { continue; }
-        const p1 = s1.players[pid]; for (const a2 of candidates(s1, p1).filter(SCORE)) { let s2; try { s2 = G.tryApply(s1, a2); } catch (e) { continue; } const v = evaluate(s2, s2.players[pid], w); if (v > b2v) { b2v = v; b2 = a1; } } }
+      for (const a1 of cands(st, p).filter(SETUP)) { let s1; try { s1 = G.tryApply(st, a1); } catch (e) { continue; }
+        const p1 = s1.players[pid]; for (const a2 of cands(s1, p1).filter(SCORE)) { let s2; try { s2 = G.tryApply(s1, a2); } catch (e) { continue; } const v = evaluate(s2, s2.players[pid], w); if (v > b2v) { b2v = v; b2 = a1; } } }
       if (b2) return bestFree || b2;
     }
     return bestFree || best;
@@ -412,7 +414,7 @@
     const K = BEAM.k, depth = BEAM.depth; inSearch = true;
     try {
       let frontier = [];
-      for (const a of candidates(st, p0)) { let s2; try { s2 = G.tryApply(st, a); } catch (e) { continue; } s2 = settle(s2, pid); frontier.push({ first: a, st: s2, v: evaluate(s2, s2.players[pid], w) + (plan && plan.denyPid !== undefined ? denyBonus(st, a, st.players[plan.denyPid]) * (W.deny || 0) : 0), done: false }); }
+      for (const a of cands(st, p0)) { let s2; try { s2 = G.tryApply(st, a); } catch (e) { continue; } s2 = settle(s2, pid); frontier.push({ first: a, st: s2, v: evaluate(s2, s2.players[pid], w) + (plan && plan.denyPid !== undefined ? denyBonus(st, a, st.players[plan.denyPid]) * (W.deny || 0) : 0), done: false }); }
       if (!frontier.length) return null;
       frontier.sort((x, y) => y.v - x.v); frontier = frontier.slice(0, K);
       for (let d = 2; d <= depth; d++) {
@@ -422,7 +424,7 @@
           const s1 = simOthers(node.st, pid);
           if (s1.ended || s1.round !== st.round || G.cur(s1).id !== pid) { next.push({ first: node.first, st: s1, v: evaluate(s1, s1.players[pid], w), done: true }); continue; }
           const p1 = s1.players[pid]; let any = false;
-          for (const a of candidates(s1, p1)) { let s2; try { s2 = G.tryApply(s1, a); } catch (e) { continue; } any = true; s2 = settle(s2, pid); next.push({ first: node.first, st: s2, v: evaluate(s2, s2.players[pid], w), done: false }); }
+          for (const a of cands(s1, p1)) { let s2; try { s2 = G.tryApply(s1, a); } catch (e) { continue; } any = true; s2 = settle(s2, pid); next.push({ first: node.first, st: s2, v: evaluate(s2, s2.players[pid], w), done: false }); }
           if (!any) next.push({ first: node.first, st: s1, v: evaluate(s1, s1.players[pid], w), done: true });
         }
         next.sort((x, y) => y.v - x.v); frontier = next.slice(0, K);
