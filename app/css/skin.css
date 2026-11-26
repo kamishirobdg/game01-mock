@@ -399,3 +399,12 @@ html[data-skin] .tcard[data-slot^="TC_J"] { --lin:#a070e8; } html[data-skin] .tc
 @media (max-width: 1099px) { #app .rtrack { display:none !important; } } /* 携帯幅・狭い画面はヘッダの「ラウンド n/5」だけ（上に貼りつくので見失わない） */
 @media (max-width: 600px) { #hdr > .turnbar { min-width:0; max-width:100%; box-sizing:border-box; } #hdr > .turnbar .since { max-height:54px; } #hdr > .turnbar .since .sv { white-space:normal; align-items:flex-start; } } /* 携帯幅：長いログの 1 行が画面幅を押し広げないよう折り返す */
 #app .panel.excl > .coresp { display:none; } /* O-82：中央の種族は盤の画面だけ（board.css） */
+/* O-134（2026-11-26・ユーザー）：進化トラック 5 本で、この端末で見ている人（オンライン＝自分の席／1 台の卓＝手番の人・AI の手番の間は人の席）のいる段を枠ごと強調（ui.js が .here を付ける）。
+   太い実線の枠＋薄い地。★の段の金の縁（細い線）は枠の内側に残す・次に進める段（点線）とも太さと線の形で分かれる。位置のコマはそのまま */
+:root { --here:#1f2430; --here-bg:rgba(31,36,48,.09); }
+[data-theme="dark"] { --here:#f4f7fb; --here-bg:rgba(255,255,255,.11); }
+.lane .lane-body > :is(.node, .slot.starstep).here { box-shadow:inset 0 0 0 3px var(--here), inset 0 0 0 999px var(--here-bg) !important; }
+.lane .lane-body > :is(.node.star, .slot.starstep.star).here { box-shadow:inset 0 0 0 3px var(--here), inset 0 0 0 5px var(--sk-gold, #d4a017), inset 0 0 0 999px var(--here-bg) !important; }
+.lane .lane-body > :is(.node, .slot.starstep).here > :is(.node-lv, .pname) { text-decoration:underline 2px; text-underline-offset:3px; }
+html[data-skin="a"] .lane .lane-body > :is(.node, .slot.starstep).here { --sk-e:var(--here); } /* 角を落とした切り口の線も枠の色に */
+.lane .lane-body > .slot.starstep.here { opacity:1; } /* 星海の済んだ段は薄くなるが、いる段は薄くしない */

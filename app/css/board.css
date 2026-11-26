@@ -486,6 +486,8 @@ html[data-board] #app .grid {
 #hdr .hres > .hresp.peek { order:1; flex-basis:100%; }
 @media (min-width: 1100px) { :root #hdr:has(> .turnbar) > .hres:has(> .hresp.peek) { flex-wrap:wrap; } }
 
+/* 14c. O-134（2026-11-26・ユーザー）：盤の進化トラックで見ている人のいる段を枠ごと強調（skin.css の O-134 と同じ印・盤は暗い地なので白）。★の段の金の内枠・Lv6 の金の枠・次に進める段の点線は内側に残る */
+html[data-board] #app .lane .lane-body > :is(.node, .slot.starstep).here { --here:#ffffff; --here-bg:rgba(255,255,255,.12); border-radius:14px; box-shadow:inset 0 0 0 3px var(--here), inset 0 0 0 999px var(--here-bg) !important; }
 /* ICO:BEGIN（tools/board_icons.js が書く・手で直さない） */
 html[data-board] #app .grid .col.shared { --ico-cull:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1.2 1.8 H14.8 L10.3 8.4 H5.7Z' fill='%23000'/%3E%3Ccircle cx='8' cy='10.9' r='1.25' fill='%23000'/%3E%3Ccircle cx='5.7' cy='14' r='1.1' fill='%23000'/%3E%3Ccircle cx='10.3' cy='14' r='1.1' fill='%23000'/%3E%3C/svg%3E"); --ico-herd:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='1' width='14' height='14' rx='3' stroke='%23000' stroke-width='1.6' fill='none'/%3E%3Cpath d='M8 5.3 L5.2 10.4 H10.8Z' stroke='%23000' stroke-width='1' fill='none'/%3E%3Ccircle cx='8' cy='5.3' r='1.9' fill='%23000'/%3E%3Ccircle cx='5.2' cy='10.4' r='1.9' fill='%23000'/%3E%3Ccircle cx='10.8' cy='10.4' r='1.9' fill='%23000'/%3E%3C/svg%3E"); }
 /* ICO:END */
