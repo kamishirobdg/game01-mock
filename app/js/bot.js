@@ -411,7 +411,18 @@
   // BEAM.depth＝自分の手数（1＝従来の 1 手読み）、BEAM.k＝各段で残す候補数。観測用 `--depth=3 --beam=3`。画面の AI は depth 1 のまま
   const BEAM = { depth: 1, k: 3 }; let inSearch = false;
   function settle(s, pid) { let g = 0; while (!s.ended && G.cur(s).id === pid && s.players[pid].pending[0] && g++ < 8) { const a = pending(s, s.players[pid]); if (!a) break; try { s = G.tryApply(s, a); } catch (e) { break; } } return s; }
-  function simOthers(s, pid) { const r0 = s.round; let g = 0; while (!s.ended && s.round === r0 && G.cur(s).id !== pid && g++ < 60) { const q = G.cur(s).id; const a = choose(s, q, 'greedy'); if (!a) break; try { s = G.tryApply(s, a); } catch (e) { break; } } return s; }
+  // O-115④：相手の代打ち（greedy）の結果を局面ごとに覚えて使い回す。鍵＝局面の中身すべて（ログと履歴を除く）＋席。重み（W・BIAS）が変わったら捨てる。打つ手は覚えなかったときと同じ（G.Bot.lastPlan も同じに戻す）
+  const SIMC = new Map(); let simW = ''; G.SIMSTAT = G.SIMSTAT || null;
+  function stateKey(s) { let k = ''; for (const f in s) { if (f === 'log' || f === 'history') continue; const v = s[f]; if (v === undefined || typeof v === 'function') continue; k += f + ':' + JSON.stringify(v) + ';'; } return k; }
+  function greedyMemo(s, q) {
+    if (G.TIES) return choose(s, q, 'greedy');
+    const wk = JSON.stringify(W) + JSON.stringify(BIAS); if (wk !== simW) { SIMC.clear(); simW = wk; }
+    const key = q + '|' + stateKey(s); const hit = SIMC.get(key); if (G.SIMSTAT) G.SIMSTAT[hit ? 'hit' : 'miss']++;
+    if (hit) { if (hit.plan) G.Bot.lastPlan = hit.plan; return hit.a === null ? null : JSON.parse(hit.a); }
+    const lp = G.Bot.lastPlan; const a = choose(s, q, 'greedy'); const np = G.Bot.lastPlan !== lp ? G.Bot.lastPlan : null;
+    if (SIMC.size >= 4000) SIMC.clear(); SIMC.set(key, { a: a ? JSON.stringify(a) : null, plan: np }); return a;
+  }
+  function simOthers(s, pid) { const r0 = s.round; let g = 0; while (!s.ended && s.round === r0 && G.cur(s).id !== pid && g++ < 60) { const q = G.cur(s).id; const a = greedyMemo(s, q); if (!a) break; try { s = G.tryApply(s, a); } catch (e) { break; } } return s; }
   function chooseBeam(st, pid) {
     const p0 = st.players[pid]; const R = RSo(st);
     const plan = W.plan ? planFor(st, p0) : null; if (plan) G.Bot.lastPlan = plan;
