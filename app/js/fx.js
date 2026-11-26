@@ -172,7 +172,7 @@
     const full = `${ct}を払う` + (top ? `。着いたとき：先駆（最初に着いた 1 人）＝痕跡+${LG.first}・祝福+1。着いたとき：追随（2 人目から・全員）＝痕跡+${LG.later}（祝福なし）${SJ ? `。終了時（着いた順に関係なく Lv6 の全員）：祝福+${SJ}（神の裁定）` : ''}` : ` → 痕跡+${g}${F ? `。先駆は 痕跡+${fg}${F.pros !== undefined ? ` か 痕跡+${F.pros}・繁栄度+1` : ''}` : ''}`);
     const parts = top ? [{ lines: ['! ' + pay] }, { first: true, lines: ['! +gem' + LG.later + ' (先 ' + (LG.first - LG.later > 0 ? '+gem' + (LG.first - LG.later) + ' ' : '') + '+bless1 )'] }].concat(SJ ? [{ lines: ['旗 i:everyone +bless' + SJ] }] : []) // O-52：Lv6 は 4 本と同じ形（後着が基本・（先 …）＝先着の上乗せ）
       : [{ lines: ['! ' + pay + ' > +gem' + g] }].concat(F ? [{ label: '先駆', first: true, lines: ['! +gem' + fg + (F.pros !== undefined ? ' i:or ' + (F.pros ? '+gem' + F.pros + ' ' : '') + '+pros1' : '')] }] : []);
-    return { parts, full, top: !!top, star: !!(F || top) };
+    return { parts, full, top: !!top, star: !!F }; // O-130：★は Lv3・Lv5 だけ（Lv6 は★なし）
   }
   // 一覧（ガイドの「カードの記号一覧」・テスト）：T32 の器官・特殊器官・形質・トラックの報酬・恩寵枠
   function all(st) {
