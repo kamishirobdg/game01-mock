@@ -13,10 +13,14 @@
   };
   const SAVE_KEY = 'game01_mock_v2';
   const ART_REAL = '../illustrations/', ART_PH = '../illustrations/placeholder/';
+  const ART_MISS = new Map(); // O-126（デザイン）：絵が無かった ID を覚え（1＝本番の絵が無い・2＝仮の絵も無い）、描き直しのたびに 404 → 差し替えを待たない（その間 紋と種族の絵が一瞬消えていた）
   function art(id, cls) {
     id = (G.ART_ALIAS && G.ART_ALIAS[id]) || id;
-    const img = h('img', { class: 'art ' + (cls || ''), alt: '', loading: 'lazy', src: ART_REAL + id + '.png' });
-    img.addEventListener('error', () => { if (img.dataset.ph) { if (img.closest('.ocard, .tcard')) img.replaceWith(h('div', { class: 'art noart ' + (cls || '') })); else img.remove(); return; } /* O-48：器官・形質のカードは絵が無くても同じ枠を残し、カードの高さをそろえる */ img.dataset.ph = '1'; img.src = ART_PH + id + '.svg'; });
+    const miss = ART_MISS.get(id) || 0;
+    if (miss === 2) { const d = h('div', { class: 'art noart ' + (cls || '') }); queueMicrotask(() => { if (!d.closest('.ocard, .tcard')) d.remove(); }); return d; }
+    const img = h('img', { class: 'art ' + (cls || ''), alt: '', decoding: 'sync', src: miss ? ART_PH + id + '.svg' : ART_REAL + id + '.png' });
+    if (miss) img.dataset.ph = '1';
+    img.addEventListener('error', () => { if (img.dataset.ph) { ART_MISS.set(id, 2); if (img.closest('.ocard, .tcard')) img.replaceWith(h('div', { class: 'art noart ' + (cls || '') })); else img.remove(); return; } /* O-48：器官・形質のカードは絵が無くても同じ枠を残し、カードの高さをそろえる */ ART_MISS.set(id, 1); img.dataset.ph = '1'; img.src = ART_PH + id + '.svg'; });
     return img;
   }
   const SPECIES_ART = { wing: 'species_wing', arm: 'species_arm', ant: 'species_ant', manta: 'species_manta' };
