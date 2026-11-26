@@ -409,7 +409,7 @@
   }
   // ---------- ビーム探索（R 内・自分の手だけ深読み・相手は 1 手読み＋計画で代打ち）----------
   // BEAM.depth＝自分の手数（1＝従来の 1 手読み）、BEAM.k＝各段で残す候補数。観測用 `--depth=3 --beam=3`。画面の AI は depth 1 のまま
-  const BEAM = { depth: 1, k: 3 }; let inSearch = false;
+  const BEAM = { depth: 1, k: 3, final: false, top: 0, budget: 0 }; let inSearch = false, inRoll = false; // O-121：final＝最終ラウンドを最終得点で読む（top＝打ち切る候補を greedy の評価の上位 N 手に絞る・0＝絞らない／budget＝ミリ秒。超えたら評価の上位 12 手を読んだ所で止める・0＝止めない＝画面だけが使う）
   function settle(s, pid) { let g = 0; while (!s.ended && G.cur(s).id === pid && s.players[pid].pending[0] && g++ < 8) { const a = pending(s, s.players[pid]); if (!a) break; try { s = G.tryApply(s, a); } catch (e) { break; } } return s; }
   // O-115④：相手の代打ち（greedy）の結果を局面ごとに覚えて使い回す。鍵＝局面の中身すべて（ログと履歴を除く）＋席。重み（W・BIAS）が変わったら捨てる。打つ手は覚えなかったときと同じ（G.Bot.lastPlan も同じに戻す）
   const SIMC = new Map(); let simW = ''; G.SIMSTAT = G.SIMSTAT || null;
@@ -453,10 +453,25 @@
     const pd = pending(st, p); if (pd) return pd;
     const gate = !!RSo(st).gates;
     style = style || (gate ? ['greedy', 'greenG', 'blueG', 'redG'][pid % 4] : STYLES[pid % 4]); // 画面のAI席：ゲート型では混合greedy＋色寄せ（純ルート台本は弱すぎるため）
-    if (style === 'greedy') return (BEAM.depth > 1 && !inSearch) ? chooseBeam(st, pid) : chooseGreedy(st, pid);
+    if (style === 'greedy') { if (finalOn(st, pid)) return chooseFinal(st, pid); return (BEAM.depth > 1 && !inSearch && !inRoll) ? chooseBeam(st, pid) : chooseGreedy(st, pid); }
     if (BIAS[style]) return chooseGreedy(st, pid, BIAS[style]);
     if (GATE_STYLES.includes(style)) return chooseGate(st, pid, style);
     return chooseClassic(st, pid, style);
   }
-  G.Bot = { choose, evaluate, candidates, STYLES, GATE_STYLES, W, BIAS, BEAM, planFor, lastPlan: null, stylesFor: (st) => (RSo(st).gates ? GATE_STYLES : STYLES) }; // W/BIAS は test/observe.js の --bw= で一時上書き
+  // ---------- O-121：最終ラウンドを最終得点で読む ----------
+  // 最終ラウンドの自分の手番（保留なし）：合法手を 1 つずつ打ち、そこから最後まで全員 greedy（1 手読み）で打ち切って、自分の実際の最終得点がいちばん高い手を選ぶ。
+  // 候補は greedy の評価の高い順に並べ、同点は評価の高いほう。BEAM.top>0 なら上位 top 手だけ打ち切る。finalGen は 1 手打ち切るごとに止まる（画面が固まらないよう UI が少しずつ進める）
+  function finalOn(st, pid) { return BEAM.final && !inSearch && !inRoll && !st.ended && st.phase === 'play' && st.round >= (RSo(st).rounds || G.ROUNDS || 5) && !st.players[pid].pending[0]; }
+  function rollout(s, seat) { let g = 0; inRoll = true; try { while (!s.ended && g++ < 3000) { const q = G.cur(s).id; const a = choose(s, q, 'greedy'); if (!a) break; try { G.apply(s, a, true); } catch (e) { break; } } } finally { inRoll = false; } return G.score(s, s.players[seat]).total; }
+  function* finalGen(st, pid) {
+    const p = st.players[pid], seen = new Set(), legal = [];
+    for (const a of candidates(st, p)) { const k = JSON.stringify(a); if (seen.has(k)) continue; seen.add(k); if (G.surelyIllegal(st, a)) continue; let s2; try { s2 = G.tryApply(st, a); } catch (e) { continue; } legal.push({ a, s2, e: evaluate(s2, s2.players[pid], W) }); }
+    if (!legal.length) { const d = BEAM.depth; return d > 1 ? chooseBeam(st, pid) : chooseGreedy(st, pid); }
+    legal.sort((x, y) => y.e - x.e); if (BEAM.top > 0 && legal.length > BEAM.top) legal.length = BEAM.top;
+    let best = null, bv = -Infinity; const t0 = Date.now(), B = BEAM.budget;
+    for (let i = 0; i < legal.length; i++) { const c = legal[i]; if (B > 0 && i >= 12 && Date.now() - t0 > B) break; const v = rollout(c.s2, pid); c.s2 = null; if (v > bv) { bv = v; best = c; } yield legal.length; }
+    return best.a;
+  }
+  function chooseFinal(st, pid) { const it = finalGen(st, pid); let r = it.next(); while (!r.done) r = it.next(); return r.value; }
+  G.Bot = { choose, evaluate, candidates, finalOn, finalGen, STYLES, GATE_STYLES, W, BIAS, BEAM, planFor, lastPlan: null, stylesFor: (st) => (RSo(st).gates ? GATE_STYLES : STYLES) }; // W/BIAS は test/observe.js の --bw= で一時上書き
 })((typeof window !== 'undefined' ? window : globalThis).G1);
