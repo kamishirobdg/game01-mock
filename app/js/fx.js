@@ -169,7 +169,7 @@
     const R = R_(st), S = R.star; if (!on(st) || !S) return null; const c = withCost && st.shared && st.shared.starCards ? G.starCost(st, lv) : null;
     const pay = c ? Object.keys(c).filter(k => c[k]).map(k => '-' + k + c[k]).join(' ') : '~額'; const ct = c ? G.starCostText(c) : `額（${G.STAR_CARD_NAME}の 2 種）`;
     const top = G.starTop(st, lv), LG = R.lv6Gems || { first: 1, later: 1 }, SJ = S.top && S.top.judge, g = G.starGem(st, lv), F = G.starFirstDef(st, lv), fg = F ? G.starFirstGem(st, lv) : 0;
-    const full = `${ct}を払う` + (top ? `。先着 痕跡+${LG.first}＋祝福+1／後着 痕跡+${LG.later}${SJ ? `。終了時 祝福+${SJ}（神の裁定・Lv6 の人みな）` : ''}` : ` → 痕跡+${g}${F ? `。先駆は 痕跡+${fg}${F.pros !== undefined ? ` か 痕跡+${F.pros}・繁栄度+1` : ''}` : ''}`);
+    const full = `${ct}を払う` + (top ? `。着いたとき：先駆（最初に着いた 1 人）＝痕跡+${LG.first}・祝福+1。着いたとき：追随（2 人目から・全員）＝痕跡+${LG.later}（祝福なし）${SJ ? `。終了時（着いた順に関係なく Lv6 の全員）：祝福+${SJ}（神の裁定）` : ''}` : ` → 痕跡+${g}${F ? `。先駆は 痕跡+${fg}${F.pros !== undefined ? ` か 痕跡+${F.pros}・繁栄度+1` : ''}` : ''}`);
     const parts = top ? [{ lines: ['! ' + pay] }, { first: true, lines: ['! +gem' + LG.later + ' (先 ' + (LG.first - LG.later > 0 ? '+gem' + (LG.first - LG.later) + ' ' : '') + '+bless1 )'] }].concat(SJ ? [{ lines: ['旗 i:everyone +bless' + SJ] }] : []) // O-52：Lv6 は 4 本と同じ形（後着が基本・（先 …）＝先着の上乗せ）
       : [{ lines: ['! ' + pay + ' > +gem' + g] }].concat(F ? [{ label: '先駆', first: true, lines: ['! +gem' + fg + (F.pros !== undefined ? ' i:or ' + (F.pros ? '+gem' + F.pros + ' ' : '') + '+pros1' : '')] }] : []);
     return { parts, full, top: !!top, star: !!(F || top) };
