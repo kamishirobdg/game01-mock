@@ -33,7 +33,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 .fxmini2 { display:grid; grid-template-columns:1fr 1fr; gap:2px 8px; margin-top:4px; } .fxmini2 > div { display:flex; flex-direction:column; } .fxmini2 small { color:var(--mute); font-size:10px; line-height:1.2; margin-left:23px; }
 .fxnote { font-size:10px; color:var(--mute); margin-top:3px !important; }
 </style>
-<link rel="stylesheet" href="../app/css/fx.css?v=5.00">
+<link rel="stylesheet" href="../app/css/fx.css?v=5.01">
 </head>
 <body>
 <h1>game01 早見表 <small id="ver">数値はすべてテストプレイ用の仮値</small></h1>
@@ -46,7 +46,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 <span id="ord">③ ラウンド2以降、開始時に<b class="k">痕跡の少ない順</b>に並べ替え</span></p></div>
 
 <div class="blk"><h2><i>2</i>進化トラック（4本・Lv1〜6）</h2>
-<p><b class="k">素材が数に達すると自動で上がる</b>（E で先に上がってもよい：<span id="step"></span>・身体 <span id="bstep"></span>。<b>二段進化</b>＝2段分を合算して手番1つ・<span id="dbl">Lv5 まで。突然変異なら<b>三段進化</b></span>）</p>
+<p><b class="k">素材が数に達すると自動で上がる</b>（E で先に上がってもよい：<span id="step"></span>・身体 <span id="bstep"></span><span id="lv6e">・Lv6 は E でなく下のトラックの資源</span>。<b>二段進化</b>＝2段分を合算して手番1つ・<span id="dbl">Lv5 まで。突然変異なら<b>三段進化</b></span>）</p>
 <div class="trk" id="trk"></div>
 <p id="starli" hidden></p>
 <p><b class="k">Lv3★・Lv5★</b>で痕跡+1、<b class="k">先駆＝強い報酬</b>（Lv5★の一番乗りは痕跡+2）。<b class="k">E を払って自力で上がった段は追随でも強</b>（<span id="leapE">知的跳躍・身体覚醒も。</span>素材で自動的に上がった追随は弱）。知性 Lv4＝形質3枚ごとに祝福+1／代謝 Lv4＝特殊器官を 1 枚（達した順）。<span id="flipli" hidden><b class="k">強に裏返す</b>＝知性 Lv3★ 弱 1 枚・Lv5★ 弱 2 枚まで（裏返さない 1 枚につき G+<span id="flipg"></span>）・Lv5★ 強 <span id="flip5s">好きなだけ</span>、弱の形質を強に（群居・長命・星渡は対象外）。</span><b class="k">Lv6</b>＝<span id="lv6"></span>：先駆 痕跡+3＋祝福+1／追随 痕跡+2。終了時 Lv6 のトラックの素材3個につき祝福+1（社会は祝福+3 固定）</p></div>
@@ -54,7 +54,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 <div class="blk"><h2><i>3</i>占有盤（各枠1ラウンドに1人）</h2>
 <ul>
 <li><b>資源</b>：<span id="res"></span>（＋協調 1 つにつき +1）。空き枠で生命核1を払うと<b>獲得量3倍</b>（緊急進出・脈動核で4倍）。<span id="pbl"></span>生命核は E・G の代わりに払えない。<b>協調進出</b>＝使用済みの場所に協調3で入る（資源枠は<b>獲得量<span id="cbm">2</span>倍</b>・淘汰は生命核1でも）</li>
-<li><b>合流進出</b>（社会 Lv4・Lv5★）：得たその場で資源枠を1つ（使用済み・自己複製も可・ワーカー不要・使わなければ消える）</li>
+<li><b>合流進出</b>（社会 Lv3★ 強・Lv4・Lv5★／群心核・寄生膜・共鳴）：得たその場で資源枠を1つ（使用済み・自己複製も可・ワーカー不要・使わなければ消える）</li>
 <li><b>淘汰</b>：<span id="mass"></span></li>
 <li id="trtli"><b>形質獲得</b>（強は1枚だけ早い者勝ち・弱は何枚でも・弱にも固有の効果）</li>
 <li><b>恩寵枠</b>（R<span id="tribR"></span>〜・<span id="tribn">4</span>種から3種）：<span id="tribpool"></span></li>
@@ -75,7 +75,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 
 <div class="two">
 <div class="blk"><h2><i>5</i>資源</h2>
-<p><b>E</b> 進化・器官・祭壇・<span class="x2">試練</span>／<b>G</b> 形質・祭壇・<span class="x2">試練</span>／<b>P</b> 淘汰・繁殖・群体の枠・祭壇・<span class="x2">試練</span>／<b>L</b> 持てば P を生む。緊急進出・繁殖・祭壇・<span class="x2">試練</span>・身体 Lv6 に払う（E・G の代わりには払えない・払った個数が身体の素材）／<b>協調</b> 資源枠の取り分+協調数（上限<span id="coopmax"></span>）</p></div>
+<p><b>E</b> 進化・器官・祭壇・<span class="x2">試練</span>／<b>G</b> 形質・祭壇・<span class="x2">試練</span>／<b>P</b> 淘汰・繁殖・群体の枠・祭壇・<span class="x2">試練</span>／<b>L</b> 持てば P を生む。緊急進出・繁殖・祭壇・<span class="x2">試練</span>・身体 Lv6 に払う（E・G の代わりには払えない・払った個数が身体の素材〔祭壇の口は献身の強のときだけ〕）／<b>協調</b> 資源枠の取り分+協調数（上限<span id="coopmax"></span>）</p></div>
 <div class="blk"><h2><i>6</i>終了時</h2>
 <p>Lv6：先駆 痕跡+3＋祝福+1／追随 痕跡+2。終了時、素材3個につき祝福+1（社会は祝福+3 固定・知性は神経（神経点・神経網 1 枚・神経核 2 枚）を含み Lv4 のぶんを引かない）。<br>得点＝痕跡×繁栄度＋祝福×成熟度</p></div>
 </div>
@@ -85,10 +85,10 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
 
 <div class="foot">数値はアプリと同じ data.js／engine.js（T52・5ラウンド）から表示・2026-11-17 改訂（記号：先駆の上乗せを「(先 …)」で同じ行に・手番なしはコマに赤い斜線・形質獲得は共用盤へ／T33＝身体 Lv2 の祭壇の解放を削る・自己複製 P+25＋身体 Lv×5・自己複製にも協調進出・協調加算の記号／自己複製の枠の緊急進出の補足を削除／効果の記号の欄を追加／星海は 4 本の下の 5 段目／T32＝T31−探索・復元＋恩寵 6 種から 3 つ〔祭壇・命・繁殖の恩寵を追加・形質の恩寵を外す〕・自己複製 P40〔緊急進出の対象〕・特殊器官 E4／G3／P8・発光 祝福+2／T31＝T30＋淘汰の 2 人目〔協調 3 か生命核 1〕・Lv5★ 強の裏返し 3 枚まで・祭壇は 1 手 2 個まで〔同じ R の 2 回目以降は生命核 1〕／T30＝T29＋知性 Lv3★ 弱・Lv5★ 弱／強を「弱の形質を強に裏返す」能力に（Lv3★ 弱 1 枚・Lv5★ 弱 2 枚まで・裏返さない 1 枚につき G+9／Lv5★ 強 好きなだけ）・淘汰(代謝) E15＋身体 Lv×5／G15＋知性 Lv×5・淘汰 4 種のあと P が代謝 Lv×5 返る／T29＝T28＋祭壇 祝福 +2／+3／+4／+5／+6・星海の先駆 Lv3 痕跡 5／Lv5 6・代謝の素材 3／6／9／12（Lv3★ 強 E・G 収入 +4・Lv5★ +10／+5）・知性の素材 2／4／7／10・知的跳躍＝形質 4／3 枚として数える・身体覚醒＝生命核の投入 +3／+2・身体 Lv4 のまとめ払いの条件なし／T28＝T27＋群心網 形成時 協調+1・群体同期／融合で協調+1・星海で払った生命核を投入に数える／T27＝T26＋器官の系統「遊泳」・星渡〔着く Lv の条件の 2 種のうち 1 種を 1.5 倍払って +1 段〕・先駆を Lv3／Lv5 に／T26＝T25＋星海を Lv1〜Lv6〔Lv5／Lv6 の値上げ・Lv6 は 4 本の Lv6 と同じ先着／後着・神の裁定 祝福 +2〕・代謝 Lv6 E100・星渡／T25＝T24−試練＋星海〔進化で進める 5 本目のトラック・痕跡 +2／+3／+4／+4／+5・3／5 段目の先駆は痕跡 +1 か繁栄度 +1〕−器官の追随の代償／T24＝T23＋試練〔R1〜R5 に 1 種ずつ・いまのラウンドだけ・痕跡 +2／+2／+2／+3／+3〕／T23＝T22＋祭壇を払い口 5 つに〔各 1 ゲーム 1 回・何個目かで祝福 +2／+2／+3／+3／+4〕／T22＝T21＋生命核の代用払いなし・身体★ L＋P・脈動 P 収入／脈動核 緊急進出 4 倍・身体 Lv6 L3・最果ての痕跡の廃止／T21＝T20＋献上（遺伝子）は生命核で払えない・Lv6 知性 G84・代謝 E150／T20＝T19−収入の即時（代謝・器官とも）・★は自動進化の追随なら弱・神経 1・1・2 枚ぶん・身体 Lv6 L4／T19＝T18＋合流進出・収入は得たときにも 1 回・神経 2 枚ぶん・資源枠の強化・Lv6 のコストと得点・知性の神の裁定／T18＝T17＋緊急進出 3 倍・生命核→資源の廃止・連結・交信腔・淘汰(代謝) E20+G20・社会 Lv6 の神の裁定 祝福+3／T17＝T16＋光翼 P21・九腕 E15／T16＝T15＋器官の定価 2 段目+E3・3 段目+E6 G3・特殊器官 2 枚の強化）</div>
 
-<script src="../app/js/icons.js?v=5.00"></script>
-<script src="../app/js/data.js?v=5.00"></script>
-<script src="../app/js/engine.js?v=5.00"></script>
-<script src="../app/js/fx.js?v=5.00"></script>
+<script src="../app/js/icons.js?v=5.01"></script>
+<script src="../app/js/data.js?v=5.01"></script>
+<script src="../app/js/engine.js?v=5.01"></script>
+<script src="../app/js/fx.js?v=5.01"></script>
 <script>
 (function () {
   const G = window.G1, $ = id => document.getElementById(id), R = G.RULESETS[(G.RULES_VISIBLE || ['t15'])[0]]; // 2026-11-05 既定 t8→t10／2026-11-07 t12→t13／2026-11-08 RULES_VISIBLE の先頭（T14）
@@ -96,7 +96,7 @@ b.k { background:var(--hl); padding:0 3px; border-radius:3px; }
   const set = (id, v) => { $(id).textContent = String(v); };
   const sl = id => G.slotText(st, id); const T = R.tribute;
   set('ver', 'v' + G.VERSION + '・' + R.name + '・数値はすべて仮値'); set('tc', (R.traitCoef || [4, 8]).join('・')); set('rounds', R.rounds || G.ROUNDS); set('yield', R.lYield || 9);
-  const stepArr = R.step.slice(1), bstep = (R.bodyStep || R.step).slice(1); set('step', stepArr.join('/') + 'E'); set('bstep', bstep.join('/') + 'E');
+  const L6P = !!R.lv6Pay && (R.maxLv || 5) >= 6, stepArr = R.step.slice(1, L6P ? 5 : undefined), bstep = (R.bodyStep || R.step).slice(1, L6P ? 5 : undefined); set('step', stepArr.join('/') + 'E'); set('bstep', bstep.join('/') + 'E'); if (!L6P) $('lv6e').hidden = true; // O-127：Lv6 はトラックの資源で払う（E は Lv5 まで）
   $('trk').innerHTML = G.TRACKS.map(t => `<span style="border-color:var(--${G.TRACK_INFO[t].color})"><b>${G.TRACK_INFO[t].name.split('・')[0]}</b><br>${(G.gateShort ? G.gateShort(st, t) : G.GATE_SHORT[t]) || ''} ${R.gates[t].slice(2).join('/')}</span>`).join('');
   set('lv6', G.TRACKS.map(t => G.lv6CostText(st, t)).join('／'));
   if (R.intelFlip) { $('flipli').hidden = false; set('flipg', G.sc(st, 3)); if (R.flip5sMax) set('flip5s', `${R.flip5sMax} 枚まで`); } // T30（O-37）／T31（O-44）
