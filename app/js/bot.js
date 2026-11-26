@@ -318,6 +318,10 @@
     if (p.round && p.round.boostLock) return out.filter(a => !(a.type === 'res' && (a.useL || a.bypassCoop || a.bypassL))); // T40（O-69）：神の加護を取った人は緊急進出・協調進出なし
     return out;
   }
+  // O-115②：G.tryFrom の結果（ほかの人は凍ったまま）を扱う口。evalT＝評価する（凍った人に触れたら redo＝tryApply でやり直す）・thaw＝凍った人を写して普通の状態に戻す（評価以外の処理に渡す前）・settleT＝保留があるときだけ戻してから settle
+  function thaw(s) { if (s.players.some(q => Object.isFrozen(q))) s.players = s.players.map(q => Object.isFrozen(q) ? G.clone(q) : q); return s; }
+  function evalT(s2, pid, w, redo) { try { return { s: s2, v: evaluate(s2, s2.players[pid], w) }; } catch (e) { if (!(e instanceof TypeError)) throw e; const s3 = redo(); return { s: s3, v: evaluate(s3, s3.players[pid], w) }; } }
+  function settleT(s, pid) { return (!s.ended && G.cur(s).id === pid && s.players[pid].pending[0]) ? settle(thaw(s), pid) : s; }
   function chooseGreedy(st, pid, w) {
     const p = st.players[pid]; const R = RSo(st);
     // 2026-11-04 ラウンド単位の計画（ユーザー採用・第53部）：方策の重み指定（色寄せ）が無い greedy は、局面から「今 R の狙い」を決めて評価の重みに反映する。手番ごとに読み直す（相手の先取りに追従）
@@ -327,8 +331,9 @@
     const isFree = (a) => a.shield || a.type === 'gToE' || a.type === 'freeConv';
     const base = evaluate(st, p, w);
     let best = null, bv = -Infinity, bestFree = null, bfv = base + 0.2, ties = 0; // ties：最良値と同点の候補数（検証用 G.TIES）
+    const TB = G.trialBase(st); // O-115②
     for (const a of cands(st, p)) {
-      let s2; try { s2 = G.tryApply(st, a); } catch (e) {
+      let s2; try { s2 = G.tryFrom(TB, a); } catch (e) {
         // E不足で打てない手は、G→E変換（無料）を挟めば打てるか試す＝複合候補。成立すれば先に変換を返す
         if (R.gToE && a.type !== 'gToE' && p.G >= R.gToE[0] && /エネルギーが足りません/.test(e.message)) {
           const m = e.message.match(/必要E(\d+)・所持E(\d+)/); const need = m ? Math.max(1, Math.ceil((+m[1] - +m[2]) / R.gToE[1])) : 1;
@@ -336,7 +341,7 @@
         }
         continue;
       }
-      let v = evaluate(s2, s2.players[pid], w); if (a.type === 'pass') v -= 1; // パスは最後の手段
+      let v = evalT(s2, pid, w, () => G.tryApply(st, a)).v; if (a.type === 'pass') v -= 1; // パスは最後の手段
       if (plan && plan.denyPid !== undefined) v += denyBonus(st, a, st.players[plan.denyPid]) * (W.deny || 0); // 終盤：首位が使える早取り枠を先に取る
       if (isFree(a)) { if (v > bfv) { bfv = v; bestFree = a; } } // 手番を消費しない手は「今の状態より良くなる」なら先に実行
       else if (v > bv) { bv = v; best = a; ties = 1; } else if (v === bv) ties++;
@@ -348,8 +353,8 @@
       const SETUP = (a) => a.type === 'res' || a.type === 'convert' || a.type === 'gToE' || a.type === 'card' || a.type === 'scan' || (a.type === 'tributeSlot' && a.res);
       const SCORE = (a) => ['breed', 'tribute', 'tributeAll', 'tributeSlot', 'track', 'mass', 'trait', 'organ', 'burst', 'gemset', 'altar', 'trial', 'lCrystal', 'coopCrystal', 'express', 'premium', 'crystal'].includes(a.type);
       let b2 = null, b2v = base + 1e-9;
-      for (const a1 of cands(st, p).filter(SETUP)) { let s1; try { s1 = G.tryApply(st, a1); } catch (e) { continue; }
-        const p1 = s1.players[pid]; for (const a2 of cands(s1, p1).filter(SCORE)) { let s2; try { s2 = G.tryApply(s1, a2); } catch (e) { continue; } const v = evaluate(s2, s2.players[pid], w); if (v > b2v) { b2v = v; b2 = a1; } } }
+      for (const a1 of cands(st, p).filter(SETUP)) { let s1; try { s1 = thaw(G.tryFrom(TB, a1)); } catch (e) { continue; }
+        const p1 = s1.players[pid], TB1 = G.trialBase(s1); for (const a2 of cands(s1, p1).filter(SCORE)) { let s2; try { s2 = G.tryFrom(TB1, a2); } catch (e) { continue; } const v = evalT(s2, pid, w, () => G.tryApply(s1, a2)).v; if (v > b2v) { b2v = v; b2 = a1; } } }
       if (b2) return bestFree || b2;
     }
     return bestFree || best;
@@ -414,9 +419,9 @@
     const K = BEAM.k, depth = BEAM.depth; inSearch = true;
     try {
       let frontier = [];
-      for (const a of cands(st, p0)) { let s2; try { s2 = G.tryApply(st, a); } catch (e) { continue; } s2 = settle(s2, pid); frontier.push({ first: a, st: s2, v: evaluate(s2, s2.players[pid], w) + (plan && plan.denyPid !== undefined ? denyBonus(st, a, st.players[plan.denyPid]) * (W.deny || 0) : 0), done: false }); }
+      const TB = G.trialBase(st); for (const a of cands(st, p0)) { let s2; try { s2 = G.tryFrom(TB, a); } catch (e) { continue; } const r = evalT(settleT(s2, pid), pid, w, () => settle(G.tryApply(st, a), pid)); frontier.push({ first: a, st: r.s, v: r.v + (plan && plan.denyPid !== undefined ? denyBonus(st, a, st.players[plan.denyPid]) * (W.deny || 0) : 0), done: false }); }
       if (!frontier.length) return null;
-      frontier.sort((x, y) => y.v - x.v); frontier = frontier.slice(0, K);
+      frontier.sort((x, y) => y.v - x.v); frontier = frontier.slice(0, K); frontier.forEach(n => thaw(n.st));
       for (let d = 2; d <= depth; d++) {
         const next = [];
         for (const node of frontier) {
@@ -424,10 +429,10 @@
           const s1 = simOthers(node.st, pid);
           if (s1.ended || s1.round !== st.round || G.cur(s1).id !== pid) { next.push({ first: node.first, st: s1, v: evaluate(s1, s1.players[pid], w), done: true }); continue; }
           const p1 = s1.players[pid]; let any = false;
-          for (const a of cands(s1, p1)) { let s2; try { s2 = G.tryApply(s1, a); } catch (e) { continue; } any = true; s2 = settle(s2, pid); next.push({ first: node.first, st: s2, v: evaluate(s2, s2.players[pid], w), done: false }); }
+          const TB1 = G.trialBase(s1); for (const a of cands(s1, p1)) { let s2; try { s2 = G.tryFrom(TB1, a); } catch (e) { continue; } any = true; const r = evalT(settleT(s2, pid), pid, w, () => settle(G.tryApply(s1, a), pid)); next.push({ first: node.first, st: r.s, v: r.v, done: false }); }
           if (!any) next.push({ first: node.first, st: s1, v: evaluate(s1, s1.players[pid], w), done: true });
         }
-        next.sort((x, y) => y.v - x.v); frontier = next.slice(0, K);
+        next.sort((x, y) => y.v - x.v); frontier = next.slice(0, K); frontier.forEach(n => thaw(n.st));
       }
       return frontier[0].first;
     } finally { inSearch = false; }
