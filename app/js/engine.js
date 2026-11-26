@@ -1640,8 +1640,16 @@
       if (a.pay === 'P' || a.pay === 'G') return false;
       if (L) return true;
       return !(opt && opt.keepE) && !(a.useL | 0) && p.E < c; }
+    // O-115③：使用済みの枠（突破の手段を使わない手だけ）・淘汰の P 不足。判定に迷う形は false（通常どおり試す）
+    try {
+      if (a.type === 'tributeSlot') return usedBlock(st, p, a.slot, false); // どの種別も claimSlot(…, {}) を通るか、その前に止まる
+      if (a.type === 'res') { const LF = (R.pu3Launch && organ(p, 'Pu3')) ? R.pu3Launch : R.launchFree; return !a.viaBoost && !a.join && !a.shield && !a.bypassCoop && !a.bypassMimic && (!(a.useL | 0) || !!LF) && usedBlock(st, p, a.slot, false); } // 緊急進出（LF）は claimSlot に生命核を渡さない
+      if (a.type === 'mass' && !a.free && !a.second) { const lm = a.kind === 'MB' && a.pay === 'L' && R.massL; if (!lm && !(a.kind === 'MM' && (a.n || 1) > 1) && p.P < massCost(p, a.kind)) return true; return !a.bypassL && !a.bypassCoop && usedBlock(st, p, a.kind, !!lm || a.kind === 'MB'); }
+    } catch (e) { return false; }
     return false;
   }
+  // claimSlot(st, p, slot, { bodyMass }) が突破の手段（生命核・協調・擬態・2 人目）なしで必ず「使用済み」で止まるか（O-115③）
+  function usedBlock(st, p, slot, bodyMass) { const s = G.SLOT_BY_ID[slot]; if (!s || !s.excl || slotUsedBy(st, slot) === undefined) return false; if (bodyMass && p.flags.strong['body5'] && RS(p).bodyAxis !== 'L') return false; if (!p.round.firstDone && organ(p, 'Rh3')) return false; if (p.traitSlotFree && G.TRAIT_SLOTS.includes(slot)) return false; return true; }
 
   // ---------- 得点 ----------
   function virtualGems(st, p) {
