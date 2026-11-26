@@ -152,6 +152,7 @@
 
   // ---------- ラウンド ----------
   function startRound(st) {
+    const carry = st.players.map(q => ({ E: q.E, G: q.G, P: q.P, L: q.L })); // O-120：ラウンド末の持ち越し（収入の前）
     st.round += 1;
     if (st.round > 1) {
       // 痕跡の少ない順（同数は前R維持＝安定ソート）
@@ -192,7 +193,7 @@
     });
     log(st, null, `=== ラウンド ${st.round} 開始（手番順：${st.turnOrder.map(i => P(st, i).name).join('→')}）===`, 'round');
     st.turnOrder.forEach(i => { const p = P(st, i); const n0 = p.pending.length; if (p._coop8Due) { p._coop8Due = false; if (RS(p).coop8Gem) addGem(st, p, 'social', 1, `協調${RS(p).coopGemAt || 8}到達`); if (RS(p).coop8Coef) addUpgrade(st, p, '協調8到達'); } syncGates(st, p); p.pending.slice(n0).forEach(x => { x.pre = true; }); }); // 2026-11-10 v3.90（ユーザー指摘）：収入の協調（交信腔・協調の収入）でゲートに達しても自動進化が次の行動まで遅れていた → 収入の直後に手番順で判定（先駆も手番順）。派生した保留（報酬の形質など）は手番前
-    st.hist = st.hist || []; st.hist.push({ round: st.round, rows: st.players.map(p => summaryRow(st, p)) });
+    st.hist = st.hist || []; st.hist.push({ round: st.round, rows: st.players.map((p, i) => st.round > 1 ? Object.assign(summaryRow(st, p), { carry: carry[i] }) : summaryRow(st, p)) });
     st.roundStart = null; // ラウンド頭へ戻すのはエントリ列の再構築（rebuild）で行う
   }
   function flSwapMax(p) {
@@ -1579,8 +1580,16 @@
       case 'startTrait': chooseStartTrait(st, e.pid, e.trait); return;
       case 'draft': draftCards(st, e.pid, e.cards); return;
       case 'finish': finishSetup(st); return;
-      default: apply(st, e);
+      default: { const b = st.phase === 'play' ? st.players.map(q => score(st, q).total) : null, n0 = st.log.length; apply(st, e); if (b) tagLog(st, n0, b); }
     }
+  }
+  // O-120：その手で出たログの行に、行の人の手の後の点と資源（s）を付け、人ごとに 1 行（その人の act の行・無ければ最初の行）にその手で増えた点（d）を付ける。CSV と画面のログが読む。rebuild（applyEntry）だけが通る＝AI の試しには掛からない
+  function tagLog(st, n0, b) {
+    const after = {}, done = {};
+    for (let i = n0; i < st.log.length; i++) { const l = st.log[i], id = l.p; if (id === null || id === undefined || !st.players[id]) continue;
+      if (!after[id]) { const q = st.players[id], sc0 = score(st, q); after[id] = { t: sc0.total, E: q.E, G: q.G, P: q.P, L: q.L, g: sc0.real, v: sc0.vg, pr: sc0.coef2 ? sc0.cfB : sc0.cf, ma: sc0.coef2 ? sc0.cfC : '' }; }
+      l.s = after[id]; }
+    for (let i = n0; i < st.log.length; i++) { const l = st.log[i], id = l.p; if (!after[id] || done[id]) continue; const first = st.log.slice(n0).find(x => x.p === id && x.kind === 'act') || st.log.slice(n0).find(x => x.p === id); first.d = after[id].t - b[id]; done[id] = true; }
   }
   // meta.undoMode: 'free'（誰でも即時）／'approve'（他の参加者全員の undoOk で成立）
   // opts.otherUids(uid) => そのuid以外の参加者uid一覧。opts.oks(entryId) => そのアンドゥ要求に対する承認uid一覧
@@ -1683,7 +1692,7 @@
     { const cv = RS(st).lv6Convert, rt = RS(st).lv6RealTracks || []; if (cv && rt.length) st.players.forEach(p => { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: intelCnt6(st, p), social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; rt.forEach(t => { if (p.lv[t] >= 6) { const k = lv6N(st, t, cnt, by, cv); if (k > 0) addGem(st, p, t, k, `${G.TRACK_INFO[t].name} Lv6 神の裁定`); } }); }); } // 試作 lv6RealTracks
     { const cv = RS(st).lv6Convert, rt = RS(st).lv6RealTracks || []; if (cv) st.players.forEach(p => { const cnt = { body: RS(st).lv6ConvertBodyInv ? (p.lInvested || 0) : p.L, intel: intelCnt6(st, p), social: p.coop, metab: p.organs.length }; const by = RS(st).lv6ConvertBy || {}; G.TRACKS.forEach(t => { if (p.lv[t] >= 6 && !rt.includes(t)) { const k = lv6N(st, t, cnt, by, cv); if (k > 0) log(st, p.id, `${p.name}：祝福+${k}（${G.TRACK_INFO[t].name} Lv6 神の裁定）`); } }); }); } // O-16（2026-11-12）：終了時の神の裁定の祝福は virtualGems で数えるだけでログに出ていなかった（得点は正しい）
     { const SJ = RS(st).star && RS(st).star.top && RS(st).star.top.judge; if (SJ) st.players.forEach(p => { if ((p.star | 0) >= STAR_MAX) log(st, p.id, `${p.name}：祝福+${SJ}（${G.STAR_NAME} ${starLvText(st, STAR_MAX)} 神の裁定）`); }); } // T26（O-26）
-    st.hist = st.hist || []; st.hist.push({ round: st.round + 1, label: '終了', rows: st.players.map(p => summaryRow(st, p)) });
+    st.hist = st.hist || []; st.hist.push({ round: st.round + 1, label: '終了', rows: st.players.map(p => Object.assign(summaryRow(st, p), { carry: { E: p.E, G: p.G, P: p.P, L: p.L } })) });
     const rows = st.players.map(p => Object.assign({ pid: p.id, name: p.name }, score(st, p)));
     rows.sort((a, b) => b.total - a.total || b.tie[0] - a.tie[0] || b.tie[1] - a.tie[1] || b.tie[2] - a.tie[2]);
     st.result = rows;

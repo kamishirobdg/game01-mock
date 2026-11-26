@@ -77,7 +77,7 @@ table.tracks td .first { display:block; font-size:10px; color:#a0760a; }
 .free { display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12px; }
 .others .orow { font-size:12px; padding:3px 0; border-top:1px dashed var(--line); }
 .logp .log { max-height:300px; overflow:auto; font-size:12px; }
-.log .l { padding:1px 4px; border-bottom:1px dotted #eee; } .log .l.round { background:#eef1f6; font-weight:600; } .log .l.gem { color:#8a5a00; } .log .l.act { color:#1f2430; }
+.log .l { padding:1px 4px; border-bottom:1px dotted #eee; } .log .l .lgain { color:#1a7f37; font-weight:600; white-space:nowrap; } /* O-120 */ .hist td small.carry { display:block; font-size:10px; color:#777; } .log .l.round { background:#eef1f6; font-weight:600; } .log .l.gem { color:#8a5a00; } .log .l.act { color:#1f2430; }
 .setup.wide { max-width:none; margin:12px; }
 .draftgrid { padding:0; grid-template-columns: minmax(360px, 1fr) minmax(0, 1.35fr); }
 .draftgrid .cardgrid { grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); } .draftgrid .cardgrid img.art.small { height:44px; } .draftgrid .cardbtn { min-width:0; }

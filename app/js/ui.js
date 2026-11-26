@@ -531,7 +531,7 @@
     if (st.hist && st.hist.length) {
       const hb = h('div', { class: 'hist' }, h('h3', null, 'ラウンド推移（各ラウンド開始時の得点）'));
       const t2 = h('table', null, h('tr', null, h('th', null, 'R'), ...st.players.map(p => h('th', null, p.name))));
-      st.hist.forEach(hh => t2.appendChild(h('tr', null, h('td', null, hh.label || ('R' + hh.round)), ...hh.rows.map(r => h('td', { title: `E${r.E} G${r.G} P${r.P}｜Lv${r.lv}｜痕跡${r.gems}＋祝福${r.vg}｜×${r.coef}` }, String(r.score))))));
+      st.hist.forEach(hh => t2.appendChild(h('tr', null, h('td', null, hh.label || ('R' + hh.round)), ...hh.rows.map(r => h('td', { title: `E${r.E} G${r.G} P${r.P}｜Lv${r.lv}｜痕跡${r.gems}＋祝福${r.vg}｜×${r.coef}` }, String(r.score), r.carry ? h('small', { class: 'carry' }, `持ち越し E${r.carry.E} G${r.carry.G} P${r.carry.P} L${r.carry.L}`) : null))))); // O-120：前のラウンドの終わりに残った資源（収入の前）
       hb.appendChild(t2); hb.appendChild(chart(st.hist)); box.appendChild(hb);
     }
     return box;
@@ -937,7 +937,7 @@
     if (!logOpen) return h('div');
     const box = h('div', { class: 'panel logp' }, h('h3', null, 'ログ'));
     const ul = h('div', { class: 'log' });
-    st.log.slice(-120).reverse().forEach(l => ul.appendChild(h('div', { class: 'l ' + l.kind + (l.p !== null && l.p !== undefined ? ' p' + l.p : '') }, `R${l.r} ${l.msg}`)));
+    st.log.slice(-120).reverse().forEach(l => ul.appendChild(h('div', { class: 'l ' + l.kind + (l.p !== null && l.p !== undefined ? ' p' + l.p : '') }, `R${l.r} ${l.msg}`, l.d > 0 ? h('b', { class: 'lgain' }, ` +${l.d}点`) : null))); // O-120：その手で点が増えたときだけ
     box.appendChild(ul); return box;
   }
 
@@ -1245,7 +1245,8 @@
     if (!st) return;
     const tf = (t) => { if (!t) return ''; const d = new Date(t), z = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`; }; // O-48：時刻の列（各手の時刻）・開始と終了の行
     const ents = isOnline() ? (Net.entries || []) : (game.entries || []); const ts = ents.map(e => e.at).filter(Boolean); const t0 = (game.meta && game.meta.startedAt) || (isOnline() && Net.meta && (Net.meta.startedAt || Net.meta.createdAt)) || ts[0], t1 = st.ended ? ts[ts.length - 1] : null;
-    const rows = [['round', 'player', 'msg', 'time'], ['', '', 'ゲーム開始', tf(t0)]].concat(st.log.map(l => [l.r, l.p !== null && l.p !== undefined ? st.players[l.p].name : '', l.msg, tf(l.t)]), st.ended ? [['', '', 'ゲーム終了', tf(t1)]] : []);
+    const sx = (l) => { const v = l.s; return v ? [v.t, l.d !== undefined ? l.d : '', v.E, v.G, v.P, v.L, v.g, v.v, v.pr, v.ma] : ['', '', '', '', '', '', '', '', '', '']; }; // O-120：行の人の手の後の点と資源（列は右に足す）
+    const rows = [['round', 'player', 'msg', 'time', '点', '増えた点', 'E', 'G', 'P', '生命核', '痕跡', '祝福', '繁栄度', '成熟度'], ['', '', 'ゲーム開始', tf(t0)].concat(sx({}))].concat(st.log.map(l => [l.r, l.p !== null && l.p !== undefined ? st.players[l.p].name : '', l.msg, tf(l.t)].concat(sx(l))), st.ended ? [['', '', 'ゲーム終了', tf(t1)].concat(sx({}))] : []);
     download(`game01_log_${st.seed}.csv`, '﻿' + rows.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n'), 'text/csv');
   }
 
