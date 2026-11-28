@@ -171,6 +171,7 @@ html[data-board] #app .grid {
   .ogrid.ofield > .ocard .hd { justify-content:center; min-height:26px; padding:2px 4px; border-radius:11px 11px 0 0; background:color-mix(in srgb, var(--lin) 45%, #000); box-shadow:none; }
   .ogrid.ofield > .ocard .hd .sw { display:none; }
   .ogrid.ofield > .ocard .hd .cost { font-size:13px; white-space:nowrap; }
+  .ogrid.ofield > .ocard .hd { position:absolute; left:0; right:0; top:0; margin:0; } /* O-148（2026-11-29・デザイン）：携帯幅でも PC 幅と同じ置き方（skin.css の携帯幅の margin:0 -6px が盤の札に効き、帯が札の左右へ約 2px はみ出していた） */
   .ogrid.ofield > .ocard :is(img.art, div.art) { width:44px; height:44px; min-height:0; flex:none; margin:2px 0 2px; border-radius:9px; }
   .ogrid.ofield > .ocard > b { font-size:12px; line-height:1.15; white-space:nowrap; color:color-mix(in srgb, var(--lin) 40%, #fff); }
   .ogrid.ofield > .ocard > .fx { background:none; border:0; padding:0; margin:2px 0 0; width:100%; }

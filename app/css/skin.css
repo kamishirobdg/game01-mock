@@ -424,3 +424,6 @@ html:not([data-skin])[data-theme="dark"] .lane .starrow > .slot.starstep { backg
 html:not([data-skin])[data-theme="dark"] .lane .starrow > .slot.starstep.star { background:#332c18; }
 html:not([data-skin])[data-theme="dark"] .lane .starrow > .slot.starstep.now { background:#1f2a40; outline-color:#8fb4ff; }
 html:not([data-skin])[data-theme="dark"] .lane .starrow > .slot.starstep.now.na { background:#23262c; outline-color:#666; }
+
+/* O-148（2026-11-29・デザイン）：効果の行に単独で置く基本形質の印（淘汰(知性)・転写の［basic］［形質］）は字の色に（.ic の既定 #222 のままだと暗い地で沈む） */
+svg.ic.basic { color:inherit; }
