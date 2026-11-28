@@ -171,7 +171,7 @@
     st.cur = 0;
     st.shared.used = {}; st.shared.organUsed = {};
     st.players.forEach(p => {
-      if (p.spore && RS(p).sporeKeep) { const cap = RS(p).sporeCap || sc(p, 3); const use = Math.min(p.E, cap), k = RS(p).sporeKeep[p.spore === 3 ? 0 : 1]; if (use > 0) { p.P += use * k; log(st, p.id, `${p.name}：胞子 E${use}×${k}→P+${use * k}（E は減らない）${st.round > 1 ? '（前ラウンドの残り）' : ''}`); } } /* T42（O-76）sporeKeep：E は減らさず E1 につき P+[強, 弱] */ else if (p.spore) { const cap = RS(p).sporeCap || sc(p, 3); const use = Math.min(p.E, cap); if (use > 0) { p.E -= use; p.P += use * p.spore; log(st, p.id, `${p.name}：胞子 E${use}→P${use * p.spore}${st.round > 1 ? '（前ラウンドの残り）' : ''}`); } } // 第42部 N9 胞子（強 E1→P3／弱 E1→P2・上限 sporeCap）
+      if (p.spore && RS(p).npGain) { /* T54（O-145）：胞子は繁栄度の段ごと＝ラウンドの境目には何もしない */ } else if (p.spore && RS(p).sporeKeep) { const cap = RS(p).sporeCap || sc(p, 3); const use = Math.min(p.E, cap), k = RS(p).sporeKeep[p.spore === 3 ? 0 : 1]; if (use > 0) { p.P += use * k; log(st, p.id, `${p.name}：胞子 E${use}×${k}→P+${use * k}（E は減らない）${st.round > 1 ? '（前ラウンドの残り）' : ''}`); } } /* T42（O-76）sporeKeep：E は減らさず E1 につき P+[強, 弱] */ else if (p.spore) { const cap = RS(p).sporeCap || sc(p, 3); const use = Math.min(p.E, cap); if (use > 0) { p.E -= use; p.P += use * p.spore; log(st, p.id, `${p.name}：胞子 E${use}→P${use * p.spore}${st.round > 1 ? '（前ラウンドの残り）' : ''}`); } } // 第42部 N9 胞子（強 E1→P3／弱 E1→P2・上限 sporeCap）
       { const nh = trait(p, 'NH'), NHF = RS(p).nhFill; if (nh && NHF) { const f = NHF[nh.strong ? 0 : 1], got = ['E', 'G', 'P'].map(r => [r, Math.max(0, f - p[r])]).filter(([, k]) => k > 0); if (got.length) { got.forEach(([r, k]) => { p[r] += k; p.nhGot = (p.nhGot || 0) + k; }); log(st, p.id, `${p.name}：渇望（手持ちを ${f} まで）${got.map(([r, k]) => r + '+' + k).join(' ')}`); } } } /* T53（O-137）渇望：収入の前の手持ちが 20／15 に足りないぶん */ { const nh = trait(p, 'NH'), NHG = RS(p).nhFill ? null : RS(p).nhGain; if (nh && NHG) { const k = NHG[nh.strong ? 0 : 1], z = ['E', 'G', 'P'].filter(r => p[r] <= 0); if (z.length) { z.forEach(r => { p[r] += k; }); log(st, p.id, `${p.name}：渇望（手持ち 0 の ${z.join('・')}）${z.map(r => r + '+' + k).join(' ')}`); } } } /* T44（O-79）渇望：収入の最初の手持ちで 0 の資源に +6／+4 */
       // 収入
       p._round = st.round; // p._round＝これから始まるラウンド番号（yieldByRound 用）
@@ -203,6 +203,7 @@
   }
   function ngCost(p) { const t = trait(p, 'NG'), A = RS(p).ngLaunchP; return t && A && !(p.round && p.round.ngUsed) ? A[t.strong ? 0 : 1] : null; } // T49（O-91）犠牲：このラウンドに P で緊急進出できるときの額（できなければ null）
   function apexBless(st, p, what) { const t = trait(p, 'NT'), A = RS(p).ntBless; if (!t || !A) return; const k = A[t.strong ? 0 : 1]; p.gemsets += k; p.ntGot = (p.ntGot || 0) + k; log(st, p.id, `${p.name}：極致（${what}）で 祝福+${k} → 祝福 ${p.gemsets}`); } // T49（O-91）極致：Lv6 に着くたび
+  function sporeHit(p, why) { const NG = RS(p).npGain; if (!NG || !p.spore) return; p.pending.push({ type: 'cvIncome', amt: Object.assign({}, NG[p.spore === 3 ? 0 : 1]), src: '胞子', spore: 1 }); } // T54（O-145）胞子：繁栄度を 1 段上げるたび E・G・P のどれか（[強, 弱] の額・pending なので受け取りは繁殖の払いの後＝同じ手の次の段には回せない）
   function nySteps(p) { return Math.max(0, (p.breedUps || 0) - (RS(p).nyStar ? 0 : (p.starPros || 0))); } // T48（O-90）nyStar：星海の先駆の繁栄度も数える // T47（O-88）結実：繁殖で繁栄度を上げた回数（星海の先駆の繁栄度は除く）
   // T51（O-99）：共生（naDisc）・寄生腺（adCoopDisc）＝協調の払いを減らす。kind＝'bypass'（協調進出）・'second'（淘汰の 2 人目）・'altar'・'star'・'lv6'。共生の弱と寄生腺は bypass・second だけ。1 より下げない（もともと 1 以下はそのまま）
   function coopCost(p, n, kind) { const R = RS(p); if (!(R.naDisc || R.adCoopDisc) || !p || !p.traits || n <= 1) return n; let d = 0; const na = trait(p, 'NA'); const bs = kind === 'bypass' || kind === 'second'; if (na && R.naDisc && (na.strong || bs)) d += R.naDisc; if (bs && R.adCoopDisc && organ(p, 'Ad2')) d += (kind === 'bypass' && R.adCoopDiscBypass) ? R.adCoopDiscBypass : R.adCoopDisc; /* T53（O-137）寄生腺：協調進出 −2・淘汰の 2 人目 −1 */ return Math.max(1, n - d); }
@@ -524,7 +525,7 @@
     const c2 = RS(p).coef2;
     if (c2) { // C2：繁殖は繁栄度へ、それ以外は成熟度へ（コマは触らない）
       const isB = /繁殖/.test(why);
-      if (isB) { p.breedUps = (p.breedUps || 0) + 1; log(st, p.id, `${p.name}：${why} → 繁栄度 ×${coefB(p)}`);  oracleHit(st, p, 'OBR'); }
+      if (isB) { p.breedUps = (p.breedUps || 0) + 1; log(st, p.id, `${p.name}：${why} → 繁栄度 ×${coefB(p)}`);  oracleHit(st, p, 'OBR'); sporeHit(p, why); }
       else { if ((p.collectUps || 0) >= (c2.collectMax || 4)) { log(st, p.id, `（成熟度は上限×${(c2.collectBase || 3) + (c2.collectMax || 4)}のため ${why} の+1は無効）`); return; } p.collectUps = (p.collectUps || 0) + 1; log(st, p.id, `${p.name}：${why} → 成熟度 ×${coefC(p)}`); }
       p.upgrades += 1; return;
     }
@@ -1258,7 +1259,7 @@
     let n = starGem(st, lv); let first = false, tookPros = false;
     if (!(opt && opt.noFirst) && starIsFirst(st, lv)) { /* T27 の星渡は noFirst を付けない（先駆になる） */ first = true; const F = starFirstDef(st, lv); if (pros.includes(lv) && F.pros !== undefined && prosRoom(p) > 0) { n = F.pros; tookPros = true; } else n = starFirstGem(st, lv); st.shared.starFirst[lv] = p.id; }
     if (n) addGem(st, p, 'body', n, `${G.STAR_NAME} ${LT}${first ? '・先駆' : ''}`); p.starGem = (p.starGem || 0) + n; // starGem：bot の評価用
-    if (tookPros) { p.breedUps = (p.breedUps || 0) + 1; p.upgrades += 1; p.starPros = (p.starPros || 0) + 1; log(st, p.id, `${p.name}：${G.STAR_NAME} ${LT}・先駆 → 繁栄度 ×${coefB(p)}`); }
+    if (tookPros) { p.breedUps = (p.breedUps || 0) + 1; p.upgrades += 1; p.starPros = (p.starPros || 0) + 1; log(st, p.id, `${p.name}：${G.STAR_NAME} ${LT}・先駆 → 繁栄度 ×${coefB(p)}`); sporeHit(p, `${G.STAR_NAME}の先駆`); }
     log(st, p.id, `${p.name}：${G.STAR_NAME} ${LT}（${why}）`);
     if (RS(p).star.lv1) lvHit(st, p, lv + 1, G.STAR_NAME); oracleHit(st, p, 'OST'); // T51（O-99）：多能・開花（内部の段＋1＝表示の Lv）・神託
   }
@@ -1529,7 +1530,7 @@
     if (pd.type === 'diIncome') { p.pending.shift(); const D = RS(p).diPay; if (a.e && !organ(p, 'Di1')) throw new Error('消化膜を持っていません'); if (a.g && !organ(p, 'Di2')) throw new Error('消化腺を持っていません'); const e = !!a.e, g = !!a.g, need = (e ? D.Di1.P : 0) + (g ? D.Di2.P : 0); if (!need) return false; if (p.P < need) throw new Error(`個体数が足りません（必要P${need}・所持P${p.P}）`); p.P -= need; if (e) p.E += D.Di1.E; if (g) p.G += D.Di2.G; p.diN = (p.diN || 0) + (e ? 1 : 0) + (g ? 1 : 0); log(st, p.id, `${p.name}：消化 P${need} → ${[e ? 'E+' + D.Di1.E : '', g ? 'G+' + D.Di2.G : ''].filter(Boolean).join(' ')}`); return false; } // T49（O-91）消化膜・消化腺：{e, g}＝払う方（両方でも・払わなくてもよい）
     if (pd.type === 'foresee') { if (!['s', 'w'].includes(a.pick)) throw new Error('強の報酬か弱の報酬を選んでください'); p.pending.shift(); const sg = a.pick === 's', key = pd.track + pd.lv; p.flags.strong[key] = sg; p.nfN = (p.nfN || 0) + 1; log(st, p.id, `${p.name}：先見で${G.TRACK_INFO[pd.track].name} Lv${pd.lv}★ は${sg ? '強' : '弱'}の報酬`); const ent = st.log[st.log.length - 1], K = [['E', 'E'], ['G', 'G'], ['P', 'P'], ['L', '生命核'], ['coop', '協調']], b0 = K.map(([k]) => p[k] || 0), inc0 = st._rwInc; st._rwInc = {}; try { applyReward(st, p, pd.track, pd.lv, sg, false); } finally { const inc = st._rwInc; st._rwInc = inc0; const t = K.map(([k, n], i) => [n, (p[k] || 0) - b0[i] - (inc[k] || 0)]).filter(([, d]) => d > 0).map(([n, d]) => `${n}+${d}`).join(' '); if (t) ent.msg += ` → ${t}`; } return false; } // T53（O-137）先見：選んだ側の報酬
     if (pd.type === 'molt') { p.pending.shift(); moltDo(st, p, pd.max, a.skip ? 0 : a.n); return false; } // T51（O-99）脱皮
-    if (pd.type === 'cvIncome') { p.pending.shift(); const r = a.res || 'E'; if (!['E', 'G', 'P'].includes(r)) throw new Error('E・G・P から選んでください'); gainRes(p, r, pd.n); log(st, p.id, `${p.name}：${pd.src || '収斂膜'}で${r}+${pd.n}`); return false; } // pd.src＝遊泳膜（T42）
+    if (pd.type === 'cvIncome') { p.pending.shift(); const r = a.res || 'E'; if (!['E', 'G', 'P'].includes(r)) throw new Error('E・G・P から選んでください'); const n = pd.amt ? pd.amt[r] : pd.n; gainRes(p, r, n); if (pd.spore) { p.npN = (p.npN || 0) + 1; p.npGot = p.npGot || { E: 0, G: 0, P: 0 }; p.npGot[r] += n; } log(st, p.id, `${p.name}：${pd.src || '収斂膜'}で${r}+${n}`); return false; } /* T54（O-145）pd.amt＝資源ごとの額（胞子）・npN／npGot は計測用 */ // pd.src＝遊泳膜（T42）
     if (pd.type === 'lYield') { const r = a.res || 'E'; if (!pd.opts.includes(r)) throw new Error(`産出で選べる資源は ${pd.opts.join('/')} です`); p.pending.shift(); gainRes(p, r, pd.n); log(st, p.id, `${p.name}：生命核の産出 ${r}+${pd.n}`); return false; }
     if (pd.type === 'wildColor') { p.pending.shift(); if (!G.TRACKS.includes(a.track)) throw new Error('色を選んでください'); p.wild = a.track; log(st, p.id, `${p.name}：共鳴膜のワイルド色＝${G.TRACK_INFO[a.track].jp}`); return false; }
     if (pd.type === 'reMilestone') {

@@ -10,7 +10,7 @@
 (function () {
   'use strict';
   const G = globalThis.G1; if (!G) return;
-  const SETS = ['t33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41', 't42', 't43', 't44', 't45', 't46', 't47', 't48', 't49', 't50', 't51', 't52', 't53']; // O-137：T53 // O-108：T52 // O-51（v3.128）：T33 の数値で書く（T32 以前は文字の表示）・O-62（v3.142）：T34 は T33 と同じ数値・v3.159：T38（v3.158 で抜けていた）・T39
+  const SETS = ['t33', 't34', 't35', 't36', 't37', 't37h', 't38', 't39', 't40', 't41', 't42', 't43', 't44', 't45', 't46', 't47', 't48', 't49', 't50', 't51', 't52', 't53', 't54']; // O-145：T54 // O-137：T53 // O-108：T52 // O-51（v3.128）：T33 の数値で書く（T32 以前は文字の表示）・O-62（v3.142）：T34 は T33 と同じ数値・v3.159：T38（v3.158 で抜けていた）・T39
   const ORGAN = {
     Mg1: '手 +E6', Mg2: '! +E6 ; 手 +E3 +G3', Mg3: '手 +all4 ; ∞ =organ1',
     Tl1: '! +G6 ; ∞ ↓trait:G:6', Tl2: '! +G9 ; ! @traitw! $0 … ; ∞ ↓trait:G:9', Tl3: '! @trait! $0 … ; ∞ ↓trait:G:12',
@@ -63,6 +63,7 @@
 
   // 全文（画面の文字表示と同じ文。ui.js の rtxt もこれを使う）
   OV.t53 = Object.assign({}, OV.t52, { organ: Object.assign({}, OV.t52.organ, { Tl1: '∞ ↓trait:G:6', Tl2: '! @traitw! $0 … ; ∞ ↓trait:G:9', Nv2: '∞ =trait1 ; 手 +G4', Lm1: '手 +G4', Ad2: '∞ ↓coopadv:coop:2 ↓cull:coop:1 …' }), trait: Object.assign({}, OV.t52.trait, { NM: ['∞ @usedslot x2 1/R …', '∞ -E6 > @usedslot x2 1/R …'], NW: ['! -E15 > +gem1 ≤gem3 …', '! -E15 > +gem1 ≤gem2 …'], NG: ['∞ -P30 > i:launch 1/R', '∞ -P40 > i:launch 1/R'], NH: ['手 +E ≤E20 +G ≤G20 +P ≤P20 …', '手 +E ≤E15 +G ≤G15 +P ≤P15 …'], MC: ['∞ ↓cull:P:24', '∞ ↓cull:P:18'], NF: ['∞ i:starstep i:follow =先 …', '∞ i:lvthreestar i:follow =先 …'] }) }); /* O-139：先見（弱）＝Lv3★（O-138 の絵） */ /* T53（O-137）：転写の形成時の G なし・神経網と発光点 G+4・寄生腺 協調進出 −2／擬態 ×2・脱皮 E15・犠牲 P30／40・渇望＝20／15 まで（≤）・耐性 強 −24P 恒久・先見（弱は Lv3★ だけ＝全文の …） */
+  OV.t54 = Object.assign({}, OV.t53, { trait: Object.assign({}, OV.t53.trait, { NP: ['∞ ?breed↑ +E25 i:or +G15 i:or +P40 …', '∞ ?breed↑ +E15 i:or +G9 i:or +P25 …'] }) }); /* T54（O-145）：胞子＝繁栄度を 1 段上げるたび（結実と同じ繁殖の絵）E・G・P のどれか（数える段の細目は全文の …） */
   function txt(st, s) {
     if (!s) return s; const R = R_(st); s = G.txt(st, s);
     s = String(s).replace(/(大量消費|淘汰)-5/g, (m, w) => w + '-' + R.massDiscLv).replace(/排他無視\+-5/g, '排他無視+-' + R.massDiscLv).replace(/-6P/g, '-' + R.mcDisc + 'P').replace(/-8P/g, '-' + R.mbDisc + 'P');

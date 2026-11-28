@@ -47,7 +47,7 @@
       case 'diIncome': { const D = RSo(st).diPay || {}; const e = !!G.organ(p, 'Di1') && D.Di1 && p.P - D.Di1.P >= 30; const g = !!G.organ(p, 'Di2') && D.Di2 && p.P - (e ? D.Di1.P : 0) - D.Di2.P >= 30; return R({ e, g }); } // T49（O-91）消化：払っても P が 30 以上残るなら払う（消化膜が先）
       case 'molt': { const opts = []; for (let n = 0; n <= pd.max; n++) opts.push(R({ n })); let best = opts[0], bv = -Infinity; opts.forEach(a => { try { const s2 = G.tryApply(st, a); const v = evaluate(s2, s2.players[pid], W); if (v > bv) { bv = v; best = a; } } catch (e) {} }); return best; } // T51（O-99）脱皮：払う回数 0〜上限を試して評価が最も高いもの
       case 'foresee': { let best = R({ pick: 's' }), bv = -Infinity; [R({ pick: 's' }), R({ pick: 'w' })].forEach(a => { try { const s2 = G.tryApply(st, a); const v = evaluate(s2, s2.players[pid], W); if (v > bv) { bv = v; best = a; } } catch (e) {} }); return best; } // T53（O-137）先見：強・弱の報酬を試して評価が高いほう
-      case 'cvIncome': return R({ res: p.E < G.sc(st, 6) ? 'E' : p.G < G.sc(st, 4) ? 'G' : 'P' });
+      case 'cvIncome': if (pd.amt) { let best = R({ res: 'E' }), bv = -Infinity; ['E', 'G', 'P'].forEach(r => { const a = R({ res: r }); try { const s2 = G.tryApply(st, a); const v = evaluate(s2, s2.players[pid], W); if (v > bv) { bv = v; best = a; } } catch (e) {} }); return best; } /* T54（O-145）胞子：E・G・P を試して評価が高いほう */ return R({ res: p.E < G.sc(st, 6) ? 'E' : p.G < G.sc(st, 4) ? 'G' : 'P' });
       case 'lYield': { const pref = [p.E < G.sc(st, 6) ? 'E' : null, p.G < G.sc(st, 4) ? 'G' : null, 'E', 'G', 'P'].filter(Boolean).filter(r => pd.opts.includes(r)); return R({ res: pref[0] || pd.opts[0] }); }
       case 'wildColor': return R({ track: G.TRACKS.find(t => p.gems[t] === 0) || 'body' });
       case 'learn': { const miss = G.TRACKS.find(t => p.gems[t] === 0); return first(st, [R({ kind: 'express', track: miss || 'body' }), R({ kind: 'mimic', effect: 'metab3w' }), R({ kind: 'mimic', effect: 'social3w' }), R({ kind: 'mimic', effect: 'intel2' }), R({ kind: 'mimic', effect: 'social2' }), R({ skip: true })]); }
@@ -194,10 +194,12 @@
     w = w || W; const sc = G.score(st, p); let v = sc.total * (2 / (RSo(st).gemPt || 2)); // 2026-10-28：評価の点は gemPt=2 の尺度に正規化（T8 で ×2 を外しても AI の重みづけが変わらないように。以下の「×2」はこの尺度）
     const RN = RSo(st).rounds || G.ROUNDS; const rem = RN - st.round; const k = rem / RN; // rem＝この後に残るラウンド数
     v += k * (p.E * w.E + p.G * w.G + p.P * w.P + p.L * w.L);
+    (p.pending || []).forEach(pd => { if (pd.type === 'cvIncome' && pd.amt) v += k * Math.max(pd.amt.E * w.E, pd.amt.G * w.G, pd.amt.P * w.P); }); // T54（O-145）：受け取る前の胞子
     if (RSo(st).lYield) { const R5 = RSo(st); const rate = (R5.yieldByRound ? 1.5 : R5.lYield) + (p.yieldAdd || 0); v += p.L * rem * rate * (p.yieldMul || 1) * (R5.yieldRes === 'P' ? w.P : w.E); } // T5：保有Lは残ラウンド分の利回りを生む（資源別の重み）
     if (rem > 0) { const has = (id) => p.traits.some(t => t.id === id); // T7：効果が得点・資源の差分に出にくい形質の見込み
       if (has('NF')) { const RF = RSo(st), nfs = G.trait(p, 'NF').strong; if (RF.nfPick) v += Math.min(4, G.TRACKS.filter(t => p.lv[t] < (nfs ? 5 : 3)).length) * sc.cfB * 2 * (nfs ? 0.35 : 0.2) * (rem / 7); /* T53（O-137）：強＝Lv3★・Lv5★（Lv5★ は痕跡+1 も）／弱＝Lv3★ */ else v += Math.min(4, G.TRACKS.filter(t => p.lv[t] < 5).length) * sc.cfB * 2 * 0.25 * (rem / 7); }
       if (has('NM')) v += rem * (RSo(st).nmMul ? 4.5 : 2.5); // T53（O-137）：獲得量 2 倍
+      { const NPG = RSo(st).npGain, c2 = RSo(st).coef2; if (NPG && p.spore && c2) { const a = NPG[p.spore === 3 ? 0 : 1], one = Math.max(a.E * w.E, a.G * w.G, a.P * w.P), room = Math.max(0, (c2.breedMax || 4) - (p.breedUps || 0)); v += Math.min(room, rem) * 0.6 * k * one; } } // T54（O-145）胞子：残りのラウンドで上げる段の見込み（上限までの余地と残りラウンドの小さいほう×0.6）×1 段の額（資源の重みで最大のもの）
       if (has('NR') && (RSo(st).nrMode === 'two' || RSo(st).nrTwoN) && G.nrTwoLeft(p) > 0) { const near = st.shared.lineages.filter(l => G.lineageCount(p, l) >= 1 && !G.lineageDone(p, l)).length; v += Math.min(G.nrTwoLeft(p), near) * rem * 1.6; } // T14：残り系統数ぶん // T13：2 枚で完成（まだ使っていなければ、1 枚ある系統が近い）
       else if (has('NR') && (RSo(st).lineageCoefMax || 0) > 0) { const near = st.shared.lineages.filter(l => G.lineageCount(p, l) >= 1).length; v += Math.min(1, Math.max(0, near - 1)) * rem * 1.6; } }
     const tg = RSo(st).traitEndGem; if (tg && !st.ended) v += Math.floor(p.traits.length / tg) * sc.cfC * 2 * (rem === 0 ? 1 : 0.6); // 試作 traitEndGem
